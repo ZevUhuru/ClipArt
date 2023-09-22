@@ -18,6 +18,12 @@ module.exports = {
         wide: { raw: '(min-aspect-ratio: 3 / 2)' },
         'taller-than-854': { raw: '(min-height: 854px)' },
       },
+      fontSize: {
+        '33': '33px',
+      },
+      spacing: {
+        '50': '50px',
+      }
     },
   },
   plugins: [],

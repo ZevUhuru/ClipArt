@@ -40,96 +40,126 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
           content="https://nextjsconf-pics.vercel.app/og-image.png"
         />
       </Head>
-      <main className="mx-auto max-w-[1960px] p-4">
-        {photoId && (
-          <Modal
-            images={images}
-            onClose={() => {
-              setLastViewedPhoto(photoId)
-            }}
-          />
-        )}
-        <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 2xl:columns-4">
-          <div className="after:content relative mb-5 flex h-[629px] flex-col items-center justify-end gap-4 overflow-hidden rounded-lg bg-white/10 px-6 pb-16 pt-64 text-center text-white shadow-highlight after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight lg:pt-0">
-            <div className="absolute inset-0 flex items-center justify-center opacity-20">
-              <span className="flex max-h-full max-w-full items-center justify-center">
-                <Bridge />
-              </span>
-              <span className="absolute left-0 right-0 bottom-0 h-[400px] bg-gradient-to-b from-black/0 via-black to-black"></span>
+      {/* <main className="mx-auto max-w-[1960px] w-full"> */}
+
+      <main className="mx-auto w-full">
+        <div className="h-screen w-full bg-white">
+          <div className="header-container">
+
+            <header className="flex justify-start h-[60px] px-50">
+              <div className="logo-container max-w-[100px]">
+                <img src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="Logo" className="w-full h-full" />
+              </div>
+            </header>
+
+            <div className="hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]" style={{ backgroundImage: "url('https://assets.codepen.io/9394943/laughing-santa-2.png')" }}>
+              <div className="hero-content ml-[50px]">
+                <h1 className="text-white text-33 font-sans text-shadow backdrop-blur-[1px] p-1 max-w-[425px]">The Largest Collection <br />of Free, Ai Generated, Clip Art</h1>
+                <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
+                  <form className="w-full flex items-center rounded">
+                    <input type="search" placeholder="Search for free clip art" className="h-12 w-full rounded-lg text-lg" />
+                  </form>
+                </div>
+              </div>
+
             </div>
-            <Logo />
-            <h1 className="mt-8 mb-4 text-base font-bold uppercase tracking-widest">
-              2022 Event Photos
-            </h1>
-            <p className="max-w-[40ch] text-white/75 sm:max-w-[32ch]">
-              Our incredible Next.js community got together in San Francisco for
-              our first ever in-person conference!
-            </p>
-            <a
-              className="pointer z-10 mt-6 rounded-lg border border-white bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-white/10 hover:text-white md:mt-4"
-              href="https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-cloudinary&project-name=nextjs-image-gallery&repository-name=with-cloudinary&env=NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,CLOUDINARY_API_KEY,CLOUDINARY_API_SECRET,CLOUDINARY_FOLDER&envDescription=API%20Keys%20from%20Cloudinary%20needed%20to%20run%20this%20application"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Clone and Deploy
-            </a>
           </div>
-          {images.map(({ id, public_id, format, blurDataUrl }) => (
-            <Link
-              key={id}
-              href={`/?photoId=${id}`}
-              as={`/p/${id}`}
-              ref={id === Number(lastViewedPhoto) ? lastViewedPhotoRef : null}
-              shallow
-              className="after:content group relative mb-5 block w-full cursor-zoom-in after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight"
-            >
-              <Image
-                alt="Next.js Conf photo"
-                className="transform rounded-lg brightness-90 transition will-change-auto group-hover:brightness-110"
-                style={{ transform: 'translate3d(0, 0, 0)' }}
-                placeholder="blur"
-                blurDataURL={blurDataUrl}
-                src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_scale,w_720/${public_id}.${format}`}
-                width={720}
-                height={480}
-                sizes="(max-width: 640px) 100vw,
-                  (max-width: 1280px) 50vw,
-                  (max-width: 1536px) 33vw,
-                  25vw"
-              />
-            </Link>
-          ))}
+          {/* <div>
+        <div>
+          <h2 className="font-sans">Featured</h2>
+          <ul className="list-none m-0 p-0">
+            <li>
+              <div className="w-72 h-36 bg-black rounded-lg"></div>
+            </li>
+          </ul>
         </div>
+      </div> */}
+        </div>
+
       </main>
-      <footer className="p-6 text-center text-white/80 sm:p-12">
-        Thank you to{' '}
-        <a
-          href="https://edelsonphotography.com/"
-          target="_blank"
-          className="font-semibold hover:text-white"
-          rel="noreferrer"
-        >
-          Josh Edelson
-        </a>
-        ,{' '}
-        <a
-          href="https://www.newrevmedia.com/"
-          target="_blank"
-          className="font-semibold hover:text-white"
-          rel="noreferrer"
-        >
-          Jenny Morgan
-        </a>
-        , and{' '}
-        <a
-          href="https://www.garysextonphotography.com/"
-          target="_blank"
-          className="font-semibold hover:text-white"
-          rel="noreferrer"
-        >
-          Gary Sexton
-        </a>{' '}
-        for the pictures.
+      <footer className="bg-gray-900" aria-labelledby="footer-heading">
+        <h2 id="footer-heading" className="sr-only">Footer</h2>
+        <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
+          <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+            <div className="space-y-8">
+              {/* <img className="h-7" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500" alt="Company name" /> */}
+              <h2 className="text-white text-xl" >Clip.Art</h2>
+              <p className="text-sm leading-6 text-gray-300">The worlds largest collection of free clip art is beautiful, modern, and available for reuse.</p>
+              <div className="flex space-x-6">
+                {/* Facebook Icon */}
+                <a href="#" className="text-gray-500 hover:text-gray-400">
+                  <span className="sr-only">Facebook</span>
+                  {/* Add your Facebook SVG icon here */}
+                </a>
+                {/* Instagram Icon */}
+                <a href="#" className="text-gray-500 hover:text-gray-400">
+                  <span className="sr-only">Instagram</span>
+                  {/* Add your Instagram SVG icon here */}
+                </a>
+                {/* Twitter Icon */}
+                <a href="#" className="text-gray-500 hover:text-gray-400">
+                  <span className="sr-only">Twitter</span>
+                  {/* Add your Twitter SVG icon here */}
+                </a>
+                {/* GitHub Icon */}
+                <a href="#" className="text-gray-500 hover:text-gray-400">
+                  <span className="sr-only">GitHub</span>
+                  {/* Add your GitHub SVG icon here */}
+                </a>
+                {/* YouTube Icon */}
+                <a href="#" className="text-gray-500 hover:text-gray-400">
+                  <span className="sr-only">YouTube</span>
+                  {/* Add your YouTube SVG icon here */}
+                </a>
+              </div>
+            </div>
+            <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+              <div className="md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                  <h3 className="text-sm font-semibold leading-6 text-white">Solutions</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Marketing</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Analytics</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Commerce</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Insights</a></li>
+                  </ul>
+                </div>
+                <div className="mt-10 md:mt-0">
+                  <h3 className="text-sm font-semibold leading-6 text-white">Support</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Pricing</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Documentation</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Guides</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">API Status</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div className="md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                  <h3 className="text-sm font-semibold leading-6 text-white">Company</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">About</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Blog</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Jobs</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Press</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Partners</a></li>
+                  </ul>
+                </div>
+                <div className="mt-10 md:mt-0">
+                  <h3 className="text-sm font-semibold leading-6 text-white">Legal</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Claim</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Privacy</a></li>
+                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Terms</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24">
+            <p className="text-xs leading-5 text-gray-400">© 2023 Clip.Art All rights reserved.</p>
+          </div>
+        </div>
       </footer>
     </>
   )
