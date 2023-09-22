@@ -23,7 +23,10 @@ module.exports = {
       },
       spacing: {
         '50': '50px',
-      }
+      },
+      backgroundImage: {
+        'footer-gradient': 'linear-gradient(#0d0f13, #222831, #37414f)',
+      },
     },
   },
   plugins: [],
