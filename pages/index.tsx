@@ -30,7 +30,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
   return (
     <>
       <Head>
-        <title>Next.js Conf 2022 Photos</title>
+        <title>Free Ai Generated Clip Art | Clip.Art</title>
         <meta
           property="og:image"
           content="https://nextjsconf-pics.vercel.app/og-image.png"
@@ -57,7 +57,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
                 <h1 className="text-white text-33 font-sans text-shadow backdrop-blur-[1px] p-1 max-w-[425px]">The Largest Collection <br />of Free, Ai Generated, Clip Art</h1>
                 <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
                   <form className="w-full flex items-center rounded">
-                    <input type="search" placeholder="Search for free clip art" className="h-12 w-full rounded-lg text-lg" />
+                    <input type="search"  placeholder="Search for free clip art" className="h-12 w-full rounded-lg text-lg p-[10px]" />
                   </form>
                 </div>
               </div>
