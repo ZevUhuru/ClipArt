@@ -52,12 +52,12 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
               </div>
             </header>
 
-            <div className="hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]" style={{ backgroundImage: "url('https://assets.codepen.io/9394943/laughing-santa-2.png')" }}>
+            <div className="hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]" style={{ backgroundImage: "url('https://assets.codepen.io/9394943/laughing-santa.png')" }}>
               <div className="hero-content ml-[50px]">
                 <h1 className="text-white text-33 font-sans text-shadow backdrop-blur-[1px] p-1 max-w-[425px]">The Largest Collection <br />of Free, Ai Generated, Clip Art</h1>
                 <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
                   <form className="w-full flex items-center rounded">
-                    <input type="search"  placeholder="Search for free clip art" className="h-12 w-full rounded-lg text-lg p-[10px]" />
+                    <input type="search"  placeholder="Search for free clip art" className="h-12 w-full rounded-lg text-lg p-[10px] shadow-lg hover:shadow-xl transition-shadow duration-300" />
                   </form>
                 </div>
               </div>
