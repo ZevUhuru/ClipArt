@@ -19,7 +19,9 @@ module.exports = {
         'taller-than-854': { raw: '(min-height: 854px)' },
       },
       fontSize: {
+        '30': '30px',
         '33': '33px',
+
       },
       spacing: {
         '50': '50px',
