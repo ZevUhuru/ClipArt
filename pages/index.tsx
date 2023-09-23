@@ -87,7 +87,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
         <footer className="bg-footer-gradient" aria-labelledby="footer-heading">
           <h2 id="footer-heading" className="sr-only">Footer</h2>
 
-          <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
+          <div className="mx-auto ml-[10px] px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
             <div className="xl:grid xl:grid-cols-3 xl:gap-8">
               <div className="space-y-8">
                 <img className="h-7" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="Company name" />
