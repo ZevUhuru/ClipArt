@@ -56,7 +56,7 @@ function SignupSection() {
           </form>
         </div>
         <div className="mr-auto place-self-center lg:col-span-6">
-          <img className="hidden mx-auto lg:flex" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/authentication/illustration.svg" alt="illustration" />
+          <img className="hidden mx-auto lg:flex" src="https://assets.codepen.io/9394943/cat-clipart-mixed-colored-transparent-bg.png" alt="illustration" />
         </div>
       </div>
     </section>
