@@ -12,7 +12,7 @@ import getBase64ImageUrl from '../utils/generateBlurPlaceholder'
 import type { ImageProps } from '../utils/types'
 import { useLastViewedPhoto } from '../utils/useLastViewedPhoto'
 import Header from '../components/header'
-
+import FreeTrialSection from '../components/freeTrialSection'
 
 
 const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
@@ -101,7 +101,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
           </div>
         </div>
 
-
+        <FreeTrialSection />
 
 
         <footer className="bg-footer-gradient" aria-labelledby="footer-heading">
