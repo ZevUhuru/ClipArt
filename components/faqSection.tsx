@@ -3,20 +3,20 @@ import React from 'react';
 function FAQSection() {
     const faqData = [
         {
-            question: "What do you mean by \"Figma assets\"?",
-            answer: "You will have access to download the full Figma project including all of the pages, the components, responsive pages, and also the icons, illustrations, and images included in the screens."
+            question: "What is \"Clip Art\"?",
+            answer: "Clip Art refers to pre-made images used to illustrate any medium. These images can be illustrations, photographs, or other graphical representations. They are often used in presentations, documents, and various digital media to enhance the visual appeal or convey specific ideas or themes."
         },
         {
-            question: "What does \"lifetime access\" exactly mean?",
-            answer: "Once you have purchased either the design, code, or both packages, you will have access to all of the future updates based on the roadmap, free of charge."
+            question: "Can I use Clip Art for commercial purposes?",
+            answer: "It depends on the licensing of the specific Clip Art. Some Clip Art is available for free and can be used for both personal and commercial purposes, while others may require a license or fee for commercial use. Always check the licensing terms and conditions before using any Clip Art for commercial purposes."
         },
         {
-            question: "How does support work?",
-            answer: "We're aware of the importance of well qualified support, that is why we decided that support will only be provided by the authors that actually worked on this project. Feel free to contact us and we'll help you out as soon as we can."
+            question: "How is Clip Art different from stock photos?",
+            answer: "While both Clip Art and stock photos are pre-made images used to illustrate various media, there are some differences: Clip Art: Typically consists of simple illustrations, icons, or symbols. They are often generic and can be used in a variety of contexts. Stock Photos: These are actual photographs taken by photographers. They can be more detailed and realistic compared to Clip Art."
         },
         {
-            question: "I want to build more than one project. Is that allowed?",
-            answer: "Yes, you can use the design and code for as many projects as you want. There are no restrictions on the number of projects you can build."
+            question: "Where can I find Clip Art?",
+            answer: "There are numerous online platforms and software that offer Clip Art collections. Some popular sources include Clip.Art which contains the largest collection of free Ai-generated clip art, various online Clip Art databases, and graphic design software. Always ensure that you have the right to use the Clip Art, especially if it's for commercial purposes."
         },
         // ... Add other questions similarly ...
     ];
