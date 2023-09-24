@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ImageGallery() {
+function ImageGallery({ categoryTitle }) {
     const images = [
         "https://flowbite.s3.amazonaws.com/docs/gallery/square/image.jpg",
         "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-1.jpg",
@@ -11,14 +11,14 @@ function ImageGallery() {
         "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-6.jpg",
         "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-7.jpg",
         "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-8.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-9.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-10.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-11.jpg"
+        // "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-9.jpg",
+        // "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-10.jpg",
+        // "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-11.jpg"
     ];
 
     return (
         <div className="category-clipart bg-footer-gradient pt-[50px]">
-            <h2 className="category-title w-full text-white flex justify-center text-2xl font-black">Christmas Clip Art</h2>
+            <h2 className="category-title w-full text-white flex justify-center text-2xl font-black">{`${categoryTitle} Clip Art`}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-footer-gradient p-[50px]">
                 {images.map((src, index) => (
                     <div key={index}>
