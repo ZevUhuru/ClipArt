@@ -7,14 +7,14 @@ function SignupSection() {
     <section className="bg-gray-50 dark:bg-gray-900">
       <div className="grid max-w-screen-xl px-4 py-8 mx-auto lg:gap-20 lg:py-16 lg:grid-cols-12">
         <div className="w-full p-6 mx-auto bg-white rounded-lg shadow dark:bg-gray-800 sm:max-w-xl lg:col-span-6 sm:p-8">
-          <a href="#" className="inline-flex items-center mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            <img className="w-8 h-8 mr-2" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="logo" />
-          </a>
+          <Link href="/" className="inline-flex items-center mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+            <img className=" h-8 mr-2" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="logo" />
+          </Link>
           <h1 className="mb-2 text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
             Create your Account
           </h1>
           <p className="text-sm font-light text-gray-500 dark:text-gray-300">
-            Start your website in seconds. Already have an account? <Link href="/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</Link>.
+            Access 1,000s of Ai-Generated Clip Art. Already have an account? <Link href="/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</Link>.
           </p>
           <form className="mt-4 space-y-6 sm:mt-6" action="#">
             <div className="grid gap-6 sm:grid-cols-2">

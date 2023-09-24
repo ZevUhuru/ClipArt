@@ -10,9 +10,9 @@ function FlowBiteComponent() {
             <div className="grid max-w-screen-xl px-4 py-8 mx-auto lg:gap-20 lg:py-16 lg:grid-cols-12">
                 <div className="w-full place-self-center lg:col-span-6">
                     <div className="p-6 mx-auto bg-white rounded-lg shadow dark:bg-gray-800 sm:max-w-xl sm:p-8">
-                        <a href="#" className="inline-flex items-center mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                            <img className="w-8 h-8 mr-2" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="logo" />
-                        </a>
+                        <Link href="/" className="inline-flex items-center mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                            <img className="h-8 mr-2" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="logo" />
+                        </Link>
                         <h1 className="mb-2 text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
                             Welcome back
                         </h1>
