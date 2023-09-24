@@ -2,18 +2,12 @@ import React from 'react';
 
 function ImageGallery({ categoryTitle }) {
     const images = [
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-1.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-2.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-3.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-4.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-5.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-6.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-7.jpg",
-        "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-8.jpg",
-        // "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-9.jpg",
-        // "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-10.jpg",
-        // "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-11.jpg"
+        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
     ];
 
     return (
@@ -22,7 +16,7 @@ function ImageGallery({ categoryTitle }) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-footer-gradient p-[50px]">
                 {images.map((src, index) => (
                     <div key={index}>
-                        <img className="h-auto max-w-full rounded-lg" src={src} alt={`Gallery Image ${index}`} />
+                        <img className="h-full max-w-full rounded-lg" src={src} alt={`Gallery Image ${index}`} />
                     </div>
                 ))}
             </div>
