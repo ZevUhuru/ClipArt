@@ -11,7 +11,7 @@ import cloudinary from '../utils/cloudinary'
 import getBase64ImageUrl from '../utils/generateBlurPlaceholder'
 import type { ImageProps } from '../utils/types'
 import { useLastViewedPhoto } from '../utils/useLastViewedPhoto'
-import Navbar from '../components/navbar'
+import Header from '../components/header'
 
 
 
@@ -48,55 +48,22 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
       <main className="mx-auto w-full ">
         <div className=" w-full ">
           <div className="header-container">
-
-            {/* <header className="flex justify-start h-[60px] px-50 bg-white">
+{/* 
+            <header className="flex justify-start h-[60px] px-50 bg-white">
               <div className="logo-container max-w-[100px]">
+              <Link href="/">
                 <img src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="Logo" className="w-full h-full" />
+              </Link>
               </div>
             </header> */}
+
+
+
+            <Header />
             
-            <header className="bg-white">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
-        <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
-            <span className="sr-only">Your Company</span>
-            <img className="h-8 w-auto" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="" />
-          </a>
-        </div>
-        <div className="flex lg:hidden">
-          <button type="button" className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700">
-            <span className="sr-only">Open main menu</span>
-            {/* SVG for the menu icon */}
-          </button>
-        </div>
-        <div className="hidden lg:flex lg:gap-x-12">
-          <div className="relative">
-            <button type="button" className="flex items-center gap-x-1 text-sm font-semibold leading-6 text-gray-900" aria-expanded="false">
-              Product
-              {/* SVG for the dropdown arrow */}
-            </button>
-            <div className="absolute -left-8 top-full z-10 mt-3 w-screen max-w-md overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-gray-900/5">
-              {/* ... rest of the dropdown content */}
-            </div>
-          </div>
-          <a href="#" className="text-sm font-semibold leading-6 text-gray-900">Features</a>
-          <a href="#" className="text-sm font-semibold leading-6 text-gray-900">Marketplace</a>
-          <a href="#" className="text-sm font-semibold leading-6 text-gray-900">Company</a>
-        </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="#" className="text-sm font-semibold leading-6 text-gray-900">Log in <span aria-hidden="true">&rarr;</span></a>
-        </div>
-      </nav>
-      <div className="lg:hidden" role="dialog" aria-modal="true">
-        <div className="fixed inset-0 z-10"></div>
-        <div className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-          {/* ... rest of the mobile menu content */}
-        </div>
-      </div>
-    </header>
             <div className="hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]" style={{ backgroundImage: "url('https://assets.codepen.io/9394943/laughing-santa-2.png')" }}>
               <div className="hero-content ml-[50px]">
-              {/* backdrop-blur-[1px] */}
+                {/* backdrop-blur-[1px] */}
                 <h1 className="text-white text-30 font-semibold font-sans text-shadow  p-1 max-w-[425px]">The Largest Collection <br />of Ai Generated Clip Art</h1>
                 <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
                   {/* <form className="w-full flex items-center rounded">
@@ -106,7 +73,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
                       className="h-12 w-full rounded-lg text-lg p-[10px] bg-white border border-gray-300 shadow-2xl hover:shadow-3xl focus:outline-none focus:border-gray-400 focus:shadow-outline transition-shadow duration-300"
                     />
                   </form> */}
-                  
+
 
                   <form className="w-full flex items-center rounded">
                     <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
@@ -116,17 +83,17 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
                           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                         </svg>
                       </div>
-                      <input 
-                        type="search" 
-                        id="default-search" 
-                        className="block w-full h-12 p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shadow-2xl hover:shadow-3xl focus:outline-none focus:shadow-outline transition-shadow duration-300" 
-                        placeholder="Search for free clip art" 
-                        required 
+                      <input
+                        type="search"
+                        id="default-search"
+                        className="block w-full h-12 p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shadow-2xl hover:shadow-3xl focus:outline-none focus:shadow-outline transition-shadow duration-300"
+                        placeholder="Search for free clip art"
+                        required
                       />
                       <button type="submit" className="h-[40px] top-[4px] text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
                     </div>
                   </form>
-                  
+
                 </div>
               </div>
 
