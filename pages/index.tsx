@@ -17,6 +17,33 @@ import FAQSection from '../components/faqSection'
 import ImageGallery from '../components/imageGallery'
 import Footer from '../components/footer'
 
+const defaultImages = [
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+];
+
+const foodImages = [
+  "https://assets.codepen.io/9394943/pecan-pie-illustration.png",
+  "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png",
+  "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+]
+
+const christmasImages = [
+  "https://assets.codepen.io/9394943/sitting-santa-illustration.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+]
+
 
 const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
   const router = useRouter()
@@ -103,14 +130,14 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
             </div>
           </div>
         </div>
-        <ImageGallery categoryTitle={"Food"}/>
+        <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <FreeTrialSection />
-        <ImageGallery categoryTitle={"Christmas"} />
+        <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
         <FreeTrialSection />
-        <ImageGallery categoryTitle={"Halloween"} />
-        <ImageGallery categoryTitle={"Birthday"} />
+        <ImageGallery categoryTitle={"Halloween"} images={defaultImages} />
+        <ImageGallery categoryTitle={"Birthday"} images={defaultImages}/>
         <FreeTrialSection />
-        <ImageGallery categoryTitle={"Cat"} />
+        <ImageGallery categoryTitle={"Cat"} images={defaultImages} />
 
 
         

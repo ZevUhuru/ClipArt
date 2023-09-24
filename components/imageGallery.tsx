@@ -1,15 +1,6 @@
 import React from 'react';
 
-function ImageGallery({ categoryTitle }) {
-    const images = [
-        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-        "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-    ];
-
+function ImageGallery({ categoryTitle, images = [] }) {
     return (
         <div className="category-clipart bg-footer-gradient pt-[50px]">
             <h2 className="category-title w-full text-white flex justify-center text-2xl font-black">{`${categoryTitle} Clip Art`}</h2>
