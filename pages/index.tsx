@@ -54,31 +54,41 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
 
             <div className="hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]" style={{ backgroundImage: "url('https://assets.codepen.io/9394943/laughing-santa-2.png')" }}>
               <div className="hero-content ml-[50px]">
-                <h1 className="text-white text-30 font-semibold font-sans text-shadow backdrop-blur-[1px] p-1 max-w-[425px]">The Largest Collection <br />of Free, Ai Generated, Clip Art</h1>
+                <h1 className="text-white text-30 font-semibold font-sans text-shadow backdrop-blur-[1px] p-1 max-w-[425px]">The Largest Collection <br />of Ai Generated Clip Art</h1>
                 <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
-                  <form className="w-full flex items-center rounded">
-                    {/* <input type="search" placeholder="Search for free clip art" className="h-12 w-full rounded-lg text-lg p-[10px] shadow-lg hover:shadow-xl transition-shadow duration-300" /> */}
+                  {/* <form className="w-full flex items-center rounded">
                     <input
                       type="search"
                       placeholder="Search for free clip art"
                       className="h-12 w-full rounded-lg text-lg p-[10px] bg-white border border-gray-300 shadow-2xl hover:shadow-3xl focus:outline-none focus:border-gray-400 focus:shadow-outline transition-shadow duration-300"
                     />
+                  </form> */}
+                  
+
+                  <form className="w-full flex items-center rounded">
+                    <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
+                    <div className="relative w-full">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                        </svg>
+                      </div>
+                      <input 
+                        type="search" 
+                        id="default-search" 
+                        className="block w-full h-12 p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shadow-2xl hover:shadow-3xl focus:outline-none focus:shadow-outline transition-shadow duration-300" 
+                        placeholder="Search for free clip art" 
+                        required 
+                      />
+                      <button type="submit" className="h-[40px] top-[4px] text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
+                    </div>
                   </form>
+                  
                 </div>
               </div>
 
             </div>
           </div>
-          {/* <div className="body bg-footer-gradient">
-            <div>
-              <h2 className="font-sans">Featured</h2>
-              <ul className="list-none m-0 p-0">
-                <li>
-                  <div className="w-72 h-36 bg-black rounded-lg"></div>
-                </li>
-              </ul>
-            </div>
-          </div> */}
         </div>
 
 
@@ -92,7 +102,9 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
               <div className="space-y-8">
                 <img className="h-7" src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="Company name" />
 
+                {/* <h3 className="text-lg leading-6 text-gray-300 ">The largest collection of free, ai-generated, clip art.</h3> */}
                 <h3 className="text-lg leading-6 text-gray-300 ">The largest collection of free, ai-generated, clip art.</h3>
+
                 <div className="flex items-center space-x-6">
                   {/* Facebook Icon */}
                   <a href="https://fb.com/clipdotart" target="_blank" className="text-gray-500 hover:text-gray-400">
@@ -119,48 +131,6 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
                   </a>
                 </div>
               </div>
-              {/* <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-              <div className="md:grid md:grid-cols-2 md:gap-8">
-                <div>
-                  <h3 className="text-sm font-semibold leading-6 text-white">Solutions</h3>
-                  <ul role="list" className="mt-6 space-y-4">
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Marketing</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Analytics</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Commerce</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Insights</a></li>
-                  </ul>
-                </div>
-                <div className="mt-10 md:mt-0">
-                  <h3 className="text-sm font-semibold leading-6 text-white">Support</h3>
-                  <ul role="list" className="mt-6 space-y-4">
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Pricing</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Documentation</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Guides</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">API Status</a></li>
-                  </ul>
-                </div>
-              </div>
-              <div className="md:grid md:grid-cols-2 md:gap-8">
-                <div>
-                  <h3 className="text-sm font-semibold leading-6 text-white">Company</h3>
-                  <ul role="list" className="mt-6 space-y-4">
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">About</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Blog</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Jobs</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Press</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Partners</a></li>
-                  </ul>
-                </div>
-                <div className="mt-10 md:mt-0">
-                  <h3 className="text-sm font-semibold leading-6 text-white">Legal</h3>
-                  <ul role="list" className="mt-6 space-y-4">
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Claim</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Privacy</a></li>
-                    <li><a href="#" className="text-sm leading-6 text-gray-300 hover:text-white">Terms</a></li>
-                  </ul>
-                </div>
-              </div>
-            </div> */}
             </div>
             <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24">
               <p className="text-xs leading-5 text-gray-400">© 2023 Clip.Art All rights reserved.</p>
