@@ -18,30 +18,32 @@ import ImageGallery from '../components/imageGallery'
 import Footer from '../components/footer'
 
 const defaultImages = [
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4' },
+  { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4' },
+  { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4' },
+  { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4'},
+  { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4'},
+  { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", },
 ];
 
 const foodImages = [
-  "https://assets.codepen.io/9394943/pecan-pie-illustration.png",
-  "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png",
-  "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png",
-  "https://assets.codepen.io/9394943/produce-basket-illustration-white-bg.png",
-  "https://assets.codepen.io/9394943/thanksgiving-illustration-1-white-bg.png",
-  "https://assets.codepen.io/9394943/pancake-illustration-1-white-bg.png",
+  { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
+  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png" },
+  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png" },
+  { src: "https://assets.codepen.io/9394943/produce-basket-illustration-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/thanksgiving-illustration-1-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/pancake-illustration-1-white-bg.png" },
 ]
 
 const christmasImages = [
-  "https://assets.codepen.io/9394943/sitting-santa-illustration.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  { src: "https://assets.codepen.io/9394943/sitting-santa-illustration.png" },
+  { src: "https://assets.codepen.io/9394943/santa-house-glass-ball-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/life-like-santa-illustration-1-wbg.png" },
+  
+  { src: "https://assets.codepen.io/9394943/christmas-tree-presents-wbg.png",  aspectRatio:  '7:4' },
+  { src: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png", aspectRatio:  '7:4'},
+  { src: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png", aspectRatio:  '7:4' },
+
 ]
 
 
