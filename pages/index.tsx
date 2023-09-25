@@ -37,10 +37,14 @@ const foodImages = [
 
 const christmasImages = [
   { src: "https://assets.codepen.io/9394943/sitting-santa-illustration.png" },
-  { src: "https://assets.codepen.io/9394943/santa-house-glass-ball-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/reindeer-clipart-white-bg.png" },
+
+  // { src: "https://assets.codepen.io/9394943/santa-house-glass-ball-white-bg.png" },
   { src: "https://assets.codepen.io/9394943/life-like-santa-illustration-1-wbg.png" },
+  // { src: "https://assets.codepen.io/9394943/reindeer-clipart-white-bg.png" },
   
-  { src: "https://assets.codepen.io/9394943/christmas-tree-presents-wbg.png",  aspectRatio:  '7:4' },
+
+  { src: "https://assets.codepen.io/9394943/smiling-elves-christmas-clip-art-white-background.png",  aspectRatio:  '7:4' },
   { src: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png", aspectRatio:  '7:4'},
   { src: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png", aspectRatio:  '7:4' },
 
