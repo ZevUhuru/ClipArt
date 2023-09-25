@@ -50,6 +50,21 @@ const christmasImages = [
 
 ]
 
+const halloweenImages = [
+  { src: "https://assets.codepen.io/9394943/witch-pencil-style-clip-art-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/african-witch-with-broomstick-white-bg.png" },
+
+  // { src: "https://assets.codepen.io/9394943/santa-house-glass-ball-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/two-halloween-clip-art-pumpkins-white-bg.png" },
+  // { src: "https://assets.codepen.io/9394943/reindeer-clipart-white-bg.png" },
+  
+
+  { src: "https://assets.codepen.io/9394943/halloween-clip-art-ghost-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/halloween-clipart-voodoo-dollas-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/halloween-clipart-ghost-pumpkin-white-bg.png" },
+
+]
+
 
 const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
   const router = useRouter()
@@ -140,8 +155,8 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
         <FreeTrialSection />
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
         <FreeTrialSection />
-        <ImageGallery categoryTitle={"Halloween"} images={defaultImages} />
-        <ImageGallery categoryTitle={"Birthday"} images={defaultImages}/>
+        <ImageGallery categoryTitle={"Halloween"} images={halloweenImages} />
+        <ImageGallery categoryTitle={"Happy Birthday"} images={defaultImages}/>
         <FreeTrialSection />
         <ImageGallery categoryTitle={"Cat"} images={defaultImages} />
 
