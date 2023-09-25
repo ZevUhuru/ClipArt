@@ -30,9 +30,9 @@ const foodImages = [
   "https://assets.codepen.io/9394943/pecan-pie-illustration.png",
   "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png",
   "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
-  "https://assets.codepen.io/9394943/watermark-clipart-cat.png",
+  "https://assets.codepen.io/9394943/produce-basket-illustration-white-bg.png",
+  "https://assets.codepen.io/9394943/thanksgiving-illustration-1-white-bg.png",
+  "https://assets.codepen.io/9394943/pancake-illustration-1-white-bg.png",
 ]
 
 const christmasImages = [
