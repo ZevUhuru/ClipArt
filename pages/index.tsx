@@ -26,6 +26,9 @@ const defaultImages = [
   { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", },
 ];
 
+
+
+
 const foodImages = [
   { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
   { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png" },
@@ -63,6 +66,27 @@ const halloweenImages = [
   { src: "https://assets.codepen.io/9394943/halloween-clipart-voodoo-dollas-white-bg.png" },
   { src: "https://assets.codepen.io/9394943/halloween-clipart-ghost-pumpkin-white-bg.png" },
 
+]
+
+
+const flowerImages = [
+  { src: "https://assets.codepen.io/9394943/white-rose-woman-hair-flower-clipart.png" },
+  { src: "https://assets.codepen.io/9394943/young-girl-holding-flowers-clipart-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/colorful-roses-flower-clipart.png" },
+  { src: "https://assets.codepen.io/9394943/pink-rose-flower-clipart-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/bride-holding-flowers-clipart-white-bg.png" },
+
+  { src: "https://assets.codepen.io/9394943/single-smiling-sunflower-emoji-flower-clipart.png" },
+
+]
+
+const catImages = [
+  { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
+  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png" },
+  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png" },
+  { src: "https://assets.codepen.io/9394943/produce-basket-illustration-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/thanksgiving-illustration-1-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/pancake-illustration-1-white-bg.png" },
 ]
 
 
@@ -156,9 +180,9 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
         <FreeTrialSection />
         <ImageGallery categoryTitle={"Halloween"} images={halloweenImages} />
-        <ImageGallery categoryTitle={"Happy Birthday"} images={defaultImages}/>
+        <ImageGallery categoryTitle={"Flower"} images={flowerImages}/>
         <FreeTrialSection />
-        <ImageGallery categoryTitle={"Cat"} images={defaultImages} />
+        <ImageGallery categoryTitle={"Cat"} images={catImages} />
 
 
         

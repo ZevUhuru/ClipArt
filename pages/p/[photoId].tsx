@@ -17,7 +17,7 @@ const Home: NextPage = ({ currentPhoto }: { currentPhoto: ImageProps }) => {
   return (
     <>
       <Head>
-        <title>Next.js Conf 2022 Photos</title>
+        <title>Clip.Art | The Larget Collection of Ai Generated Clip Art</title>
         <meta property="og:image" content={currentPhotoUrl} />
         <meta name="twitter:image" content={currentPhotoUrl} />
       </Head>
