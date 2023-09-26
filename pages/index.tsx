@@ -71,22 +71,22 @@ const halloweenImages = [
 
 const flowerImages = [
   { src: "https://assets.codepen.io/9394943/white-rose-woman-hair-flower-clipart.png" },
-  { src: "https://assets.codepen.io/9394943/young-girl-holding-flowers-clipart-white-bg.png" },
   { src: "https://assets.codepen.io/9394943/colorful-roses-flower-clipart.png" },
+  { src: "https://assets.codepen.io/9394943/young-girl-holding-flowers-clipart-white-bg.png" }, 
   { src: "https://assets.codepen.io/9394943/pink-rose-flower-clipart-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/bride-holding-flowers-clipart-white-bg.png" },
-
+  { src: "https://assets.codepen.io/9394943/hawaiian-biscus-flower-clip-art.png" },
   { src: "https://assets.codepen.io/9394943/single-smiling-sunflower-emoji-flower-clipart.png" },
 
 ]
 
 const catImages = [
-  { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
-  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png" },
-  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png" },
-  { src: "https://assets.codepen.io/9394943/produce-basket-illustration-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/thanksgiving-illustration-1-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/pancake-illustration-1-white-bg.png" },
+  { src: "https://assets.codepen.io/9394943/two-kittens-playing-with-golf-balls-in-paint-clip-art.png" },
+  { src: "https://assets.codepen.io/9394943/cute-kittens-holding-golf-clubs-clip-art.png" },
+  { src: "https://assets.codepen.io/9394943/kitten-holding-dumbbell-cat-clip-art.png" },
+
+  { src: "https://assets.codepen.io/9394943/cats-laying-in-fruit-basket-clip-art.png" },
+  { src: "https://assets.codepen.io/9394943/cute-himalayan-kittens-playing-with-golf-balls-clip-art.png" },
+  { src: "https://assets.codepen.io/9394943/cute-cats-cuddling-clip-art.png" },
 ]
 
 
