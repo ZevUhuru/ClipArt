@@ -111,28 +111,17 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
         <title>Free Ai Generated Clip Art | Clip.Art</title>
         <meta
           property="og:image"
-          content="https://nextjsconf-pics.vercel.app/og-image.png"
+          content="https://assets.codepen.io/9394943/clip-art-logo-cover.pngg"
         />
         <meta
           name="twitter:image"
-          content="https://nextjsconf-pics.vercel.app/og-image.png"
+          content="https://assets.codepen.io/9394943/clip-art-logo-cover.png"
         />
       </Head>
-      {/* <main className="mx-auto max-w-[1960px] w-full"> */}
 
       <main className="mx-auto w-full ">
         <div className=" w-full ">
           <div className="header-container">
-{/* 
-            <header className="flex justify-start h-[60px] px-50 bg-white">
-              <div className="logo-container max-w-[100px]">
-              <Link href="/">
-                <img src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" alt="Logo" className="w-full h-full" />
-              </Link>
-              </div>
-            </header> */}
-
-
 
             <Header />
             
