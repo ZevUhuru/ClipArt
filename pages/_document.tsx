@@ -6,6 +6,11 @@ class MyDocument extends Document {
       <Html lang="en">
         <Head>
           <link rel="icon" href="/favicon.ico" />
+          <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://unpkg.com/flowbite-typography@1.0.3/dist/typography.min.css"
+          />
           <meta
             name="description"
             content="The Largest Collection of Ai Generated Clip Art"
