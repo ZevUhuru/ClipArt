@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from '../components/header';
 import Main from '../components/Page/Blog/main';
-import Sidebar from '../components/Page/Blog/sidebar';
+import Sidebar from '../components/Page/Blog/relatedArticles';
 import Footer from '../components/footer';
 import Newsletter from '../components/Page/Blog/newsletter';
 

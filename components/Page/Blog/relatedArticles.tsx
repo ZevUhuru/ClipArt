@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Sidebar = () => {
+const RelatedArticlesSection = () => {
     return (
         <aside aria-label="Related articles" className="py-8 lg:py-24 bg-white dark:bg-gray-900">
         <div className="px-4 mx-auto max-w-screen-xl">
@@ -68,4 +68,4 @@ const Sidebar = () => {
     )
 }
 
-export default Sidebar
+export default RelatedArticlesSection
