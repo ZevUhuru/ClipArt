@@ -3,7 +3,7 @@ import React from 'react';
 
 const Newsletter = () => {
     return (
-        <div id="newsletter-modal" tabIndex="-1" className="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full">
+        <div id="newsletter-modal" tabIndex={-1} className="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full">
 <div className="relative p-4 w-full max-w-2xl h-full rounded-lg md:h-auto">
     <div className="flex relative items-center bg-white rounded-lg shadow dark:bg-gray-800">
         <img src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/newsletter/people-at-office.png" className="hidden h-64 rounded-l-lg md:flex" alt="office" />

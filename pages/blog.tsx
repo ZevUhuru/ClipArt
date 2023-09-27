@@ -10,7 +10,7 @@ const BlogPage = () => {
         <>
             <Header />
            <Main />
-           <Sidebar />
+           {/* <Sidebar /> */}
             <section className="bg-gray-50 dark:bg-gray-800">
                 <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
                     <div className="mx-auto max-w-screen-md sm:text-center">
