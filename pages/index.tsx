@@ -108,7 +108,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
   return (
     <>
       <Head>
-        <title>Free Ai Generated Clip Art | Clip.Art</title>
+        <title>Free Clip Art - Ai Generated with Modern Themes and Designs</title>
         <meta
           property="og:image"
           content="https://assets.codepen.io/9394943/clip-art-logo-cover.pngg"
