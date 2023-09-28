@@ -16,6 +16,8 @@ import FreeTrialSection from 'src/components/freeTrialSection'
 import FAQSection from 'src/components/faqSection'
 import ImageGallery from 'src/components/imageGallery'
 import Footer from 'src/components/footer'
+import SearchComponent from 'src/components/Search'
+
 
 const defaultImages = [
   { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4' },
@@ -123,7 +125,8 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
         <div className=" w-full ">
           <div className="header-container">
 
-            <Header />
+            {/* <Header /> */}
+            <SearchComponent />
             
             <div className="hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]" style={{ backgroundImage: "url('https://assets.codepen.io/9394943/laughing-santa-2.png')" }}>
               <div className="hero-content ml-[50px]">
