@@ -36,9 +36,7 @@ const MainSidebar = () => {
                     <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Get all the stories you need-to-know from the most powerful name in news delivered first thing every morning to your inbox</p>
                     <button type="button" data-modal-toggle="newsletter-modal" className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800 text-center w-full">Subscribe</button>
                 </div>
-            </div>
-               
-            <div className="mb-12">
+                <div className="mb-12">
                 <h4 className="mb-4 text-sm font-bold text-gray-900 dark:text-white uppercase">Latest news</h4>
                 {newsItems.map((item, index) => (
                     <div key={index} className="mb-6 flex items-center">
@@ -61,7 +59,10 @@ const MainSidebar = () => {
                     </a>
                     <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Students and Teachers, save up to 60% on Flowbite Creative Cloud.</p>
                     <p className="text-xs text-gray-400 uppercase dark:text-gray-500">Ads placeholder</p>
-                </div>
+            </div>
+            </div>
+               
+
         </aside>
     );
 }
