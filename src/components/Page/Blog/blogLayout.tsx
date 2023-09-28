@@ -4,27 +4,27 @@ import Link from "next/link";
 const articles = [
     {
         title: "How to Generate Royalty Free Christmas Clip Art Using Ai",
-        image: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png",
+        image: "https://assets.codepen.io/9394943/santa-clipart.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "2 minutes",
         url: "/learn/how-to-generate-royalty-free-christmas-clip-art-using-ai"
     },
     {
         title: "How to Generate Royalty Free Flowers Clip Art Using Ai",
-        image: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png",
+        image: "https://assets.codepen.io/9394943/smiling-elves-christmas-clip-art-white-background.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "12 minutes",
         url: "/learn/how-to-generate-royalty-free-christmas-clip-art-using-ai"
     },
     {
-        title: "We partnered up with Google",
+        title: "How to Generate Royalty Free Christmas Clip Art Using Ai",
         image: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "8 minutes",
         url: "/learn/how-to-generate-royalty-free-christmas-clip-art-using-ai"
     },
     {
-        title: "Our first project with React",
+        title: "How to Generate Royalty Free Christmas Clip Art Using Ai",
         image: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "12 minutes",
