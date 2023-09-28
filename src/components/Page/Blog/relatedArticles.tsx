@@ -4,25 +4,25 @@ import React from 'react'
 const articles = [
     {
         title: "Our first office",
-        image: "https://flowbite.s3.amazonaws.com/blocks/marketing-ui/article/blog-1.png",
+        image: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "2 minutes"
     },
     {
         title: "Enterprise design tips",
-        image: "https://flowbite.s3.amazonaws.com/blocks/marketing-ui/article/blog-2.png",
+        image: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "12 minutes"
     },
     {
         title: "We partnered up with Google",
-        image: "https://flowbite.s3.amazonaws.com/blocks/marketing-ui/article/blog-3.png",
+        image: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "8 minutes"
     },
     {
         title: "Our first project with React",
-        image: "https://flowbite.s3.amazonaws.com/blocks/marketing-ui/article/blog-4.png",
+        image: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png",
         description: "Over the past year, Volosoft has undergone many changes! After months of preparation.",
         readTime: "12 minutes"
     }
