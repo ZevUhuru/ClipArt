@@ -1,7 +1,5 @@
 import type { AppProps } from 'next/app'
-import '../styles/index.css'
-// import 'flowbite/dist/css/flowbite.min.css';
-// import 'flowbite/dist/js/flowbite.min.js';
+import 'src/styles/index.css'
 
 
 export default function MyApp({ Component, pageProps }: AppProps) {

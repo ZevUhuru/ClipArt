@@ -1,7 +1,7 @@
 import React from 'react';
-import Navbar from '../components/Page/Search/navbar';
-import Sidebar from '../components/Page/Search/sidebar';
-import Main from '../components/Page/Search/main';
+import Navbar from 'src/components/Page/Search/navbar';
+import Sidebar from 'src/components/Page/Search/sidebar';
+import Main from 'src/components/Page/Search/main';
 
 const SearchPage = () => {
     return (

@@ -1,9 +1,10 @@
 import React from 'react';
-import Header from '../components/header';
-import Main from '../components/Page/Blog/main';
-import Sidebar from '../components/Page/Blog/relatedArticles';
-import Footer from '../components/footer';
-import Newsletter from '../components/Page/Blog/newsletter';
+import Header from 'src/components/header';
+import Main from 'src/components/Page/Blog/main';
+import Sidebar from 'src/components/Page/Blog/relatedArticles';
+import Footer from 'src/components/footer';
+import Newsletter from 'src/components/Page/Blog/newsletter';
+
 
 const BlogPage = () => {
     return (
