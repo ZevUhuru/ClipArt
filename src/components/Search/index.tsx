@@ -28,10 +28,10 @@ const SearchComponent = () => {
         <header>
             <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
                 <div className="grid grid-cols-3 items-center mx-auto max-w-screen-xl">
-                    <a href="https://flowbite.com" className="flex items-center lg:justify-center lg:order-2">
+                    <Link href="/" className="flex items-center lg:justify-center lg:order-2">
                         <img src="https://assets.codepen.io/9394943/color-logo-no-bg.svg" className="mr-3 h-6 sm:h-9" alt="Flowbite Logo" />
                         {/* <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Flowbite</span> */}
-                    </a>
+                    </Link>
 
                     <div className="flex col-span-2 justify-end items-center lg:order-3 lg:col-span-1">
                         <a href="#" className="text-gray-800 dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2 lg:px-5 lg:py-2.5 mr-2 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800">Login</a>
