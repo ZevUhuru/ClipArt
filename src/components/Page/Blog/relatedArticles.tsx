@@ -36,11 +36,11 @@ const RelatedArticlesSection = () => {
                 <h2 className="mb-6 lg:mb-8 text-2xl font-bold text-gray-900 dark:text-white">Related articles</h2>
                 <div className="grid gap-6 lg:gap-12 md:grid-cols-2">
                     {articles.map((article, index) => (
-                        <article key={index} className="flex flex-col xl:flex-row">
+                        <article key={index} className="flex flex-col items-center sm:items-start xl:flex-row">
                             <a href="#" className="mb-2 xl:mb-0">
                                 <img src={article.image} className="mr-5 max-w-sm" alt={`Image ${index + 1}`} />
                             </a>
-                            <div className="flex flex-col justify-center">
+                            <div className="flex flex-col justify-center items-center sm:items-start">
                                 <h2 className="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
                                     <a href="#">{article.title}</a>
                                 </h2>
