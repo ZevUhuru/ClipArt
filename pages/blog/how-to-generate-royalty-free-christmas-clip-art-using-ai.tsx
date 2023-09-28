@@ -1,5 +1,6 @@
 import React from 'react';
-import Header from 'src/components/header';
+// import Header from 'src/components/header';
+import Header from 'src/components/Page/Search/navbar';
 import Main from 'src/components/Page/Blog/main';
 import Sidebar from 'src/components/Page/Blog/relatedArticles';
 import Footer from 'src/components/footer';
@@ -11,7 +12,7 @@ const BlogPage = () => {
         <>
             <Header />
            <Main />
-           {/* <Sidebar /> */}
+           <Sidebar />
             <section className="bg-gray-50 dark:bg-gray-800">
                 <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
                     <div className="mx-auto max-w-screen-md sm:text-center">
