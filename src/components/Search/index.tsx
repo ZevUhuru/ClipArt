@@ -125,32 +125,7 @@ const SearchComponent = () => {
                                             </li>
                                         </ul>
                                     </div>
-                                    <div className="py-5 px-5 bg-gray-50 lg:rounded-lg lg:col-span-1 dark:bg-gray-700">
-                                        <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Browse categories</h3>
-                                        <ul className="space-y-4 text-sm text-gray-500 dark:text-gray-400">
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Animation</a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Branding</a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Illustration</a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Mobile</a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Print</a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Product Design</a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Web Design</a>
-                                            </li>
-                                        </ul>
-                                    </div>
+                  
                                 </div>
                             </li>
                             {/* <li>
@@ -235,7 +210,7 @@ const SearchComponent = () => {
                                         </ul>
                                     </div>
                                     <div className="py-5 px-5 bg-gray-50 lg:rounded-lg lg:col-span-1 dark:bg-gray-700">
-                                        <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Browse categories</h3>
+                                        <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Browse designs</h3>
                                         <ul className="space-y-4 text-sm text-gray-500 dark:text-gray-400">
                                             <li>
                                                 <a href="#" className="hover:text-primary-600 dark:hover:text-primary-500">Animation</a>
