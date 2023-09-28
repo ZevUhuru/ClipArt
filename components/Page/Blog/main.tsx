@@ -5,12 +5,12 @@ import MainSidebar from "./mainSidebar";
 const MainSection = () => {
     return (
         <main className="pb-16 lg:pb-24 bg-white dark:bg-gray-900 antialiased">
-            <header className="bg-[url('https://flowbite.s3.amazonaws.com/blocks/marketing-ui/articles/background.png')] w-full h-[460px] xl:h-[537px] bg-no-repeat bg-cover bg-center bg-blend-darken relative">
+            <header className="bg-[url('https://assets.codepen.io/9394943/smiling-elves-christmas-clip-art-white-background.png')] w-full h-[460px] xl:h-[537px] bg-no-repeat bg-cover bg-center bg-blend-darken relative">
                 <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50"></div>
                 <div className="absolute top-20 left-1/2 px-4 mx-auto w-full max-w-screen-xl -translate-x-1/2 xl:top-1/2 xl:-translate-y-1/2 xl:px-0">
-                    <span className="block mb-4 text-gray-300">Published in <a href="#" className="font-semibold text-white hover:underline">World News</a></span>
-                    <h1 className="mb-4 max-w-4xl text-2xl font-extrabold leading-none text-white sm:text-3xl lg:text-4xl">Flowbite Blocks Tutorial - Learn how to get started with custom sections using the Flowbite Blocks</h1>
-                    <p className="text-lg font-normal text-gray-300">Before going digital, you might scribbling down some ideas in a sketchbook.</p>
+                    <span className="block mb-4 text-gray-300">Published in <a href="#" className="font-semibold text-white hover:underline">Ai Art Tutorials</a></span>
+                    <h1 className="mb-4 max-w-4xl text-2xl font-extrabold leading-none text-white sm:text-3xl lg:text-4xl">How to Generate Royalty Free Christmas Clip Art using Ai</h1>
+                    {/* <p className="text-lg font-normal text-gray-300">Before going digital, you might scribbling down some ideas in a sketchbook.</p> */}
                 </div>
             </header>
             <div className="flex relative z-20 justify-between p-6 -m-36 mx-4 max-w-screen-xl bg-white dark:bg-gray-800 rounded xl:-m-32 xl:p-9 xl:mx-auto">
@@ -107,7 +107,7 @@ const MainSection = () => {
                         Flowbite</a>. It comes with the most commonly used UI components, such as buttons, navigation
                         bars, cards, form elements, and more which are conveniently built with the utility classNamees from
                         Tailwind CSS.</p>
-                    <figure><img src="https://flowbite.s3.amazonaws.com/typography-plugin/typography-image-1.png" alt="" className="mx-auto" />
+                    <figure><img src="https://assets.codepen.io/9394943/life-like-santa-illustration-1-wbg.png" alt="" className="mx-auto" />
                         <figcaption>Digital art by Anonymous</figcaption>
                     </figure>
                     <h2>Getting started with Flowbite</h2>
@@ -149,22 +149,8 @@ const MainSection = () => {
                     <p>A typeface is a collection of letters. While each letter is unique, certain shapes are shared across
                         letters. A typeface represents shared patterns across a collection of letters.</p>
                     <h4>Baseline</h4>
-                    <p>A typeface is a collection of letters. While each letter is unique, certain shapes are shared across
-                        letters. A typeface represents shared patterns across a collection of letters.</p>
-                    <h4>Measurement from the baseline</h4>
-                    <p>A typeface is a collection of letters. While each letter is unique, certain shapes are shared across
-                        letters. A typeface represents shared patterns across a collection of letters.</p>
-                    <h3>Type classNameification</h3>
-                    <h4>Serif</h4>
-                    <p>A serif is a small shape or projection that appears at the beginning or end of a stroke on a letter.
-                        Typefaces with serifs are called serif typefaces. Serif fonts are classNameified as one of the
-                        following:</p>
-                    <h4>Old-Style serifs</h4>
-                    <ul>
-                        <li>Low contrast between thick and thin strokes</li>
-                        <li>Diagonal stress in the strokes</li>
-                        <li>Slanted serifs on lower-case ascenders</li>
-                    </ul><img src="https://flowbite.s3.amazonaws.com/typography-plugin/typography-image-2.png" alt="" />
+           
+                    <img src="https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png" alt="" />
                     <ol>
                         <li>Low contrast between thick and thin strokes</li>
                         <li>Diagonal stress in the strokes</li>
