@@ -4,7 +4,7 @@ import React from 'react';
 
 const Gallery = () => {
     const renderDivs = (count, height) => {
-        return Array(count).fill().map((_, index) => (
+        return Array(count).fill(null).map((_, index) => (
             <div key={index} className={`border-2 border-dashed border-gray-300 rounded-lg dark:border-gray-600 ${height}`}></div>
         ))
     }
