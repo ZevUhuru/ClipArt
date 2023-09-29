@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from 'src/components/Page/Search/navbar';
 import Sidebar from 'src/components/Page/Search/sidebar';
-import Main from 'src/components/Page/Search/main';
+import Gallery from 'src/components/Page/Search/gallery';
 
 const SearchPage = () => {
     return (
@@ -9,8 +9,7 @@ const SearchPage = () => {
             <div className="antialiased bg-gray-50 dark:bg-gray-900">
                 <Navbar />
                 <Sidebar />
-
-                <Main />
+                <Gallery />
             </div>
         </>
     );

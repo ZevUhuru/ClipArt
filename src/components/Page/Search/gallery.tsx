@@ -1,11 +1,13 @@
 import React from 'react';
 
-const MainContent = () => {
+
+
+const Gallery = () => {
     const renderDivs = (count, height) => {
         return Array(count).fill().map((_, index) => (
             <div key={index} className={`border-2 border-dashed border-gray-300 rounded-lg dark:border-gray-600 ${height}`}></div>
-        ));
-    };
+        ))
+    }
 
     return (
         <main className="bg-gray-50 dark:bg-gray-900 p-4 md:ml-64 lg:mr-16 min-h-full pt-20">
@@ -21,7 +23,7 @@ const MainContent = () => {
                 {renderDivs(4, "h-48 lg:h-72")}
             </div>
         </main>
-    );
+    )
 }
 
-export default MainContent;
+export default Gallery
