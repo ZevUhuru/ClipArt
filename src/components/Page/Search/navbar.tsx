@@ -1,12 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 
-import SearchIcon from 'src/components/Icons/searchIcon'
 import MenuIcon from 'src/components/Icons/menuIcon'
 import CloseIcon from 'src/components/Icons/closeIcon'
+import SearchForm from './searchForm'
 
 
-const Navbar = () => {
+const Navbar = ({ onSearchResults }) => {
     
     return (
         <nav className="bg-white border-b border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
@@ -28,22 +28,7 @@ const Navbar = () => {
                             alt="Flowbite Logo"
                         />
                     </Link>
-                    <form action="#" method="GET" className="hidden md:block lg:pl-2">
-                        <label htmlFor="topbar-search" className="sr-only">Search</label>
-                        <div className="relative md:w-64 lg:w-96">
-                            <div
-                                className="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
-                                <SearchIcon />
-                            </div>
-                            <input
-                                type="text"
-                                name="email"
-                                id="topbar-search"
-                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                placeholder="Search for free clip art"
-                            />
-                        </div>
-                    </form>
+                    <SearchForm onSearchResults={onSearchResults} />
                 </div>
             </div>
         </nav>
