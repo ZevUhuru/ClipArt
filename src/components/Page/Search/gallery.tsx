@@ -66,7 +66,7 @@ const Gallery = () => {
                 ))}
             </div>
         </main>
-    );
+    )
 }
 
 export default Gallery;
