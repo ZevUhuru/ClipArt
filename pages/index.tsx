@@ -134,7 +134,6 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
         <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <FreeTrialSection />
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
-        <FreeTrialSection />
         <ImageGallery categoryTitle={"Halloween"} images={halloweenImages} />
         <ImageGallery categoryTitle={"Flower"} images={flowerImages}/>
         <FreeTrialSection />

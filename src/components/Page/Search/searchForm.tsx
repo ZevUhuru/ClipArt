@@ -1,23 +1,39 @@
 import React, { useState } from 'react';
 import SearchIcon from 'src/components/Icons/searchIcon';
 import typesenseClient from 'src/utils/typesense';
+import _ from 'lodash';
 
 const SearchForm = ({ onSearchResults }) => {
     const [query, setQuery] = useState('');
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-
+    const search = async () => {
         const searchParameters = {
             q: query,
             query_by: 'title,tags,description',
-            prefix: false,
+            prefix: true,
             num_typos: 2,
             per_page: 30,
         };
 
-        const searchResults = await typesenseClient.collections('clip_arts').documents().search(searchParameters);
-        onSearchResults(searchResults.hits);
+        try {
+            const searchResults = await typesenseClient.collections('clip_arts').documents().search(searchParameters);
+            onSearchResults(searchResults.hits);
+            console.log(searchResults.hits);
+        } catch (error) {
+            console.error("Error during search:", error);
+        }
+    };
+
+    // Debounce the search function
+    const debouncedSearch = _.debounce(search, 300);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        debouncedSearch();
+    };
+
+    const handleInputChange = (e) => {
+        setQuery(e.target.value);
     };
 
     return (
@@ -33,7 +49,7 @@ const SearchForm = ({ onSearchResults }) => {
                         name="email"
                         id="topbar-search"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={handleInputChange}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder="Search for free clip art"
                     />

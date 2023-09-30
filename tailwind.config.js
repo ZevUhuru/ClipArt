@@ -70,6 +70,9 @@ module.exports = {
       backgroundImage: {
         'footer-gradient': 'linear-gradient(#0d0f13, #222831, #37414f)',
       },
+      backgroundColor: {
+        'custom-gray': '#0d0f13',
+      },
     },
   },
   plugins: [

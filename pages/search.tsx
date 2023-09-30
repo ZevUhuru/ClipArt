@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Navbar from 'src/components/Page/Search/navbar';
-import Sidebar from 'src/components/Page/Search/sidebar';
 import Gallery from 'src/components/Page/Search/gallery';
 import Footer from 'src/components/footer';
 
@@ -46,6 +45,8 @@ const SearchPage = () => {
     const handleSearchResults = (results) => {
         setSearchResults(results);
         setHasSearched(true);
+
+        console.log(results);
     };
 
     

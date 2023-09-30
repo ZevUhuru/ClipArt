@@ -4,9 +4,9 @@ import Image from 'next/image';
 function ImageGallery({ categoryTitle, images = [] }) {
 
     return (
-        <div className="category-clipart bg-footer-gradient">
+        <div className="category-clipart bg-custom-gray">
             <h2 id={`${categoryTitle.toLowerCase()}-clipart`} className="category-title w-full text-white flex justify-center text-2xl font-black p-[50px]">{`${categoryTitle} Clip Art`}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-footer-gradient p-[50px] pt-[0]">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-custom-gray p-[50px] pt-[0]">
                 {images.map((image, index) => (
                     <div
                         key={index}
