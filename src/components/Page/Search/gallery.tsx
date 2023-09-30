@@ -51,8 +51,8 @@ const Gallery = () => {
     }
 
     return (
-        <main className="bg-gray-50 dark:bg-gray-900 p-4 md:ml-64 lg:mr-16 min-h-full pt-20">
-            <div className="grid grid-cols-3 gap-4 mb-4">
+        <main className="bg-gray-50 dark:bg-gray-900 p-4 lg:mr-16 min-h-full pt-20">
+            <div className="grid grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
                 {imagesArray.map((image, index) => (
                     <div key={index} className="p-2 bg-gray-100 rounded-lg">
                         <Image 

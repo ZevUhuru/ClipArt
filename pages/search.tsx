@@ -8,7 +8,7 @@ const SearchPage = () => {
         <>
             <div className="antialiased bg-gray-50 dark:bg-gray-900">
                 <Navbar />
-                <Sidebar />
+                {/* <Sidebar /> */}
                 <Gallery />
             </div>
         </>
