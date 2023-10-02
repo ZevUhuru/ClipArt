@@ -1,10 +1,4 @@
-import React, { useState } from 'react';
-import Navbar from 'src/components/Page/Search/navbar';
-import Gallery from 'src/components/Page/Search/gallery';
-import Footer from 'src/components/footer';
-
-// SearchPage.js
-const imagesArray = [
+export const imagesArray = [
     { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
     { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png" },
     { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png" },
@@ -36,30 +30,3 @@ const imagesArray = [
     { src: "https://assets.codepen.io/9394943/cute-himalayan-kittens-playing-with-golf-balls-clip-art.png" },
     { src: "https://assets.codepen.io/9394943/cute-cats-cuddling-clip-art.png" }
   ];
-  
-
-const SearchPage = () => {
-    const [searchResults, setSearchResults] = useState(imagesArray);
-    const [hasSearched, setHasSearched] = useState(false);
-
-    const handleSearchResults = (results) => {
-        setSearchResults(results);
-        setHasSearched(true);
-
-        console.log(results);
-    };
-
-    
-    return (
-      <>
-        <div className="antialiased bg-gray-50 dark:bg-gray-900">
-          <Navbar onSearchResults={handleSearchResults} />
-          <Gallery searchResults={searchResults} hasSearched={hasSearched} defaultImages={imagesArray} />
-          <Footer />
-        </div>
-      </>
-    );
-  };
-  
-  export default SearchPage;
-  

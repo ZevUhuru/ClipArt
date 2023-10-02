@@ -4,7 +4,7 @@ import SearchIcon from 'src/components/Icons/searchIcon';
 
 const HeroSection = () => {
     return (
-        <div className="relative hero-container flex flex-col justify-center h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]">
+        <div className="relative hero-container flex flex-col justify-center items-center sm:items-stretch md:items h-full w-full max-h-[500px] bg-black border-b border-gray-900 bg-no-repeat bg-center bg-cover min-h-[600px]">
             {/* Use next/image as a background */}
             <Image
                 src="https://assets.codepen.io/9394943/laughing-santa-2.png"
@@ -15,8 +15,9 @@ const HeroSection = () => {
                 priority={true}
                 className="z-0" // Place it behind your content
             />
-            <div className="z-10 hero-content ml-[50px]">
-                <h1 className="text-white text-30 font-semibold font-sans text-shadow  p-1 max-w-[425px]">The Largest Collection <br />of Ai Generated Clip Art</h1>
+            <div className="z-10 absolute flex flex-col justify-between h-full py-2.5 sm:relative sm:py-0  hero-content sm:ml-[50px]
+">
+                <h1 className="text-white text-30 font-semibold font-sans text-shadow  p-1 max-w-[425px] md:text-[36px]">The Largest Collection <br />of Ai Generated Clip Art</h1>
                 <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
                     <form className="w-full flex items-center rounded">
                         <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
