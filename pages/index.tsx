@@ -122,7 +122,7 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
       </Head>
 
       <main className="mx-auto w-full ">
-        <div className=" w-full ">
+        <div className=" w-full h-full">
           <div className="header-container">
 
             {/* <Header /> */}
