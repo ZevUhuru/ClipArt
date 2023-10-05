@@ -1,50 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React, { useEffect } from 'react';
 import SearchHeader from 'src/components/Page/Search/searchHeader';
 import Gallery from 'src/components/Page/Search/gallery';
 import Footer from 'src/components/footer';
-import { useSearch } from 'src/hooks/useSearch';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSearchResults } from 'src/redux/features/search/searchSlice'; // Make sure to import the action
 import { getSearchResults } from 'src/selectors/searchSelectors';
-import { imagesArray } from 'src/constants';
-import _ from 'lodash';
+import { fetchSearchResults } from 'src/hooks/useSearch'; // Assuming this function makes the API request
 
-
-const SearchPage = () => {
+const SearchPage = ({ initialSearchResults, currentQuery }) => {
     const dispatch = useDispatch();
-    const router = useRouter();
 
-    // Safely extract the 'q' query parameter and ensure it's a string
-    const extractQueryString = (): string | undefined => {
-        const queryValue = router.query.q;
-        if (typeof queryValue === 'string') {
-            return queryValue;
-        }
-        // Handle the case where queryValue might be an array (e.g., ?q=value1&q=value2)
-        if (Array.isArray(queryValue)) {
-            return queryValue[0]; // or handle it in another appropriate way
-        }
-        return undefined;
-    };
-
-    const [currentQuery, setCurrentQuery] = useState<string | undefined>(extractQueryString());
-
-    // Use react-query to fetch search results
-    const { data: searchResults, isLoading, error } = useSearch(currentQuery);
-
+    // Set initial search results to Redux store
     useEffect(() => {
-        setCurrentQuery(extractQueryString());
-
-    }, [router.query.q]);
-
-    useEffect(() => {
-        console.log('currentQuery', currentQuery);
-
-        if (searchResults) {
-            dispatch(setSearchResults(searchResults));
+        if (initialSearchResults) {
+            console.log('initialSearchResults', initialSearchResults)
+            dispatch(setSearchResults(initialSearchResults));
         }
-    }, [searchResults, dispatch]);
+    }, []);
+    
 
     // Get the search results from Redux using reselect
     const reduxSearchResults = useSelector(getSearchResults);
@@ -53,11 +26,38 @@ const SearchPage = () => {
         <>
             <div className="antialiased bg-gray-50 dark:bg-gray-900">
                 <SearchHeader  />
-                <Gallery searchResults={reduxSearchResults} hasSearched={!!currentQuery} />
+                <Gallery searchResults={reduxSearchResults} />
                 <Footer />
             </div>
         </>
     );
 };
+
+export async function getServerSideProps(context) {
+    try {
+        console.log("getServerSideProps triggered");
+        const query = context.query.q;
+        console.log("Query parameter:", query);
+
+        let searchResults = await fetchSearchResults(query);
+        console.log('Server fetched results:', searchResults);
+
+        return {
+            props: {
+                initialSearchResults: searchResults,
+                currentQuery: query
+            }
+        };
+    } catch (error) {
+        console.error("Error in getServerSideProps:", error.message);
+        return {
+            props: {
+                initialSearchResults: [],
+                currentQuery: ''
+            }
+        };
+    }
+}
+
 
 export default SearchPage;

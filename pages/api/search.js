@@ -35,8 +35,9 @@ export default async (req, res) => {
 
   try {
     // Perform the search using Typesense
-    const searchResults = await typesenseClient.collections('clip_arts').documents().search(searchParameters);
-    
+    const COLLECTION_NAME = 'clip_arts';
+    const searchResults = await typesenseClient.collections(COLLECTION_NAME).documents().search(searchParameters);
+    console.log(searchResults)
     // Return the search results
     return res.status(200).json({ success: true, data: searchResults.hits });
   } catch (error) {

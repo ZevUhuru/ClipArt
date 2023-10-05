@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
 import SearchIcon from 'src/components/Icons/searchIcon';
-import { useRouter } from 'next/router'; // Import the useRouter hook
+import { useRouter } from 'next/router';
+import { useDispatch } from 'react-redux';
+import { setSearchResults } from 'src/redux/features/search/searchSlice';
+import { fetchSearchResults } from 'src/hooks/useSearch';
 
 const SearchForm: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const router = useRouter(); // Initialize the useRouter hook
+    const router = useRouter();
+    const dispatch = useDispatch();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
+        setSearchQuery(e.target.value.trim()); // Trim the input value
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        router.push(`/search/${searchQuery}`); // Update the URL to reflect the search query
+
+        if (!searchQuery) {  // Validate the searchQuery
+            console.error("Search query is empty.");
+            return;
+        }
+
+        try {
+            const results = await fetchSearchResults(searchQuery);
+            dispatch(setSearchResults(results));
+            router.push(`/search/${searchQuery}`); // Removed await since we're not using shallow routing
+        } catch (error) {
+            console.error("Error fetching search results:", error.message);
+        }
     };
 
     return (
@@ -25,7 +41,7 @@ const SearchForm: React.FC = () => {
                     </div>
                     <input
                         type="text"
-                        name="search" // Updated the name attribute
+                        name="search"
                         id="topbar-search"
                         value={searchQuery}
                         onChange={handleInputChange}
