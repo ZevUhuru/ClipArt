@@ -12,6 +12,8 @@ class MyDocument extends Document {
             href="https://unpkg.com/flowbite-typography@1.0.3/dist/typography.min.css"
           />
           <link rel="stylesheet" href="https://use.typekit.net/qau0npc.css"></link>
+          <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+          </link>
           <meta
             name="description"
             content="The Largest Collection of Ai Generated Clip Art"

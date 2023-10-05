@@ -6,7 +6,12 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-futura;
   }
+  
+  body {
+    @apply font-body;
+  }
 }
+
 
 
 
