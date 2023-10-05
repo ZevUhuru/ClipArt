@@ -34,11 +34,13 @@ const SearchPage = () => {
     const { data: searchResults, isLoading, error } = useSearch(currentQuery);
 
     useEffect(() => {
-        console.log('router.query.q', router.query.q);
         setCurrentQuery(extractQueryString());
+
     }, [router.query.q]);
 
     useEffect(() => {
+        console.log('currentQuery', currentQuery);
+
         if (searchResults) {
             dispatch(setSearchResults(searchResults));
         }

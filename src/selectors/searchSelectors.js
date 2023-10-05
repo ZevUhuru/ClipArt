@@ -1,7 +1,7 @@
 import { createSelector } from 'reselect';
 
-export const getSearchResults = (state) => state.search?.results;
-export const getDefaultResults = (state) => state.search?.defaultResults;
+export const getSearchResults = (state) => state.searchResults?.results;
+export const getDefaultResults = (state) => state.searchResults?.defaultResults;
 
 
 

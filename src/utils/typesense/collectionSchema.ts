@@ -7,7 +7,7 @@ const clipArtCollectionSchema = {
     { name: "description", type: "string" },
     { name: "image_url", type: "string" },
     { name: "date", type: "int32" },
-    { name: "synonyms", type: "object" } 
+    { name: "synonyms", type: "string[]" } 
   ],
   enable_nested_fields: true,
   default_sorting_field: "date"

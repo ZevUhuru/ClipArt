@@ -8,23 +8,25 @@ type GalleryProps = {
     hasSearched: boolean;
 };
 
-const Gallery: React.FC<GalleryProps> = ({ searchResults, hasSearched }) => {
-    const defaultResults = useSelector(getDefaultResults);
-    const imagesToDisplay = hasSearched ? searchResults : defaultResults;
+const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
+    const defaultResults = useSelector(getDefaultResults)
+    let imagesToDisplay
 
-    const extractAltFromUrl = (url) => {
-        const match = url.match(/\/9\d{4,}\/(.*?)(?:\.png|\.jpg|\.jpeg)$/);
-        return match && match[1] ? match[1].replace(/-/g, ' ') : 'Image';
-    };
+   if (!searchResults.length) {
+    imagesToDisplay = defaultResults;
+    } else {
+        imagesToDisplay = searchResults;
+    }
+
 
     return (
         <main className="bg-gray-50 dark:bg-gray-900 p-4 lg:mr-16 min-h-full pt-20">
-            <div className="grid grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
                 {imagesToDisplay?.map((image, index) => (
-                    <div key={index} className="p-2 bg-gray-100 rounded-lg">
+                    <div key={image.id} className="p-2 bg-gray-100 rounded-lg">
                         <Image 
-                            src={image.src || image.document?.image_url} 
-                            alt={extractAltFromUrl(image.src || image.document?.image_url)} 
+                            src={image.image_url} 
+                            alt={image.title || 'Image'} 
                             width={500} 
                             height={500} 
                             className="rounded-lg shadow-md border border-gray-300"
