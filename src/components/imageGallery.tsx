@@ -26,8 +26,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     };
 
     return (
-        <main className="bg-black dark:bg-gray-900 p-4 min-h-full flex flex-col justify-between">
-        <h2 id={`${categoryTitle.toLowerCase()}-clipart`} className="category-title w-full text-white flex justify-center text-2xl font-black p-[50px]">{`${categoryTitle} Clip Art`}</h2>
+        <main className="bg-footer-gradient dark:bg-gray-900 p-4 min-h-full flex flex-col justify-between">
+        <h2 id={`${categoryTitle.toLowerCase()}-clipart`} className="category-title w-full text-white flex justify-center text-2xl sm:text-3xl font-black p-[50px]">{`${categoryTitle} Clip Art`}</h2>
         
         <div className="flex flex-grow items-center justify-center "> {/* Added this container */}
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-4">

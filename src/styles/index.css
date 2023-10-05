@@ -1,6 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer utilities {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-futura;
+  }
+}
+
+
+
 
 @supports (font: -apple-system-body) and (-webkit-appearance: none) {
   img[loading='lazy'] {
@@ -11,3 +20,5 @@
 html {
   scroll-behavior: smooth;
 }
+
+

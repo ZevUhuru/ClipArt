@@ -17,7 +17,7 @@ import FAQSection from 'src/components/faqSection'
 import ImageGallery from 'src/components/imageGallery'
 import Footer from 'src/components/footer'
 import SearchComponent from 'src/components/Search'
-import HeroSection from 'src/components/Page/Home/hero'
+import HeroSection from 'src/components/Page/Home/Hero'
 
 const defaultImages = [
   { src: "https://assets.codepen.io/9394943/watermark-clipart-cat.png", aspectRatio:  '7:4' },
@@ -131,8 +131,9 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
 
           </div>
         </div>
-        <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <FreeTrialSection />
+
+        <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
         <ImageGallery categoryTitle={"Halloween"} images={halloweenImages} />
         <ImageGallery categoryTitle={"Flower"} images={flowerImages}/>

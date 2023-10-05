@@ -1,14 +1,16 @@
 import React from 'react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
+import { getDefaultResults } from 'src/selectors/searchSelectors';
 
 type GalleryProps = {
     searchResults: any[];
     hasSearched: boolean;
-    defaultImages: any[];
 };
 
-const Gallery: React.FC<GalleryProps> = ({ searchResults, hasSearched, defaultImages }) => {
-    const imagesToDisplay = hasSearched ? searchResults : defaultImages;
+const Gallery: React.FC<GalleryProps> = ({ searchResults, hasSearched }) => {
+    const defaultResults = useSelector(getDefaultResults);
+    const imagesToDisplay = hasSearched ? searchResults : defaultResults;
 
     const extractAltFromUrl = (url) => {
         const match = url.match(/\/9\d{4,}\/(.*?)(?:\.png|\.jpg|\.jpeg)$/);

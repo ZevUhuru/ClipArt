@@ -11,20 +11,31 @@ import { imagesArray } from 'src/constants';
 import _ from 'lodash';
 
 
-
 const SearchPage = () => {
     const dispatch = useDispatch();
     const router = useRouter();
 
-    const [currentQuery, setCurrentQuery] = useState<string | undefined>(router.query.q as string);
+    // Safely extract the 'q' query parameter and ensure it's a string
+    const extractQueryString = (): string | undefined => {
+        const queryValue = router.query.q;
+        if (typeof queryValue === 'string') {
+            return queryValue;
+        }
+        // Handle the case where queryValue might be an array (e.g., ?q=value1&q=value2)
+        if (Array.isArray(queryValue)) {
+            return queryValue[0]; // or handle it in another appropriate way
+        }
+        return undefined;
+    };
 
-
+    const [currentQuery, setCurrentQuery] = useState<string | undefined>(extractQueryString());
 
     // Use react-query to fetch search results
     const { data: searchResults, isLoading, error } = useSearch(currentQuery);
 
     useEffect(() => {
-        setCurrentQuery(router.query.q as string);
+        console.log('router.query.q', router.query.q);
+        setCurrentQuery(extractQueryString());
     }, [router.query.q]);
 
     useEffect(() => {
