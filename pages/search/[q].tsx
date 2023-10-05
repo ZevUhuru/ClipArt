@@ -51,7 +51,7 @@ const SearchPage = () => {
         <>
             <div className="antialiased bg-gray-50 dark:bg-gray-900">
                 <SearchHeader  />
-                <Gallery searchResults={reduxSearchResults} hasSearched={!!currentQuery} defaultImages={imagesArray} />
+                <Gallery searchResults={reduxSearchResults} hasSearched={!!currentQuery} />
                 <Footer />
             </div>
         </>
