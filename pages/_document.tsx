@@ -11,11 +11,12 @@ class MyDocument extends Document {
             type="text/css"
             href="https://unpkg.com/flowbite-typography@1.0.3/dist/typography.min.css"
           />
+          <link rel="stylesheet" href="https://use.typekit.net/qau0npc.css"></link>
           <meta
             name="description"
             content="The Largest Collection of Ai Generated Clip Art"
           />
-          <meta property="og:site_name" content="nextjsconf-pics.vercel.app" />
+          <meta property="og:site_name" content="clip.art" />
           <meta
             property="og:description"
             content="The Largest Collection of Ai Generated Clip Art"
