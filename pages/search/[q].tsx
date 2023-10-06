@@ -27,7 +27,6 @@ const SearchPage = ({ initialSearchResults, currentQuery }) => {
             <div className="antialiased bg-gray-50 dark:bg-gray-900">
                 <SearchHeader  />
                 <Gallery searchResults={reduxSearchResults} />
-                <Footer />
             </div>
         </>
     );
