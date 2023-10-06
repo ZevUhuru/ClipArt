@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import SearchHeader from 'src/components/Page/Search/searchHeader';
 import Gallery from 'src/components/Page/Search/gallery';
-import Footer from 'src/components/footer';
+import Sidebar from 'src/components/Page/Search/sidebar';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSearchResults } from 'src/redux/features/search/searchSlice'; // Make sure to import the action
 import { getSearchResults } from 'src/selectors/searchSelectors';

@@ -1,38 +1,11 @@
 import React, { useState } from "react"
 import SearchIcon from "src/components/Icons/searchIcon"
-import { useRouter } from "next/router"
-import { useDispatch } from "react-redux"
-import { setSearchResults } from "src/redux/features/search/searchSlice"
-import { fetchSearchResults } from "src/hooks/useSearch"
+import { useSearchForm } from "src/hooks/useSearchForm"
 
 
 
 export default function HeroForm() {
-    const [searchQuery, setSearchQuery] = useState('');
-    const router = useRouter();
-    const dispatch = useDispatch();
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value.trim()); // Trim the input value
-    };
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if (!searchQuery) {  // Validate the searchQuery
-            console.error("Search query is empty.");
-            return;
-        }
-
-        try {
-            const results = await fetchSearchResults(searchQuery);
-            dispatch(setSearchResults(results))
-            router.push(`/search/${searchQuery}`) // Removed await since we're not using shallow routing
-        } catch (error) {
-            console.error("Error fetching search results:", error.message);
-        }
-    }
-
+    const { searchQuery, handleInputChange, handleSubmit } = useSearchForm()
 
     return (
         <div className="search-container flex flex-col justify-end items-center w-full max-w-xl mt-[50px]">
