@@ -38,7 +38,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                             alt={extractAltFromUrl(image.src || image.document?.image_url)}
                             width={500}
                             height={500}
-                            className="rounded-lg shadow-md border border-gray-300"
+                            className="rounded-lg shadow-md border-gray-300"
                             priority={index < 3} // Prioritize loading of the first 3 images
                         />
                     </div>
