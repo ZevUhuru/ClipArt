@@ -32,19 +32,18 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                     };
 
                     // Truncate the title to 30 characters
-                    const truncatedTitle = image.title.length > 30 
-                        ? `${image.title.substring(0, 27)}...` 
+                    const truncatedTitle = image.title.length > 30
+                        ? `${image.title.substring(0, 27)}...`
                         : image.title;
 
                     return (
                         <div
                             key={image.id || index}
-                            className="p-1 bg-gray-100 rounded-lg relative group cursor-pointer overflow-hidden"
+                            className="rounded-lg relative group cursor-pointer overflow-hidden"
+                        ><div
+                            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-footer-gradient p-1 rounded-full"
+                            onClick={toggleFavorite}
                         >
-                            <div
-                                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-footer-gradient p-1 rounded-full"
-                                onClick={toggleFavorite}
-                            >
                                 <HeartIcon className={`${isFavorited ? 'text-red-500 w-6 h-6' : 'text-white w-6 h-6'}`} />
                             </div>
                             <Image
@@ -56,7 +55,7 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                                 priority={index < 3}
                                 layout="responsive"
                             />
-                            <div className="absolute bottom-0 bg-footer-gradient w-full flex items-center justify-center py-1 text-white group-hover:opacity-100 opacity-0 transition-opacity">
+                            <div className="absolute bottom-0 bg-footer-gradient w-full flex items-center justify-center py-1 text-white group-hover:opacity-100 opacity-0 transition-opacity left-0 right-0 mx-auto">
                                 <Tooltip content={image.title} className="text-xs sm:text-sm md:text-base">
                                     <p className="truncate text-center text-sm sm:text-base md:text-lg">{truncatedTitle}</p>
                                 </Tooltip>
