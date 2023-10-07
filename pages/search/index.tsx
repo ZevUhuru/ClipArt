@@ -11,7 +11,7 @@ const SearchIndexPage = () => {
 
   return (
     <>
-      <div className="antialiased bg-gray-50 dark:bg-gray-900">
+      <div className="antialiased bg-gray-50 dark:bg-gray-900 min-h-screen">
         <SearchHeader />
         <Gallery searchResults={defaultResults} />
       </div>
