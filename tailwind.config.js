@@ -8,7 +8,11 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx}',
     'node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}',
   ],
-  
+  variants: {
+    extend: {
+      opacity: ['group-hover'],
+    },
+  },
   theme: {
     extend: {
       colors: {
