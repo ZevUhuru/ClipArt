@@ -32,7 +32,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
         <div className="flex flex-grow items-center justify-center "> {/* Added this container */}
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-6">
                 {imagesToDisplay.map((image, index) => (
-                    <div key={index} className="rounded-lg mb-4 max-w-[516px] p-1 bg-gray-100 ">
+                    <div key={index} className="rounded-lg mb-4 max-w-[516px]bg-gray-100 ">
                         <Image
                             src={image.src || image.document?.image_url}
                             alt={extractAltFromUrl(image.src || image.document?.image_url)}
