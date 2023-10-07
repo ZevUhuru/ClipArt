@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { getDefaultResults } from 'src/selectors/searchSelectors';
-import { Modal, Tooltip } from 'flowbite-react';
+import { Tooltip } from 'flowbite-react';
 import HeartIcon from 'src/components/Icons/heartIcon';
 
 interface GalleryProps {
@@ -19,14 +19,6 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
         imagesToDisplay = searchResults;
     }
 
-    const [isModalOpen, setModalOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
-
-    const openModal = (image) => {
-        setSelectedImage(image);
-        setModalOpen(true);
-    };
-
     const truncateTitle = (title) => {
         return title.length > 30 ? `${title.substring(0, 27)}...` : title;
     };
@@ -42,9 +34,11 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                         <div
                             key={image.id || index}
                             className="rounded-lg relative group cursor-pointer overflow-hidden"
-                            onClick={() => openModal(image)}
                         >
-                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-footer-gradient p-1 rounded-full">
+                            <div className={`absolute top-4 right-4 p-1 rounded-full bg-footer-gradient transition-opacity z-10
+                            md:opacity-0 md:group-hover:opacity-100
+                            md:hover:bg-opacity-75
+                            `}>
                                 <HeartIcon className="text-white w-6 h-6" />
                             </div>
                             <Image
@@ -56,7 +50,10 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                                 priority={index < 3}
                                 layout="responsive"
                             />
-                            <div className="absolute bottom-0 bg-footer-gradient w-full flex items-center justify-center py-1 text-white group-hover:opacity-100 opacity-0 transition-opacity">
+                            <div className={`absolute bottom-0 w-full flex items-center justify-center py-1 text-white
+                            bg-footer-gradient
+                            md:opacity-0 md:group-hover:opacity-100
+                            `}>
                                 <Tooltip content={image.title} className="text-xs sm:text-sm md:text-base">
                                     <p className="truncate text-center text-sm sm:text-base md:text-lg">{truncatedTitle}</p>
                                 </Tooltip>
@@ -65,26 +62,6 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                     );
                 })}
             </div>
-            {isModalOpen && selectedImage && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex items-center justify-center">
-                    <div className="bg-white p-4 rounded-lg">
-                        <div className="flex justify-between">
-                            <div className="text-gray-700">{selectedImage.title}</div>
-                            <button
-                                onClick={() => setModalOpen(false)}
-                                className="text-red-500"
-                            >
-                                <HeartIcon className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <img
-                            src={selectedImage.image_url}
-                            alt={selectedImage.title}
-                            className="mt-4"
-                        />
-                    </div>
-                </div>
-            )}
         </main>
     );
 };
