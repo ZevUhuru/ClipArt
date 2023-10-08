@@ -11,16 +11,19 @@ interface GalleryProps {
 
 const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
     const defaultResults = useSelector(getDefaultResults);
-    let imagesToDisplay;
-
-    if (!searchResults.length) {
-        imagesToDisplay = defaultResults;
-    } else {
-        imagesToDisplay = searchResults;
-    }
+    let imagesToDisplay = searchResults.length ? searchResults : defaultResults;
 
     const truncateTitle = (title) => {
         return title.length > 30 ? `${title.substring(0, 27)}...` : title;
+    };
+
+    const [favorited, setFavorited] = useState({});
+
+    const toggleFavorite = (id) => {
+        setFavorited(prevState => ({
+            ...prevState,
+            [id]: !prevState[id]
+        }));
     };
 
     return (
@@ -28,12 +31,6 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
                 {imagesToDisplay?.map((item, index) => {
                     const image = item.document ? item.document : item;
-                    const [isFavorited, setFavorited] = useState(false);
-
-                    const toggleFavorite = () => {
-                        setFavorited(!isFavorited);
-                    };
-
                     const truncatedTitle = truncateTitle(image.title);
 
                     return (
@@ -42,12 +39,12 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                             className="rounded-lg relative group cursor-pointer overflow-hidden"
                         >
                             <div
-                                className={`absolute top-4 right-4 p-1 rounded-full transition-opacity z-10
-                                md:opacity-0 md:group-hover:opacity-100 bg-footer-gradient
+                                className={`absolute top-4 right-4 p-1 rounded-full transition-opacity z-10 bg-footer-gradient
+                                md:opacity-0 md:group-hover:opacity-100
                                 `}
-                                onClick={toggleFavorite}
+                                onClick={() => toggleFavorite(image.id)}
                             >
-                                <HeartIcon className={`${isFavorited ? 'text-red-500 w-6 h-6' : 'text-white w-6 h-6'}`} />
+                                <HeartIcon className={`${favorited[image.id] ? 'text-red-500 w-6 h-6' : 'text-white w-6 h-6'}`} />
                             </div>
                             <Image
                                 src={image.image_url || ''}

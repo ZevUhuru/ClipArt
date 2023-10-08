@@ -3,29 +3,32 @@ import SearchHeader from 'src/components/Page/Search/searchHeader';
 import Gallery from 'src/components/Page/Search/gallery';
 import Sidebar from 'src/components/Page/Search/sidebar';
 import { useDispatch, useSelector } from 'react-redux';
-import { setSearchResults } from 'src/redux/features/search/searchSlice'; // Make sure to import the action
+import { setSearchResults } from 'src/redux/features/search/searchSlice';
 import { getSearchResults } from 'src/selectors/searchSelectors';
-import { fetchSearchResults } from 'src/hooks/useSearch'; // Assuming this function makes the API request
+import { fetchSearchResults } from 'src/hooks/useSearch';
 
 const SearchPage = ({ initialSearchResults, currentQuery }) => {
     const dispatch = useDispatch();
 
-    // Set initial search results to Redux store
     useEffect(() => {
-        if (initialSearchResults) {
-            console.log('initialSearchResults', initialSearchResults)
-            dispatch(setSearchResults(initialSearchResults));
+        async function fetchAndSetSearchResults() {
+            const searchResults = await fetchSearchResults(currentQuery);
+            dispatch(setSearchResults(searchResults));
         }
-    }, []);
-    
 
-    // Get the search results from Redux using reselect
+        if (initialSearchResults) {
+            dispatch(setSearchResults(initialSearchResults));
+        } else {
+            fetchAndSetSearchResults();
+        }
+    }, [currentQuery, dispatch, initialSearchResults]);
+
     const reduxSearchResults = useSelector(getSearchResults);
 
     return (
         <>
             <div className="antialiased bg-gray-50 dark:bg-gray-900 min-h-screen">
-                <SearchHeader  />
+                <SearchHeader />
                 <Gallery searchResults={reduxSearchResults} />
             </div>
         </>
@@ -34,12 +37,9 @@ const SearchPage = ({ initialSearchResults, currentQuery }) => {
 
 export async function getServerSideProps(context) {
     try {
-        console.log("getServerSideProps triggered");
         const query = context.query.q;
-        console.log("Query parameter:", query);
 
         let searchResults = await fetchSearchResults(query);
-        console.log('Server fetched results:', searchResults);
 
         return {
             props: {
@@ -57,6 +57,5 @@ export async function getServerSideProps(context) {
         };
     }
 }
-
 
 export default SearchPage;
