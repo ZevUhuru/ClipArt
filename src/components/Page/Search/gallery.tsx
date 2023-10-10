@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { getDefaultResults } from 'src/selectors/searchSelectors';
 import { Tooltip } from 'flowbite-react';
-
 import HeartIcon from 'src/components/Icons/heartIcon';
 
 interface GalleryProps {
@@ -12,39 +11,40 @@ interface GalleryProps {
 
 const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
     const defaultResults = useSelector(getDefaultResults);
-    let imagesToDisplay;
+    let imagesToDisplay = searchResults.length ? searchResults : defaultResults;
 
-    if (!searchResults.length) {
-        imagesToDisplay = defaultResults;
-    } else {
-        imagesToDisplay = searchResults;
-    }
+    const truncateTitle = (title) => {
+        return title.length > 30 ? `${title.substring(0, 27)}...` : title;
+    };
+
+    const [favorited, setFavorited] = useState({});
+
+    const toggleFavorite = (id) => {
+        setFavorited(prevState => ({
+            ...prevState,
+            [id]: !prevState[id]
+        }));
+    };
 
     return (
         <main className="bg-gray-50 dark:bg-gray-900 p-4 lg:ml-16 lg:mr-16 min-h-full pt-20">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
                 {imagesToDisplay?.map((item, index) => {
                     const image = item.document ? item.document : item;
-                    const [isFavorited, setFavorited] = useState(false);
-
-                    const toggleFavorite = () => {
-                        setFavorited(!isFavorited);
-                    };
-
-                    // Truncate the title to 30 characters
-                    const truncatedTitle = image.title.length > 30
-                        ? `${image.title.substring(0, 27)}...`
-                        : image.title;
+                    const truncatedTitle = truncateTitle(image.title);
 
                     return (
                         <div
                             key={image.id || index}
                             className="rounded-lg relative group cursor-pointer overflow-hidden"
-                        ><div
-                            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-footer-gradient p-1 rounded-full"
-                            onClick={toggleFavorite}
                         >
-                                <HeartIcon className={`${isFavorited ? 'text-red-500 w-6 h-6' : 'text-white w-6 h-6'}`} />
+                            <div
+                                className={`absolute top-4 right-4 p-1 rounded-full transition-opacity z-10 bg-footer-gradient
+                                md:opacity-0 md:group-hover:opacity-100
+                                `}
+                                onClick={() => toggleFavorite(image.id)}
+                            >
+                                <HeartIcon className={`${favorited[image.id] ? 'text-red-500 w-6 h-6' : 'text-white w-6 h-6'}`} />
                             </div>
                             <Image
                                 src={image.image_url || ''}
@@ -55,7 +55,9 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
                                 priority={index < 3}
                                 layout="responsive"
                             />
-                            <div className="absolute bottom-0 bg-footer-gradient w-full flex items-center justify-center py-1 text-white group-hover:opacity-100 opacity-0 transition-opacity left-0 right-0 mx-auto">
+                            <div className={`absolute bottom-0 w-full flex items-center justify-center py-1 text-white
+                            md:opacity-0 md:group-hover:opacity-100 bg-footer-gradient
+                            `}>
                                 <Tooltip content={image.title} className="text-xs sm:text-sm md:text-base">
                                     <p className="truncate text-center text-sm sm:text-base md:text-lg">{truncatedTitle}</p>
                                 </Tooltip>
@@ -66,6 +68,6 @@ const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
             </div>
         </main>
     );
-}
+};
 
 export default Gallery;
