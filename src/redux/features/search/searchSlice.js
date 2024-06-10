@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { imagesArray } from 'src/constants';
+// import { imagesArray } from 'src/constants';
 
 const initialState = {
   results: [],
-  defaultResults: [...imagesArray],
+  defaultResults: [],
   isLoading: false,
   error: null,
 };

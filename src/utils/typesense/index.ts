@@ -1,4 +1,5 @@
-const Typesense = require('typesense');
+
+import Typesense from 'typesense';
 
 const typesense = new Typesense.Client({
   nodes: [{

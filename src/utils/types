@@ -1,0 +1,29 @@
+const fs = require('fs');
+const path = require('path');
+
+// Path to the input JSON file
+const dataFilePath = path.join(__dirname, 'documents.json');
+
+// Read the JSON data
+fs.readFile(dataFilePath, 'utf8', (err, data) => {
+  if (err) {
+    console.error('Error reading the data file:', err);
+    return;
+  }
+
+  // Parse the JSON data
+  let documents = JSON.parse(data);
+
+  // Adjust each document
+  documents = documents.map(document => {
+    // Convert tags array to a comma-separated string
+    if (document.tags && Array.isArray(document.tags)) {
+      document.tags = document.tags.join(", ");
+    }
+    // Adjust other fields as necessary
+    return document;
+  });
+
+  // Print the modified documents to the terminal
+  console.log(JSON.stringify(documents, null, 2));
+});
