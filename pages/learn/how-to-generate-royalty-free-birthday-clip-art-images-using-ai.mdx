@@ -6,15 +6,15 @@ import Footer from 'src/components/footer';
 import Newsletter from 'src/components/Page/Blog/newsletter';
 
 
-const BlogPage = () => {
-    return (
+export default function BlogPage() {
+   return (
         <>
             <SearchHeader />
             <Main />
             <Sidebar />
             <Newsletter />
             <Footer />
-        </>)
+        </>
+        )
 }
 
-export default BlogPage;
