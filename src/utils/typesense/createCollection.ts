@@ -1,7 +1,6 @@
-import typesense from './index';
+// createCollection.ts
+import typesense from './index'; // Adjust the import according to your project structure
 import clipArtCollectionSchema from './collectionSchema';
-
-
 
 const createClipArtCollection = async () => {
   try {

@@ -1,8 +1,9 @@
-import { createGlobalState } from 'react-hooks-global-state'
+// src/utils/useLastViewedPhoto.ts
+import { createGlobalState } from 'react-hooks-global-state';
 
-const initialState = { photoToScrollTo: null }
-const { useGlobalState } = createGlobalState(initialState)
+const initialState = { photoToScrollTo: null as number | null };
+const { useGlobalState } = createGlobalState(initialState);
 
 export const useLastViewedPhoto = () => {
-  return useGlobalState('photoToScrollTo')
-}
+  return useGlobalState('photoToScrollTo');
+};

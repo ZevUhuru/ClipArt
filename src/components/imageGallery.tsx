@@ -18,7 +18,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 }) => {
 
     // Check for search results, then default images, then props images.
-    const imagesToDisplay = hasSearched ? searchResults : (defaultImages.length > 0 ? defaultImages : images);
+    const imagesToDisplay = hasSearched ? searchResults ?? [] : (defaultImages.length > 0 ? defaultImages : images);
 
     const extractAltFromUrl = (url) => {
         const match = url.match(/\/9\d{4,}\/(.*?)(?:\.png|\.jpg|\.jpeg)$/);
@@ -34,8 +34,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                 {imagesToDisplay.map((image, index) => (
                     <div key={index} className="rounded-lg mb-4 max-w-[516px]bg-gray-100 ">
                         <Image
-                            src={image.src || image.document?.image_url}
-                            alt={extractAltFromUrl(image.src || image.document?.image_url)}
+                            src={image?.src || image?.document?.image_url}
+                            alt={extractAltFromUrl(image?.src || image?.document?.image_url)}
                             width={500}
                             height={500}
                             className="rounded-lg shadow-md border-gray-300"
