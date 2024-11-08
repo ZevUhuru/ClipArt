@@ -7,24 +7,42 @@ import HeartIcon from 'src/components/Icons/heartIcon';
 
 interface GalleryProps {
     searchResults: any;
+    isLoading: boolean;
+    error: string | null;
 }
 
-const Gallery: React.FC<GalleryProps> = ({ searchResults }) => {
-    const defaultResults = useSelector(getDefaultResults);
-    let imagesToDisplay = searchResults.length ? searchResults : defaultResults;
+const Gallery: React.FC<GalleryProps> = ({ searchResults, isLoading, error }) => {
+     const [favorited, setFavorited] = useState({});
 
-    const truncateTitle = (title) => {
-        return title.length > 30 ? `${title.substring(0, 27)}...` : title;
-    };
-
-    const [favorited, setFavorited] = useState({});
-
-    const toggleFavorite = (id) => {
-        setFavorited(prevState => ({
-            ...prevState,
-            [id]: !prevState[id]
-        }));
-    };
+     const defaultResults = useSelector(getDefaultResults);
+     let imagesToDisplay = searchResults.length ? searchResults : defaultResults;
+ 
+     const truncateTitle = (title) => {
+         return title.length > 30 ? `${title.substring(0, 27)}...` : title;
+     };
+ 
+     const toggleFavorite = (id) => {
+         setFavorited(prevState => ({
+             ...prevState,
+             [id]: !prevState[id]
+         }));
+     };
+ 
+     if (error) {
+         return (
+             <div className="flex justify-center items-center p-4">
+                 <p className="text-red-500">{error}</p>
+             </div>
+         );
+     }
+ 
+     if (isLoading) {
+         return (
+             <div className="flex justify-center items-center p-4">
+                 <p>Loading...</p>
+             </div>
+         );
+     }
 
     return (
         <main className="bg-gray-50 dark:bg-gray-900 p-4 lg:ml-16 lg:mr-16 min-h-full pt-20">

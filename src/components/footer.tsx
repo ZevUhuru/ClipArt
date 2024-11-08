@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
         <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24">
-          <p className="text-xs leading-5 text-gray-400"> Clip.Art © 2024. All rights reserved. <br/> Clip.Art is a division of <a href="https://www.esy.com">ESY.COM LLC</a>.</p>
+          <p className="text-xs leading-5 text-gray-400"> Clip.Art © 2024. All rights reserved. <br/> Clip.Art is a division of <a href="https://www.esy.com">Esy LLC</a>.</p>
         </div>
       </div>
     </footer>
