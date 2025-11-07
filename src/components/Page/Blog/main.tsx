@@ -18,7 +18,7 @@ const MainSection = () => {
                 <article className="xl:w-[828px] w-full max-w-none format format-sm sm:format-base lg:format-lg format-blue dark:format-invert">
                     <div className="flex flex-col lg:flex-row justify-between lg:items-center">
                         <div className="flex items-center space-x-3 text-gray-500 dark:text-gray-400 text-base mb-2 lg:mb-0">
-                            <span>By <a href="#" className="text-gray-900 dark:text-white hover:underline no-underline font-semibold">Lem Uhuru</a></span>
+                            <span>By <a href="#" className="text-gray-900 dark:text-white hover:underline no-underline font-semibold">Editor</a></span>
                             <span className="bg-gray-300 dark:bg-gray-400 w-2 h-2 rounded-full"></span>
                             <span><time className="font-normal text-gray-500 dark:text-gray-400 uppercase"  dateTime="2022-03-08" title="August 3rd, 2022">December , 2023, 2:20am EDT</time></span>
                         </div>
