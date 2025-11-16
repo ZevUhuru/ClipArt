@@ -7,9 +7,23 @@ services:
       POSTGRES_USER: ${LOCAL_POSTGRES_USER}
       POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  typesense:
+    image: typesense/typesense:29.0
+    restart: unless-stopped
+    ports:
+      - "8108:8108"
+    volumes:
+      - typesense_data:/data
+    environment:
+      - TYPESENSE_DATA_DIR=/data
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+      - TYPESENSE_ENABLE_CORS=true
+    command: '--data-dir /data --api-key=${TYPESENSE_API_KEY} --enable-cors'
+
 volumes:
   postgres_data:
+  typesense_data:
