@@ -91,3 +91,14 @@ export interface ImageProps {
   format: string;
   blurDataUrl?: string;
 }
+
+// Props for SharedModal component
+export interface SharedModalProps {
+  index: number;
+  images?: ImageProps[];
+  changePhotoId: (newVal: number) => void;
+  closeModal: () => void;
+  navigation: boolean;
+  currentPhoto?: ImageProps;
+  direction?: number;
+}
