@@ -72,7 +72,7 @@ const HeroSection = () => {
                         description=""
                         buttonText="Get Early Access"
                         placeholderText="Enter your email"
-                        successMessage="🎉 You're on the list! Check your email for your free starter pack."
+                        successMessage="🎉 You're on the list! We'll email you when premium bundles launch with your free starter pack."
                         centered={true}
                     />
                 </div>

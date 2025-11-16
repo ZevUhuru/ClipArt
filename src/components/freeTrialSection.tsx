@@ -12,7 +12,7 @@ function FreeTrialSection() {
                         description="Join our waitlist and be the first to access exclusive AI-generated clip art bundles. Plus, get a free starter pack when we launch!"
                         buttonText="Join Waitlist"
                         placeholderText="Enter your email"
-                        successMessage="🎉 You're on the list! We'll send you exclusive early access."
+                        successMessage="🎉 You're on the list! We'll notify you first when we launch with exclusive early-bird pricing."
                         centered={true}
                     />
                     
