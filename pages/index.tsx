@@ -77,7 +77,6 @@ const Home: NextPage = () => {
             <HeroSection />
           </div>
         </div>
-        <FreeTrialSection />
 
         <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
