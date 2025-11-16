@@ -1,12 +1,11 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import Header from 'src/components/header'
+import PreLaunchHeader from 'src/components/PreLaunchHeader'
 import FreeTrialSection from 'src/components/freeTrialSection'
 import FAQSection from 'src/components/faqSection'
 import ImageGallery from 'src/components/imageGallery'
 import Footer from 'src/components/footer'
-import SearchComponent from 'src/components/Search'
 import HeroSection from 'src/components/Page/Home/Hero'
 import BundlesTeaser from 'src/components/BundlesTeaser'
 
@@ -70,13 +69,13 @@ const Home: NextPage = () => {
         />
       </Head>
 
+      <PreLaunchHeader />
+      
       <main className="mx-auto w-full">
-        <div className="w-full h-full">
-          <div className="header-container">
-            <SearchComponent />
-            <HeroSection />
-          </div>
-        </div>
+        <HeroSection />
+
+        {/* Browse anchor for header navigation */}
+        <div id="browse" className="relative -top-20" />
 
         <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
