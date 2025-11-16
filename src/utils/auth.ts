@@ -34,7 +34,7 @@ export async function verifyAdminToken(token: string): Promise<AdminSession | nu
       typeof payload.iat === 'number' &&
       typeof payload.exp === 'number'
     ) {
-      return payload as AdminSession;
+      return payload as unknown as AdminSession;
     }
     
     return null;
