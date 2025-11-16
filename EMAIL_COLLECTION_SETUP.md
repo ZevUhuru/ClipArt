@@ -98,9 +98,9 @@ ORDER BY subscribed_at DESC;
 2. **Email Capture #1** - Right after hero (early capture)
 3. **Image Galleries** - Your existing clip art samples
 4. **Premium Bundles Teaser** - Shows 3 coming-soon bundles with:
-   - Holiday Magic Bundle - $29
-   - Nature & Flowers Pack - $24
-   - Cute Animals Collection - $27
+   - Holiday Magic Bundle - $17 (150+ images)
+   - Nature & Flowers Pack - $12 (100+ images)
+   - Cute Animals Collection - $14 (120+ images)
 5. **Email Capture #2** - Final call-to-action with anchor link
 6. **FAQ Section** - (existing)
 7. **Footer** - (existing)
@@ -162,7 +162,7 @@ const bundles: Bundle[] = [
     title: 'Your Bundle Name',
     description: 'Description',
     imageCount: '100+ images',
-    price: '$29',
+    price: '$12',
     // ... more fields
   }
 ]

@@ -113,18 +113,20 @@ Choose one:
 ## 💰 Pricing Strategy
 
 Based on your bundles teaser, you're showing:
-- Holiday Magic Bundle: $29
-- Nature & Flowers: $24
-- Cute Animals: $27
+- Holiday Magic Bundle: $17 (150+ images)
+- Nature & Flowers: $12 (100+ images)
+- Cute Animals: $14 (120+ images)
+
+**These prices are competitive with Etsy** while maintaining quality perception.
 
 **Early Bird Strategy:**
 - List at these prices
-- Offer 30% off to waitlist = $17-20
+- Offer 20-30% off to waitlist = $8-14
 - This creates urgency + rewards early supporters
 
 **Bundle + Membership Option:**
-- All 3 bundles: $69 (save $11)
-- Or monthly subscription: $9/mo for ongoing access
+- All 3 bundles: $39 (save $4)
+- Or monthly subscription: $7/mo for ongoing access
 
 ---
 
