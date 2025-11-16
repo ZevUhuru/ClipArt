@@ -8,6 +8,7 @@ import ImageGallery from 'src/components/imageGallery'
 import Footer from 'src/components/footer'
 import SearchComponent from 'src/components/Search'
 import HeroSection from 'src/components/Page/Home/Hero'
+import BundlesTeaser from 'src/components/BundlesTeaser'
 
 const foodImages = [
   { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
@@ -82,8 +83,14 @@ const Home: NextPage = () => {
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
         <ImageGallery categoryTitle={"Halloween"} images={halloweenImages} />
         <ImageGallery categoryTitle={"Flower"} images={flowerImages} />
-        <FreeTrialSection />
+        
+        <BundlesTeaser />
+        
         <ImageGallery categoryTitle={"Cats"} images={catImages} />
+
+        <div id="signup">
+          <FreeTrialSection />
+        </div>
 
         <FAQSection />
         <Footer />
