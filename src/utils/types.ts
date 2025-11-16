@@ -81,3 +81,12 @@ export interface TypesenseDocument {
   image_url: string;
   creation_timestamp: number;
 }
+
+// Cloudinary image properties for gallery/carousel
+export interface ImageProps {
+  id: number;
+  height: string;
+  width: string;
+  public_id: string;
+  format: string;
+}
