@@ -74,12 +74,12 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onClose={handleClose} className="relative z-40">
-        {/* Backdrop - dimmed when email modal is open */}
-        <div className={`fixed inset-0 backdrop-blur-sm transition-opacity ${showEmailModal ? 'bg-black/40' : 'bg-black/80'}`} aria-hidden="true" />
+        {/* Backdrop - dimmed and non-interactive when email modal is open */}
+        <div className={`fixed inset-0 backdrop-blur-sm transition-opacity ${showEmailModal ? 'bg-black/40 pointer-events-none' : 'bg-black/80'}`} aria-hidden="true" />
 
         {/* Modal */}
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-opacity ${showEmailModal ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className={`fixed inset-0 flex items-center justify-center p-4 ${showEmailModal ? 'pointer-events-none' : ''}`}>
+          <Dialog.Panel className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-opacity ${showEmailModal ? 'opacity-50' : ''}`}>
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-white">

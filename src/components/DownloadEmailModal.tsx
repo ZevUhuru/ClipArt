@@ -51,10 +51,10 @@ const DownloadEmailModal: React.FC<DownloadEmailModalProps> = ({
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-[60]">
       {/* Backdrop - darker to show it's on top */}
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]" aria-hidden="true" />
 
       {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-[61]">
         <Dialog.Panel className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
           <Dialog.Title className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Get Your Free Download
