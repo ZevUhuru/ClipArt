@@ -30,6 +30,7 @@ class MyDocument extends Document {
             name="twitter:description"
             content="The Largest Collection of Ai Generated Clip Art"
           />
+          <script src="https://analytics.ahrefs.com/analytics.js" data-key="YHjK43y2cc5lRWQniqs17Q" async></script>
         </Head>
         <body className="bg-black antialiased">
           <Main />
