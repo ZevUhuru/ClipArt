@@ -31,7 +31,7 @@ const HeroSection = () => {
 
                 {/* Main Headline */}
                 <h1 className="font-header text-white text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                    Beautiful Clip Art Bundles
+                    AI-Generated Clip Art Bundles
                     <br />
                     <span className="text-blue-400">Under $10. No License Needed.</span>
                 </h1>
