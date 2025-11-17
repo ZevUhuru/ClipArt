@@ -48,6 +48,7 @@ export default async function handler(
 
     // 2. Track download - create downloads_by_url table for homepage images
     try {
+      // Create table if it doesn't exist
       await client.query(`
         CREATE TABLE IF NOT EXISTS downloads_by_url (
           id SERIAL PRIMARY KEY,
@@ -61,19 +62,20 @@ export default async function handler(
         )
       `);
 
-      // Create index for faster queries
+      // Create indexes for faster queries
       await client.query(`
         CREATE INDEX IF NOT EXISTS idx_downloads_by_url_image_url ON downloads_by_url(image_url);
         CREATE INDEX IF NOT EXISTS idx_downloads_by_url_category ON downloads_by_url(category);
         CREATE INDEX IF NOT EXISTS idx_downloads_by_url_downloaded_at ON downloads_by_url(downloaded_at DESC);
       `);
 
+      // Insert download record
       const downloadQuery = `
         INSERT INTO downloads_by_url (image_url, email, category, image_title, downloaded_at, ip_address, user_agent)
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5, $6)
       `;
       
-      await client.query(downloadQuery, [
+      const downloadResult = await client.query(downloadQuery, [
         imageUrl, 
         email.toLowerCase().trim(), 
         category || null, 
@@ -81,9 +83,28 @@ export default async function handler(
         ip_address, 
         user_agent
       ]);
+
+      console.log('Download tracked successfully:', {
+        imageUrl,
+        category,
+        email: email.toLowerCase().trim(),
+      });
     } catch (err: any) {
-      console.error('Download tracking error:', err);
-      // Don't fail the request if tracking fails
+      // Log detailed error for debugging
+      console.error('Download tracking error:', {
+        message: err.message,
+        code: err.code,
+        detail: err.detail,
+        hint: err.hint,
+        stack: err.stack,
+      });
+      
+      // Return error details in response for debugging (remove in production)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Full error:', err);
+      }
+      
+      // Don't fail the request if tracking fails - download still works
     }
 
     await client.query('COMMIT');
@@ -94,8 +115,20 @@ export default async function handler(
     });
   } catch (error: any) {
     await client.query('ROLLBACK');
-    console.error('Download tracking error:', error);
-    res.status(500).json({ error: 'Failed to record download' });
+    console.error('Download API error:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+    });
+    res.status(500).json({ 
+      error: 'Failed to record download',
+      // Include error details in development
+      ...(process.env.NODE_ENV === 'development' && {
+        details: error.message,
+        code: error.code,
+      }),
+    });
   } finally {
     client.release();
   }
