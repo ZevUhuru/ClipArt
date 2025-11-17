@@ -8,6 +8,7 @@ import ImageGallery from 'src/components/imageGallery'
 import Footer from 'src/components/footer'
 import HeroSection from 'src/components/Page/Home/Hero'
 import BundlesTeaser from 'src/components/BundlesTeaser'
+import ComparisonSection from 'src/components/ComparisonSection'
 
 const foodImages = [
   { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
@@ -73,6 +74,8 @@ const Home: NextPage = () => {
       
       <main className="mx-auto w-full">
         <HeroSection />
+
+        <ComparisonSection />
 
         {/* Browse anchor for header navigation */}
         <div id="browse" className="relative -top-20" />
