@@ -64,23 +64,31 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    // Don't close if email modal is open
+    if (!showEmailModal) {
+      onClose();
+    }
+  };
+
   return (
     <>
-      <Dialog open={isOpen} onClose={onClose} className="relative z-40">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" aria-hidden="true" />
+      <Dialog open={isOpen} onClose={handleClose} className="relative z-40">
+        {/* Backdrop - dimmed when email modal is open */}
+        <div className={`fixed inset-0 backdrop-blur-sm transition-opacity ${showEmailModal ? 'bg-black/40' : 'bg-black/80'}`} aria-hidden="true" />
 
         {/* Modal */}
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <Dialog.Panel className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-opacity ${showEmailModal ? 'opacity-50 pointer-events-none' : ''}`}>
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-white">
                 {imageTitle}
               </Dialog.Title>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                disabled={showEmailModal}
               >
                 <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </button>

@@ -49,9 +49,9 @@ const DownloadEmailModal: React.FC<DownloadEmailModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
+    <Dialog open={isOpen} onClose={onClose} className="relative z-[60]">
+      {/* Backdrop - darker to show it's on top */}
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
