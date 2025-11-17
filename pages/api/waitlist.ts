@@ -1,67 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Pool } from 'pg';
 
-// Use connection pooler for serverless (Netlify)
+// Initialize PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 1, // Serverless functions should use 1 connection
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
 });
-
-// Auto-setup function: Creates tables using direct connection if they don't exist
-async function autoSetupDatabase() {
-  let connectionString = process.env.DATABASE_URL || '';
-  
-  // Convert pooler URL to direct connection for DDL operations
-  if (connectionString.includes('pooler.supabase.com')) {
-    connectionString = connectionString
-      .replace('pooler.supabase.com:6543', 'db.supabase.co:5432')
-      .replace('.pooler.', '.');
-  }
-
-  const directPool = new Pool({
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-  });
-
-  const client = await directPool.connect();
-
-  try {
-    await client.query('BEGIN');
-
-    // Create email_waitlist table
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS email_waitlist (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        source VARCHAR(50) DEFAULT 'homepage',
-        subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        ip_address INET,
-        user_agent TEXT,
-        unsubscribed BOOLEAN DEFAULT false,
-        unsubscribed_at TIMESTAMP,
-        notes TEXT
-      )
-    `);
-
-    // Create indexes
-    await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_waitlist_email ON email_waitlist(email);
-      CREATE INDEX IF NOT EXISTS idx_waitlist_subscribed ON email_waitlist(subscribed_at DESC);
-    `);
-
-    await client.query('COMMIT');
-    console.log('Auto-setup: email_waitlist table created successfully');
-  } catch (error: any) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-    await directPool.end();
-  }
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -104,21 +47,7 @@ export default async function handler(
     `;
 
     const values = [email.toLowerCase().trim(), source, ip_address, user_agent];
-    
-    let result;
-    try {
-      result = await pool.query(query, values);
-    } catch (err: any) {
-      // If table doesn't exist, try to create it automatically
-      if (err.message?.includes('does not exist') || err.code === '42P01') {
-        console.log('Table missing, attempting auto-setup...');
-        await autoSetupDatabase();
-        // Retry the insert after setup
-        result = await pool.query(query, values);
-      } else {
-        throw err;
-      }
-    }
+    const result = await pool.query(query, values);
 
     return res.status(200).json({
       success: true,
