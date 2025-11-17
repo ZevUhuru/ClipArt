@@ -1,9 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Pool } from 'pg';
 
-// Initialize PostgreSQL connection pool
+// Use connection pooler for serverless (Netlify)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 1, // Serverless functions should use 1 connection
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 export default async function handler(

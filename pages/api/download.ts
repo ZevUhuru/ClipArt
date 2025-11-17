@@ -1,9 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Pool } from 'pg';
 
+// Use connection pooler for serverless (Netlify)
+// Pooler URL format: postgresql://postgres:[PASSWORD]@[PROJECT].pooler.supabase.com:6543/postgres
+// Direct URL format: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Optimize for serverless
+  max: 1, // Serverless functions should use 1 connection
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 export default async function handler(
@@ -46,30 +53,10 @@ export default async function handler(
 
     await client.query(waitlistQuery, [email.toLowerCase().trim(), source, ip_address, user_agent]);
 
-    // 2. Track download - create downloads_by_url table for homepage images
+    // 2. Track download - insert into downloads_by_url table
+    // Note: Table must be created manually in Supabase SQL Editor (pooler doesn't support CREATE TABLE)
+    // Run db/supabase-setup.sql in Supabase SQL Editor first
     try {
-      // Create table if it doesn't exist
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS downloads_by_url (
-          id SERIAL PRIMARY KEY,
-          image_url TEXT NOT NULL,
-          email VARCHAR(255),
-          category VARCHAR(100),
-          image_title VARCHAR(255),
-          downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          ip_address INET,
-          user_agent TEXT
-        )
-      `);
-
-      // Create indexes for faster queries
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS idx_downloads_by_url_image_url ON downloads_by_url(image_url);
-        CREATE INDEX IF NOT EXISTS idx_downloads_by_url_category ON downloads_by_url(category);
-        CREATE INDEX IF NOT EXISTS idx_downloads_by_url_downloaded_at ON downloads_by_url(downloaded_at DESC);
-      `);
-
-      // Insert download record
       const downloadQuery = `
         INSERT INTO downloads_by_url (image_url, email, category, image_title, downloaded_at, ip_address, user_agent)
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5, $6)
@@ -96,7 +83,8 @@ export default async function handler(
         code: err.code,
         detail: err.detail,
         hint: err.hint,
-        stack: err.stack,
+        // Common error: table doesn't exist - run db/supabase-setup.sql in Supabase SQL Editor
+        tableExists: err.message?.includes('does not exist') ? false : undefined,
       });
       
       // Return error details in response for debugging (remove in production)
