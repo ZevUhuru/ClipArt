@@ -21,7 +21,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
   imageTitle,
   category
 }) => {
-  const [state, setState] = useState<ModalState>('view');
+  const [state, setState] = useState<ModalState>('email');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -86,15 +86,10 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
   };
 
   const handleClose = () => {
-    setState('view');
+    setState('email');
     setEmail('');
     setError('');
     onClose();
-  };
-
-  const handleBackToView = () => {
-    setState('view');
-    setError('');
   };
 
   return (
@@ -207,10 +202,10 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
                     <div className="flex gap-3">
                       <button
                         type="button"
-                        onClick={handleBackToView}
+                        onClick={handleClose}
                         className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
                       >
-                        Back
+                        Cancel
                       </button>
                       <button
                         type="submit"

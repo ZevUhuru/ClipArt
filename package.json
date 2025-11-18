@@ -6,7 +6,8 @@
     "start": "next start",
     "lint": "next lint",
     "update-typsense-collections": "ts-node-esm src/utils/typesense/uploadCollectionSchema.ts",
-    "setup-typesense": "node src/utils/typeSense/setupTypesense.js"
+    "setup-typesense": "node src/utils/typeSense/setupTypesense.js",
+    "migrate:images": "ts-node scripts/migrate-existing-images.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.4",

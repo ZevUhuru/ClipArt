@@ -1,6 +1,7 @@
-import type { NextPage } from 'next'
+import type { NextPage, GetStaticProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
+import { Pool } from 'pg'
 import PreLaunchHeader from 'src/components/PreLaunchHeader'
 import FreeTrialSection from 'src/components/freeTrialSection'
 import FAQSection from 'src/components/faqSection'
@@ -10,52 +11,20 @@ import HeroSection from 'src/components/Page/Home/Hero'
 import BundlesTeaser from 'src/components/BundlesTeaser'
 import ComparisonSection from 'src/components/ComparisonSection'
 
-const foodImages = [
-  { src: "https://assets.codepen.io/9394943/pecan-pie-illustration.png" },
-  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg-2.png" },
-  { src: "https://assets.codepen.io/9394943/mexican-food-illustration-whitebg.png" },
-  { src: "https://assets.codepen.io/9394943/produce-basket-illustration-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/thanksgiving-illustration-1-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/pancake-illustration-1-white-bg.png" },
-]
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+})
 
-const christmasImages = [
-  { src: "https://assets.codepen.io/9394943/sitting-santa-illustration.png" },
-  { src: "https://assets.codepen.io/9394943/reindeer-clipart-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/life-like-santa-illustration-1-wbg.png" },
-  { src: "https://assets.codepen.io/9394943/smiling-elves-christmas-clip-art-white-background.png",  aspectRatio:  '7:4' },
-  { src: "https://assets.codepen.io/9394943/christmas-tree-cookie-wbg.png", aspectRatio:  '7:4'},
-  { src: "https://assets.codepen.io/9394943/santa-smiles-icons-white-bg.png", aspectRatio:  '7:4' },
-]
+interface HomeProps {
+  foodImages: Array<{ src: string; slug: string; title: string }>;
+  christmasImages: Array<{ src: string; slug: string; title: string }>;
+  halloweenImages: Array<{ src: string; slug: string; title: string }>;
+  flowerImages: Array<{ src: string; slug: string; title: string }>;
+  catImages: Array<{ src: string; slug: string; title: string }>;
+}
 
-const halloweenImages = [
-  { src: "https://assets.codepen.io/9394943/witch-pencil-style-clip-art-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/african-witch-with-broomstick-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/two-halloween-clip-art-pumpkins-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/halloween-clip-art-ghost-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/halloween-clipart-voodoo-dollas-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/halloween-clipart-ghost-pumpkin-white-bg.png" },
-]
-
-const flowerImages = [
-  { src: "https://assets.codepen.io/9394943/white-rose-woman-hair-flower-clipart.png" },
-  { src: "https://assets.codepen.io/9394943/colorful-roses-flower-clipart.png" },
-  { src: "https://assets.codepen.io/9394943/young-girl-holding-flowers-clipart-white-bg.png" }, 
-  { src: "https://assets.codepen.io/9394943/pink-rose-flower-clipart-white-bg.png" },
-  { src: "https://assets.codepen.io/9394943/hawaiian-biscus-flower-clip-art.png" },
-  { src: "https://assets.codepen.io/9394943/single-smiling-sunflower-emoji-flower-clipart.png" },
-]
-
-const catImages = [
-  { src: "https://assets.codepen.io/9394943/two-kittens-playing-with-golf-balls-in-paint-clip-art.png" },
-  { src: "https://assets.codepen.io/9394943/cute-kittens-holding-golf-clubs-clip-art.png" },
-  { src: "https://assets.codepen.io/9394943/kitten-holding-dumbbell-cat-clip-art.png" },
-  { src: "https://assets.codepen.io/9394943/cats-laying-in-fruit-basket-clip-art.png" },
-  { src: "https://assets.codepen.io/9394943/cute-himalayan-kittens-playing-with-golf-balls-clip-art.png" },
-  { src: "https://assets.codepen.io/9394943/cute-cats-cuddling-clip-art.png" },
-]
-
-const Home: NextPage = () => {
+const Home: NextPage<HomeProps> = ({ foodImages, christmasImages, halloweenImages, flowerImages, catImages }) => {
   return (
     <>
       <Head>
@@ -79,11 +48,11 @@ const Home: NextPage = () => {
 
         {/* Browse anchor for header navigation */}
         <div id="browse" className="relative -top-20" />
-
+        
         <ImageGallery categoryTitle={"Food"} images={foodImages} />
         <ImageGallery categoryTitle={"Christmas"} images={christmasImages} />
         <ImageGallery categoryTitle={"Halloween"} images={halloweenImages} />
-        <ImageGallery categoryTitle={"Flower"} images={flowerImages} />
+        <ImageGallery categoryTitle={"Flowers"} images={flowerImages} />
         
         <BundlesTeaser />
         
@@ -99,5 +68,44 @@ const Home: NextPage = () => {
     </>
   )
 }
+
+export const getStaticProps: GetStaticProps = async () => {
+  const client = await pool.connect();
+  
+  try {
+    // Fetch images by category from database
+    const fetchImagesByCategory = async (category: string, limit: number = 6) => {
+      const result = await client.query(`
+        SELECT image_url as src, slug, title
+        FROM images
+        WHERE category = $1 AND published = true
+        ORDER BY created_at DESC
+        LIMIT $2
+      `, [category, limit]);
+      return result.rows;
+    };
+
+    const [foodImages, christmasImages, halloweenImages, flowerImages, catImages] = await Promise.all([
+      fetchImagesByCategory('food', 6),
+      fetchImagesByCategory('christmas', 6),
+      fetchImagesByCategory('halloween', 6),
+      fetchImagesByCategory('flowers', 6),
+      fetchImagesByCategory('cats', 5),
+    ]);
+
+    return {
+      props: {
+        foodImages,
+        christmasImages,
+        halloweenImages,
+        flowerImages,
+        catImages,
+      },
+      revalidate: 3600, // Revalidate every hour
+    };
+  } finally {
+    client.release();
+  }
+};
 
 export default Home
