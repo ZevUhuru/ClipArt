@@ -26,4 +26,23 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Image Protection - Prevent right-click and saving */
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+/* Allow clicks on clickable image containers */
+a img, 
+button img,
+.clickable-image img {
+  pointer-events: auto;
+}
+
 

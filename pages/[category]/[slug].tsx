@@ -1,7 +1,7 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import { Pool } from 'pg';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PreLaunchHeader from 'src/components/PreLaunchHeader';
 import Footer from 'src/components/footer';
 import ImageDetailModal from 'src/components/ImageDetailModal';
@@ -32,6 +32,35 @@ export default function ImagePage({ image, relatedImages }: ImagePageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const categoryTitle = image.category.charAt(0).toUpperCase() + image.category.slice(1);
+
+  // Disable right-click on this page to protect images
+  useEffect(() => {
+    const disableRightClick = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const disableKeyboardShortcuts = (e: KeyboardEvent) => {
+      // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+        (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+        (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+      ) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    document.addEventListener('contextmenu', disableRightClick);
+    document.addEventListener('keydown', disableKeyboardShortcuts);
+
+    return () => {
+      document.removeEventListener('contextmenu', disableRightClick);
+      document.removeEventListener('keydown', disableKeyboardShortcuts);
+    };
+  }, []);
 
   return (
     <>
@@ -67,12 +96,32 @@ export default function ImagePage({ image, relatedImages }: ImagePageProps) {
 
           {/* Image Display */}
           <div className="grid md:grid-cols-2 gap-8 items-start">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg relative select-none">
               <img
                 src={image.image_url}
                 alt={image.title}
-                className="w-full h-auto rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
+                className="w-full h-auto rounded-lg cursor-pointer hover:opacity-95 transition-opacity select-none"
                 onClick={() => setIsModalOpen(true)}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+                draggable={false}
+              />
+              {/* CSS Watermark Overlay (temporary until proper watermarks added) */}
+              <div 
+                className="absolute inset-0 pointer-events-none flex items-center justify-center"
+                style={{
+                  background: 'repeating-linear-gradient(45deg, transparent, transparent 100px, rgba(0,0,0,0.02) 100px, rgba(0,0,0,0.02) 200px)'
+                }}
+              >
+                <div className="text-6xl font-bold text-white/10 select-none rotate-[-45deg] tracking-wider">
+                  clip.art
+                </div>
+              </div>
+              {/* Transparent overlay to prevent direct interaction */}
+              <div 
+                className="absolute inset-0 cursor-pointer"
+                onClick={() => setIsModalOpen(true)}
+                onContextMenu={(e) => e.preventDefault()}
               />
             </div>
 
