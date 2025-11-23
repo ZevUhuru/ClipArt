@@ -87,7 +87,7 @@ const HeroSection = () => {
                 {/* Subheadline */}
                 <p className="text-gray-300 text-lg sm:text-xl mb-8 max-w-2xl leading-relaxed">
                     High-quality clip art for any project. Download free, use forever.
-                    <span className="text-white font-semibold block mt-2">29 images available now. New images added weekly.</span>
+                    <span className="text-white font-semibold block mt-2">29 images available now. 100+ new images added weekly.</span>
                 </p>
 
                 {/* Trust Indicators */}
