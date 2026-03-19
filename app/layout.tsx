@@ -10,11 +10,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "clip.art — AI Clip Art Generator",
+  title: "Clip Art — AI Clip Art Generator",
   description:
     "Generate beautiful clip art in seconds. Describe what you want, pick a style, and download instantly. No license needed.",
   openGraph: {
-    title: "clip.art — AI Clip Art Generator",
+    title: "Clip Art — AI Clip Art Generator",
     description:
       "Generate beautiful clip art in seconds. Describe what you want, pick a style, and download instantly.",
     url: "https://clip.art",

@@ -66,15 +66,36 @@ export function MosaicBackground() {
         })}
       </div>
 
-      {/* Base dark wash across everything */}
-      <div className="absolute inset-0 bg-[#0a0a0a]/40" />
+      {/* Base dark wash -- dims everything uniformly */}
+      <div className="absolute inset-0 bg-[#0a0a0a]/50" />
 
-      {/* Radial vignette -- much darker center stage for legibility, lighter edges for vivid images */}
+      {/* Studio spotlight -- bright center, dark edges like Doodles */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 70% at 50% 55%, rgba(10,10,10,0.92) 0%, rgba(10,10,10,0.7) 50%, rgba(10,10,10,0.15) 100%)",
+            "radial-gradient(ellipse 60% 50% at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)",
+        }}
+      />
+
+      {/* Corner shadows for extra depth */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 0% 0%, rgba(0,0,0,0.6) 0%, transparent 50%), " +
+            "radial-gradient(ellipse 100% 100% at 100% 0%, rgba(0,0,0,0.6) 0%, transparent 50%), " +
+            "radial-gradient(ellipse 100% 100% at 0% 100%, rgba(0,0,0,0.6) 0%, transparent 50%), " +
+            "radial-gradient(ellipse 100% 100% at 100% 100%, rgba(0,0,0,0.6) 0%, transparent 50%)",
+        }}
+      />
+
+      {/* Subtle center glow for the "studio light" feel */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 100%)",
         }}
       />
     </div>
