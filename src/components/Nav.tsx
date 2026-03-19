@@ -16,7 +16,7 @@ export function Nav() {
   }
 
   return (
-    <nav className="relative z-10 flex-shrink-0 border-b border-white/10 bg-[#111111]">
+    <nav className="relative z-10 flex-shrink-0 bg-[#111111]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}

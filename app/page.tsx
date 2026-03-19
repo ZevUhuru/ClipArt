@@ -17,11 +17,11 @@ export default function Home() {
           <div className="w-full max-w-xl">
             {/* Hero text */}
             <div className="mb-6 text-center">
-              <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Generate clip art{" "}
-                <span className="gradient-text">in seconds.</span>
+              <h1 className="font-futura-bold text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                <span className="block text-white">Generate Clip Art</span>
+                <span className="gradient-text">In Seconds.</span>
               </h1>
-              <p className="mt-3 text-sm text-gray-400 sm:text-base">
+              <p className="mx-auto mt-4 max-w-md text-sm text-gray-400 sm:text-base">
                 Describe what you want. Download instantly. No license needed.
               </p>
             </div>
