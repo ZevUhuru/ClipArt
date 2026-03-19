@@ -21,38 +21,36 @@ export default function Home() {
                 <span className="block text-white">Generate Clip Art</span>
                 <span className="gradient-text">In Seconds.</span>
               </h1>
-              <p className="mx-auto mt-4 max-w-md text-sm text-gray-400 sm:text-base">
+              <p className="mt-4 whitespace-nowrap text-sm text-gray-300 sm:text-base">
                 Describe what you want. Download instantly. No license needed.
               </p>
             </div>
 
-            {/* Steps */}
-            <div className="mb-5 flex items-center justify-center gap-6 sm:gap-8">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white">
-                  1
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 sm:text-sm">
+            {/* Steps cards */}
+            <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-pink-400 sm:text-xs">
+                  Step 01
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">
                   Describe
-                </span>
+                </p>
               </div>
-              <div className="h-px w-6 bg-white/20" />
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white">
-                  2
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 sm:text-sm">
+              <div className="rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-orange-400 sm:text-xs">
+                  Step 02
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">
                   Generate
-                </span>
+                </p>
               </div>
-              <div className="h-px w-6 bg-white/20" />
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white">
-                  3
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 sm:text-sm">
+              <div className="rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-green-400 sm:text-xs">
+                  Step 03
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">
                   Download
-                </span>
+                </p>
               </div>
             </div>
 

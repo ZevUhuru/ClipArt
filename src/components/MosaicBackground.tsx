@@ -90,12 +90,21 @@ export function MosaicBackground() {
         }}
       />
 
+      {/* Extra dark zone behind steps + card area (lower center) */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 55% 35% at 50% 65%, rgba(0,0,0,0.7) 0%, transparent 100%)",
+        }}
+      />
+
       {/* Subtle center glow for the "studio light" feel */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 100%)",
+            "radial-gradient(ellipse 50% 40% at 50% 45%, rgba(255,255,255,0.03) 0%, transparent 100%)",
         }}
       />
     </div>
