@@ -1,106 +1,72 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  future: {
-    hoverOnlyWhenSupported: true,
-  },
-  purge: [
-    './src/**/*.{js,ts,jsx,tsx}',
-    './pages/**/*.{js,ts,jsx,tsx}',
-    'node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}',
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  variants: {
-    extend: {
-      opacity: ['group-hover'],
-    },
-  },
   theme: {
     extend: {
+      fontFamily: {
+        futura: ["futura-pt", "sans-serif"],
+        "futura-bold": ["futura-pt-bold", "sans-serif"],
+        body: [
+          "Inter",
+          "var(--font-inter)",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
+        sans: [
+          "Inter",
+          "var(--font-inter)",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
+      },
       colors: {
-        primary: {
-          "50":"#eff6ff",
-          "100":"#dbeafe",
-          "200":"#bfdbfe",
-          "300":"#93c5fd",
-          "400":"#60a5fa",
-          "500":"#3b82f6",
-          "600":"#2563eb",
-          "700":"#1d4ed8",
-          "800":"#1e40af",
-          "900":"#1e3a8a",
-          "950":"#172554"
+        brand: {
+          50: "#fef2f8",
+          100: "#fde6f2",
+          200: "#ffc9e0",
+          300: "#ff8ac2",
+          400: "#FF6B9D",
+          500: "#ff4d88",
+          600: "#e63370",
+          700: "#c2245c",
+          800: "#991b49",
+          900: "#751438",
         },
       },
-      fontFamily: {
-        'futura': ['futura-pt', 'sans-serif'],
-        'futura-bold': ['futura-pt-bold', 'sans-serif'], 
-        'body': [
-          'Inter', 
-          'ui-sans-serif', 
-          'system-ui', 
-          '-apple-system', 
-          'Segoe UI', 
-          'Roboto', 
-          'Helvetica Neue', 
-          'Arial', 
-          'Noto Sans', 
-          'sans-serif', 
-          'Apple Color Emoji', 
-          'Segoe UI Emoji', 
-          'Segoe UI Symbol', 
-          'Noto Color Emoji'
-        ],
-        'sans': [
-          'Inter', 
-          'ui-sans-serif', 
-          'system-ui', 
-          '-apple-system', 
-          'Segoe UI', 
-          'Roboto', 
-          'Helvetica Neue', 
-          'Arial', 
-          'Noto Sans', 
-          'sans-serif', 
-          'Apple Color Emoji', 
-          'Segoe UI Emoji', 
-          'Segoe UI Symbol', 
-          'Noto Color Emoji'
-        ]
-      },
-      fontWeight: {
-        'light': 300,
-        'book': 400,
-        'medium': 500,
-        'demi': 600,
-        'bold': 700,
-        'heavy': 800,
-        'extrabold': 800,
-      },
-      boxShadow: {
-        highlight: 'inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
-      },
-      screens: {
-        narrow: { raw: '(max-aspect-ratio: 3 / 2)' },
-        wide: { raw: '(min-aspect-ratio: 3 / 2)' },
-        'taller-than-854': { raw: '(min-height: 854px)' },
-      },
-      fontSize: {
-        '23': '23px',
-        '30': '30px',
-        '33': '33px',
-        '36': '36px',
-      },
-      spacing: {
-        '50': '50px',
-      },
       backgroundImage: {
-        'footer-gradient': 'linear-gradient(#0d0f13, #222831, #37414f)',
+        "brand-gradient":
+          "linear-gradient(135deg, #FF6B9D 0%, #FF8A65 50%, #4ADE80 100%)",
       },
-      backgroundColor: {
-        'custom-gray': '#0d0f13',
+      borderRadius: {
+        "4xl": "2rem",
+      },
+      animation: {
+        "fade-in": "fadeIn 0.5s ease-out",
+        "slide-up": "slideUp 0.3s ease-out",
+        "pulse-soft": "pulseSoft 2s ease-in-out infinite",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        pulseSoft: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
       },
     },
   },
-  plugins: [
-    require('flowbite/plugin'),
-  ],
-}
+  plugins: [],
+};

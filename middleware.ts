@@ -1,44 +1,44 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  // Protect all /admin routes except /admin/login
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Allow access to login page
-    if (request.nextUrl.pathname === '/admin/login') {
-      return NextResponse.next();
-    }
-
-    // Check for admin token
-    const token = request.cookies.get('admin_token')?.value;
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-
-    try {
-      // Verify token
-      await jwtVerify(token, JWT_SECRET);
-      return NextResponse.next();
-    } catch (error) {
-      // Invalid token, redirect to login
-      const response = NextResponse.redirect(new URL('/admin/login', request.url));
-      response.cookies.delete('admin_token');
-      return response;
-    }
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  await supabase.auth.getUser();
+
+  return supabaseResponse;
 }
 
 export const config = {
-  matcher: '/admin/:path*',
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
-
-
-
