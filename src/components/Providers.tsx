@@ -13,11 +13,24 @@ export function Providers({ children }: { children: ReactNode }) {
     const supabase = createBrowserClient();
     if (!supabase) return;
 
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from("profiles")
       .select("credits")
       .eq("id", userId)
       .single();
+
+    if (error) {
+      console.error("Failed to fetch credits:", error.message);
+      // Fallback: fetch via API route which uses service role key
+      try {
+        const res = await fetch("/api/me/credits");
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.credits === "number") setCredits(data.credits);
+        }
+      } catch { /* ignore fallback failure */ }
+      return;
+    }
 
     if (profile) {
       setCredits(profile.credits);
