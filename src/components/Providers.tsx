@@ -1,47 +1,55 @@
 "use client";
 
-import { ReactNode, useCallback, useEffect } from "react";
+import { ReactNode, useCallback, useEffect, useRef } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/stores/useAppStore";
 import { AuthModal } from "./AuthModal";
 import { BuyCreditsModal } from "./BuyCreditsModal";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export function Providers({ children }: { children: ReactNode }) {
   const { setUser, setCredits } = useAppStore();
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
-  const refreshCredits = useCallback(async (userId: string) => {
-    const supabase = createBrowserClient();
-    if (!supabase) return;
+  const fetchCredits = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me/credits");
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.credits === "number") setCredits(data.credits);
+      }
+    } catch { /* ignore */ }
+  }, [setCredits]);
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("credits")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("Failed to fetch credits:", error.message);
-      // Fallback: fetch via API route which uses service role key
-      try {
-        const res = await fetch("/api/me/credits");
-        if (res.ok) {
-          const data = await res.json();
-          if (typeof data.credits === "number") setCredits(data.credits);
-        }
-      } catch { /* ignore fallback failure */ }
-      return;
+  const subscribeToCredits = useCallback((supabase: ReturnType<typeof createBrowserClient>, userId: string) => {
+    if (channelRef.current) {
+      supabase?.removeChannel(channelRef.current);
     }
 
-    if (profile) {
-      setCredits(profile.credits);
-    }
+    const channel = supabase?.channel(`credits:${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${userId}`,
+        },
+        (payload) => {
+          const newCredits = payload.new?.credits;
+          if (typeof newCredits === "number") {
+            setCredits(newCredits);
+          }
+        },
+      )
+      .subscribe();
+
+    channelRef.current = channel ?? null;
   }, [setCredits]);
 
   useEffect(() => {
-    const client = createBrowserClient();
-    if (!client) return;
-
-    const supabase = client;
+    const supabase = createBrowserClient();
+    if (!supabase) return;
 
     async function loadSession() {
       const {
@@ -50,21 +58,8 @@ export function Providers({ children }: { children: ReactNode }) {
 
       if (user) {
         setUser({ id: user.id, email: user.email! });
-        await refreshCredits(user.id);
-
-        // After Stripe checkout redirect, the webhook may take a moment to process.
-        // Poll for updated credits so the UI reflects the purchase.
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("success") === "true") {
-          let attempts = 0;
-          const poll = setInterval(async () => {
-            attempts++;
-            await refreshCredits(user.id);
-            if (attempts >= 5) clearInterval(poll);
-          }, 2000);
-
-          window.history.replaceState({}, "", window.location.pathname);
-        }
+        await fetchCredits();
+        subscribeToCredits(supabase, user.id);
       }
     }
 
@@ -75,15 +70,25 @@ export function Providers({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email! });
-        await refreshCredits(session.user.id);
+        await fetchCredits();
+        subscribeToCredits(supabase, session.user.id);
       } else {
         setUser(null);
         setCredits(0);
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [setUser, setCredits, refreshCredits]);
+    return () => {
+      subscription.unsubscribe();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
+  }, [setUser, setCredits, fetchCredits, subscribeToCredits]);
 
   return (
     <>
