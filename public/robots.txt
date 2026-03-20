@@ -1,0 +1,24 @@
+# clip.art robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://clip.art/sitemap.xml
+
+# Block internal/API routes
+Disallow: /api/
+Disallow: /auth/
+Disallow: /generator
+
+# Allow search engines to crawl all public content
+Allow: /christmas
+Allow: /heart
+Allow: /halloween
+Allow: /flower
+Allow: /school
+Allow: /book
+Allow: /pumpkin
+Allow: /cat
+Allow: /thanksgiving
+Allow: /free

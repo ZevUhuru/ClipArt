@@ -116,7 +116,7 @@ export function Generator() {
         </p>
       )}
 
-      {imageUrl && <GenerationResult imageUrl={imageUrl} />}
+      {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} />}
     </div>
   );
 }

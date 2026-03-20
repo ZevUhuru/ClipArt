@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 
 interface GenerationResultProps {
   imageUrl: string;
+  prompt?: string;
 }
 
-export function GenerationResult({ imageUrl }: GenerationResultProps) {
+export function GenerationResult({ imageUrl, prompt }: GenerationResultProps) {
   async function handleDownload() {
     const response = await fetch(imageUrl);
     const blob = await response.blob();
@@ -30,7 +31,7 @@ export function GenerationResult({ imageUrl }: GenerationResultProps) {
       <div className="relative aspect-square w-full bg-gray-50">
         <Image
           src={imageUrl}
-          alt="Generated clip art"
+          alt={prompt ? `${prompt} - AI generated clip art` : "AI generated clip art"}
           fill
           className="object-contain p-4"
           unoptimized

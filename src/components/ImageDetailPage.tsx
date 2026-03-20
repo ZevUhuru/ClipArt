@@ -81,7 +81,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
             <div className="relative aspect-square w-full">
               <Image
                 src={image.url}
-                alt={image.title}
+                alt={image.description}
                 fill
                 className="object-contain p-6"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -179,7 +179,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
                     <div className="relative aspect-square bg-gray-50">
                       <Image
                         src={img.url}
-                        alt={img.title}
+                        alt={`${img.title} - free ${categoryName.toLowerCase()} clip art`}
                         fill
                         className="object-contain p-3 transition-transform group-hover:scale-105"
                         sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
