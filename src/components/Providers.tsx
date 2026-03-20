@@ -54,7 +54,7 @@ export function Providers({ children }: { children: ReactNode }) {
     async function loadSession() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await supabase!.auth.getUser();
 
       if (user) {
         setUser({ id: user.id, email: user.email! });
