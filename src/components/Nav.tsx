@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useAppStore } from "@/stores/useAppStore";
 import { createBrowserClient } from "@/lib/supabase/client";
-import { CreditBadge } from "./CreditBadge";
+
+function CreditBadgeInline() {
+  const { credits } = useAppStore();
+  return <>{credits} credit{credits !== 1 ? "s" : ""}</>;
+}
 
 export function Nav() {
   const { openAuthModal, openBuyCreditsModal, user, setUser, setCredits } = useAppStore();
@@ -42,6 +46,9 @@ export function Nav() {
 
           {user ? (
             <>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white">
+                <CreditBadgeInline />
+              </span>
               <Link
                 href="/generator"
                 className="rounded-full px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white"

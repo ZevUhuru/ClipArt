@@ -24,9 +24,11 @@ const PACKS = [
 export function BuyCreditsModal() {
   const { isBuyCreditsOpen, closeBuyCreditsModal } = useAppStore();
   const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handlePurchase(packId: string) {
     setLoading(packId);
+    setError(null);
     try {
       const res = await fetch("/api/credits/checkout", {
         method: "POST",
@@ -36,8 +38,12 @@ export function BuyCreditsModal() {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setError(data.error || "Something went wrong");
+        setLoading(null);
       }
     } catch {
+      setError("Network error. Please try again.");
       setLoading(null);
     }
   }
@@ -74,6 +80,12 @@ export function BuyCreditsModal() {
             <p className="mt-2 text-sm text-gray-500">
               One credit = one generation. No subscription, no expiry.
             </p>
+
+            {error && (
+              <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </p>
+            )}
 
             <div className="mt-6 grid grid-cols-2 gap-4">
               {PACKS.map((pack) => (
