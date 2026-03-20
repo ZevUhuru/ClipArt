@@ -55,7 +55,10 @@ function ImageCard({ image }: { image: SampleImage }) {
 
 function GalleryImageCard({ image }: { image: GalleryImage }) {
   return (
-    <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-lg">
+    <Link
+      href={`/${image.category}/${image.slug}`}
+      className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-lg"
+    >
       <div className="relative aspect-square bg-gray-50">
         <Image
           src={image.url}
@@ -71,7 +74,7 @@ function GalleryImageCard({ image }: { image: GalleryImage }) {
           {image.title}
         </p>
         <button
-          onClick={() => downloadClip(image.url, `${image.slug}.png`)}
+          onClick={(e) => { e.preventDefault(); downloadClip(image.url, `${image.slug}.png`); }}
           className="ml-2 flex-shrink-0 text-pink-500 hover:text-pink-700"
           title="Download"
         >
@@ -80,23 +83,34 @@ function GalleryImageCard({ image }: { image: GalleryImage }) {
           </svg>
         </button>
       </div>
-    </div>
+    </Link>
   );
 }
 
 export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps) {
   const sampleImages = getCategoryImages(category.slug);
   const [searchResults, setSearchResults] = useState<GalleryImage[] | null>(null);
+  const [filteredSamples, setFilteredSamples] = useState<SampleImage[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults(null);
+      setFilteredSamples(null);
       return;
     }
 
     setIsSearching(true);
     try {
+      const lower = query.toLowerCase();
+      const filtered = sampleImages.filter(
+        (img) =>
+          img.title.toLowerCase().includes(lower) ||
+          img.description.toLowerCase().includes(lower) ||
+          img.tags.some((t) => t.toLowerCase().includes(lower)),
+      );
+      setFilteredSamples(filtered);
+
       const res = await fetch(
         `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category.slug)}`
       );
@@ -116,10 +130,11 @@ export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps
     } finally {
       setIsSearching(false);
     }
-  }, [category.slug]);
+  }, [category.slug, sampleImages]);
 
+  const isFiltering = searchResults !== null || filteredSamples !== null;
   const displayImages = searchResults ?? galleryImages;
-  const showSamples = searchResults === null;
+  const displaySamples = filteredSamples ?? sampleImages;
 
   const relatedCategories = category.relatedSlugs
     .map((slug) => categoryMap.get(slug))
@@ -164,13 +179,13 @@ export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps
 
       {/* Gallery Grid */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
-        {searchResults !== null && (
+        {isFiltering && (
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} found
+              {displayImages.length + displaySamples.length} result{displayImages.length + displaySamples.length !== 1 ? "s" : ""} found
             </p>
             <button
-              onClick={() => setSearchResults(null)}
+              onClick={() => { setSearchResults(null); setFilteredSamples(null); }}
               className="text-sm font-medium text-pink-600 hover:text-pink-700"
             >
               Clear search
@@ -181,14 +196,14 @@ export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps
           {displayImages.map((img) => (
             <GalleryImageCard key={img.slug} image={img} />
           ))}
-          {showSamples && sampleImages.map((img) => (
+          {displaySamples.map((img) => (
             <ImageCard key={img.url} image={img} />
           ))}
         </div>
-        {displayImages.length === 0 && (!showSamples || sampleImages.length === 0) && (
+        {displayImages.length === 0 && displaySamples.length === 0 && (
           <div className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
             <p className="text-sm text-gray-400">
-              {searchResults !== null
+              {isFiltering
                 ? "No results found. Try a different search term."
                 : `No clip art yet. Be the first to generate ${category.name.toLowerCase()} clip art!`}
             </p>
