@@ -4,10 +4,6 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "assets.codepen.io",
-      },
-      {
-        protocol: "https",
         hostname: "images.clip.art",
       },
     ],

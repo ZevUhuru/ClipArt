@@ -9,10 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "latest",
     "@google/genai": "latest",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
-    "@aws-sdk/client-s3": "latest",
     "framer-motion": "latest",
     "next": "^14.2.0",
     "react": "^18.3.0",
@@ -27,7 +27,9 @@
     "autoprefixer": "^10",
     "eslint": "^8",
     "eslint-config-next": "^14",
+    "mime-types": "^3.0.2",
     "postcss": "^8",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4",
     "typescript": "^5"
   },
