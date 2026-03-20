@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { downloadClip } from "@/utils/downloadClip";
 
 interface GenerationResultProps {
   imageUrl: string;
@@ -9,17 +10,8 @@ interface GenerationResultProps {
 }
 
 export function GenerationResult({ imageUrl, prompt }: GenerationResultProps) {
-  async function handleDownload() {
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `clip-art-${Date.now()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  function handleDownload() {
+    downloadClip(imageUrl);
   }
 
   return (

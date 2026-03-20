@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAppStore } from "@/stores/useAppStore";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { downloadClip } from "@/utils/downloadClip";
 
 interface Generation {
   id: string;
@@ -90,12 +91,7 @@ export function HistoryGrid() {
           <div className="p-3">
             <p className="mb-2 truncate text-xs text-gray-500">{gen.prompt}</p>
             <button
-              onClick={() => {
-                const a = document.createElement("a");
-                a.href = gen.image_url;
-                a.download = `clip-art-${gen.id}.png`;
-                a.click();
-              }}
+              onClick={() => downloadClip(gen.image_url, `clip-art-${gen.id}.png`)}
               className="text-xs font-medium text-pink-600 hover:text-pink-700"
             >
               Download

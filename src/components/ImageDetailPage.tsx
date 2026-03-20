@@ -10,6 +10,7 @@ import {
   getCategorySlugForImage,
   type Category,
 } from "@/data/categories";
+import { downloadClip } from "@/utils/downloadClip";
 
 interface ImageDetailPageProps {
   image: SampleImage;
@@ -23,17 +24,8 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
     .filter((img) => img.slug !== image.slug)
     .slice(0, 6);
 
-  async function handleDownload() {
-    const response = await fetch(image.url);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${image.slug}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  function handleDownload() {
+    downloadClip(image.url, `${image.slug}.png`);
   }
 
   return (
