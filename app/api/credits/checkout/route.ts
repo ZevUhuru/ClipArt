@@ -40,14 +40,12 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err) {
-    console.error("Checkout error:", err);
-
-    const message = err instanceof Error ? err.message : String(err);
-    const isStripeError = message.includes("No such price") || message.includes("Invalid");
+  } catch (err: unknown) {
+    const stripeErr = err as { type?: string; message?: string; code?: string };
+    console.error("Checkout error:", stripeErr.type, stripeErr.code, stripeErr.message);
 
     return NextResponse.json(
-      { error: isStripeError ? "Payment configuration error." : "Failed to create checkout session." },
+      { error: stripeErr.message || "Failed to create checkout session." },
       { status: 500 },
     );
   }
