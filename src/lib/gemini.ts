@@ -9,21 +9,39 @@ function getAI() {
   return _ai;
 }
 
+const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
+
 export async function generateClipArt(prompt: string): Promise<Buffer> {
-  const response = await getAI().models.generateContent({
-    model: "gemini-2.5-flash-image",
-    contents: prompt,
-    config: {
-      responseModalities: ["IMAGE"],
-      imageConfig: { aspectRatio: "1:1" },
-    },
-  });
+  try {
+    const response = await getAI().models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        responseModalities: ["IMAGE"],
+        imageConfig: { aspectRatio: "1:1" },
+      },
+    });
 
-  const part = response.candidates?.[0]?.content?.parts?.[0];
+    const part = response.candidates?.[0]?.content?.parts?.[0];
 
-  if (!part || !("inlineData" in part) || !part.inlineData?.data) {
-    throw new Error("No image returned from Gemini");
+    if (!part || !("inlineData" in part) || !part.inlineData?.data) {
+      throw new Error("No image returned from Gemini");
+    }
+
+    return Buffer.from(part.inlineData.data, "base64");
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+
+    if (message.includes("429") || message.includes("RESOURCE_EXHAUSTED")) {
+      if (message.includes("free_tier") || message.includes("limit: 0")) {
+        throw new Error(
+          "BILLING_REQUIRED: Gemini image generation requires a billing-enabled API key. " +
+          "Enable billing at https://aistudio.google.com/apikey",
+        );
+      }
+      throw new Error("RATE_LIMITED: Too many requests. Please wait a moment and try again.");
+    }
+
+    throw err;
   }
-
-  return Buffer.from(part.inlineData.data, "base64");
 }

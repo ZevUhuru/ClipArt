@@ -4,16 +4,16 @@ import { MosaicBackground } from "@/components/MosaicBackground";
 
 export default function Home() {
   return (
-    <main className="relative h-screen overflow-hidden bg-[#0a0a0a]">
+    <main className="relative min-h-screen bg-[#0a0a0a]">
       {/* Animated mosaic background */}
       <MosaicBackground />
 
       {/* Content layer */}
-      <div className="relative z-10 flex h-full flex-col">
+      <div className="relative z-10 flex min-h-screen flex-col">
         <Nav />
 
         {/* Centered generator card */}
-        <div className="flex flex-1 items-center justify-center px-4 py-6">
+        <div className="flex flex-1 items-center justify-center px-4 py-6 pb-16">
           <div className="w-full max-w-xl">
             {/* Hero text */}
             <div className="mb-6 text-center">

@@ -19,7 +19,7 @@ const columnSpeeds = [60, 55, 65, 50, 58, 62];
 
 export function MosaicBackground() {
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="fixed inset-0 overflow-hidden">
       <div className="flex h-full w-full gap-3 px-3">
         {columns.map((col, colIndex) => {
           const isUp = colIndex % 2 === 0;

@@ -107,6 +107,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ imageUrl, credits: profile.credits - 1 });
   } catch (err) {
     console.error("Generation error:", err);
+
+    const message = err instanceof Error ? err.message : String(err);
+
+    if (message.startsWith("BILLING_REQUIRED:")) {
+      return NextResponse.json(
+        { error: "Image generation service is not configured yet. Please try again later." },
+        { status: 503 },
+      );
+    }
+
+    if (message.startsWith("RATE_LIMITED:")) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment and try again." },
+        { status: 429 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Generation failed. Please try again." },
       { status: 500 },

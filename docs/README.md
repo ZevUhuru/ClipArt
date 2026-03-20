@@ -2,6 +2,13 @@
 
 Internal documentation, plans, patterns, and strategy for the clip.art project.
 
+## Core Guides
+
+| Document | Description |
+|----------|-------------|
+| [UX_FLOW.md](UX_FLOW.md) | Complete user experience flow — generation, auth, credits, SEO pages |
+| [R2_IMAGE_STORAGE.md](R2_IMAGE_STORAGE.md) | Cloudflare R2 storage plan, directory structure, seeding strategy |
+
 ## Structure
 
 | Directory | Purpose |

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StylePicker } from "./StylePicker";
 import { GenerationResult } from "./GenerationResult";
 import { useAppStore } from "@/stores/useAppStore";
@@ -12,6 +12,7 @@ export function Generator() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   const { openAuthModal, openBuyCreditsModal, setCredits, user } =
     useAppStore();
@@ -51,6 +52,10 @@ export function Generator() {
       if (typeof data.credits === "number") {
         setCredits(data.credits);
       }
+
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -116,7 +121,9 @@ export function Generator() {
         </p>
       )}
 
-      {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} />}
+      <div ref={resultRef}>
+        {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} />}
+      </div>
     </div>
   );
 }
