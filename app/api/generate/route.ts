@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { generateClipArt } from "@/lib/gemini";
 import { uploadToR2 } from "@/lib/r2";
@@ -53,8 +54,21 @@ export async function POST(request: NextRequest) {
 
       const slug = slugifyPrompt(prompt);
       const uid = Math.random().toString(36).slice(2, 8);
-      const key = `free/${slug}-${uid}.png`;
-      const imageUrl = await uploadToR2(imageBuffer, key);
+      const cat = validCategory || "free";
+      const key = `${cat}/${slug}-${uid}.png`;
+      const imageUrl = await uploadToR2(imageBuffer, key, { category: cat });
+
+      const admin = createSupabaseAdmin();
+      await admin.from("generations").insert({
+        prompt,
+        style,
+        image_url: imageUrl,
+        category: cat,
+        is_public: true,
+        title: prompt.slice(0, 100),
+      });
+
+      revalidatePath(`/${cat}`);
 
       const response = NextResponse.json({ imageUrl });
       response.cookies.set(COOKIE_NAME, String(freeCount + 1), {
@@ -97,12 +111,18 @@ export async function POST(request: NextRequest) {
       .update({ credits: profile.credits - 1 })
       .eq("id", user.id);
 
+    const imgCategory = validCategory || "free";
     await admin.from("generations").insert({
       user_id: user.id,
       prompt,
       style,
       image_url: imageUrl,
+      category: imgCategory,
+      is_public: true,
+      title: prompt.slice(0, 100),
     });
+
+    revalidatePath(`/${imgCategory}`);
 
     return NextResponse.json({ imageUrl, credits: profile.credits - 1 });
   } catch (err) {

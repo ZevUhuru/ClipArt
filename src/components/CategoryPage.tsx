@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CategoryNav } from "./CategoryNav";
+import { SearchBar } from "./SearchBar";
 import {
   type Category,
   categoryMap,
@@ -10,9 +12,20 @@ import {
   getCategorySlugForImage,
 } from "@/data/categories";
 import type { SampleImage } from "@/data/sampleGallery";
+import { downloadClip } from "@/utils/downloadClip";
+
+export interface GalleryImage {
+  slug: string;
+  title: string;
+  url: string;
+  description: string;
+  category: string;
+  tags: string[];
+}
 
 interface CategoryPageProps {
   category: Category;
+  galleryImages?: GalleryImage[];
 }
 
 function ImageCard({ image }: { image: SampleImage }) {
@@ -40,43 +53,73 @@ function ImageCard({ image }: { image: SampleImage }) {
   );
 }
 
-function PlaceholderCard({ index, categoryName }: { index: number; categoryName: string }) {
+function GalleryImageCard({ image }: { image: GalleryImage }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 transition-all hover:border-pink-300 hover:bg-pink-50/30">
-      <div className="flex flex-1 items-center justify-center p-6">
-        <div className="text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <p className="text-xs font-medium text-gray-400">Coming soon</p>
-        </div>
+    <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-lg">
+      <div className="relative aspect-square bg-gray-50">
+        <Image
+          src={image.url}
+          alt={`${image.title} - free clip art`}
+          fill
+          className="object-contain p-3 transition-transform group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+          unoptimized
+        />
       </div>
-      <div className="px-3 py-2.5">
-        <p className="truncate text-xs font-medium text-gray-400">
-          {categoryName} #{index + 1}
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <p className="truncate text-xs font-medium text-gray-600">
+          {image.title}
         </p>
+        <button
+          onClick={() => downloadClip(image.url, `${image.slug}.png`)}
+          className="ml-2 flex-shrink-0 text-pink-500 hover:text-pink-700"
+          title="Download"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </button>
       </div>
     </div>
   );
 }
 
-export function CategoryPage({ category }: CategoryPageProps) {
-  const existingImages = getCategoryImages(category.slug);
+export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps) {
+  const sampleImages = getCategoryImages(category.slug);
+  const [searchResults, setSearchResults] = useState<GalleryImage[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const totalSlots = 12;
-  const placeholderCount = Math.max(0, totalSlots - existingImages.length);
+  const handleSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category.slug)}`
+      );
+      const data = await res.json();
+      setSearchResults(
+        (data.results || []).map((r: Record<string, string>) => ({
+          slug: r.slug || r.id,
+          title: r.title,
+          url: r.url,
+          description: r.description,
+          category: r.category,
+          tags: [],
+        }))
+      );
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [category.slug]);
+
+  const displayImages = searchResults ?? galleryImages;
+  const showSamples = searchResults === null;
 
   const relatedCategories = category.relatedSlugs
     .map((slug) => categoryMap.get(slug))
@@ -110,20 +153,47 @@ export function CategoryPage({ category }: CategoryPageProps) {
         </div>
       </section>
 
+      {/* Search */}
+      <section className="mx-auto max-w-2xl px-4 pb-8">
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder={`Search ${category.name.toLowerCase()} clip art...`}
+          isLoading={isSearching}
+        />
+      </section>
+
       {/* Gallery Grid */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
+        {searchResults !== null && (
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} found
+            </p>
+            <button
+              onClick={() => setSearchResults(null)}
+              className="text-sm font-medium text-pink-600 hover:text-pink-700"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {existingImages.map((img) => (
+          {displayImages.map((img) => (
+            <GalleryImageCard key={img.slug} image={img} />
+          ))}
+          {showSamples && sampleImages.map((img) => (
             <ImageCard key={img.url} image={img} />
           ))}
-          {Array.from({ length: placeholderCount }).map((_, i) => (
-            <PlaceholderCard
-              key={`placeholder-${i}`}
-              index={existingImages.length + i}
-              categoryName={category.name}
-            />
-          ))}
         </div>
+        {displayImages.length === 0 && (!showSamples || sampleImages.length === 0) && (
+          <div className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+            <p className="text-sm text-gray-400">
+              {searchResults !== null
+                ? "No results found. Try a different search term."
+                : `No clip art yet. Be the first to generate ${category.name.toLowerCase()} clip art!`}
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Generate CTA */}
