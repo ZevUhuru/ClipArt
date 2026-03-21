@@ -5,13 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { CategoryNav } from "./CategoryNav";
 import { SearchBar } from "./SearchBar";
-import {
-  type Category,
-  categoryMap,
-  getCategoryImages,
-  getCategorySlugForImage,
-} from "@/data/categories";
+import { getCategoryImages, getCategorySlugForImage } from "@/data/categories";
 import type { SampleImage } from "@/data/sampleGallery";
+import type { DbCategory } from "@/lib/categories";
 import { downloadClip } from "@/utils/downloadClip";
 
 export interface GalleryImage {
@@ -24,8 +20,9 @@ export interface GalleryImage {
 }
 
 interface CategoryPageProps {
-  category: Category;
+  category: DbCategory;
   galleryImages?: GalleryImage[];
+  relatedCategories?: DbCategory[];
 }
 
 function ImageCard({ image }: { image: SampleImage }) {
@@ -87,11 +84,14 @@ function GalleryImageCard({ image }: { image: GalleryImage }) {
   );
 }
 
-export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps) {
+export function CategoryPage({ category, galleryImages = [], relatedCategories = [] }: CategoryPageProps) {
   const sampleImages = getCategoryImages(category.slug);
   const [searchResults, setSearchResults] = useState<GalleryImage[] | null>(null);
   const [filteredSamples, setFilteredSamples] = useState<SampleImage[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+
+  const suggestedPrompts = category.suggested_prompts || [];
+  const seoContent = category.seo_content || [];
 
   const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -136,10 +136,6 @@ export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps
   const displayImages = searchResults ?? galleryImages;
   const displaySamples = filteredSamples ?? sampleImages;
 
-  const relatedCategories = category.relatedSlugs
-    .map((slug) => categoryMap.get(slug))
-    .filter(Boolean) as Category[];
-
   return (
     <div className="min-h-screen bg-white">
       <CategoryNav />
@@ -158,9 +154,11 @@ export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps
             return word + " ";
           })}
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base text-gray-500 sm:text-lg">
-          {category.intro}
-        </p>
+        {category.intro && (
+          <p className="mx-auto mt-4 max-w-2xl text-base text-gray-500 sm:text-lg">
+            {category.intro}
+          </p>
+        )}
         <div className="mt-6">
           <Link href="/generator" className="btn-primary text-base">
             Generate Your Own
@@ -212,47 +210,51 @@ export function CategoryPage({ category, galleryImages = [] }: CategoryPageProps
       </section>
 
       {/* Generate CTA */}
-      <section className="mx-auto max-w-3xl px-4 pb-16">
-        <div className="rounded-3xl bg-brand-gradient p-[2px]">
-          <div className="rounded-[22px] bg-white p-8 text-center sm:p-10">
-            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-              Create custom {category.name.toLowerCase()} clip art
-            </h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
-              Describe exactly what you want and our AI will generate it in
-              seconds. Try one of these prompts:
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {category.suggestedPrompts.map((prompt) => (
-                <Link
-                  key={prompt}
-                  href="/generator"
-                  className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-600 transition-all hover:border-pink-300 hover:bg-pink-50 hover:text-pink-700 sm:text-sm"
-                >
-                  &ldquo;{prompt}&rdquo;
+      {suggestedPrompts.length > 0 && (
+        <section className="mx-auto max-w-3xl px-4 pb-16">
+          <div className="rounded-3xl bg-brand-gradient p-[2px]">
+            <div className="rounded-[22px] bg-white p-8 text-center sm:p-10">
+              <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                Create custom {category.name.toLowerCase()} clip art
+              </h2>
+              <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
+                Describe exactly what you want and our AI will generate it in
+                seconds. Try one of these prompts:
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {suggestedPrompts.map((prompt) => (
+                  <Link
+                    key={prompt}
+                    href="/generator"
+                    className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-600 transition-all hover:border-pink-300 hover:bg-pink-50 hover:text-pink-700 sm:text-sm"
+                  >
+                    &ldquo;{prompt}&rdquo;
+                  </Link>
+                ))}
+              </div>
+              <div className="mt-8">
+                <Link href="/generator" className="btn-primary px-8 text-base">
+                  Start Generating — It&apos;s Free
                 </Link>
-              ))}
-            </div>
-            <div className="mt-8">
-              <Link href="/generator" className="btn-primary px-8 text-base">
-                Start Generating — It&apos;s Free
-              </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* SEO Content */}
-      <section className="mx-auto max-w-3xl px-4 pb-16">
-        {category.seoContent.map((paragraph, i) => (
-          <p
-            key={i}
-            className="mt-4 text-sm leading-relaxed text-gray-600 first:mt-0 sm:text-base"
-          >
-            {paragraph}
-          </p>
-        ))}
-      </section>
+      {seoContent.length > 0 && (
+        <section className="mx-auto max-w-3xl px-4 pb-16">
+          {seoContent.map((paragraph, i) => (
+            <p
+              key={i}
+              className="mt-4 text-sm leading-relaxed text-gray-600 first:mt-0 sm:text-base"
+            >
+              {paragraph}
+            </p>
+          ))}
+        </section>
+      )}
 
       {/* Related Categories */}
       {relatedCategories.length > 0 && (

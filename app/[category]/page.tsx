@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { categories, categoryMap } from "@/data/categories";
+import { getCategoryBySlug, getAllCategories, type DbCategory } from "@/lib/categories";
 import { CategoryPage } from "@/components/CategoryPage";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -10,20 +10,21 @@ interface PageProps {
   params: { category: string };
 }
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const categories = await getAllCategories();
   return categories.map((c) => ({ category: c.slug }));
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
-  const category = categoryMap.get(params.category);
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const category = await getCategoryBySlug(params.category);
   if (!category) return {};
 
   return {
-    title: category.metaTitle,
-    description: category.metaDescription,
+    title: category.meta_title || `${category.name} Clip Art`,
+    description: category.meta_description,
     openGraph: {
-      title: category.metaTitle,
-      description: category.metaDescription,
+      title: category.meta_title || `${category.name} Clip Art`,
+      description: category.meta_description || undefined,
       url: `https://clip.art/${category.slug}`,
       siteName: "clip.art",
       type: "website",
@@ -36,14 +37,14 @@ async function getGalleryImages(categorySlug: string) {
     const admin = createSupabaseAdmin();
     const { data } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, created_at")
+      .select("id, prompt, title, image_url, style, category, slug, created_at")
       .eq("category", categorySlug)
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(60);
 
     return (data || []).map((row: Record<string, string>) => ({
-      slug: row.id,
+      slug: row.slug || row.id,
       title: row.title || row.prompt,
       url: row.image_url,
       description: row.prompt,
@@ -55,11 +56,35 @@ async function getGalleryImages(categorySlug: string) {
   }
 }
 
+async function getRelatedCategories(relatedSlugs: string[]): Promise<DbCategory[]> {
+  if (!relatedSlugs.length) return [];
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("*")
+      .in("slug", relatedSlugs)
+      .eq("is_active", true);
+    return (data || []) as DbCategory[];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Page({ params }: PageProps) {
-  const category = categoryMap.get(params.category);
+  const category = await getCategoryBySlug(params.category);
   if (!category) notFound();
 
-  const dbImages = await getGalleryImages(params.category);
+  const [dbImages, relatedCategories] = await Promise.all([
+    getGalleryImages(params.category),
+    getRelatedCategories(category.related_slugs || []),
+  ]);
 
-  return <CategoryPage category={category} galleryImages={dbImages} />;
+  return (
+    <CategoryPage
+      category={category}
+      galleryImages={dbImages}
+      relatedCategories={relatedCategories}
+    />
+  );
 }

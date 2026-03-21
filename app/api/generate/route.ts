@@ -4,28 +4,15 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { generateClipArt } from "@/lib/gemini";
 import { uploadToR2 } from "@/lib/r2";
+import { classifyPrompt } from "@/lib/classify";
 import { buildPrompt, type StyleKey, STYLES } from "@/lib/styles";
 
 const FREE_LIMIT = 5;
 const COOKIE_NAME = "clip_art_free";
 
-const VALID_CATEGORIES = new Set([
-  "christmas", "heart", "halloween", "flower", "school",
-  "book", "pumpkin", "cat", "thanksgiving", "free",
-]);
-
-function slugifyPrompt(prompt: string): string {
-  return prompt
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, style, category } = await request.json();
+    const { prompt, style } = await request.json();
 
     if (!prompt || typeof prompt !== "string" || prompt.length > 500) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
@@ -34,8 +21,6 @@ export async function POST(request: NextRequest) {
     if (!style || !(style in STYLES)) {
       return NextResponse.json({ error: "Invalid style" }, { status: 400 });
     }
-
-    const validCategory = category && VALID_CATEGORIES.has(category) ? category : null;
 
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
@@ -52,10 +37,10 @@ export async function POST(request: NextRequest) {
       const fullPrompt = buildPrompt(prompt, style as StyleKey);
       const imageBuffer = await generateClipArt(fullPrompt);
 
-      const slug = slugifyPrompt(prompt);
-      const uid = Math.random().toString(36).slice(2, 8);
-      const cat = validCategory || "free";
-      const key = `${cat}/${slug}-${uid}.png`;
+      const classification = await classifyPrompt(prompt, style);
+
+      const cat = classification.category;
+      const key = `${cat}/${classification.slug}-${Math.random().toString(36).slice(2, 8)}.png`;
       const imageUrl = await uploadToR2(imageBuffer, key, { category: cat });
 
       const admin = createSupabaseAdmin();
@@ -65,7 +50,9 @@ export async function POST(request: NextRequest) {
         image_url: imageUrl,
         category: cat,
         is_public: true,
-        title: prompt.slice(0, 100),
+        title: classification.title,
+        slug: classification.slug,
+        description: classification.description,
       });
 
       revalidatePath(`/${cat}`);
@@ -97,32 +84,29 @@ export async function POST(request: NextRequest) {
     const fullPrompt = buildPrompt(prompt, style as StyleKey);
     const imageBuffer = await generateClipArt(fullPrompt);
 
-    const slug = slugifyPrompt(prompt);
-    const uid = Math.random().toString(36).slice(2, 8);
-    const dir = validCategory || `gen/${user.id}`;
-    const key = `${dir}/${slug}-${uid}.png`;
-    const imageUrl = await uploadToR2(imageBuffer, key, {
-      category: validCategory || undefined,
-    });
+    const classification = await classifyPrompt(prompt, style);
+    const cat = classification.category;
+    const key = `${cat}/${classification.slug}-${Math.random().toString(36).slice(2, 8)}.png`;
+    const imageUrl = await uploadToR2(imageBuffer, key, { category: cat });
 
-    // Deduct credit and save generation record
     await admin
       .from("profiles")
       .update({ credits: profile.credits - 1 })
       .eq("id", user.id);
 
-    const imgCategory = validCategory || "free";
     await admin.from("generations").insert({
       user_id: user.id,
       prompt,
       style,
       image_url: imageUrl,
-      category: imgCategory,
+      category: cat,
       is_public: true,
-      title: prompt.slice(0, 100),
+      title: classification.title,
+      slug: classification.slug,
+      description: classification.description,
     });
 
-    revalidatePath(`/${imgCategory}`);
+    revalidatePath(`/${cat}`);
 
     return NextResponse.json({ imageUrl, credits: profile.credits - 1 });
   } catch (err) {
