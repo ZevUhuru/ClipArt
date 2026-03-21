@@ -1,8 +1,10 @@
 -- Admin CMS migration
 -- Run this in the Supabase SQL Editor
 
--- 1. Categories table (replaces hardcoded src/data/categories.ts)
-CREATE TABLE IF NOT EXISTS public.categories (
+-- 1. Drop old legacy categories table and recreate with new schema
+DROP TABLE IF EXISTS public.categories CASCADE;
+
+CREATE TABLE public.categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   slug text UNIQUE NOT NULL,
   name text NOT NULL,
@@ -27,8 +29,8 @@ CREATE POLICY "Anyone can read active categories"
 CREATE POLICY "Service can manage categories"
   ON public.categories FOR ALL USING (true) WITH CHECK (true);
 
-CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories (slug);
-CREATE INDEX IF NOT EXISTS idx_categories_active ON public.categories (is_active, sort_order);
+CREATE INDEX idx_categories_slug ON public.categories (slug);
+CREATE INDEX idx_categories_active ON public.categories (is_active, sort_order);
 
 -- 2. Add is_admin to profiles
 ALTER TABLE public.profiles
