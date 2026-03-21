@@ -10,13 +10,12 @@ function CreditBadgeInline() {
 }
 
 export function Nav() {
-  const { openAuthModal, openBuyCreditsModal, user, setUser, setCredits } = useAppStore();
+  const { openAuthModal, openBuyCreditsModal, user, resetUserState } = useAppStore();
 
   async function handleSignOut() {
     const supabase = createBrowserClient();
     if (supabase) await supabase.auth.signOut();
-    setUser(null);
-    setCredits(0);
+    resetUserState();
   }
 
   return (

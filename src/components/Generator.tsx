@@ -14,7 +14,7 @@ export function Generator() {
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const { openAuthModal, openBuyCreditsModal, setCredits, user } =
+  const { openAuthModal, openBuyCreditsModal, setCredits, prependGeneration, user } =
     useAppStore();
 
   async function handleGenerate() {
@@ -56,6 +56,10 @@ export function Generator() {
 
       if (typeof data.credits === "number") {
         setCredits(data.credits);
+      }
+
+      if (data.generation) {
+        prependGeneration(data.generation);
       }
 
       setTimeout(() => {

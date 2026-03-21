@@ -1,45 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useAppStore } from "@/stores/useAppStore";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { downloadClip } from "@/utils/downloadClip";
 
-interface Generation {
-  id: string;
-  image_url: string;
-  prompt: string;
-  style: string;
-  created_at: string;
-}
-
 export function HistoryGrid() {
-  const { user } = useAppStore();
-  const [generations, setGenerations] = useState<Generation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, generations, generationsLoaded, setGenerations } = useAppStore();
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!user || generationsLoaded) return;
 
     async function fetchGenerations() {
       const supabase = createBrowserClient();
-      if (!supabase) { setLoading(false); return; }
+      if (!supabase) return;
       const { data } = await supabase
         .from("generations")
-        .select("*")
+        .select("id, image_url, prompt, style, category, slug, created_at")
         .order("created_at", { ascending: false })
         .limit(50);
 
       setGenerations(data || []);
-      setLoading(false);
     }
 
     fetchGenerations();
-  }, [user]);
+  }, [user, generationsLoaded, setGenerations]);
 
   if (!user) {
     return (
@@ -49,7 +36,7 @@ export function HistoryGrid() {
     );
   }
 
-  if (loading) {
+  if (!generationsLoaded) {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -77,28 +64,59 @@ export function HistoryGrid() {
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-      {generations.map((gen) => (
-        <div key={gen.id} className="card group overflow-hidden">
-          <div className="relative aspect-square bg-gray-50">
-            <Image
-              src={gen.image_url}
-              alt={gen.prompt}
-              fill
-              className="object-contain p-3"
-              unoptimized
-            />
+      {generations.map((gen) => {
+        const detailHref =
+          gen.category && gen.slug
+            ? `/${gen.category}/${gen.slug}`
+            : gen.category
+              ? `/${gen.category}/${gen.id}`
+              : null;
+
+        return (
+          <div key={gen.id} className="card group overflow-hidden">
+            {detailHref ? (
+              <Link href={detailHref} className="block relative aspect-square bg-gray-50">
+                <Image
+                  src={gen.image_url}
+                  alt={gen.prompt}
+                  fill
+                  className="object-contain p-3 transition-transform group-hover:scale-105"
+                  unoptimized
+                />
+              </Link>
+            ) : (
+              <div className="relative aspect-square bg-gray-50">
+                <Image
+                  src={gen.image_url}
+                  alt={gen.prompt}
+                  fill
+                  className="object-contain p-3"
+                  unoptimized
+                />
+              </div>
+            )}
+            <div className="flex items-center justify-between p-3">
+              <p className="min-w-0 flex-1 truncate text-xs text-gray-500">{gen.prompt}</p>
+              <div className="ml-2 flex shrink-0 items-center gap-2">
+                {detailHref && (
+                  <Link
+                    href={detailHref}
+                    className="text-xs font-medium text-gray-400 hover:text-gray-600"
+                  >
+                    View
+                  </Link>
+                )}
+                <button
+                  onClick={() => downloadClip(gen.image_url, `clip-art-${gen.id}.png`)}
+                  className="text-xs font-medium text-pink-600 hover:text-pink-700"
+                >
+                  Download
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="p-3">
-            <p className="mb-2 truncate text-xs text-gray-500">{gen.prompt}</p>
-            <button
-              onClick={() => downloadClip(gen.image_url, `clip-art-${gen.id}.png`)}
-              className="text-xs font-medium text-pink-600 hover:text-pink-700"
-            >
-              Download
-            </button>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

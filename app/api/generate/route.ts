@@ -57,21 +57,29 @@ export async function POST(request: NextRequest) {
       .update({ credits: profile.credits - 1 })
       .eq("id", user.id);
 
-    await admin.from("generations").insert({
-      user_id: user.id,
-      prompt,
-      style,
-      image_url: imageUrl,
-      category: cat,
-      is_public: true,
-      title: classification.title,
-      slug: classification.slug,
-      description: classification.description,
-    });
+    const { data: generation } = await admin
+      .from("generations")
+      .insert({
+        user_id: user.id,
+        prompt,
+        style,
+        image_url: imageUrl,
+        category: cat,
+        is_public: true,
+        title: classification.title,
+        slug: classification.slug,
+        description: classification.description,
+      })
+      .select("id, image_url, prompt, style, category, slug, created_at")
+      .single();
 
     revalidatePath(`/${cat}`);
 
-    return NextResponse.json({ imageUrl, credits: profile.credits - 1 });
+    return NextResponse.json({
+      imageUrl,
+      credits: profile.credits - 1,
+      generation,
+    });
   } catch (err) {
     console.error("Generation error:", err);
 

@@ -8,7 +8,7 @@ import { BuyCreditsModal } from "./BuyCreditsModal";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export function Providers({ children }: { children: ReactNode }) {
-  const { setUser, setCredits } = useAppStore();
+  const { setUser, setCredits, resetUserState } = useAppStore();
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchCredits = useCallback(async () => {
@@ -73,8 +73,7 @@ export function Providers({ children }: { children: ReactNode }) {
         await fetchCredits();
         subscribeToCredits(supabase, session.user.id);
       } else {
-        setUser(null);
-        setCredits(0);
+        resetUserState();
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;
@@ -88,7 +87,7 @@ export function Providers({ children }: { children: ReactNode }) {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [setUser, setCredits, fetchCredits, subscribeToCredits]);
+  }, [setUser, setCredits, resetUserState, fetchCredits, subscribeToCredits]);
 
   return (
     <>
