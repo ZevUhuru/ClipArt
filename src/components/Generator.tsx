@@ -20,6 +20,11 @@ export function Generator() {
   async function handleGenerate() {
     if (!prompt.trim() || isGenerating) return;
 
+    if (!user) {
+      openAuthModal("signup");
+      return;
+    }
+
     setError(null);
     setIsGenerating(true);
     setImageUrl(null);

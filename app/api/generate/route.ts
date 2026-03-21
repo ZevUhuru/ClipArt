@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { generateClipArt } from "@/lib/gemini";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
 import { buildPrompt, type StyleKey, STYLES } from "@/lib/styles";
-
-const FREE_LIMIT = 5;
-const COOKIE_NAME = "clip_art_free";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,51 +21,10 @@ export async function POST(request: NextRequest) {
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Anonymous: check cookie-based free tier
     if (!user) {
-      const cookieStore = await cookies();
-      const freeCount = parseInt(cookieStore.get(COOKIE_NAME)?.value || "0", 10);
-
-      if (freeCount >= FREE_LIMIT) {
-        return NextResponse.json({ requiresAuth: true }, { status: 401 });
-      }
-
-      const fullPrompt = buildPrompt(prompt, style as StyleKey);
-      const imageBuffer = await generateClipArt(fullPrompt);
-
-      const classification = await classifyPrompt(prompt, style);
-
-      const cat = classification.category;
-      const key = `${cat}/${classification.slug}-${Math.random().toString(36).slice(2, 8)}.png`;
-      const imageUrl = await uploadToR2(imageBuffer, key, { category: cat });
-
-      const admin = createSupabaseAdmin();
-      await admin.from("generations").insert({
-        prompt,
-        style,
-        image_url: imageUrl,
-        category: cat,
-        is_public: true,
-        title: classification.title,
-        slug: classification.slug,
-        description: classification.description,
-      });
-
-      revalidatePath(`/${cat}`);
-
-      const response = NextResponse.json({ imageUrl });
-      response.cookies.set(COOKIE_NAME, String(freeCount + 1), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30,
-        path: "/",
-      });
-
-      return response;
+      return NextResponse.json({ requiresAuth: true }, { status: 401 });
     }
 
-    // Authenticated: check credits
     const admin = createSupabaseAdmin();
     const { data: profile } = await admin
       .from("profiles")
