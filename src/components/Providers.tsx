@@ -5,7 +5,10 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/stores/useAppStore";
 import { AuthModal } from "./AuthModal";
 import { BuyCreditsModal } from "./BuyCreditsModal";
+import { BuyCreditsModalSlot } from "./BuyCreditsModalSlot";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+
+const useSlotModal = process.env.NEXT_PUBLIC_CREDITS_MODAL_VARIANT === "slot";
 
 export function Providers({ children }: { children: ReactNode }) {
   const { setUser, setCredits, resetUserState } = useAppStore();
@@ -93,7 +96,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <>
       {children}
       <AuthModal />
-      <BuyCreditsModal />
+      {useSlotModal ? <BuyCreditsModalSlot /> : <BuyCreditsModal />}
     </>
   );
 }
