@@ -25,15 +25,36 @@ images.clip.art/
   gen/{userId}/       authenticated user generations
 ```
 
+## Image Processing Pipeline
+
+```
+Generation:  Gemini PNG → Sharp WebP (quality 85) → R2 upload
+Download:    R2 WebP → Sharp PNG conversion → user receives .png
+Display:     R2 WebP → Next.js Image Optimization → browser (smallest format)
+```
+
+- **Storage format**: WebP (quality 85, effort 4) — ~50-70% smaller than PNG
+- **Download format**: PNG — converted on-the-fly by `/api/download` via Sharp
+- **Why WebP for storage**: Reduces R2 storage costs, faster page loads, lower CDN bandwidth
+- **Why PNG for downloads**: Universal format users expect; works in all editors and tools
+
 ## File Naming Convention
 
+### Seed images (migrated from local samples)
 ```
 {category}/{slug}.{hash10}.webp
 ```
-
-- `slug`: slugified image name (lowercase, hyphens, no special chars)
 - `hash10`: first 10 chars of SHA-256 content hash (cache busting)
-- Format: WebP (quality 85) via sharp, max 2048px width
+
+### AI-generated images
+```
+{category}/{slug}-{random6}.webp
+```
+- `random6`: 6-char random string (collision avoidance)
+
+### Common rules
+- `slug`: slugified image name (lowercase, hyphens, no special chars)
+- Format: WebP (quality 85) via Sharp
 - Cache: `Cache-Control: public, max-age=31536000, immutable`
 
 ## Scripts

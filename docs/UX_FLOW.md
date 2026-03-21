@@ -15,16 +15,15 @@ Complete user experience flow for clip.art — from first visit through generati
 
 ### Anonymous (no account)
 
-- Gets **5 free generations** tracked via an `httpOnly` cookie (`clip_art_free`, 30-day expiry).
-- Generated images are stored in R2 under `free/{slug}-{uid}.png`.
-- No history is persisted — images are ephemeral once the browser tab closes.
+- Can browse all public gallery/category pages and image detail pages.
+- Clicking "Generate" opens the AuthModal (signup mode) — no generations without an account.
 
 ### Authenticated (signed in)
 
 - Starts with **5 credits** (set by the `handle_new_user` DB trigger on first signup).
 - Each generation costs **1 credit**.
 - All generations are saved to the `generations` table and displayed in the History Grid on `/generator`.
-- Generated images are stored in R2 under `gen/{userId}/{slug}-{uid}.png` (or `{category}/` if a valid category is specified).
+- Generated images are stored in R2 under `{category}/{slug}-{uid}.webp`.
 
 ## Generation Flow
 
@@ -34,23 +33,21 @@ Complete user experience flow for clip.art — from first visit through generati
 │  ↓                                                  │
 │  Click "Generate"                                   │
 │  ↓                                                  │
-│  POST /api/generate  { prompt, style, category? }   │
+│  Client checks user state                           │
+│  ├─ No user → opens AuthModal (signup) immediately  │
+│  └─ Signed in → continues ↓                         │
 │  ↓                                                  │
-│  ┌─ Anonymous ─────────────────────────────────┐    │
-│  │  cookie < 5?                                │    │
-│  │  ├─ YES → Gemini → R2 → return imageUrl    │    │
-│  │  │        (increment cookie)                │    │
-│  │  └─ NO  → 401 { requiresAuth: true }       │    │
-│  │           → Client opens AuthModal          │    │
-│  └─────────────────────────────────────────────┘    │
-│  ┌─ Authenticated ─────────────────────────────┐    │
-│  │  credits > 0?                               │    │
-│  │  ├─ YES → Gemini → R2 → return imageUrl    │    │
-│  │  │        → deduct 1 credit                 │    │
-│  │  │        → insert into generations         │    │
-│  │  └─ NO  → 402 { requiresCredits: true }    │    │
-│  │           → Client opens BuyCreditsModal    │    │
-│  └─────────────────────────────────────────────┘    │
+│  POST /api/generate  { prompt, style }              │
+│  ↓                                                  │
+│  ┌─ Server-side checks ───────────────────────┐     │
+│  │  No session?  → 401 { requiresAuth }       │     │
+│  │  credits ≤ 0? → 402 { requiresCredits }    │     │
+│  │  OK?          → continue ↓                 │     │
+│  └────────────────────────────────────────────┘     │
+│  ↓                                                  │
+│  Gemini → Sharp (PNG→WebP) → R2 upload              │
+│  → classify prompt → deduct 1 credit                │
+│  → insert into generations → revalidate cache       │
 │  ↓                                                  │
 │  Image appears with "Download PNG" button           │
 └─────────────────────────────────────────────────────┘
@@ -60,12 +57,21 @@ Complete user experience flow for clip.art — from first visit through generati
 
 1. **Validate** — prompt (string, max 500 chars) and style (must be a valid `StyleKey`)
 2. **Build prompt** — `buildPrompt(prompt, style)` appends style descriptor + "clip art, isolated object, no text"
-3. **Gemini Image API** — `generateClipArt(fullPrompt)` calls `gemini-2.5-flash-image` with `responseModalities: ["IMAGE"]`, aspect ratio `1:1`
-4. **Auto-classify** — `classifyPrompt(prompt, style)` calls Gemini Flash text to generate clean title, category, SEO description, and URL slug (see [AUTO_CLASSIFICATION.md](AUTO_CLASSIFICATION.md))
-5. **Upload to R2** — PNG buffer uploaded to `images.clip.art/{category}/{slug}-{uid}.png` with immutable cache headers
-6. **Save to DB** — Insert into `generations` with clean metadata from classifier
-7. **Bust cache** — `revalidatePath('/{category}')` for instant Vercel edge cache refresh
-8. **Return URL** — `https://images.clip.art/{key}` served via R2 custom domain
+3. **Gemini Image API** — `generateClipArt(fullPrompt)` calls `gemini-2.5-flash-image` with `responseModalities: ["IMAGE"]`, aspect ratio `1:1`, returns PNG buffer
+4. **Convert to WebP** — Sharp converts PNG → WebP (quality 85, effort 4), ~50-70% smaller
+5. **Auto-classify** — `classifyPrompt(prompt, style)` calls Gemini Flash text to generate clean title, category, SEO description, and URL slug (see [AUTO_CLASSIFICATION.md](AUTO_CLASSIFICATION.md))
+6. **Upload to R2** — WebP buffer uploaded to `images.clip.art/{category}/{slug}-{uid}.webp` with `Content-Type: image/webp` and immutable cache headers
+7. **Save to DB** — Insert into `generations` with clean metadata from classifier
+8. **Bust cache** — `revalidatePath('/{category}')` for instant Vercel edge cache refresh
+9. **Return URL** — `https://images.clip.art/{key}` served via R2 custom domain
+
+### Download Pipeline
+
+1. **User clicks "Download PNG"** → client calls `/api/download?url={r2_url}`
+2. **Proxy fetches** from R2 (WebP) → buffers the response
+3. **Sharp converts** WebP → PNG on the fly
+4. **Response** streamed with `Content-Disposition: attachment; filename="{slug}.png"`
+5. User receives a standard PNG file regardless of storage format
 
 ### Available Styles
 
@@ -171,7 +177,7 @@ Four tables (all with RLS enabled):
 
 ### `generations`
 - `id` (uuid, PK)
-- `user_id` (uuid, FK → profiles, nullable for anonymous)
+- `user_id` (uuid, FK → profiles)
 - `prompt` (text)
 - `style` (text)
 - `image_url` (text)
