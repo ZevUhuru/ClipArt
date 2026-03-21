@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 
 const ALLOWED_HOSTS = new Set(["images.clip.art"]);
 
@@ -26,14 +27,28 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
   }
 
-  const contentType = upstream.headers.get("content-type") || "image/png";
-  const segments = parsed.pathname.split("/");
-  const filename = segments[segments.length - 1] || "clip-art.png";
+  const rawBuffer = Buffer.from(await upstream.arrayBuffer());
+  const contentType = upstream.headers.get("content-type") || "";
 
-  return new NextResponse(upstream.body, {
+  const isPng = contentType === "image/png" || url.endsWith(".png");
+  let outputBuffer: Buffer;
+  let outputFilename: string;
+
+  const segments = parsed.pathname.split("/");
+  const basename = (segments[segments.length - 1] || "clip-art").replace(/\.[^.]+$/, "");
+
+  if (isPng || contentType === "image/png") {
+    outputBuffer = rawBuffer;
+    outputFilename = `${basename}.png`;
+  } else {
+    outputBuffer = await sharp(rawBuffer).png().toBuffer();
+    outputFilename = `${basename}.png`;
+  }
+
+  return new NextResponse(outputBuffer, {
     headers: {
-      "Content-Type": contentType,
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Type": "image/png",
+      "Content-Disposition": `attachment; filename="${outputFilename}"`,
       "Cache-Control": "private, no-cache",
     },
   });

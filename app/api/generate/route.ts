@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { generateClipArt } from "@/lib/gemini";
 import { uploadToR2 } from "@/lib/r2";
@@ -37,12 +38,19 @@ export async function POST(request: NextRequest) {
     }
 
     const fullPrompt = buildPrompt(prompt, style as StyleKey);
-    const imageBuffer = await generateClipArt(fullPrompt);
+    const rawBuffer = await generateClipArt(fullPrompt);
+
+    const webpBuffer = await sharp(rawBuffer)
+      .webp({ quality: 85, effort: 4 })
+      .toBuffer();
 
     const classification = await classifyPrompt(prompt, style);
     const cat = classification.category;
-    const key = `${cat}/${classification.slug}-${Math.random().toString(36).slice(2, 8)}.png`;
-    const imageUrl = await uploadToR2(imageBuffer, key, { category: cat });
+    const key = `${cat}/${classification.slug}-${Math.random().toString(36).slice(2, 8)}.webp`;
+    const imageUrl = await uploadToR2(webpBuffer, key, {
+      category: cat,
+      contentType: "image/webp",
+    });
 
     await admin
       .from("profiles")
