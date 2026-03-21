@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     outputFilename = `${basename}.png`;
   }
 
-  return new NextResponse(outputBuffer, {
+  return new NextResponse(new Uint8Array(outputBuffer), {
     headers: {
       "Content-Type": "image/png",
       "Content-Disposition": `attachment; filename="${outputFilename}"`,
