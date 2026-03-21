@@ -60,9 +60,12 @@ Complete user experience flow for clip.art — from first visit through generati
 
 1. **Validate** — prompt (string, max 500 chars) and style (must be a valid `StyleKey`)
 2. **Build prompt** — `buildPrompt(prompt, style)` appends style descriptor + "clip art, isolated object, no text"
-3. **Gemini API** — `generateClipArt(fullPrompt)` calls the Nano Banana model (`gemini-2.5-flash-image`) with `responseModalities: ["IMAGE"]`, aspect ratio `1:1`
-4. **Upload to R2** — PNG buffer uploaded to Cloudflare R2 with `Cache-Control: public, max-age=31536000, immutable`
-5. **Return URL** — `https://images.clip.art/{key}` served via R2 custom domain
+3. **Gemini Image API** — `generateClipArt(fullPrompt)` calls `gemini-2.5-flash-image` with `responseModalities: ["IMAGE"]`, aspect ratio `1:1`
+4. **Auto-classify** — `classifyPrompt(prompt, style)` calls Gemini Flash text to generate clean title, category, SEO description, and URL slug (see [AUTO_CLASSIFICATION.md](AUTO_CLASSIFICATION.md))
+5. **Upload to R2** — PNG buffer uploaded to `images.clip.art/{category}/{slug}-{uid}.png` with immutable cache headers
+6. **Save to DB** — Insert into `generations` with clean metadata from classifier
+7. **Bust cache** — `revalidatePath('/{category}')` for instant Vercel edge cache refresh
+8. **Return URL** — `https://images.clip.art/{key}` served via R2 custom domain
 
 ### Available Styles
 
@@ -129,18 +132,20 @@ Powered by Supabase Auth. Two methods:
 
 ### Category Page (`/{category}`)
 
-- 10 categories: `christmas`, `heart`, `halloween`, `flower`, `school`, `book`, `pumpkin`, `cat`, `thanksgiving`, `free`
-- Pre-rendered at build time via `generateStaticParams()`
-- Custom SEO metadata per category (title, description, OG tags)
-- Displays a grid of curated sample images from `sampleGallery.ts`
+- Categories stored in DB `categories` table (started with 10, scaling to 100+). See [DYNAMIC_CATEGORIES.md](DYNAMIC_CATEGORIES.md)
+- Pre-rendered at build time via `generateStaticParams()`, new categories render on-demand (ISR, 60s revalidation)
+- SEO metadata pulled from DB: `meta_title`, `meta_description`, OG tags
+- Displays DB-sourced gallery images (from `generations` table) + static sample images
+- Includes search bar with client-side sample filtering + server-side DB full-text search
 - Light-themed layout with `CategoryNav` (white background, brand gradient stripe)
 
 ### Image Detail Page (`/{category}/{slug}`)
 
-- Pre-rendered for all 29 sample images via `generateStaticParams()`
+- Static sample images pre-rendered via `generateStaticParams()`
+- DB-generated images resolved by `slug` column first, then `id` fallback (ISR, 60s revalidation)
 - Structured data: `ImageObject` + `BreadcrumbList` JSON-LD
 - Full-bleed image display with descriptive alt text
-- "Download Free" button — direct download from R2, no credits needed
+- "Download Free" button — proxied via `/api/download` for cross-origin R2 downloads
 - Related images grid showing other images in the same category
 
 ## Client State (Zustand)
@@ -154,23 +159,43 @@ Powered by Supabase Auth. Two methods:
 
 ## Database Schema
 
-Three tables (all with RLS enabled):
+Four tables (all with RLS enabled):
 
 ### `profiles`
 - `id` (uuid, PK, FK → auth.users)
 - `email` (text)
 - `credits` (integer, default 5)
+- `is_admin` (boolean, default false)
 - `created_at` (timestamptz)
 - Auto-created via `handle_new_user` trigger on signup
 
 ### `generations`
 - `id` (uuid, PK)
-- `user_id` (uuid, FK → profiles)
+- `user_id` (uuid, FK → profiles, nullable for anonymous)
 - `prompt` (text)
 - `style` (text)
 - `image_url` (text)
+- `title` (text) — clean display title from auto-classifier
+- `slug` (text, unique) — URL-friendly slug for detail pages
+- `description` (text) — SEO description from auto-classifier
+- `category` (text) — category slug
+- `is_public` (boolean, default false) — gallery visibility
+- `search_vector` (tsvector) — auto-populated for full-text search
 - `created_at` (timestamptz)
-- Indexed on `user_id` and `created_at DESC`
+- Indexed on `user_id`, `created_at DESC`, `category + is_public`, GIN on `search_vector`
+
+### `categories`
+- `id` (uuid, PK)
+- `slug` (text, unique) — URL path segment
+- `name` (text) — display name
+- `h1`, `meta_title`, `meta_description`, `intro` (text) — SEO fields
+- `seo_content` (text[]) — paragraphs of SEO copy
+- `suggested_prompts` (text[]) — example prompts for CTA
+- `related_slugs` (text[]) — linked category slugs
+- `image_count` (integer) — denormalized count
+- `is_active` (boolean) — visibility toggle
+- `sort_order` (integer) — display ordering
+- See [DYNAMIC_CATEGORIES.md](DYNAMIC_CATEGORIES.md) for full details
 
 ### `purchases`
 - `id` (uuid, PK)
