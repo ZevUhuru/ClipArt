@@ -2,47 +2,50 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
-import { GenerationResult } from "@/components/GenerationResult";
-import { useAppStore } from "@/stores/useAppStore";
+import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
+import { createBrowserClient } from "@/lib/supabase/client";
 import { downloadClip } from "@/utils/downloadClip";
 import type { StyleKey } from "@/lib/styles";
 
-interface CommunityImage {
-  id: string;
-  slug: string;
-  title: string;
-  url: string;
-  category: string;
-  style: string;
-}
+const suggestedPrompts = [
+  "a happy sun wearing sunglasses",
+  "cute cat holding a book",
+  "baby elephant with a birthday hat",
+  "rainbow unicorn with stars",
+  "friendly robot waving hello",
+  "puppy playing in autumn leaves",
+];
 
-function CommunityFeed() {
-  const [images, setImages] = useState<CommunityImage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+function RecentsGrid() {
+  const { user, generations, generationsLoaded, setGenerations } = useAppStore();
   const openDrawer = useImageDrawer((s) => s.open);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/search?category=free&limit=30");
-        const data = await res.json();
-        setImages(data.results || []);
-      } catch {
-        setImages([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    load();
-  }, []);
+    if (!user || generationsLoaded) return;
 
-  if (isLoading) {
+    async function fetchGenerations() {
+      const supabase = createBrowserClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from("generations")
+        .select("id, image_url, prompt, style, category, slug, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      setGenerations(data || []);
+    }
+
+    fetchGenerations();
+  }, [user, generationsLoaded, setGenerations]);
+
+  if (!generationsLoaded && user) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="animate-pulse overflow-hidden rounded-2xl">
             <div className="aspect-square bg-gray-100" />
           </div>
@@ -51,20 +54,29 @@ function CommunityFeed() {
     );
   }
 
-  if (images.length === 0) return null;
+  if (generations.length === 0) return null;
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-      {images.map((img) => (
+      {generations.map((gen) => (
         <div
-          key={img.id}
+          key={gen.id}
           className="card group cursor-pointer overflow-hidden"
-          onClick={() => openDrawer(img)}
+          onClick={() =>
+            openDrawer({
+              id: gen.id,
+              slug: gen.slug || gen.id,
+              title: gen.prompt,
+              url: gen.image_url,
+              category: gen.category || "free",
+              style: gen.style,
+            })
+          }
         >
           <div className="relative aspect-square bg-gray-50">
             <Image
-              src={img.url}
-              alt={img.title}
+              src={gen.image_url}
+              alt={gen.prompt}
               fill
               className="object-contain p-3 transition-transform group-hover:scale-105"
               unoptimized
@@ -72,12 +84,12 @@ function CommunityFeed() {
           </div>
           <div className="flex items-center justify-between px-3 py-2">
             <p className="min-w-0 flex-1 truncate text-xs text-gray-500">
-              {img.title}
+              {gen.prompt}
             </p>
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                downloadClip(img.url, `clip-art-${img.id}.png`);
+                downloadClip(gen.image_url, `clip-art-${gen.id}.png`);
               }}
               className="ml-2 shrink-0 text-xs font-medium text-pink-600 opacity-0 transition-opacity group-hover:opacity-100"
             >
@@ -93,13 +105,19 @@ function CommunityFeed() {
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const { openAuthModal, openBuyCreditsModal, setCredits, prependGeneration, user } =
-    useAppStore();
+  const {
+    openAuthModal,
+    openBuyCreditsModal,
+    setCredits,
+    prependGeneration,
+    user,
+    generations,
+    generationsLoaded,
+  } = useAppStore();
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim() || isGenerating) return;
@@ -111,7 +129,6 @@ export default function CreatePage() {
 
     setError(null);
     setIsGenerating(true);
-    setImageUrl(null);
 
     try {
       const res = await fetch("/api/generate", {
@@ -132,8 +149,6 @@ export default function CreatePage() {
       }
       if (!res.ok) throw new Error(data.error || "Generation failed");
 
-      setImageUrl(data.imageUrl);
-
       if (typeof data.credits === "number") setCredits(data.credits);
       if (data.generation) prependGeneration(data.generation);
 
@@ -146,6 +161,9 @@ export default function CreatePage() {
       setIsGenerating(false);
     }
   }, [prompt, style, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
+
+  const hasRecents = generationsLoaded && generations.length > 0;
+  const showEmptyState = !user || (generationsLoaded && generations.length === 0);
 
   return (
     <div className="min-h-screen">
@@ -213,30 +231,59 @@ export default function CreatePage() {
           )}
         </AnimatePresence>
 
-        {/* Generation result */}
-        <div ref={resultRef}>
-          <AnimatePresence>
-            {imageUrl && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
+        {/* Empty state with prompt chips */}
+        {showEmptyState && (
+          <div className="py-12 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+              <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Create your first clip art
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
+              Describe what you want and our AI generates it in seconds. Try one of these to get started:
+            </p>
+            <div className="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
+              {suggestedPrompts.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => setPrompt(suggestion)}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+            <div className="mt-8">
+              <Link
+                href="/search"
+                className="text-sm text-gray-400 transition-colors hover:text-gray-600"
               >
-                <div className="mx-auto max-w-md">
-                  <GenerationResult imageUrl={imageUrl} prompt={prompt} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                Or browse community creations →
+              </Link>
+            </div>
+          </div>
+        )}
 
-        {/* Community feed */}
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Community Creations
-          </h2>
-        </div>
-        <CommunityFeed />
+        {/* Recents grid */}
+        {!showEmptyState && (
+          <>
+            <div ref={resultRef} className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+                Recents
+              </h2>
+              <Link
+                href="/my-art"
+                className="text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
+              >
+                View all →
+              </Link>
+            </div>
+            <RecentsGrid />
+          </>
+        )}
       </div>
     </div>
   );
