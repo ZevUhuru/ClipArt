@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
 
     const classification = await classifyPrompt(prompt, style);
     const cat = classification.category;
-    const key = `${cat}/${classification.slug}-${Math.random().toString(36).slice(2, 8)}.webp`;
+    const suffix = Math.random().toString(36).slice(2, 8);
+    const uniqueSlug = `${classification.slug}-${suffix}`;
+    const key = `${cat}/${uniqueSlug}.webp`;
     const imageUrl = await uploadToR2(webpBuffer, key, {
       category: cat,
       contentType: "image/webp",
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
         category: cat,
         is_public: true,
         title: classification.title,
-        slug: classification.slug,
+        slug: uniqueSlug,
         description: classification.description,
       })
       .select("id, image_url, prompt, style, category, slug, created_at")

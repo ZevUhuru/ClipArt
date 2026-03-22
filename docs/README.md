@@ -19,6 +19,13 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 |---------|------|--------|
 | [clip.art & esy.com Strategy](strategy/sessions/2026-03-21-clip-art-and-esy-strategy.md) | 2026-03-21 | Verticals, $10K-$100K MRR paths, esy.com platform, YouTube, site architecture |
 
+## Fix Write-ups
+
+| Fix | Date | Impact |
+|-----|------|--------|
+| [State management & WebP migration](fixes/2026-03-16_state-management-webp-migration.md) | 2026-03-16 | Centralized state, WebP pipeline |
+| [Duplicate slug generation failure](fixes/2026-03-22-duplicate-slug-generation-failure.md) | 2026-03-22 | Silent generation loss on repeated prompts, SEO duplicate content concern |
+
 ## Structure
 
 | Directory | Purpose |
