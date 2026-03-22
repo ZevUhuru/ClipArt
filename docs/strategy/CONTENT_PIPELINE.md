@@ -240,6 +240,44 @@ At $0.016-$0.062 per image, a single credit purchase ($4.99 for 15 credits) cove
 
 More importantly: 1M keyword-targeted pages generating organic traffic at even $0.01 RPM (ad revenue) or 0.1% conversion to credit purchases would significantly exceed the pipeline cost.
 
+## Revised Strategy: Seed + UGC Flywheel
+
+After analysis, a 1M-image brute-force approach is unnecessary. The optimal path:
+
+### Phase 1: Seed Library (25K-50K images)
+
+The pipeline generates a critical mass of keyword-targeted images covering the most-searched clip art terms. This is enough to:
+- Rank for thousands of long-tail queries in Google Images
+- Populate every category with quality content
+- Establish domain authority
+
+### Phase 2: UGC Flywheel Takes Over
+
+Once organic traffic arrives, user-generated content compounds the library:
+
+```
+Pipeline seeds 50K images → Google indexes them → Organic traffic →
+Users sign up → Users generate clip art → Public by default →
+More pages indexed → More traffic → More users → ...
+```
+
+At 1,000 daily active users averaging 3 generations each, users produce 3,000 images/day — more than the pipeline ever could, and at zero generation cost to us (users spend their own credits).
+
+### Why Not 1M From the Pipeline?
+
+- **Cost**: Even the budget scenario is $16K+ for 1M images
+- **Diminishing returns**: Long-tail keyword demand is finite — beyond 50K you're targeting increasingly thin queries
+- **UGC is free**: Every user generation is a page we didn't pay to create
+- **UGC is diverse**: Real users generate things keyword research can't predict
+
+### The Public/Private Toggle Factor
+
+The [public/private toggle](../features/PUBLIC_PRIVATE_TOGGLE.md) defaults to ON, meaning most user-generated content feeds back into the public library. This is the mechanism that turns paid credits into organic growth:
+
+- Pipeline images: always `is_public: true`
+- User images: `is_public: true` by default (user can opt out)
+- Expected public rate from users: 80-90% (most won't toggle it off)
+
 ## Implementation Priority
 
 1. **Start with a manual batch script** — run 50 images, verify quality, tune prompts
@@ -247,6 +285,7 @@ More importantly: 1M keyword-targeted pages generating organic traffic at even $
 3. **Add Agent 1** (Ahrefs integration) once manual keyword selection is validated
 4. **Add Agent 5** (index management) once page count exceeds 10K
 5. **Add orchestrator + notifications** when running daily at scale
+6. **Taper pipeline volume** once UGC generates 1K+ public images/day
 
 ## Quality Safeguards
 
