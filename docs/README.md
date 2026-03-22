@@ -13,6 +13,18 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 | [DYNAMIC_CATEGORIES.md](DYNAMIC_CATEGORIES.md) | DB-driven categories replacing hardcoded config, scaling to 100+ |
 | [APP_SHELL.md](APP_SHELL.md) | App shell overhaul — white sidebar, `/create` `/search` `/my-art`, cross-linking with SEO pages, URL migration from `/generator` |
 
+## Features
+
+| Document | Description |
+|----------|-------------|
+| [Public/Private Toggle](features/PUBLIC_PRIVATE_TOGGLE.md) | User-facing toggle to control whether generations are shared with the community or kept private |
+
+## Strategy
+
+| Document | Description |
+|----------|-------------|
+| [Content Pipeline](strategy/CONTENT_PIPELINE.md) | Agent-driven pipeline for generating 100K-1M keyword-targeted clip art images/year — architecture, cost analysis, Google penalty risk, ramp-up schedule |
+
 ## Strategy Sessions
 
 | Session | Date | Topics |
@@ -30,6 +42,7 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 
 | Directory | Purpose |
 |-----------|---------|
+| `features/` | Feature documentation and specs |
 | `strategy/` | Product strategy, growth plans, business model |
 | `strategy/sessions/` | Strategy session notes (`YYYY-MM-DD-topic.md`) |
 | `patterns/` | Code patterns, architecture decisions |

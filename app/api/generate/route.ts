@@ -9,7 +9,7 @@ import { buildPrompt, type StyleKey, STYLES } from "@/lib/styles";
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, style } = await request.json();
+    const { prompt, style, isPublic } = await request.json();
 
     if (!prompt || typeof prompt !== "string" || prompt.length > 500) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         style,
         image_url: imageUrl,
         category: cat,
-        is_public: true,
+        is_public: isPublic !== false,
         title: classification.title,
         slug: uniqueSlug,
         description: classification.description,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       .select("id, image_url, prompt, style, category, slug, created_at")
       .single();
 
-    revalidatePath(`/${cat}`);
+    if (isPublic !== false) revalidatePath(`/${cat}`);
 
     return NextResponse.json({
       imageUrl,
