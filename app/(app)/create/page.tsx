@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
 import { GenerationResult } from "@/components/GenerationResult";
 import { useAppStore } from "@/stores/useAppStore";
+import { useImageDrawer } from "@/stores/useImageDrawer";
 import { downloadClip } from "@/utils/downloadClip";
 import type { StyleKey } from "@/lib/styles";
 
@@ -21,6 +22,7 @@ interface CommunityImage {
 function CommunityFeed() {
   const [images, setImages] = useState<CommunityImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const openDrawer = useImageDrawer((s) => s.open);
 
   useEffect(() => {
     async function load() {
@@ -57,6 +59,7 @@ function CommunityFeed() {
         <div
           key={img.id}
           className="card group cursor-pointer overflow-hidden"
+          onClick={() => openDrawer(img)}
         >
           <div className="relative aspect-square bg-gray-50">
             <Image
@@ -72,7 +75,10 @@ function CommunityFeed() {
               {img.title}
             </p>
             <button
-              onClick={() => downloadClip(img.url, `clip-art-${img.id}.png`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadClip(img.url, `clip-art-${img.id}.png`);
+              }}
               className="ml-2 shrink-0 text-xs font-medium text-pink-600 opacity-0 transition-opacity group-hover:opacity-100"
             >
               Download

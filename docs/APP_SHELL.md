@@ -140,6 +140,71 @@ The `/generator` route still exists as a redirect, so existing bookmarks and ext
 
 **Flat routes over nested**: `/create`, `/search`, `/my-art` are top-level routes sharing a layout via a route group, not nested under `/maker/*` or `/app/*`. Cleaner URLs, better SEO independence, and each route maps 1:1 to a sidebar item.
 
+## Image Detail Drawer
+
+When a user clicks an image card inside the app shell (`/search` or `/create`), a drawer opens instead of navigating to the SEO detail page. This keeps users in the app shell while still providing quick access to image details and downloads.
+
+### Behavior by Viewport
+
+**Desktop (md+)** — Right drawer, 420px wide:
+- Slides in from the right over a dimmed backdrop (`bg-black/30`)
+- Fixed to the right edge, full viewport height
+- Close via: backdrop click, Escape key, or X button
+- Framer Motion animation: `x: '100%'` → `x: 0`
+
+**Mobile (<md)** — Bottom sheet, ~85vh:
+- Slides up from the bottom with rounded top corners (`rounded-t-2xl`)
+- Drag handle (gray pill) at the top — swipe down past 100px threshold to dismiss
+- Framer Motion `drag="y"` with elastic constraints
+- z-40 (above bottom nav at z-30)
+
+### Drawer Content
+
+- Large image preview (aspect-square, `object-contain`)
+- Title
+- Category badge (links to SEO category page)
+- Style tag
+- **Download Free PNG** button — triggers `downloadClip()`, drawer stays open
+- **Generate Similar** link — navigates to `/create`, drawer closes
+- **View full page →** link — navigates to `/${category}/${slug}` (SEO detail page)
+
+### State Management
+
+Separate zustand store (`src/stores/useImageDrawer.ts`) to avoid coupling with the main app store:
+
+```typescript
+interface DrawerImage {
+  id: string;
+  slug: string;
+  title: string;
+  url: string;
+  category: string;
+  style: string;
+}
+
+// Actions: open(image), close()
+// State: image (null when closed)
+```
+
+### Integration
+
+- `ImageDetailDrawer` renders in `app/(app)/layout.tsx` as a sibling to `AppSidebar` and `AppBottomNav`
+- `/search` page: image card `<Link>` replaced with `onClick` → `useImageDrawer.open(item)`
+- `/create` page: `CommunityFeed` cards get same `onClick` handler
+- No changes to SEO detail pages — direct URL access (`/free/abc123`) still renders the full `ImageDetailPage`
+
+### Interaction Table
+
+| Action | Result |
+|--------|--------|
+| Click image card on `/search` or `/create` | Drawer opens |
+| Click backdrop | Drawer closes |
+| Press Escape | Drawer closes |
+| Swipe down on mobile handle | Drawer closes |
+| Click "Download Free PNG" | Downloads image, drawer stays open |
+| Click "Generate Similar" | Navigates to `/create`, drawer closes |
+| Click "View full page →" | Navigates to SEO detail page, drawer closes |
+
 ## File Inventory
 
 New files:
@@ -149,6 +214,8 @@ New files:
 - `app/(app)/my-art/page.tsx`
 - `src/components/AppSidebar.tsx`
 - `src/components/AppBottomNav.tsx`
+- `src/components/ImageDetailDrawer.tsx`
+- `src/stores/useImageDrawer.ts`
 
 Modified files:
 - `app/generator/page.tsx` — redirect to `/create`

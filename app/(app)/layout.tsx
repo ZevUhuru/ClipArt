@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppBottomNav } from "@/components/AppBottomNav";
+import { ImageDetailDrawer } from "@/components/ImageDetailDrawer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <main className="min-h-screen pb-20 md:ml-60 md:pb-0">{children}</main>
       <AppBottomNav />
+      <ImageDetailDrawer />
     </div>
   );
 }
