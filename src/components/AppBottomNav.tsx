@@ -37,7 +37,7 @@ export function AppBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/[0.06] bg-[#1c1c27] md:hidden">
       <div className="flex h-16 items-center justify-around">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
@@ -46,7 +46,7 @@ export function AppBottomNav() {
               key={tab.href}
               href={tab.href}
               className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
-                isActive ? "text-gray-900" : "text-gray-400"
+                isActive ? "text-white" : "text-gray-500"
               }`}
             >
               <span className={isActive ? "text-brand-400" : ""}>{tab.icon}</span>

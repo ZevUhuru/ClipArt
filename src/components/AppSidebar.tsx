@@ -46,13 +46,13 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-30 hidden h-screen w-60 flex-col border-r border-gray-200 bg-white md:flex">
+    <aside className="fixed left-0 top-0 z-30 hidden h-screen w-60 flex-col border-r border-white/[0.06] bg-[#1c1c27] md:flex">
       {/* Logo */}
       <div className="flex h-16 items-center px-5">
         <Link href="/" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://assets.codepen.io/9394943/color-logo-no-bg.svg"
+            src="/logo-white.svg"
             className="h-7"
             alt="clip.art"
           />
@@ -69,8 +69,8 @@ export function AppSidebar() {
               href={item.href}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-white/10 text-white"
+                  : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
               }`}
             >
               {item.icon}
@@ -84,7 +84,7 @@ export function AppSidebar() {
       <div className="px-3 pt-5">
         <button
           onClick={() => user ? openBuyCreditsModal() : openAuthModal("signup")}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-100 hover:shadow-sm"
+          className="flex w-full items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-gray-300 transition-all hover:bg-white/[0.08] hover:text-white"
         >
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400">
             <svg className="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -99,23 +99,23 @@ export function AppSidebar() {
       <div className="flex-1" />
 
       {/* Footer: Credits & Auth */}
-      <div className="border-t border-gray-100 p-4 space-y-2">
+      <div className="border-t border-white/[0.06] p-4 space-y-2">
         {user ? (
           <>
-            <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
-              <svg className="h-4 w-4 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+            <div className="flex items-center gap-2 rounded-lg bg-white/[0.04] px-3 py-2">
+              <svg className="h-4 w-4 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-white">
                 {credits}
               </span>
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-500">
                 credit{credits !== 1 ? "s" : ""}
               </span>
             </div>
             <button
               onClick={handleSignOut}
-              className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-400 transition-colors hover:text-gray-600"
+              className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:text-gray-300"
             >
               Sign out
             </button>
@@ -124,13 +124,13 @@ export function AppSidebar() {
           <div className="space-y-1.5">
             <button
               onClick={() => openAuthModal("signin")}
-              className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+              className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-400 transition-colors hover:bg-white/[0.06] hover:text-white"
             >
               Log in
             </button>
             <button
               onClick={() => openAuthModal("signup")}
-              className="w-full rounded-lg bg-gray-900 px-3 py-2.5 text-center text-sm font-semibold text-white transition-all hover:bg-gray-800"
+              className="w-full rounded-lg bg-white px-3 py-2.5 text-center text-sm font-semibold text-gray-900 transition-all hover:bg-gray-100"
             >
               Sign up
             </button>
