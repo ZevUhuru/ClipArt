@@ -13,6 +13,7 @@ const styleLabels: Record<StyleKey, string> = {
   cartoon: "Cartoon",
   sticker: "Sticker",
   vintage: "Vintage",
+  watercolor: "Watercolor",
 };
 
 export function StylePicker({ selected, onSelect }: StylePickerProps) {

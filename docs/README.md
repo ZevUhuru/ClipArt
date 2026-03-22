@@ -43,12 +43,12 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 | Directory | Purpose |
 |-----------|---------|
 | `features/` | Feature documentation and specs |
+| `ideas/` | Feature ideas and explorations |
 | `strategy/` | Product strategy, growth plans, business model |
 | `strategy/sessions/` | Strategy session notes (`YYYY-MM-DD-topic.md`) |
 | `patterns/` | Code patterns, architecture decisions |
 | `fixes/` | Bug fix write-ups and post-mortems |
 | `performance-audits/` | Lighthouse audits, CDN setup, optimization notes |
-| `ideas/` | Feature ideas and explorations |
 | `archive/` | Superseded or completed plans |
 
 ## Naming Conventions
