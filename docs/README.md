@@ -11,6 +11,13 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 | [ADMIN_CMS.md](ADMIN_CMS.md) | Admin panel — image management, category CRUD, API routes |
 | [AUTO_CLASSIFICATION.md](AUTO_CLASSIFICATION.md) | Gemini-powered auto-classification of titles, categories, and SEO metadata |
 | [DYNAMIC_CATEGORIES.md](DYNAMIC_CATEGORIES.md) | DB-driven categories replacing hardcoded config, scaling to 100+ |
+| [APP_SHELL.md](APP_SHELL.md) | App shell overhaul — white sidebar, `/create` `/search` `/my-art`, cross-linking with SEO pages, URL migration from `/generator` |
+
+## Strategy Sessions
+
+| Session | Date | Topics |
+|---------|------|--------|
+| [clip.art & esy.com Strategy](strategy/sessions/2026-03-21-clip-art-and-esy-strategy.md) | 2026-03-21 | Verticals, $10K-$100K MRR paths, esy.com platform, YouTube, site architecture |
 
 ## Structure
 

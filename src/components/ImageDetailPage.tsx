@@ -138,7 +138,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
 
             {/* Generate similar */}
             <Link
-              href="/generator"
+              href="/create"
               className="btn-secondary mt-3 w-full justify-center py-3.5 text-base"
             >
               Generate Similar with AI
@@ -203,7 +203,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
             </p>
             <div className="mt-8">
               <Link
-                href="/generator"
+                href="/create"
                 className="btn-primary px-8 text-base"
               >
                 Start Generating — It&apos;s Free
@@ -223,7 +223,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
             clip.art
           </Link>
           <Link
-            href="/generator"
+            href="/create"
             className="text-sm font-medium text-gray-400 hover:text-gray-600"
           >
             AI Generator

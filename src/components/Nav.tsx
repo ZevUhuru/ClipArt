@@ -49,7 +49,7 @@ export function Nav() {
                 <CreditBadgeInline />
               </span>
               <Link
-                href="/generator"
+                href="/create"
                 className="rounded-full px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white"
               >
                 Create

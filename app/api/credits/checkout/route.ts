@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         credits: String(pack.credits),
       },
-      success_url: `${appUrl}/generator?success=true`,
-      cancel_url: `${appUrl}/generator`,
+      success_url: `${appUrl}/create?success=true`,
+      cancel_url: `${appUrl}/create`,
     });
 
     return NextResponse.json({ url: session.url });

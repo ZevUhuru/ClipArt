@@ -160,7 +160,7 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
           </p>
         )}
         <div className="mt-6">
-          <Link href="/generator" className="btn-primary text-base">
+          <Link href="/create" className="btn-primary text-base">
             Generate Your Own
           </Link>
         </div>
@@ -225,7 +225,7 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
                 {suggestedPrompts.map((prompt) => (
                   <Link
                     key={prompt}
-                    href="/generator"
+                    href="/create"
                     className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-600 transition-all hover:border-pink-300 hover:bg-pink-50 hover:text-pink-700 sm:text-sm"
                   >
                     &ldquo;{prompt}&rdquo;
@@ -233,7 +233,7 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
                 ))}
               </div>
               <div className="mt-8">
-                <Link href="/generator" className="btn-primary px-8 text-base">
+                <Link href="/create" className="btn-primary px-8 text-base">
                   Start Generating — It&apos;s Free
                 </Link>
               </div>
@@ -285,7 +285,7 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
             clip.art
           </Link>
           <Link
-            href="/generator"
+            href="/create"
             className="text-sm font-medium text-gray-400 hover:text-gray-600"
           >
             AI Generator
