@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useAppStore } from "@/stores/useAppStore";
+import { useImageDrawer } from "@/stores/useImageDrawer";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { downloadClip } from "@/utils/downloadClip";
 
@@ -62,61 +62,52 @@ export function HistoryGrid() {
     );
   }
 
+  return <HistoryItems generations={generations} />;
+}
+
+function HistoryItems({ generations }: { generations: ReturnType<typeof useAppStore.getState>["generations"] }) {
+  const openDrawer = useImageDrawer((s) => s.open);
+
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-      {generations.map((gen) => {
-        const detailHref =
-          gen.category && gen.slug
-            ? `/${gen.category}/${gen.slug}`
-            : gen.category
-              ? `/${gen.category}/${gen.id}`
-              : null;
-
-        return (
-          <div key={gen.id} className="card group overflow-hidden">
-            {detailHref ? (
-              <Link href={detailHref} className="block relative aspect-square bg-gray-50">
-                <Image
-                  src={gen.image_url}
-                  alt={gen.prompt}
-                  fill
-                  className="object-contain p-3 transition-transform group-hover:scale-105"
-                  unoptimized
-                />
-              </Link>
-            ) : (
-              <div className="relative aspect-square bg-gray-50">
-                <Image
-                  src={gen.image_url}
-                  alt={gen.prompt}
-                  fill
-                  className="object-contain p-3"
-                  unoptimized
-                />
-              </div>
-            )}
-            <div className="flex items-center justify-between p-3">
-              <p className="min-w-0 flex-1 truncate text-xs text-gray-500">{gen.prompt}</p>
-              <div className="ml-2 flex shrink-0 items-center gap-2">
-                {detailHref && (
-                  <Link
-                    href={detailHref}
-                    className="text-xs font-medium text-gray-400 hover:text-gray-600"
-                  >
-                    View
-                  </Link>
-                )}
-                <button
-                  onClick={() => downloadClip(gen.image_url, `clip-art-${gen.id}.png`)}
-                  className="text-xs font-medium text-pink-600 hover:text-pink-700"
-                >
-                  Download
-                </button>
-              </div>
-            </div>
+      {generations.map((gen) => (
+        <div
+          key={gen.id}
+          className="card group cursor-pointer overflow-hidden"
+          onClick={() =>
+            openDrawer({
+              id: gen.id,
+              slug: gen.slug || gen.id,
+              title: gen.prompt,
+              url: gen.image_url,
+              category: gen.category || "free",
+              style: gen.style,
+            })
+          }
+        >
+          <div className="relative aspect-square bg-gray-50">
+            <Image
+              src={gen.image_url}
+              alt={gen.prompt}
+              fill
+              className="object-contain p-3 transition-transform group-hover:scale-105"
+              unoptimized
+            />
           </div>
-        );
-      })}
+          <div className="flex items-center justify-between p-3">
+            <p className="min-w-0 flex-1 truncate text-xs text-gray-500">{gen.prompt}</p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadClip(gen.image_url, `clip-art-${gen.id}.png`);
+              }}
+              className="ml-2 shrink-0 text-xs font-medium text-pink-600 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              Download
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
