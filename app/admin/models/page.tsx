@@ -123,10 +123,10 @@ export default function AdminModelsPage() {
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                     (config[style] || "gemini") === "dalle"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-green-50 text-green-700"
+                      ? "bg-green-50 text-green-700"
+                      : "bg-amber-50 text-amber-700"
                   }`}>
-                    {(config[style] || "gemini") === "dalle" ? "~$0.011" : "~$0.002"}
+                    {(config[style] || "gemini") === "dalle" ? "~$0.011" : "~$0.039"}
                   </span>
                 </td>
               </tr>
@@ -137,7 +137,7 @@ export default function AdminModelsPage() {
 
       <div className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
         <strong>Note:</strong> All styles cost 1 credit to the user regardless of model.
-        GPT Image 1 costs ~5x more per image than Gemini. The model config is cached for 60 seconds.
+        GPT Image 1 (~$0.011) is ~3.5x cheaper than Gemini (~$0.039) per image. The model config is cached for 60 seconds.
       </div>
     </div>
   );

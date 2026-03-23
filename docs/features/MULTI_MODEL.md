@@ -1,6 +1,7 @@
 # Multi-Model Image Generation
 
 **Date:** 2026-03-22
+**Updated:** 2026-03-23 (corrected pricing from official Google/OpenAI docs)
 **Status:** Shipped
 
 ## Overview
@@ -37,8 +38,11 @@ User prompt + style
 
 | Model | Provider | Cost/image | Quality | Speed |
 |-------|----------|-----------|---------|-------|
-| Gemini 2.5 Flash | Google | ~$0.002 | Good for clean clip art | ~5-10s |
+| Gemini 2.5 Flash | Google | ~$0.039 | Good for clean clip art | ~5-10s |
+| Gemini 2.5 Flash (batch) | Google | ~$0.0195 | Same (batch mode) | Async |
 | GPT Image 1 | OpenAI | ~$0.011 | Better for artistic/textured styles | ~10-15s |
+
+> **GPT Image 1 is ~3.5x cheaper than Gemini per image.** Pricing verified 2026-03-23 from official docs.
 
 ## Configuration
 
