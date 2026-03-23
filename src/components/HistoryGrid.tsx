@@ -19,6 +19,7 @@ export function HistoryGrid() {
       const { data } = await supabase
         .from("generations")
         .select("id, image_url, prompt, style, category, slug, created_at")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
 

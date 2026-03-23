@@ -20,29 +20,10 @@ const suggestedPrompts = [
   "puppy playing in autumn leaves",
 ];
 
-function RecentsGrid() {
-  const { user, generations, generationsLoaded, setGenerations } = useAppStore();
+function GenerationGrid({ items, loading }: { items: Generation[]; loading: boolean }) {
   const openDrawer = useImageDrawer((s) => s.open);
 
-  useEffect(() => {
-    if (!user || generationsLoaded) return;
-
-    async function fetchGenerations() {
-      const supabase = createBrowserClient();
-      if (!supabase) return;
-      const { data } = await supabase
-        .from("generations")
-        .select("id, image_url, prompt, style, category, slug, created_at")
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      setGenerations(data || []);
-    }
-
-    fetchGenerations();
-  }, [user, generationsLoaded, setGenerations]);
-
-  if (!generationsLoaded && user) {
+  if (loading) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -54,11 +35,15 @@ function RecentsGrid() {
     );
   }
 
-  if (generations.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <p className="py-12 text-center text-sm text-gray-400">Nothing here yet.</p>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-      {generations.map((gen) => (
+      {items.map((gen) => (
         <div
           key={gen.id}
           className="card group cursor-pointer overflow-hidden"
@@ -102,12 +87,70 @@ function RecentsGrid() {
   );
 }
 
+function RecentsGrid() {
+  const { user, generations, generationsLoaded, setGenerations } = useAppStore();
+
+  useEffect(() => {
+    if (!user || generationsLoaded) return;
+
+    async function fetchGenerations() {
+      const supabase = createBrowserClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from("generations")
+        .select("id, image_url, prompt, style, category, slug, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      setGenerations(data || []);
+    }
+
+    fetchGenerations();
+  }, [user, generationsLoaded, setGenerations]);
+
+  return (
+    <GenerationGrid
+      items={generations}
+      loading={!generationsLoaded && !!user}
+    />
+  );
+}
+
+function CommunityGrid() {
+  const [items, setItems] = useState<Generation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCommunity() {
+      const supabase = createBrowserClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from("generations")
+        .select("id, image_url, prompt, style, category, slug, created_at")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      setItems(data || []);
+      setLoading(false);
+    }
+
+    fetchCommunity();
+  }, []);
+
+  return <GenerationGrid items={items} loading={loading} />;
+}
+
+type Tab = "recents" | "community";
+
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
   const [isPublic, setIsPublic] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("recents");
   const resultRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -281,21 +324,35 @@ export default function CreatePage() {
           </div>
         )}
 
-        {/* Recents grid */}
+        {/* Tabbed grids */}
         {!showEmptyState && (
           <>
             <div ref={resultRef} className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-                Recents
-              </h2>
-              <Link
-                href="/my-art"
-                className="text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
-              >
-                View all →
-              </Link>
+              <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+                {(["recents", "community"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                      activeTab === tab
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {tab === "recents" ? "Recents" : "Community"}
+                  </button>
+                ))}
+              </div>
+              {activeTab === "recents" && (
+                <Link
+                  href="/my-art"
+                  className="text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  View all →
+                </Link>
+              )}
             </div>
-            <RecentsGrid />
+            {activeTab === "recents" ? <RecentsGrid /> : <CommunityGrid />}
           </>
         )}
       </div>
