@@ -18,12 +18,14 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 | Document | Description |
 |----------|-------------|
 | [Public/Private Toggle](features/PUBLIC_PRIVATE_TOGGLE.md) | User-facing toggle to control whether generations are shared with the community or kept private |
+| [Multi-Model Generation](features/MULTI_MODEL.md) | Unified model router (Gemini + DALL-E 3) with admin-configurable style-to-model mapping |
 
 ## Strategy
 
 | Document | Description |
 |----------|-------------|
 | [Content Pipeline](strategy/CONTENT_PIPELINE.md) | Agent-driven pipeline for generating 100K-1M keyword-targeted clip art images/year — architecture, cost analysis, Google penalty risk, ramp-up schedule |
+| [Pricing & Model Costs](strategy/PRICING_MODELS.md) | Cost analysis per model, revenue per credit, decision to keep 1 credit for all models |
 
 ## Strategy Sessions
 

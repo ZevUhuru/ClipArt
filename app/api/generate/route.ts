@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import { generateClipArt } from "@/lib/gemini";
+import { generateImage } from "@/lib/imageGen";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
-import { buildPrompt, type StyleKey, STYLES } from "@/lib/styles";
+import { type StyleKey, STYLES } from "@/lib/styles";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,8 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ requiresCredits: true }, { status: 402 });
     }
 
-    const fullPrompt = buildPrompt(prompt, style as StyleKey);
-    const rawBuffer = await generateClipArt(fullPrompt);
+    const rawBuffer = await generateImage(prompt, style as StyleKey);
 
     const webpBuffer = await sharp(rawBuffer)
       .webp({ quality: 85, effort: 4 })

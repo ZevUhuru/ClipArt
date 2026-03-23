@@ -9,6 +9,17 @@ export const STYLES = {
 
 export type StyleKey = keyof typeof STYLES;
 
+export type ModelKey = "gemini" | "dalle";
+
+export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
+  flat: "gemini",
+  outline: "gemini",
+  cartoon: "gemini",
+  sticker: "gemini",
+  vintage: "gemini",
+  watercolor: "gemini",
+};
+
 const PROMPT_TEMPLATES = {
   clipart: "clip art, isolated object, no text",
   illustration: "illustration, isolated subject, no text, not a photograph",
