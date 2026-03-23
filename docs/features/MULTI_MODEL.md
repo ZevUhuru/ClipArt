@@ -5,7 +5,7 @@
 
 ## Overview
 
-The image generation pipeline supports multiple AI models (Gemini, DALL-E 3) with automatic routing per style. Admin can override which model powers each style via the admin panel — no code deploy required.
+The image generation pipeline supports multiple AI models (Gemini, GPT Image 1) with automatic routing per style. Admin can override which model powers each style via the admin panel — no code deploy required.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ User prompt + style
 | Model | Provider | Cost/image | Quality | Speed |
 |-------|----------|-----------|---------|-------|
 | Gemini 2.5 Flash | Google | ~$0.002 | Good for clean clip art | ~5-10s |
-| DALL-E 3 | OpenAI | ~$0.04 | Better for artistic/textured styles | ~10-15s |
+| GPT Image 1 | OpenAI | ~$0.011 | Better for artistic/textured styles | ~10-15s |
 
 ## Configuration
 
@@ -60,7 +60,7 @@ The admin panel at `/admin/models` shows a table of styles with model dropdowns.
 
 | File | Purpose |
 |------|---------|
-| `src/lib/dalle.ts` | DALL-E 3 generation function |
+| `src/lib/dalle.ts` | GPT Image 1 generation function |
 | `src/lib/imageGen.ts` | Unified router — resolveModel + generateImage |
 | `src/lib/gemini.ts` | Gemini generation function (unchanged) |
 | `src/lib/styles.ts` | STYLE_MODEL_MAP defaults, ModelKey type |

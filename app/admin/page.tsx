@@ -71,6 +71,13 @@ export default async function AdminDashboard() {
           <h2 className="text-lg font-semibold text-gray-900">Manage Categories</h2>
           <p className="mt-1 text-sm text-gray-500">Create and edit categories with SEO fields. Auto-generate SEO content with AI.</p>
         </Link>
+        <Link
+          href="/admin/models"
+          className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Model Configuration</h2>
+          <p className="mt-1 text-sm text-gray-500">Choose which AI model (Gemini, GPT Image 1) powers each style. Changes take effect immediately.</p>
+        </Link>
       </div>
     </div>
   );

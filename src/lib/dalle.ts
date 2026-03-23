@@ -12,16 +12,14 @@ function getClient() {
 export async function generateWithDallE(prompt: string): Promise<Buffer> {
   try {
     const response = await getClient().images.generate({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt,
       size: "1024x1024",
-      quality: "standard",
-      response_format: "b64_json",
       n: 1,
     });
 
     const b64 = response.data?.[0]?.b64_json;
-    if (!b64) throw new Error("No image returned from DALL-E");
+    if (!b64) throw new Error("No image returned from OpenAI");
 
     return Buffer.from(b64, "base64");
   } catch (err: unknown) {

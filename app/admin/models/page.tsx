@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const STYLES = ["flat", "outline", "cartoon", "sticker", "vintage", "watercolor"] as const;
 const MODELS = [
   { value: "gemini", label: "Gemini (Google)" },
-  { value: "dalle", label: "DALL-E 3 (OpenAI)" },
+  { value: "dalle", label: "GPT Image 1 (OpenAI)" },
 ] as const;
 
 type ModelConfig = Record<string, string>;
@@ -126,7 +126,7 @@ export default function AdminModelsPage() {
                       ? "bg-amber-50 text-amber-700"
                       : "bg-green-50 text-green-700"
                   }`}>
-                    {(config[style] || "gemini") === "dalle" ? "~$0.04" : "~$0.002"}
+                    {(config[style] || "gemini") === "dalle" ? "~$0.011" : "~$0.002"}
                   </span>
                 </td>
               </tr>
@@ -137,7 +137,7 @@ export default function AdminModelsPage() {
 
       <div className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
         <strong>Note:</strong> All styles cost 1 credit to the user regardless of model.
-        DALL-E 3 costs ~20x more per image than Gemini. The model config is cached for 60 seconds.
+        GPT Image 1 costs ~5x more per image than Gemini. The model config is cached for 60 seconds.
       </div>
     </div>
   );

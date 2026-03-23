@@ -12,10 +12,9 @@ All styles cost 1 credit regardless of which AI model generates the image. This 
 | Model | Cost/image | At 1K images/month | At 10K images/month |
 |-------|-----------|--------------------|--------------------|
 | Gemini 2.5 Flash | ~$0.002 | $2 | $20 |
-| DALL-E 3 Standard | ~$0.04 | $40 | $400 |
-| DALL-E 3 HD | ~$0.08 | $80 | $800 |
+| GPT Image 1 | ~$0.011 | $11 | $110 |
 
-DALL-E 3 is **20x more expensive** than Gemini per image.
+GPT Image 1 is **~5x more expensive** than Gemini per image — far cheaper than the deprecated DALL-E 3 (~$0.04).
 
 ## Revenue per credit
 
@@ -26,14 +25,14 @@ DALL-E 3 is **20x more expensive** than Gemini per image.
 | Value (30 credits) | $7.99 | 30 | $0.27 |
 | Power (100 credits) | $19.99 | 100 | $0.20 |
 
-Even at the worst margin (Power pack), revenue per credit ($0.20) far exceeds DALL-E 3 cost ($0.04). Absorbing the model cost difference is viable.
+Even at the worst margin (Power pack), revenue per credit ($0.20) far exceeds GPT Image 1 cost ($0.011). Absorbing the model cost difference is very comfortable.
 
 ## When to reconsider
 
 Switch to variable credit costs if:
-- DALL-E usage exceeds 50% of total generations (unlikely — most styles default to Gemini)
+- OpenAI usage exceeds 50% of total generations (unlikely — most styles default to Gemini)
 - A premium model costs >$0.10/image
-- Monthly API spend exceeds $500 and most of it is DALL-E
+- Monthly API spend exceeds $500 and most of it is OpenAI
 
 ## Future: Pro subscription model
 
@@ -45,4 +44,4 @@ This makes the cost-per-image question moot for Pro users since they're paying a
 
 ## Decision
 
-**Keep 1 credit for all models.** The margin is healthy, the UX stays simple, and the admin can limit DALL-E usage by only assigning it to styles where it meaningfully outperforms Gemini.
+**Keep 1 credit for all models.** The margin is healthy, the UX stays simple, and the admin can limit OpenAI usage by only assigning it to styles where it meaningfully outperforms Gemini.
