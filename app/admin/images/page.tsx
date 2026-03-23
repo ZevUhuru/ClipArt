@@ -106,7 +106,7 @@ export default function AdminImagesPage() {
               <th className="px-4 py-3 font-medium text-gray-500">Category</th>
               <th className="px-4 py-3 font-medium text-gray-500">Style</th>
               <th className="px-4 py-3 font-medium text-gray-500">Public</th>
-              <th className="px-4 py-3 font-medium text-gray-500">Date</th>
+              <th className="px-4 py-3 font-medium text-gray-500">Created</th>
               <th className="px-4 py-3 font-medium text-gray-500">Actions</th>
             </tr>
           </thead>
@@ -155,8 +155,14 @@ export default function AdminImagesPage() {
                       {img.is_public ? "Public" : "Hidden"}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(img.created_at).toLocaleDateString()}
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
+                    {new Date(img.created_at).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
