@@ -34,10 +34,11 @@ function resolveApiCategory(slug: string): string {
 
 function ImageGrid({ items }: { items: SearchResult[] }) {
   const openDrawer = useImageDrawer((s) => s.open);
+  const safeItems = items.filter((item) => item.id && item.url);
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {items.map((item) => (
+      {safeItems.map((item) => (
         <div key={item.id} className="card group overflow-hidden">
           <button
             onClick={() => openDrawer(item)}
@@ -45,7 +46,7 @@ function ImageGrid({ items }: { items: SearchResult[] }) {
           >
             <Image
               src={item.url}
-              alt={item.title}
+              alt={item.title || "Clip art"}
               fill
               className="object-contain p-3 transition-transform group-hover:scale-105"
               unoptimized

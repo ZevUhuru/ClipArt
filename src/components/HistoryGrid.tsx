@@ -68,10 +68,11 @@ export function HistoryGrid() {
 
 function HistoryItems({ generations }: { generations: ReturnType<typeof useAppStore.getState>["generations"] }) {
   const openDrawer = useImageDrawer((s) => s.open);
+  const safeGenerations = generations.filter((gen) => gen.id && gen.image_url);
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-      {generations.map((gen) => (
+      {safeGenerations.map((gen) => (
         <div
           key={gen.id}
           className="card group cursor-pointer overflow-hidden"
@@ -89,7 +90,7 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
           <div className="relative aspect-square bg-gray-50">
             <Image
               src={gen.image_url}
-              alt={gen.prompt}
+              alt={gen.prompt || "Clip art"}
               fill
               className="object-contain p-3 transition-transform group-hover:scale-105"
               unoptimized

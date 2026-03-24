@@ -25,29 +25,36 @@ export function Providers({ children }: { children: ReactNode }) {
   }, [setCredits]);
 
   const subscribeToCredits = useCallback((supabase: ReturnType<typeof createBrowserClient>, userId: string) => {
+    if (!supabase) return;
+
     if (channelRef.current) {
-      supabase?.removeChannel(channelRef.current);
+      supabase.removeChannel(channelRef.current);
     }
 
-    const channel = supabase?.channel(`credits:${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "profiles",
-          filter: `id=eq.${userId}`,
-        },
-        (payload) => {
-          const newCredits = payload.new?.credits;
-          if (typeof newCredits === "number") {
-            setCredits(newCredits);
-          }
-        },
-      )
-      .subscribe();
+    try {
+      const channel = supabase
+        .channel(`credits:${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `id=eq.${userId}`,
+          },
+          (payload) => {
+            const newCredits = payload.new?.credits;
+            if (typeof newCredits === "number") {
+              setCredits(newCredits);
+            }
+          },
+        )
+        .subscribe();
 
-    channelRef.current = channel ?? null;
+      channelRef.current = channel;
+    } catch {
+      channelRef.current = null;
+    }
   }, [setCredits]);
 
   useEffect(() => {
@@ -60,7 +67,7 @@ export function Providers({ children }: { children: ReactNode }) {
       } = await supabase!.auth.getUser();
 
       if (user) {
-        setUser({ id: user.id, email: user.email! });
+        setUser({ id: user.id, email: user.email ?? "" });
         await fetchCredits();
         subscribeToCredits(supabase, user.id);
       }
@@ -72,7 +79,7 @@ export function Providers({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email! });
+        setUser({ id: session.user.id, email: session.user.email ?? "" });
         await fetchCredits();
         subscribeToCredits(supabase, session.user.id);
       } else {
