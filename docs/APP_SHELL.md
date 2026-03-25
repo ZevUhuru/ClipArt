@@ -35,17 +35,21 @@ These zones are deliberately separate. Category pages are optimized for SEO (ric
 
 ### AppSidebar (`src/components/AppSidebar.tsx`)
 
-White sidebar with clean, premium feel (Linear/Notion style).
+Dark sidebar (`bg-[#1c1c27]`) with two sections: **Tools** and **Browse**.
 
-- Fixed left, full height, `w-60`, `bg-white`, `border-r border-gray-200`
-- **Logo**: Color logo (same as CategoryNav) linking to `/`
-- **Nav items**: Create, Search, My Clip Art — with active state via `usePathname()`
+- Fixed left, full height, `w-60`, dark theme with white/gray text
+- **Logo**: White logo linking to `/`
+- **Tools section**: Create (active), Animate (soon), Edit (soon) — each a top-level product tool
+- **Browse section**: Search, My Clip Art
+- **"Coming Soon" items**: Non-interactive `<div>` elements with "Soon" pill badge, dimmed text
 - **Get Credits CTA**: Subtle outlined button with amber bolt icon. Opens `BuyCreditsModal` if authenticated, `AuthModal` (signup) if not.
-- **Footer**: Credits count in gray pill (when signed in), Sign out. Or Log in / Sign up buttons (when signed out).
+- **Footer**: Credits count (when signed in), Sign out. Or Log in / Sign up buttons (when signed out).
 - Hidden on mobile (`hidden md:flex`)
 
-Active state: `bg-gray-100 text-gray-900`
-Inactive: `text-gray-500 hover:bg-gray-50 hover:text-gray-900`
+Active state: `bg-white/[0.12] text-white shadow-sm`
+Inactive: `text-gray-400 hover:bg-white/[0.07] hover:text-gray-200`
+
+See [PRODUCT_ARCHITECTURE.md](PRODUCT_ARCHITECTURE.md) for the full tool hierarchy and sub-mode design.
 
 ### AppBottomNav (`src/components/AppBottomNav.tsx`)
 
