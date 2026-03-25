@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
+import { CreateModeToggle } from "@/components/CreateModeToggle";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -217,6 +218,7 @@ export default function CreatePage() {
       {/* Compact generator bar */}
       <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto max-w-5xl px-4 py-4">
+          <CreateModeToggle />
           {/* Input row */}
           <div className="flex gap-3">
             <div className="relative flex-1">

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
+import { CreateModeToggle } from "@/components/CreateModeToggle";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { downloadClip } from "@/utils/downloadClip";
 import { STYLE_ASPECT_MAP } from "@/lib/styles";
@@ -221,6 +222,7 @@ export default function ColoringPagesCreatePage() {
       {/* Compact generator bar */}
       <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto max-w-5xl px-4 py-4">
+          <CreateModeToggle />
           {/* Input row */}
           <div className="flex gap-3">
             <div className="relative flex-1">
