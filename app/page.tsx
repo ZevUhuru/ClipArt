@@ -101,15 +101,6 @@ export default async function Home() {
             <div className="rounded-3xl border border-white/10 bg-white p-6 shadow-[0_0_80px_rgba(255,138,101,0.15)] sm:p-8">
               <Generator />
             </div>
-
-            <div className="mt-6 text-center">
-              <Link
-                href="/coloring-pages"
-                className="text-sm font-medium text-gray-400 transition-colors hover:text-white"
-              >
-                Try our AI Coloring Pages &rarr;
-              </Link>
-            </div>
           </div>
         </div>
       </div>
