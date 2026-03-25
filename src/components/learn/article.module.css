@@ -1,0 +1,266 @@
+/* Article body styling — light variant matching esy.com/school editorial style */
+
+.article {
+  color: #334155;
+  max-width: 100%;
+  line-height: 1.75;
+  font-size: 1rem;
+  padding: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── Headings ── */
+
+.article h1 {
+  color: #0a0a0a;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem 0;
+  padding-bottom: 0.75rem;
+  background: linear-gradient(to right, #FF6B9D, #ff8a65) no-repeat bottom left / 100% 2px;
+}
+
+.article h2 {
+  color: #0a0a0a;
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin: 2.5rem 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.article h3 {
+  color: #0a0a0a;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.5rem 0;
+}
+
+.article h4 {
+  color: #0a0a0a;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem 0;
+}
+
+/* ── Paragraphs ── */
+
+.article p {
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.75;
+  margin: 0.75rem 0;
+}
+
+.article strong {
+  color: #0a0a0a;
+  font-weight: 600;
+}
+
+/* ── Links ── */
+
+.article a {
+  color: #FF6B9D;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.article a:hover {
+  color: #e5557f;
+  text-decoration: underline;
+}
+
+/* ── Lists ── */
+
+.article ul,
+.article ol {
+  margin: 0.75rem 0 0.75rem 1.5rem;
+  padding: 0 0 0 0.5rem;
+}
+
+.article li {
+  color: #475569;
+  font-size: 1rem;
+  margin: 0.4rem 0;
+  line-height: 1.75;
+}
+
+.article ul li {
+  list-style-type: disc;
+}
+
+.article ul li::marker {
+  color: #FF6B9D;
+}
+
+.article ol li {
+  list-style-type: decimal;
+}
+
+.article ol li::marker {
+  color: #FF6B9D;
+  font-weight: 600;
+}
+
+/* ── Blockquotes ── */
+
+.article blockquote {
+  background: rgba(255, 107, 157, 0.04);
+  border-left: 3px solid #FF6B9D;
+  border-radius: 8px;
+  color: #475569;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+}
+
+.article blockquote p {
+  margin: 0.25rem 0;
+}
+
+/* ── Code ── */
+
+.article code {
+  background: #f1f5f9;
+  color: #0a0a0a;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.article pre {
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.article pre code {
+  background: none;
+  color: #334155;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* ── Tables ── */
+
+.article table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  display: block;
+  overflow-x: auto;
+}
+
+.article th,
+.article td {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.article th {
+  background: #f8fafc;
+  color: #0a0a0a;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.article td {
+  color: #475569;
+  font-size: 0.9375rem;
+}
+
+.article tr:nth-child(even) td {
+  background: rgba(248, 250, 252, 0.8);
+}
+
+/* ── Images ── */
+
+.article img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  object-fit: cover;
+}
+
+/* ── Horizontal rule ── */
+
+.article hr {
+  border: none;
+  height: 4px;
+  margin: 2.5rem 0;
+  background: transparent;
+  background-image: radial-gradient(circle, #FF6B9D 2px, transparent 2px);
+  background-size: 12px 4px;
+  background-position: center;
+  background-repeat: repeat-x;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 640px) {
+  .article {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+  .article h1 {
+    font-size: 1.25rem;
+    margin: 1.5rem 0 0.75rem 0;
+  }
+  .article h2 {
+    font-size: 1.0625rem;
+    margin: 1.5rem 0 0.5rem 0;
+  }
+  .article h3 {
+    font-size: 0.9375rem;
+    margin: 1rem 0 0.35rem 0;
+  }
+  .article h4 {
+    font-size: 0.875rem;
+  }
+  .article p {
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+    line-height: 1.65;
+  }
+  .article ul,
+  .article ol {
+    margin: 0.5rem 0 0.5rem 1rem;
+    padding-left: 0.25rem;
+  }
+  .article li {
+    font-size: 0.875rem;
+    margin: 0.25rem 0;
+  }
+  .article img {
+    margin: 1rem 0;
+    border-radius: 8px;
+  }
+  .article blockquote {
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+  }
+  .article pre {
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+  }
+}

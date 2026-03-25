@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground } from "@/components/MosaicBackground";
 import { getAllCategories, getColoringThemes, type DbCategory } from "@/lib/categories";
+import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { sampleImages } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
@@ -81,11 +82,12 @@ const faqItems = [
 ];
 
 export default async function Home() {
-  const [categories, coloringThemes, clipArtImages, coloringImages] = await Promise.all([
+  const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts] = await Promise.all([
     getAllCategories(),
     getColoringThemes(),
     getCommunityGallery(),
     getColoringGallery(),
+    Promise.resolve(getAllPosts()),
   ]);
 
   const activeThemes = coloringThemes.filter((t) => t.slug !== "coloring-free");
@@ -421,7 +423,7 @@ export default async function Home() {
         <footer className="bg-[#0a0a0a] text-gray-400">
           <div className="mx-auto max-w-6xl px-4 pt-16 pb-10">
             {/* Top: Logo + columns */}
-            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
               {/* Brand */}
               <div className="lg:col-span-2">
                 <Link href="/">
@@ -439,6 +441,21 @@ export default async function Home() {
                 <ul className="space-y-2.5">
                   <li><Link href="/create" className="text-sm hover:text-white transition-colors">AI Clip Art Generator</Link></li>
                   <li><Link href="/create/coloring-pages" className="text-sm hover:text-white transition-colors">Coloring Page Generator</Link></li>
+                </ul>
+              </div>
+
+              {/* Learn */}
+              <div>
+                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Learn</h4>
+                <ul className="space-y-2.5">
+                  <li><Link href="/learn" className="text-sm hover:text-white transition-colors">All Tutorials</Link></li>
+                  {learnPosts.slice(0, 5).map((post) => (
+                    <li key={post.slug}>
+                      <Link href={`/learn/${post.slug}`} className="text-sm hover:text-white transition-colors">
+                        {post.title}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
 
@@ -479,6 +496,7 @@ export default async function Home() {
               </p>
               <div className="flex items-center gap-5">
                 <Link href="/create" className="text-xs text-gray-500 hover:text-white transition-colors">Generator</Link>
+                <Link href="/learn" className="text-xs text-gray-500 hover:text-white transition-colors">Learn</Link>
                 <Link href="/coloring-pages" className="text-xs text-gray-500 hover:text-white transition-colors">Coloring Pages</Link>
               </div>
             </div>

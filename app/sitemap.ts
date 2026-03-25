@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { sampleImages } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
 import { getAllCategories, getColoringThemes } from "@/lib/categories";
+import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 3600;
@@ -98,6 +99,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  /* --- Learn --- */
+
+  const learnHub: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/learn`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+  ];
+
+  const learnPosts = getAllPosts();
+  const learnArticlePages: MetadataRoute.Sitemap = learnPosts.map((post) => ({
+    url: `${baseUrl}/learn/${post.slug}`,
+    lastModified: post.date ? new Date(post.date) : now,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   return [
     ...staticPages,
     ...categoryPages,
@@ -106,5 +126,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...coloringLanding,
     ...coloringThemePages,
     ...coloringDetailPages,
+    ...learnHub,
+    ...learnArticlePages,
   ];
 }
