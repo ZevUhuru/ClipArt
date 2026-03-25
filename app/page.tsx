@@ -399,20 +399,69 @@ export default async function Home() {
         </section>
 
         {/* ── FOOTER ── */}
-        <footer className="border-t border-gray-100">
-          <div className="mx-auto max-w-6xl px-4 py-10">
-            <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-              <Link href="/" className="text-base font-bold text-gray-900">
-                clip.art
-              </Link>
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-                <Link href="/create" className="text-sm text-gray-500 hover:text-gray-700">AI Generator</Link>
-                <Link href="/create/coloring-pages" className="text-sm text-gray-500 hover:text-gray-700">Coloring Pages</Link>
-                <Link href="/coloring-pages" className="text-sm text-gray-500 hover:text-gray-700">Browse Coloring</Link>
+        <footer className="bg-[#0a0a0a] text-gray-400">
+          <div className="mx-auto max-w-6xl px-4 pt-16 pb-10">
+            {/* Top: Logo + columns */}
+            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+              {/* Brand */}
+              <div className="lg:col-span-2">
+                <Link href="/">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo-white.svg" className="h-7" alt="clip.art" />
+                </Link>
+                <p className="mt-4 max-w-xs text-sm leading-relaxed text-gray-500">
+                  Free AI-powered clip art and coloring page generator. Describe what you want, download it in seconds. No attribution required.
+                </p>
+              </div>
+
+              {/* Create */}
+              <div>
+                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Create</h4>
+                <ul className="space-y-2.5">
+                  <li><Link href="/create" className="text-sm hover:text-white transition-colors">AI Clip Art Generator</Link></li>
+                  <li><Link href="/create/coloring-pages" className="text-sm hover:text-white transition-colors">Coloring Page Generator</Link></li>
+                </ul>
+              </div>
+
+              {/* Browse Clip Art */}
+              <div>
+                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Clip Art</h4>
+                <ul className="space-y-2.5">
+                  {categories.slice(0, 8).map((cat: DbCategory) => (
+                    <li key={cat.slug}>
+                      <Link href={`/${cat.slug}`} className="text-sm hover:text-white transition-colors">
+                        {cat.name} Clip Art
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Browse Coloring Pages */}
+              <div>
+                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Coloring Pages</h4>
+                <ul className="space-y-2.5">
+                  <li><Link href="/coloring-pages" className="text-sm hover:text-white transition-colors">All Coloring Pages</Link></li>
+                  {activeThemes.slice(0, 7).map((theme: DbCategory) => (
+                    <li key={theme.slug}>
+                      <Link href={`/coloring-pages/${theme.slug}`} className="text-sm hover:text-white transition-colors">
+                        {theme.name} Coloring Pages
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-            <div className="mt-6 border-t border-gray-100 pt-6 text-center text-xs text-gray-400">
-              Free for personal and commercial use. No attribution required.
+
+            {/* Bottom bar */}
+            <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+              <p className="text-xs text-gray-500">
+                &copy; {new Date().getFullYear()} clip.art. All images are free for personal and commercial use.
+              </p>
+              <div className="flex items-center gap-5">
+                <Link href="/create" className="text-xs text-gray-500 hover:text-white transition-colors">Generator</Link>
+                <Link href="/coloring-pages" className="text-xs text-gray-500 hover:text-white transition-colors">Coloring Pages</Link>
+              </div>
             </div>
           </div>
         </footer>
