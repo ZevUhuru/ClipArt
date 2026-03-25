@@ -70,7 +70,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left: Image */}
           <div className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm">
-            <div className="relative aspect-square w-full">
+            <div className={`relative w-full ${image.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
               <Image
                 src={image.url}
                 alt={image.description}

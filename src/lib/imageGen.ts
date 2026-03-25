@@ -1,6 +1,6 @@
 import { generateClipArt } from "./gemini";
 import { generateWithDallE } from "./dalle";
-import { type StyleKey, type ModelKey, STYLE_MODEL_MAP, buildPrompt } from "./styles";
+import { type StyleKey, type ModelKey, STYLE_MODEL_MAP, STYLE_ASPECT_MAP, buildPrompt } from "./styles";
 import { createSupabaseAdmin } from "./supabase/server";
 
 let _cachedConfig: Record<string, string> | null = null;
@@ -46,12 +46,13 @@ export async function generateImage(
 ): Promise<Buffer> {
   const model = await resolveModel(style);
   const prompt = buildPrompt(userPrompt, style);
+  const aspectRatio = STYLE_ASPECT_MAP[style] || "1:1";
 
   switch (model) {
     case "dalle":
-      return generateWithDallE(prompt);
+      return generateWithDallE(prompt, aspectRatio);
     case "gemini":
     default:
-      return generateClipArt(prompt);
+      return generateClipArt(prompt, aspectRatio);
   }
 }

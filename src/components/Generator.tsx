@@ -4,12 +4,13 @@ import { useRef, useState } from "react";
 import { StylePicker } from "./StylePicker";
 import { GenerationResult } from "./GenerationResult";
 import { useAppStore } from "@/stores/useAppStore";
-import type { StyleKey } from "@/lib/styles";
+import { type StyleKey, STYLE_ASPECT_MAP } from "@/lib/styles";
 
 export function Generator() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [resultAspectRatio, setResultAspectRatio] = useState<string>("1:1");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -53,6 +54,7 @@ export function Generator() {
       }
 
       setImageUrl(data.imageUrl);
+      setResultAspectRatio(STYLE_ASPECT_MAP[style] || "1:1");
 
       if (typeof data.credits === "number") {
         setCredits(data.credits);
@@ -131,7 +133,7 @@ export function Generator() {
       )}
 
       <div ref={resultRef}>
-        {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} />}
+        {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} aspectRatio={resultAspectRatio} />}
       </div>
     </div>
   );

@@ -2,9 +2,12 @@
 
 import { STYLES, type StyleKey } from "@/lib/styles";
 
+const CLIP_ART_STYLES: StyleKey[] = ["flat", "outline", "cartoon", "sticker", "vintage", "watercolor"];
+
 interface StylePickerProps {
   selected: StyleKey;
   onSelect: (style: StyleKey) => void;
+  styles?: StyleKey[];
 }
 
 const styleLabels: Record<StyleKey, string> = {
@@ -14,12 +17,13 @@ const styleLabels: Record<StyleKey, string> = {
   sticker: "Sticker",
   vintage: "Vintage",
   watercolor: "Watercolor",
+  coloring: "Coloring Page",
 };
 
-export function StylePicker({ selected, onSelect }: StylePickerProps) {
+export function StylePicker({ selected, onSelect, styles = CLIP_ART_STYLES }: StylePickerProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {(Object.keys(STYLES) as StyleKey[]).map((key) => (
+      {styles.map((key) => (
         <button
           key={key}
           onClick={() => onSelect(key)}

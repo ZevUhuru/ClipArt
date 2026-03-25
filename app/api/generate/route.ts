@@ -5,7 +5,7 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 import { generateImage } from "@/lib/imageGen";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
-import { type StyleKey, STYLES } from "@/lib/styles";
+import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +37,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ requiresCredits: true }, { status: 402 });
     }
 
-    const rawBuffer = await generateImage(prompt, style as StyleKey);
+    const styleKey = style as StyleKey;
+    const rawBuffer = await generateImage(prompt, styleKey);
+    const aspectRatio = STYLE_ASPECT_MAP[styleKey] || "1:1";
 
     const webpBuffer = await sharp(rawBuffer)
       .webp({ quality: 85, effort: 4 })
@@ -70,8 +72,9 @@ export async function POST(request: NextRequest) {
         title: classification.title,
         slug: uniqueSlug,
         description: classification.description,
+        aspect_ratio: aspectRatio,
       })
-      .select("id, image_url, prompt, style, category, slug, created_at")
+      .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
       .single();
 
     if (isPublic !== false) revalidatePath(`/${cat}`);

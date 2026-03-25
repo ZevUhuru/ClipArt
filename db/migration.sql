@@ -41,6 +41,7 @@ create table if not exists public.generations (
   prompt text not null,
   style text not null,
   image_url text not null,
+  aspect_ratio text not null default '1:1',
   created_at timestamptz default now()
 );
 

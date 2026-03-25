@@ -9,6 +9,7 @@ export interface Generation {
   style: string;
   category: string | null;
   slug: string | null;
+  aspect_ratio?: string;
   created_at: string;
 }
 

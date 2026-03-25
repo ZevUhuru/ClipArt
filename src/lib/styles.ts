@@ -5,6 +5,7 @@ export const STYLES = {
   sticker: "sticker illustration style, white background, thick outline, vibrant colors, cute",
   vintage: "vintage retro illustration, muted colors, textured, nostalgic style",
   watercolor: "watercolor painting illustration, soft edges, paint splashes, delicate brushstrokes, pastel and vibrant watercolor tones, white paper background",
+  coloring: "black and white coloring book page, thick clean outlines, large enclosed areas for coloring, no fills, no shading, no color, no gradients, simple bold line art, white background",
 } as const;
 
 export type StyleKey = keyof typeof STYLES;
@@ -18,12 +19,26 @@ export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
   sticker: "gemini",
   vintage: "gemini",
   watercolor: "gemini",
+  coloring: "gemini",
+};
+
+export type AspectRatio = "1:1" | "3:4";
+
+export const STYLE_ASPECT_MAP: Record<StyleKey, AspectRatio> = {
+  flat: "1:1",
+  outline: "1:1",
+  cartoon: "1:1",
+  sticker: "1:1",
+  vintage: "1:1",
+  watercolor: "1:1",
+  coloring: "3:4",
 };
 
 const PROMPT_TEMPLATES = {
   clipart: "clip art, isolated object, no text",
   illustration: "illustration, isolated subject, no text, not a photograph",
   whimsical: "whimsical art print, expressive, artistic, isolated subject, no text, not a photograph",
+  coloringpage: "coloring book page, printable line art, black outlines only, no text, no color, white background",
 } as const;
 
 type TemplateKey = keyof typeof PROMPT_TEMPLATES;
@@ -35,6 +50,7 @@ const STYLE_TEMPLATE_MAP: Record<StyleKey, TemplateKey> = {
   sticker: "clipart",
   vintage: "illustration",
   watercolor: "illustration",
+  coloring: "coloringpage",
 };
 
 export function buildPrompt(userPrompt: string, style: StyleKey): string {

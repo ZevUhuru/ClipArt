@@ -11,14 +11,14 @@ function getAI() {
 
 const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
 
-export async function generateClipArt(prompt: string): Promise<Buffer> {
+export async function generateClipArt(prompt: string, aspectRatio: string = "1:1"): Promise<Buffer> {
   try {
     const response = await getAI().models.generateContent({
       model: MODEL,
       contents: prompt,
       config: {
         responseModalities: ["IMAGE"],
-        imageConfig: { aspectRatio: "1:1" },
+        imageConfig: { aspectRatio },
       },
     });
 

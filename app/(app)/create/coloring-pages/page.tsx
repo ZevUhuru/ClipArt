@@ -4,20 +4,19 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { StylePicker } from "@/components/StylePicker";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { downloadClip } from "@/utils/downloadClip";
-import type { StyleKey } from "@/lib/styles";
+import { STYLE_ASPECT_MAP } from "@/lib/styles";
 
 const suggestedPrompts = [
-  "a happy sun wearing sunglasses",
-  "cute cat holding a book",
-  "baby elephant with a birthday hat",
-  "rainbow unicorn with stars",
-  "friendly robot waving hello",
-  "puppy playing in autumn leaves",
+  "dinosaur in a jungle scene",
+  "princess castle with towers and a dragon",
+  "underwater scene with fish and coral",
+  "cute puppies playing in a garden",
+  "space rocket with planets and stars",
+  "farm animals in a barn",
 ];
 
 function GenerationGrid({ items, loading }: { items: Generation[]; loading: boolean }) {
@@ -28,7 +27,7 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="animate-pulse overflow-hidden rounded-2xl">
-            <div className="aspect-square bg-gray-100" />
+            <div className="aspect-[3/4] bg-gray-100" />
           </div>
         ))}
       </div>
@@ -61,10 +60,10 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
             })
           }
         >
-          <div className="relative aspect-square bg-gray-50">
+          <div className={`relative bg-gray-50 ${gen.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
             <Image
               src={gen.image_url}
-              alt={gen.prompt || "Clip art"}
+              alt={gen.prompt || "Coloring page"}
               fill
               className="object-contain p-3 transition-transform group-hover:scale-105"
               unoptimized
@@ -77,7 +76,7 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                downloadClip(gen.image_url, `clip-art-${gen.id}.png`);
+                downloadClip(gen.image_url, `coloring-page-${gen.id}.png`);
               }}
               className="ml-2 shrink-0 text-xs font-medium text-pink-600 opacity-0 transition-opacity group-hover:opacity-100"
             >
@@ -92,6 +91,7 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
 function RecentsGrid() {
   const { user, generations, generationsLoaded, setGenerations } = useAppStore();
+  const coloringGenerations = generations.filter((g) => g.style === "coloring");
 
   useEffect(() => {
     if (!user || generationsLoaded) return;
@@ -114,7 +114,7 @@ function RecentsGrid() {
 
   return (
     <GenerationGrid
-      items={generations}
+      items={coloringGenerations}
       loading={!generationsLoaded && !!user}
     />
   );
@@ -132,6 +132,7 @@ function CommunityGrid() {
         .from("generations")
         .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
         .eq("is_public", true)
+        .eq("style", "coloring")
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -147,9 +148,8 @@ function CommunityGrid() {
 
 type Tab = "recents" | "community";
 
-export default function CreatePage() {
+export default function ColoringPagesCreatePage() {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState<StyleKey>("flat");
   const [isPublic, setIsPublic] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +165,9 @@ export default function CreatePage() {
     generations,
     generationsLoaded,
   } = useAppStore();
+
+  const style = "coloring" as const;
+  const aspectRatio = STYLE_ASPECT_MAP[style];
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim() || isGenerating) return;
@@ -207,10 +210,11 @@ export default function CreatePage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [prompt, style, isPublic, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
+  }, [prompt, isPublic, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
 
-  const hasRecents = generationsLoaded && generations.length > 0;
-  const showEmptyState = !user || (generationsLoaded && generations.length === 0);
+  const coloringGenerations = generations.filter((g) => g.style === "coloring");
+  const hasRecents = generationsLoaded && coloringGenerations.length > 0;
+  const showEmptyState = !user || (generationsLoaded && coloringGenerations.length === 0);
 
   return (
     <div className="min-h-screen">
@@ -224,7 +228,7 @@ export default function CreatePage() {
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe your clip art... (e.g. a happy sun wearing sunglasses)"
+                placeholder="Describe your coloring page... (e.g. dinosaur in a jungle scene)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                 maxLength={500}
                 disabled={isGenerating}
@@ -255,9 +259,11 @@ export default function CreatePage() {
             </button>
           </div>
 
-          {/* Style pills + share toggle */}
+          {/* Mode label + share toggle */}
           <div className="mt-3 flex items-center justify-between">
-            <StylePicker selected={style} onSelect={setStyle} />
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500">
+              Coloring Page &middot; Portrait
+            </span>
             <button
               type="button"
               onClick={() => setIsPublic((v) => !v)}
@@ -296,14 +302,14 @@ export default function CreatePage() {
           <div className="py-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
               <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Create your first clip art
+              Create your first coloring page
             </h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
-              Describe what you want and our AI generates it in seconds. Try one of these to get started:
+              Describe a scene and we&apos;ll generate a printable coloring page with bold outlines. Try one of these:
             </p>
             <div className="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
               {suggestedPrompts.map((suggestion) => (
@@ -315,14 +321,6 @@ export default function CreatePage() {
                   {suggestion}
                 </button>
               ))}
-            </div>
-            <div className="mt-8">
-              <Link
-                href="/search"
-                className="text-sm text-gray-400 transition-colors hover:text-gray-600"
-              >
-                Or browse community creations →
-              </Link>
             </div>
           </div>
         )}
@@ -346,14 +344,6 @@ export default function CreatePage() {
                   </button>
                 ))}
               </div>
-              {activeTab === "recents" && (
-                <Link
-                  href="/my-art"
-                  className="text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
-                >
-                  View all →
-                </Link>
-              )}
             </div>
             {activeTab === "recents" ? <RecentsGrid /> : <CommunityGrid />}
           </>

@@ -123,7 +123,7 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string };
+  image: { id: string; slug: string; title: string; url: string; category: string; style: string; aspect_ratio?: string };
   categorySlug: string;
   detailHref: string;
   onClose: () => void;
@@ -134,7 +134,7 @@ function DrawerContent({ image, categorySlug, detailHref, onClose }: DrawerConte
     <div className="space-y-5 px-6 pb-8 pt-4">
       {/* Image */}
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-        <div className="relative aspect-square w-full">
+        <div className={`relative w-full ${image.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
           <Image
             src={image.url}
             alt={image.title}

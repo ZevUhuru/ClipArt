@@ -7,6 +7,7 @@ export interface DrawerImage {
   url: string;
   category: string;
   style: string;
+  aspect_ratio?: string;
 }
 
 interface ImageDrawerState {

@@ -7,20 +7,23 @@ import { downloadClip } from "@/utils/downloadClip";
 interface GenerationResultProps {
   imageUrl: string;
   prompt?: string;
+  aspectRatio?: string;
 }
 
-export function GenerationResult({ imageUrl, prompt }: GenerationResultProps) {
+export function GenerationResult({ imageUrl, prompt, aspectRatio }: GenerationResultProps) {
   function handleDownload() {
     downloadClip(imageUrl);
   }
+
+  const isPortrait = aspectRatio === "3:4";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card overflow-hidden"
+      className={`card overflow-hidden ${isPortrait ? "mx-auto max-w-sm" : ""}`}
     >
-      <div className="relative aspect-square w-full bg-gray-50">
+      <div className={`relative w-full bg-gray-50 ${isPortrait ? "aspect-[3/4]" : "aspect-square"}`}>
         <Image
           src={imageUrl}
           alt={prompt ? `${prompt} - AI generated clip art` : "AI generated clip art"}

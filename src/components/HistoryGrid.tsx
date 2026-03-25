@@ -18,7 +18,7 @@ export function HistoryGrid() {
       if (!supabase) return;
       const { data } = await supabase
         .from("generations")
-        .select("id, image_url, prompt, style, category, slug, created_at")
+        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -84,6 +84,7 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
               url: gen.image_url,
               category: gen.category || "free",
               style: gen.style,
+              aspect_ratio: gen.aspect_ratio,
             })
           }
         >

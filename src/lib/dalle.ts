@@ -9,12 +9,19 @@ function getClient() {
   return _client;
 }
 
-export async function generateWithDallE(prompt: string): Promise<Buffer> {
+const ASPECT_TO_DALLE_SIZE: Record<string, "1024x1024" | "1024x1536" | "1536x1024"> = {
+  "1:1": "1024x1024",
+  "3:4": "1024x1536",
+  "4:3": "1536x1024",
+};
+
+export async function generateWithDallE(prompt: string, aspectRatio: string = "1:1"): Promise<Buffer> {
   try {
+    const size = ASPECT_TO_DALLE_SIZE[aspectRatio] || "1024x1024";
     const response = await getClient().images.generate({
       model: "gpt-image-1",
       prompt,
-      size: "1024x1024",
+      size,
       n: 1,
     });
 

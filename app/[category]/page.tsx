@@ -37,7 +37,7 @@ async function getGalleryImages(categorySlug: string) {
     const admin = createSupabaseAdmin();
     const { data } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, created_at")
+      .select("id, prompt, title, image_url, style, category, slug, aspect_ratio, created_at")
       .eq("category", categorySlug)
       .eq("is_public", true)
       .order("created_at", { ascending: false })
@@ -50,6 +50,7 @@ async function getGalleryImages(categorySlug: string) {
       description: row.prompt,
       category: row.category,
       tags: [row.style, row.category].filter(Boolean),
+      aspect_ratio: row.aspect_ratio || "1:1",
     }));
   } catch {
     return [];
