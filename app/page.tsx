@@ -99,36 +99,55 @@ export default async function Home() {
       <MosaicBackground />
 
       {/* ───── DARK ZONE: Hero + Generator ───── */}
-      <div className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10 flex min-h-[100dvh] flex-col">
         <Nav />
-        <div className="flex flex-1 items-center justify-center px-4 py-6 pb-16">
+        <div className="flex flex-1 items-center justify-center px-3 py-4 pb-8 sm:px-4 sm:py-6 sm:pb-16">
           <div className="w-full max-w-xl">
-            <div className="mb-6 text-center">
+            <div className="mb-4 text-center sm:mb-6">
+              <div className="mb-3 flex justify-center sm:mb-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-400/[0.12] px-3 py-1.5 shadow-sm backdrop-blur-sm sm:px-4 sm:py-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 sm:h-7 sm:w-7">
+                    <svg className="h-3 w-3 text-black sm:h-3.5 sm:w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                      <path
+                        fillRule="evenodd"
+                        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  <div className="text-left leading-tight">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-amber-100 sm:text-xs">
+                      15 free generations
+                    </p>
+                    <p className="text-[10px] text-amber-200/80 sm:text-[11px]">Included when you sign up</p>
+                  </div>
+                </div>
+              </div>
               <h1 className="font-futura-bold text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 <span className="block text-white">Generate Clip Art</span>
                 <span className="gradient-text">In Seconds.</span>
               </h1>
-              <p className="mt-4 whitespace-nowrap text-sm text-gray-300 sm:text-base">
-                15 free generations. Describe it, download it, done.
+              <p className="mt-2 text-xs text-gray-300 sm:hidden">
+                Describe it, generate, download.
               </p>
             </div>
 
-            <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
-              <div className="rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-pink-400 sm:text-xs">Step 01</p>
-                <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">Describe</p>
+            <div className="mb-5 hidden grid-cols-3 gap-3 sm:grid">
+              <div className="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10 backdrop-blur-sm">
+                <p className="text-xs font-bold uppercase tracking-wider text-pink-400">Step 01</p>
+                <p className="mt-0.5 text-sm font-semibold text-white">Describe</p>
               </div>
-              <div className="rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-orange-400 sm:text-xs">Step 02</p>
-                <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">Generate</p>
+              <div className="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10 backdrop-blur-sm">
+                <p className="text-xs font-bold uppercase tracking-wider text-orange-400">Step 02</p>
+                <p className="mt-0.5 text-sm font-semibold text-white">Generate</p>
               </div>
-              <div className="rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10 backdrop-blur-sm sm:px-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-green-400 sm:text-xs">Step 03</p>
-                <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">Download</p>
+              <div className="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10 backdrop-blur-sm">
+                <p className="text-xs font-bold uppercase tracking-wider text-green-400">Step 03</p>
+                <p className="mt-0.5 text-sm font-semibold text-white">Download</p>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white p-6 shadow-[0_0_80px_rgba(255,138,101,0.15)] sm:p-8">
+            <div className="rounded-2xl border border-white/10 bg-white p-3 shadow-[0_0_80px_rgba(255,138,101,0.15)] sm:rounded-3xl sm:p-8">
               <Generator />
             </div>
           </div>

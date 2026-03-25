@@ -66,8 +66,8 @@ export function MosaicBackground() {
         })}
       </div>
 
-      {/* Base dark wash -- dims everything uniformly */}
-      <div className="absolute inset-0 bg-[#0a0a0a]/50" />
+      {/* Base dark wash -- dims everything uniformly (stronger on mobile for legibility) */}
+      <div className="absolute inset-0 bg-[#0a0a0a]/60 sm:bg-[#0a0a0a]/50" />
 
       {/* Studio spotlight -- bright center, dark edges like Doodles */}
       <div

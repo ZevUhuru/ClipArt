@@ -75,33 +75,54 @@ export function Generator() {
   }
 
   return (
-    <div className="space-y-4">
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe your clip art... (e.g. a happy sun wearing sunglasses)"
-        className="input-field min-h-[100px] resize-none"
-        maxLength={500}
-        disabled={isGenerating}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleGenerate();
-          }
-        }}
-      />
+    <div className="space-y-3 sm:space-y-5">
+      <div>
+        <label
+          htmlFor="home-prompt"
+          className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 sm:text-xs"
+        >
+          Your prompt
+        </label>
+        <div className="rounded-2xl border border-gray-200/90 bg-gradient-to-b from-gray-50 to-white p-[3px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_2px_rgba(0,0,0,0.04)] sm:p-1">
+          <textarea
+            id="home-prompt"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="e.g. happy sun wearing sunglasses, flat mascot style"
+            rows={2}
+            className="min-h-[56px] w-full resize-none rounded-[0.875rem] border-0 bg-white/90 px-3 py-2.5 text-[15px] leading-snug text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-400/25 disabled:opacity-60 sm:min-h-[104px] sm:px-4 sm:py-3 sm:text-base"
+            maxLength={500}
+            disabled={isGenerating}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleGenerate();
+              }
+            }}
+          />
+        </div>
+        <p className="mt-1.5 text-[11px] text-gray-400 sm:text-xs">
+          <span className="hidden sm:inline">Shift + Enter for a new line.</span>
+          <span className="sm:hidden">Shift + ↵ new line · Enter generates</span>
+        </p>
+      </div>
 
-      <StylePicker selected={style} onSelect={setStyle} />
+      <div>
+        <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 sm:text-xs">
+          Style
+        </span>
+        <StylePicker selected={style} onSelect={setStyle} />
+      </div>
 
       <button
         onClick={handleGenerate}
         disabled={!prompt.trim() || isGenerating}
-        className="btn-primary w-full py-4 text-base"
+        className="btn-primary w-full py-3 text-sm sm:py-4 sm:text-base"
       >
         {isGenerating ? (
           <span className="flex items-center gap-2">
             <svg
-              className="h-5 w-5 animate-spin"
+              className="h-4 w-4 animate-spin sm:h-5 sm:w-5"
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -127,7 +148,7 @@ export function Generator() {
       </button>
 
       {error && (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm">
           {error}
         </p>
       )}
