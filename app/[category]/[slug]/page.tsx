@@ -29,6 +29,7 @@ async function getDbImage(slug: string) {
       .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at")
       .eq("slug", slug)
       .eq("is_public", true)
+      .neq("style", "coloring")
       .single();
 
     if (bySlug) return bySlug;
@@ -38,6 +39,7 @@ async function getDbImage(slug: string) {
       .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at")
       .eq("id", slug)
       .eq("is_public", true)
+      .neq("style", "coloring")
       .single();
 
     return byId || null;
