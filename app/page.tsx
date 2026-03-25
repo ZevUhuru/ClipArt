@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground } from "@/components/MosaicBackground";
@@ -57,6 +58,16 @@ export default function Home() {
             {/* Generator card */}
             <div className="rounded-3xl border border-white/10 bg-white p-6 shadow-[0_0_80px_rgba(255,138,101,0.15)] sm:p-8">
               <Generator />
+            </div>
+
+            {/* Cross-links */}
+            <div className="mt-6 text-center">
+              <Link
+                href="/coloring-pages"
+                className="text-sm font-medium text-gray-400 transition-colors hover:text-white"
+              >
+                Try our AI Coloring Pages &rarr;
+              </Link>
             </div>
           </div>
         </div>

@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
     const cat = classification.category;
     const suffix = Math.random().toString(36).slice(2, 8);
     const uniqueSlug = `${classification.slug}-${suffix}`;
-    const key = `${cat}/${uniqueSlug}.webp`;
+    const isColoring = styleKey === "coloring";
+    const key = isColoring
+      ? `coloring-pages/${cat}/${uniqueSlug}.webp`
+      : `${cat}/${uniqueSlug}.webp`;
     const imageUrl = await uploadToR2(webpBuffer, key, {
       category: cat,
       contentType: "image/webp",
@@ -77,7 +80,10 @@ export async function POST(request: NextRequest) {
       .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
       .single();
 
-    if (isPublic !== false) revalidatePath(`/${cat}`);
+    if (isPublic !== false) {
+      revalidatePath(isColoring ? `/coloring-pages/${cat}` : `/${cat}`);
+      if (isColoring) revalidatePath("/coloring-pages");
+    }
 
     return NextResponse.json({
       imageUrl,

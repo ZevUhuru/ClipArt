@@ -18,6 +18,7 @@ CREATE TABLE public.categories (
   image_count integer NOT NULL DEFAULT 0,
   is_active boolean NOT NULL DEFAULT true,
   sort_order integer NOT NULL DEFAULT 0,
+  type text NOT NULL DEFAULT 'clipart',
   created_at timestamptz DEFAULT now()
 );
 

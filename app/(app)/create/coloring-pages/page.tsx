@@ -263,9 +263,17 @@ export default function ColoringPagesCreatePage() {
 
           {/* Mode label + share toggle */}
           <div className="mt-3 flex items-center justify-between">
-            <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500">
-              Coloring Page &middot; Portrait
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500">
+                Coloring Page &middot; Portrait
+              </span>
+              <Link
+                href="/coloring-pages"
+                className="text-xs font-medium text-pink-500 hover:text-pink-700"
+              >
+                Browse Coloring Pages
+              </Link>
+            </div>
             <button
               type="button"
               onClick={() => setIsPublic((v) => !v)}

@@ -26,10 +26,26 @@ async function getCategorySlugs(): Promise<string[]> {
       .from("categories")
       .select("slug")
       .eq("is_active", true)
+      .in("type", ["clipart"])
       .order("sort_order");
     return (data || []).map((r: { slug: string }) => r.slug);
   } catch {
     return ["christmas", "heart", "halloween", "free", "flower", "school", "book", "pumpkin", "cat", "thanksgiving"];
+  }
+}
+
+async function getColoringThemeSlugs(): Promise<string[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("slug")
+      .eq("is_active", true)
+      .eq("type", "coloring")
+      .order("sort_order");
+    return (data || []).map((r: { slug: string }) => r.slug);
+  } catch {
+    return ["mandala", "unicorn", "dinosaur", "animals", "princess", "mermaid", "ocean", "space", "farm", "coloring-free"];
   }
 }
 
@@ -43,17 +59,30 @@ function slugify(text: string): string {
 }
 
 export async function classifyPrompt(prompt: string, style: string): Promise<Classification> {
+  const isColoring = style === "coloring";
+  const fallbackCategory = isColoring ? "coloring-free" : "free";
+
   const fallback: Classification = {
     title: prompt.slice(0, 80),
-    category: "free",
+    category: fallbackCategory,
     description: prompt,
     slug: slugify(prompt),
   };
 
   try {
-    const categorySlugs = await getCategorySlugs();
+    const categorySlugs = isColoring
+      ? await getColoringThemeSlugs()
+      : await getCategorySlugs();
 
-    const systemPrompt = `You are a clip art classifier. Given a user's image generation prompt, return a JSON object with:
+    const systemPrompt = isColoring
+      ? `You are a coloring page classifier. Given a user's coloring page generation prompt, return a JSON object with:
+- "title": A clean, properly capitalized title for the coloring page (max 60 chars). Fix typos. Do NOT include "coloring page" in the title.
+- "category": The best matching theme slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "coloring-free".
+- "description": A short SEO-friendly description of the coloring page (100-160 chars). Mention the subject and that it's a printable coloring page.
+- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 60 chars).
+
+Return ONLY valid JSON, no markdown fences, no explanation.`
+      : `You are a clip art classifier. Given a user's image generation prompt, return a JSON object with:
 - "title": A clean, properly capitalized title for the clip art (max 60 chars). Fix typos. Do NOT include "clip art" in the title.
 - "category": The best matching category slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "free".
 - "description": A short SEO-friendly description of the image (100-160 chars). Mention the subject and potential uses.

@@ -15,12 +15,16 @@ import { downloadClip } from "@/utils/downloadClip";
 interface ImageDetailPageProps {
   image: SampleImage;
   categorySlug: string;
+  isColoringPage?: boolean;
 }
 
-export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
+export function ImageDetailPage({ image, categorySlug, isColoringPage = false }: ImageDetailPageProps) {
   const category = categoryMap.get(categorySlug);
   const categoryName = category?.name || categorySlug;
-  const relatedImages = getImagesByCategory(image.category)
+  const categoryHref = isColoringPage ? `/coloring-pages/${categorySlug}` : `/${categorySlug}`;
+  const categoryLabel = isColoringPage ? `${categoryName} Coloring Pages` : `${categoryName} Clip Art`;
+  const createHref = isColoringPage ? "/create/coloring-pages" : "/create";
+  const relatedImages = isColoringPage ? [] : getImagesByCategory(image.category)
     .filter((img) => img.slug !== image.slug)
     .slice(0, 6);
 
@@ -48,12 +52,26 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </li>
+          {isColoringPage && (
+            <>
+              <li>
+                <Link href="/coloring-pages" className="hover:text-gray-600">
+                  Coloring Pages
+                </Link>
+              </li>
+              <li aria-hidden="true">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </li>
+            </>
+          )}
           <li>
             <Link
-              href={`/${categorySlug}`}
+              href={categoryHref}
               className="hover:text-gray-600"
             >
-              {categoryName} Clip Art
+              {categoryLabel}
             </Link>
           </li>
           <li aria-hidden="true">
@@ -91,10 +109,10 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
             {/* Category badge */}
             <div className="mt-4">
               <Link
-                href={`/${categorySlug}`}
+                href={categoryHref}
                 className="inline-flex items-center rounded-full bg-brand-gradient px-3 py-1 text-xs font-semibold text-white"
               >
-                {categoryName}
+                {categoryLabel}
               </Link>
             </div>
 
@@ -133,15 +151,15 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
                   d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
               </svg>
-              Download Free PNG
+              {isColoringPage ? "Download Free Coloring Page" : "Download Free PNG"}
             </button>
 
             {/* Generate similar */}
             <Link
-              href="/create"
+              href={createHref}
               className="btn-secondary mt-3 w-full justify-center py-3.5 text-base"
             >
-              Generate Similar with AI
+              {isColoringPage ? "Create Similar Coloring Page" : "Generate Similar with AI"}
             </Link>
 
             {/* License info */}
@@ -195,18 +213,21 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
         <div className="rounded-3xl bg-brand-gradient p-[2px]">
           <div className="rounded-[22px] bg-white p-8 text-center sm:p-10">
             <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-              Create your own {categoryName.toLowerCase()} clip art
+              {isColoringPage
+                ? `Create your own ${categoryName.toLowerCase()} coloring pages`
+                : `Create your own ${categoryName.toLowerCase()} clip art`}
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
-              Describe what you want and our AI generates it in seconds. 15 free
-              generations, no sign-up required.
+              {isColoringPage
+                ? "Describe any scene and our AI generates a printable coloring page with bold outlines. 15 free generations, no sign-up required."
+                : "Describe what you want and our AI generates it in seconds. 15 free generations, no sign-up required."}
             </p>
             <div className="mt-8">
               <Link
-                href="/create"
+                href={createHref}
                 className="btn-primary px-8 text-base"
               >
-                Start Generating — It&apos;s Free
+                Start Creating — It&apos;s Free
               </Link>
             </div>
           </div>
@@ -259,26 +280,18 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
             {
               "@context": "https://schema.org",
               "@type": "BreadcrumbList",
-              itemListElement: [
-                {
-                  "@type": "ListItem",
-                  position: 1,
-                  name: "Home",
-                  item: "https://clip.art",
-                },
-                {
-                  "@type": "ListItem",
-                  position: 2,
-                  name: `${categoryName} Clip Art`,
-                  item: `https://clip.art/${categorySlug}`,
-                },
-                {
-                  "@type": "ListItem",
-                  position: 3,
-                  name: image.title,
-                  item: `https://clip.art/${categorySlug}/${image.slug}`,
-                },
-              ],
+              itemListElement: isColoringPage
+                ? [
+                    { "@type": "ListItem", position: 1, name: "Home", item: "https://clip.art" },
+                    { "@type": "ListItem", position: 2, name: "Coloring Pages", item: "https://clip.art/coloring-pages" },
+                    { "@type": "ListItem", position: 3, name: categoryLabel, item: `https://clip.art/coloring-pages/${categorySlug}` },
+                    { "@type": "ListItem", position: 4, name: image.title, item: `https://clip.art/coloring-pages/${categorySlug}/${image.slug}` },
+                  ]
+                : [
+                    { "@type": "ListItem", position: 1, name: "Home", item: "https://clip.art" },
+                    { "@type": "ListItem", position: 2, name: `${categoryName} Clip Art`, item: `https://clip.art/${categorySlug}` },
+                    { "@type": "ListItem", position: 3, name: image.title, item: `https://clip.art/${categorySlug}/${image.slug}` },
+                  ],
             },
           ]),
         }}

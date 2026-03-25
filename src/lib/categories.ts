@@ -23,6 +23,7 @@ export async function getAllCategories(): Promise<DbCategory[]> {
       .from("categories")
       .select("*")
       .eq("is_active", true)
+      .in("type", ["clipart"])
       .order("sort_order");
     return (data || []) as DbCategory[];
   } catch {
@@ -52,6 +53,53 @@ export async function getCategorySlugs(): Promise<string[]> {
       .from("categories")
       .select("slug")
       .eq("is_active", true)
+      .in("type", ["clipart"])
+      .order("sort_order");
+    return (data || []).map((r: { slug: string }) => r.slug);
+  } catch {
+    return [];
+  }
+}
+
+export async function getColoringThemes(): Promise<DbCategory[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .eq("type", "coloring")
+      .order("sort_order");
+    return (data || []) as DbCategory[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getColoringThemeBySlug(slug: string): Promise<DbCategory | null> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("*")
+      .eq("slug", slug)
+      .eq("type", "coloring")
+      .eq("is_active", true)
+      .single();
+    return (data as DbCategory) || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getColoringThemeSlugs(): Promise<string[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("slug")
+      .eq("is_active", true)
+      .eq("type", "coloring")
       .order("sort_order");
     return (data || []).map((r: { slug: string }) => r.slug);
   } catch {
