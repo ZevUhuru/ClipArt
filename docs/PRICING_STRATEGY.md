@@ -61,59 +61,44 @@ The real competition is Etsy's small themed sets at ~39¢/image. clip.art is che
 
 Stripe fee = 2.9% + $0.30 per transaction. Smaller purchases lose a higher % to fees.
 
-## Current Pricing Options
+## Current Pricing (Active)
 
-### Option A: Slot Modal (recommended for launch)
-
-| Tier | Price | Credits | Per Credit | Margin After Fees + COGS |
-|------|-------|---------|------------|--------------------------|
-| Mini | $2.99 | 10 | 29.9¢ | ~$2.10 (70%) |
-| Value | $5.99 | 40 | 15.0¢ | ~$3.52 (59%) |
-| Power | $8.99 | 75 | 12.0¢ | ~$4.68 (52%) |
-
-**Why this works:**
-- All under $10 = impulse buy territory
-- The Value tier is the obvious choice (2x price of Mini gets 4x credits)
-- Power tier exists mainly as a decoy to make Value look smarter (center-stage effect)
-- $2.99 entry is low enough for "just try it" but high enough that Stripe fees don't destroy margin
-
-### Option B: Lower Entry (if conversion is poor)
+### Slot Modal (primary)
 
 | Tier | Price | Credits | Per Credit | Margin After Fees + COGS |
 |------|-------|---------|------------|--------------------------|
-| Mini | $1.99 | 8 | 24.9¢ | ~$1.23 (62%) |
-| Value | $4.99 | 35 | 14.3¢ | ~$2.80 (56%) |
-| Power | $8.99 | 75 | 12.0¢ | ~$4.68 (52%) |
+| Quick Hit | $1.99 | 30 | 6.6¢ | ~$1.03 (52%) |
+| Sweet Spot | $4.99 | 100 | 5.0¢ | ~$0.56 (11%) |
+| Binge | $9.99 | 200 | 5.0¢ | ~-$0.57 (break-even) |
 
-**When to switch:** If <5% of free-tier users convert within the first 2 weeks. The $1.99 entry removes almost all friction but Stripe takes 18%.
+**Philosophy:** Maximize volume and addiction. The entry price is under $2 (impulse buy), credits feel abundant, and per-image cost is low enough that failed generations don't sting. We trade margin for retention and word-of-mouth.
 
-### Option C: Original 2-Tier (current production)
+### Original 2-Tier (fallback via env var)
 
 | Tier | Price | Credits | Per Credit | Margin After Fees + COGS |
 |------|-------|---------|------------|--------------------------|
-| Starter | $5.00 | 30 | 16.7¢ | ~$3.06 (61%) |
-| Pro | $12.00 | 100 | 12.0¢ | ~$6.44 (54%) |
+| Starter | $4.99 | 100 | 5.0¢ | ~$0.56 (11%) |
+| Pro | $9.99 | 200 | 5.0¢ | ~-$0.57 (break-even) |
 
-**When to use:** Simpler UI, higher average order value. Good if most buyers are repeat users who already know they want credits.
+**When to use:** Simpler UI, same pricing philosophy. Toggle via `NEXT_PUBLIC_CREDITS_MODAL_VARIANT`.
 
 ## Decision Framework
 
 ```
-User signs up → gets 5 free credits → generates images
+User signs up → gets 15 free credits → generates images → gets hooked
                                            │
                               Runs out of credits
                                            │
                       ┌────────────────────┼────────────────────┐
                       │                    │                    │
                Price sensitive      Average user          Power user
-               "Is this worth it?"  "I need more"         "I use this daily"
+               "Just one more pull" "I need more"         "I use this daily"
                       │                    │                    │
-                 Mini ($2.99)        Value ($5.99)        Power ($8.99)
-                 Gateway buy         Core revenue         Whale capture
+               Quick Hit ($1.99)   Sweet Spot ($4.99)    Binge ($9.99)
+               Impulse buy          Core revenue          Whale capture
                       │                    │                    │
-                 Try 10 images      40 images lasts      75 images for
-                 Decide if they     1-2 weeks for        heavy projects
-                 want more          casual use
+                 30 images,         100 images lasts      200 images for
+                 instant gratif.    weeks of casual use   heavy projects
 ```
 
 ## Key Metrics to Track
@@ -125,11 +110,9 @@ User signs up → gets 5 free credits → generates images
 
 ## Recommendation
 
-**Launch with Option A (Slot Modal)**. The 3-tier under-$10 structure is the strongest for conversion:
-- Low entry barrier ($2.99 vs $5.00 in the original)
-- Clear value winner in the middle
-- All impulse-buy range
+**Optimize for volume and habit formation, not margin per transaction.** The goal is to make generating feel like pulling a slot machine — cheap, fast, addictive. Users who generate frequently become advocates and repeat buyers.
 
-If after 2 weeks the Mini tier is getting most purchases but few repeat buys, drop to Option B ($1.99 entry) to cast a wider net. If Value/Power dominate and people aren't price-sensitive, you could even raise the Power tier to $11.99 for better margins.
-
-The original 2-tier (Option C) can stay as a fallback via the `NEXT_PUBLIC_CREDITS_MODAL_VARIANT` env var.
+- $1.99 entry removes virtually all purchase friction
+- 15 free credits on signup gets users deep into the loop before the paywall hits
+- High credit counts make users feel rich, not rationed
+- If margins are too thin at scale, raise the generation quality/speed rather than the price

@@ -20,7 +20,7 @@ Complete user experience flow for clip.art — from first visit through generati
 
 ### Authenticated (signed in)
 
-- Starts with **5 credits** (set by the `handle_new_user` DB trigger on first signup).
+- Starts with **15 credits** (set by the `handle_new_user` DB trigger on first signup).
 - Each generation costs **1 credit**.
 - All generations are saved to the `generations` table and displayed in the History Grid on `/generator`.
 - Generated images are stored in R2 under `{category}/{slug}-{uid}.webp`.
@@ -92,7 +92,7 @@ Powered by Supabase Auth. Two methods:
 1. User clicks "Continue with Google" in AuthModal
 2. Redirects to Google consent screen
 3. Returns to `/auth/callback` → Supabase exchanges code for session
-4. `handle_new_user` trigger creates a `profiles` row with 5 credits
+4. `handle_new_user` trigger creates a `profiles` row with 15 credits
 5. User redirected to `/generator`
 
 ### Email Magic Link
@@ -110,8 +110,8 @@ Powered by Supabase Auth. Two methods:
 │  BuyCreditsModal opens (triggered by 402 or Nav) │
 │  ↓                                               │
 │  User selects a credit pack:                     │
-│  ├─ Starter: 30 credits — $5                     │
-│  └─ Pro:    100 credits — $12                    │
+│  ├─ Starter: 100 credits — $4.99                 │
+│  └─ Pro:     200 credits — $9.99                 │
 │  ↓                                               │
 │  POST /api/credits/checkout  { packId }          │
 │  ↓                                               │
@@ -170,7 +170,7 @@ Four tables (all with RLS enabled):
 ### `profiles`
 - `id` (uuid, PK, FK → auth.users)
 - `email` (text)
-- `credits` (integer, default 5)
+- `credits` (integer, default 15)
 - `is_admin` (boolean, default false)
 - `created_at` (timestamptz)
 - Auto-created via `handle_new_user` trigger on signup

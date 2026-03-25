@@ -73,8 +73,8 @@ INSERT INTO public.categories (slug, name, h1, meta_title, meta_description, int
   ('free', 'Free', 'Free Clip Art',
    'Free Clip Art — Download Free AI Generated Images',
    'Download free clip art for any project. Generate custom illustrations with AI at no cost. No attribution required.',
-   'Get free clip art for school projects, presentations, social media, and more. Every visitor gets 5 free AI generations — no sign-up required. Create exactly what you need.',
-   ARRAY['Finding quality free clip art has always been a challenge. Most free clip art sites serve outdated, low-quality images with restrictive licenses. clip.art changes that by letting you generate exactly the clip art you need, for free, with no attribution required.', 'Every visitor gets 5 free generations with no account needed. Sign up for 5 more free credits. Each generation creates a unique, high-quality PNG image tailored to your description. Whether you need clip art for a school report, a business presentation, or a social media post, you can create it here in seconds.'],
+   'Get free clip art for school projects, presentations, social media, and more. Every visitor gets 15 free AI generations — no sign-up required. Create exactly what you need.',
+   ARRAY['Finding quality free clip art has always been a challenge. Most free clip art sites serve outdated, low-quality images with restrictive licenses. clip.art changes that by letting you generate exactly the clip art you need, for free, with no attribution required.', 'Every visitor gets 15 free generations with no account needed. Each generation creates a unique, high-quality PNG image tailored to your description. Whether you need clip art for a school report, a business presentation, or a social media post, you can create it here in seconds.'],
    ARRAY['Colorful stack of books for a school project', 'Professional handshake business illustration', 'Happy birthday cake with candles and confetti'],
    ARRAY['school', 'book', 'flower', 'heart'], 4),
 

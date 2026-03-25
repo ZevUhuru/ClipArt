@@ -22,7 +22,7 @@ export default function Home() {
                 <span className="gradient-text">In Seconds.</span>
               </h1>
               <p className="mt-4 whitespace-nowrap text-sm text-gray-300 sm:text-base">
-                Describe what you want. Download instantly. No license needed.
+                15 free generations. Describe it, download it, done.
               </p>
             </div>
 

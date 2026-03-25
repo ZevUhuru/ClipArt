@@ -7,15 +7,15 @@ import { useAppStore } from "@/stores/useAppStore";
 const PACKS = [
   {
     name: "Starter",
-    credits: 30,
-    price: "$5",
+    credits: 100,
+    price: "$4.99",
     priceId: "starter",
     popular: false,
   },
   {
     name: "Pro",
-    credits: 100,
-    price: "$12",
+    credits: 200,
+    price: "$9.99",
     priceId: "pro",
     popular: true,
   },

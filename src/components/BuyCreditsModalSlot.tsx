@@ -6,33 +6,33 @@ import { useAppStore } from "@/stores/useAppStore";
 
 const SLOT_PACKS = [
   {
-    name: "Try It",
-    credits: 10,
-    price: "$2.99",
+    name: "Quick Hit",
+    credits: 30,
+    price: "$1.99",
     priceId: "mini",
     badge: null,
     highlight: false,
   },
   {
-    name: "Popular",
-    credits: 40,
-    price: "$5.99",
+    name: "Sweet Spot",
+    credits: 100,
+    price: "$4.99",
     priceId: "value",
     badge: "Best Value",
     highlight: true,
   },
   {
-    name: "Power",
-    credits: 75,
-    price: "$8.99",
+    name: "Binge",
+    credits: 200,
+    price: "$9.99",
     priceId: "power",
     badge: "Most Credits",
     highlight: false,
   },
 ] as const;
 
-const REEL_DUMMY_PRICES = ["$1.49", "$3.49", "$7.49", "$4.99", "$9.99", "$6.49", "$2.49", "$11.99"];
-const REEL_DUMMY_CREDITS = ["5", "20", "50", "15", "80", "35", "25", "120"];
+const REEL_DUMMY_PRICES = ["$0.99", "$2.49", "$5.49", "$3.99", "$7.99", "$6.49", "$1.49", "$8.99"];
+const REEL_DUMMY_CREDITS = ["10", "30", "50", "100", "150", "40", "80", "250"];
 
 function SlotReel({
   pack,

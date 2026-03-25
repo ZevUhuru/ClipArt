@@ -88,11 +88,23 @@ export function AuthModal() {
                 ? "Create your account"
                 : "Welcome back"}
             </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              {authModalMode === "signup"
-                ? "Sign up to get 5 free credits and keep generating."
-                : "Sign in to access your generations."}
-            </p>
+            {authModalMode === "signup" ? (
+              <div className="mt-3 flex flex-col items-start gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-gradient px-3 py-1 text-sm font-bold text-white shadow-sm">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                  </svg>
+                  15 free credits included
+                </span>
+                <p className="text-sm text-gray-500">
+                  Sign up and start generating — no credit card required.
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-gray-500">
+                Sign in to access your generations.
+              </p>
+            )}
 
             <div className="mt-6 space-y-4">
               <button

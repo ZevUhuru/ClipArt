@@ -16,28 +16,28 @@ export const CREDIT_PACKS: Record<
   // Original modal packs
   starter: {
     priceId: process.env.STRIPE_STARTER_PRICE_ID || "",
-    credits: 30,
-    amountCents: 500,
+    credits: 100,
+    amountCents: 499,
   },
   pro: {
     priceId: process.env.STRIPE_PRO_PRICE_ID || "",
-    credits: 100,
-    amountCents: 1200,
+    credits: 200,
+    amountCents: 999,
   },
   // Slot modal packs
   mini: {
     priceId: process.env.STRIPE_MINI_PRICE_ID || "",
-    credits: 10,
-    amountCents: 299,
+    credits: 30,
+    amountCents: 199,
   },
   value: {
     priceId: process.env.STRIPE_VALUE_PRICE_ID || "",
-    credits: 40,
-    amountCents: 599,
+    credits: 100,
+    amountCents: 499,
   },
   power: {
     priceId: process.env.STRIPE_POWER_PRICE_ID || "",
-    credits: 75,
-    amountCents: 899,
+    credits: 200,
+    amountCents: 999,
   },
 };

@@ -22,12 +22,11 @@ GPT Image 1 is **~3.5x cheaper** than Gemini 2.5 Flash per image. DALL-E 2/3 dep
 
 | Package | Price | Credits | Revenue/credit |
 |---------|-------|---------|----------------|
-| Starter (15 credits) | $4.99 | 15 | $0.33 |
-| Mini (5 credits) | $1.99 | 5 | $0.40 |
-| Value (30 credits) | $7.99 | 30 | $0.27 |
-| Power (100 credits) | $19.99 | 100 | $0.20 |
+| Quick Hit | $1.99 | 30 | $0.07 |
+| Sweet Spot | $4.99 | 100 | $0.05 |
+| Binge | $9.99 | 200 | $0.05 |
 
-Even at the worst margin (Power pack), revenue per credit ($0.20) comfortably exceeds both GPT Image 1 ($0.011) and Gemini ($0.039). Margins are healthy for either model.
+Revenue per credit is lower than before — this is intentional. We're optimizing for volume and habit formation over per-transaction margin. Even at the lowest tier ($0.05/credit), revenue still exceeds GPT Image 1 cost ($0.011) and covers Gemini ($0.039) with slim margin.
 
 ## When to reconsider
 

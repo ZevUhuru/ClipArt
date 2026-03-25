@@ -198,7 +198,7 @@ export function ImageDetailPage({ image, categorySlug }: ImageDetailPageProps) {
               Create your own {categoryName.toLowerCase()} clip art
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
-              Describe what you want and our AI generates it in seconds. 5 free
+              Describe what you want and our AI generates it in seconds. 15 free
               generations, no sign-up required.
             </p>
             <div className="mt-8">
