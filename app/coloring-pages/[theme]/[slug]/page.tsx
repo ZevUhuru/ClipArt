@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getColoringThemeBySlug } from "@/lib/categories";
 import { ImageDetailPage } from "@/components/ImageDetailPage";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -90,5 +91,10 @@ export default async function Page({ params }: PageProps) {
     aspect_ratio: dbRow.aspect_ratio || "3:4",
   };
 
-  return <ImageDetailPage image={image} categorySlug={params.theme} isColoringPage />;
+  return (
+    <>
+      <ImageDetailPage image={image} categorySlug={params.theme} isColoringPage />
+      <MarketingFooter />
+    </>
+  );
 }

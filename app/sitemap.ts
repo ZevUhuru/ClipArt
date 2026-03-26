@@ -99,6 +99,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  /* --- Stickers --- */
+
+  const stickersLanding: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/stickers`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+  ];
+
   /* --- Learn --- */
 
   const learnHub: MetadataRoute.Sitemap = [
@@ -126,6 +137,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...coloringLanding,
     ...coloringThemePages,
     ...coloringDetailPages,
+    ...stickersLanding,
     ...learnHub,
     ...learnArticlePages,
   ];

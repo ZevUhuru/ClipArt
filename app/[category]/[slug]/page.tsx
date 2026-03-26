@@ -4,6 +4,7 @@ import { sampleImages, imageBySlug } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
 import { getCategoryBySlug } from "@/lib/categories";
 import { ImageDetailPage } from "@/components/ImageDetailPage";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -110,7 +111,12 @@ export default async function Page({ params }: PageProps) {
   if (staticImage) {
     const expectedCategory = getCategorySlugForImage(staticImage);
     if (params.category !== expectedCategory) notFound();
-    return <ImageDetailPage image={staticImage} categorySlug={params.category} />;
+    return (
+      <>
+        <ImageDetailPage image={staticImage} categorySlug={params.category} />
+        <MarketingFooter />
+      </>
+    );
   }
 
   const dbRow = await getDbImage(params.slug);
@@ -126,5 +132,10 @@ export default async function Page({ params }: PageProps) {
     aspect_ratio: dbRow.aspect_ratio || "1:1",
   };
 
-  return <ImageDetailPage image={image} categorySlug={params.category} />;
+  return (
+    <>
+      <ImageDetailPage image={image} categorySlug={params.category} />
+      <MarketingFooter />
+    </>
+  );
 }

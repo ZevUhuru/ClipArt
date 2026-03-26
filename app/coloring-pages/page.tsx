@@ -4,6 +4,7 @@ import { getColoringThemes } from "@/lib/categories";
 import { CategoryNav } from "@/components/CategoryNav";
 import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -180,17 +181,7 @@ export default async function ColoringPagesLanding() {
         </p>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6">
-          <Link href="/" className="text-sm font-medium text-gray-400 hover:text-gray-600">
-            clip.art
-          </Link>
-          <Link href="/create/coloring-pages" className="text-sm font-medium text-gray-400 hover:text-gray-600">
-            Coloring Page Generator
-          </Link>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

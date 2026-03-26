@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground } from "@/components/MosaicBackground";
 import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { getAllCategories, getColoringThemes, type DbCategory } from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -151,7 +153,9 @@ export default async function Home() {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white p-3 shadow-[0_0_80px_rgba(255,138,101,0.15)] sm:rounded-3xl sm:p-8">
-              <Generator />
+              <Suspense>
+                <Generator />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -407,89 +411,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <footer className="bg-[#0a0a0a] text-gray-400">
-          <div className="mx-auto max-w-6xl px-4 pt-16 pb-10">
-            {/* Top: Logo + columns */}
-            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
-              {/* Brand */}
-              <div className="lg:col-span-2">
-                <Link href="/">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo-white.svg" className="h-7" alt="clip.art" />
-                </Link>
-                <p className="mt-4 max-w-xs text-sm leading-relaxed text-gray-500">
-                  Free AI-powered clip art and coloring page generator. Describe what you want, download it in seconds. No attribution required.
-                </p>
-              </div>
-
-              {/* Create */}
-              <div>
-                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Create</h4>
-                <ul className="space-y-2.5">
-                  <li><Link href="/create" className="text-sm hover:text-white transition-colors">AI Clip Art Generator</Link></li>
-                  <li><Link href="/create/coloring-pages" className="text-sm hover:text-white transition-colors">Coloring Page Generator</Link></li>
-                </ul>
-              </div>
-
-              {/* Learn */}
-              <div>
-                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Learn</h4>
-                <ul className="space-y-2.5">
-                  <li><Link href="/learn" className="text-sm hover:text-white transition-colors">All Tutorials</Link></li>
-                  {learnPosts.slice(0, 5).map((post) => (
-                    <li key={post.slug}>
-                      <Link href={`/learn/${post.slug}`} className="text-sm hover:text-white transition-colors">
-                        {post.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Browse Clip Art */}
-              <div>
-                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Clip Art</h4>
-                <ul className="space-y-2.5">
-                  {categories.slice(0, 8).map((cat: DbCategory) => (
-                    <li key={cat.slug}>
-                      <Link href={`/${cat.slug}`} className="text-sm hover:text-white transition-colors">
-                        {cat.name} Clip Art
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Browse Coloring Pages */}
-              <div>
-                <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Coloring Pages</h4>
-                <ul className="space-y-2.5">
-                  <li><Link href="/coloring-pages" className="text-sm hover:text-white transition-colors">All Coloring Pages</Link></li>
-                  {activeThemes.slice(0, 7).map((theme: DbCategory) => (
-                    <li key={theme.slug}>
-                      <Link href={`/coloring-pages/${theme.slug}`} className="text-sm hover:text-white transition-colors">
-                        {theme.name} Coloring Pages
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Bottom bar */}
-            <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
-              <p className="text-xs text-gray-500">
-                &copy; {new Date().getFullYear()} clip.art. All images are free for personal and commercial use.
-              </p>
-              <div className="flex items-center gap-5">
-                <Link href="/create" className="text-xs text-gray-500 hover:text-white transition-colors">Generator</Link>
-                <Link href="/learn" className="text-xs text-gray-500 hover:text-white transition-colors">Learn</Link>
-                <Link href="/coloring-pages" className="text-xs text-gray-500 hover:text-white transition-colors">Coloring Pages</Link>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <MarketingFooter />
       </div>
     </main>
   );

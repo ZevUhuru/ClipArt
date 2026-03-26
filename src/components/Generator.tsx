@@ -1,14 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { StylePicker } from "./StylePicker";
 import { GenerationResult } from "./GenerationResult";
 import { useAppStore } from "@/stores/useAppStore";
-import { type StyleKey, STYLE_ASPECT_MAP } from "@/lib/styles";
+import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
+
+const VALID_STYLES = Object.keys(STYLES) as StyleKey[];
 
 export function Generator() {
+  const searchParams = useSearchParams();
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (hydrated) return;
+    const sp = searchParams.get("style");
+    if (sp && VALID_STYLES.includes(sp as StyleKey)) {
+      setStyle(sp as StyleKey);
+    }
+    const pp = searchParams.get("prompt");
+    if (pp) {
+      setPrompt(pp);
+    }
+    setHydrated(true);
+  }, [searchParams, hydrated]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [resultAspectRatio, setResultAspectRatio] = useState<string>("1:1");
   const [isGenerating, setIsGenerating] = useState(false);

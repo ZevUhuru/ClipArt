@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getColoringThemeBySlug, getColoringThemes, type DbCategory } from "@/lib/categories";
 import { ColoringThemePage } from "@/components/ColoringThemePage";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -95,10 +96,13 @@ export default async function Page({ params }: PageProps) {
   ]);
 
   return (
-    <ColoringThemePage
-      theme={theme}
-      galleryImages={dbImages}
-      relatedThemes={relatedThemes}
-    />
+    <>
+      <ColoringThemePage
+        theme={theme}
+        galleryImages={dbImages}
+        relatedThemes={relatedThemes}
+      />
+      <MarketingFooter />
+    </>
   );
 }

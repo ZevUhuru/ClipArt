@@ -242,20 +242,6 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6">
-          <Link href="/" className="text-sm font-medium text-gray-400 hover:text-gray-600">
-            clip.art
-          </Link>
-          <Link
-            href="/create"
-            className="text-sm font-medium text-gray-400 hover:text-gray-600"
-          >
-            AI Generator
-          </Link>
-        </div>
-      </footer>
     </div>
   );
 }
