@@ -47,7 +47,7 @@ export function CategoryNav() {
                 />
               </svg>
             </span>
-            Get Credits
+            Get Free Credits
           </button>
 
           {user ? (
