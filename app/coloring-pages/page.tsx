@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { getColoringThemes } from "@/lib/categories";
 import { CategoryNav } from "@/components/CategoryNav";
+import { ImageCard } from "@/components/ImageCard";
+import { ImageGrid } from "@/components/ImageGrid";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -117,31 +118,24 @@ export default async function ColoringPagesLanding() {
           <h2 className="mb-6 text-center text-xl font-bold text-gray-900 sm:text-2xl">
             Recently created coloring pages
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <ImageGrid variant="coloring">
             {featured.map((img) => (
-              <Link
+              <ImageCard
                 key={img.id}
+                image={{
+                  slug: img.slug || img.id,
+                  title: img.title || img.prompt,
+                  url: img.image_url,
+                  category: img.category,
+                  style: "coloring",
+                  aspect_ratio: img.aspect_ratio || "3:4",
+                }}
+                variant="coloring"
                 href={`/coloring-pages/${img.category}/${img.slug || img.id}`}
-                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-lg"
-              >
-                <div className="relative aspect-[3/4] bg-gray-50">
-                  <Image
-                    src={img.image_url}
-                    alt={`${img.title || img.prompt} — free coloring page`}
-                    fill
-                    className="object-contain p-3 transition-transform group-hover:scale-105"
-                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 16vw"
-                    unoptimized
-                  />
-                </div>
-                <div className="px-3 py-2.5">
-                  <p className="truncate text-xs font-medium text-gray-600">
-                    {img.title || img.prompt}
-                  </p>
-                </div>
-              </Link>
+                showStyleBadge={false}
+              />
             ))}
-          </div>
+          </ImageGrid>
         </section>
       )}
 

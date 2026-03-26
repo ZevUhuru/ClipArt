@@ -1,8 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground } from "@/components/MosaicBackground";
+import { ImageCard } from "@/components/ImageCard";
+import { ImageGrid } from "@/components/ImageGrid";
 import { getAllCategories, getColoringThemes, type DbCategory } from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -179,39 +180,31 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            <ImageGrid className="mt-8">
               {(hasClipArt ? clipArtImages : fallbackClipArt).map((img) => {
                 const isDb = "id" in img && "image_url" in img;
                 const src = isDb ? (img as CommunityImage).image_url : (img as typeof sampleImages[0]).url;
                 const title = isDb ? ((img as CommunityImage).title || (img as CommunityImage).prompt) : (img as typeof sampleImages[0]).title;
                 const slug = isDb ? ((img as CommunityImage).slug || (img as CommunityImage).id) : (img as typeof sampleImages[0]).slug;
                 const cat = isDb ? (img as CommunityImage).category : getCategorySlugForImage(img as typeof sampleImages[0]);
-                const href = `/${cat}/${slug}`;
+                const style = isDb ? (img as CommunityImage).style : undefined;
                 const key = isDb ? (img as CommunityImage).id : (img as typeof sampleImages[0]).slug;
 
                 return (
-                  <Link
+                  <ImageCard
                     key={key}
-                    href={href}
-                    className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl"
-                  >
-                    <div className="relative aspect-square bg-gray-50">
-                      <Image
-                        src={src}
-                        alt={`${title} — free AI clip art`}
-                        fill
-                        className="object-contain p-4 transition-transform group-hover:scale-105"
-                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="px-3 py-3">
-                      <p className="truncate text-sm font-medium text-gray-700">{title}</p>
-                    </div>
-                  </Link>
+                    image={{
+                      slug: slug,
+                      title: title,
+                      url: src,
+                      category: cat,
+                      style: style,
+                    }}
+                    href={`/${cat}/${slug}`}
+                  />
                 );
               })}
-            </div>
+            </ImageGrid>
 
             {/* Category pills */}
             {categories.length > 0 && (
@@ -246,29 +239,24 @@ export default async function Home() {
             </div>
 
             {hasColoring ? (
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <ImageGrid variant="coloring" className="mt-8">
                 {coloringImages.map((img) => (
-                  <Link
+                  <ImageCard
                     key={img.id}
+                    image={{
+                      slug: img.slug || img.id,
+                      title: img.title || img.prompt,
+                      url: img.image_url,
+                      category: img.category,
+                      style: "coloring",
+                      aspect_ratio: img.aspect_ratio || "3:4",
+                    }}
+                    variant="coloring"
                     href={`/coloring-pages/${img.category}/${img.slug || img.id}`}
-                    className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl"
-                  >
-                    <div className="relative aspect-[3/4] bg-white">
-                      <Image
-                        src={img.image_url}
-                        alt={`${img.title || img.prompt} — free coloring page`}
-                        fill
-                        className="object-contain p-4 transition-transform group-hover:scale-105"
-                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="px-3 py-3">
-                      <p className="truncate text-sm font-medium text-gray-700">{img.title || img.prompt}</p>
-                    </div>
-                  </Link>
+                    showStyleBadge={false}
+                  />
                 ))}
-              </div>
+              </ImageGrid>
             ) : (
               <div className="mt-8 rounded-3xl border-2 border-dashed border-gray-200 p-16 text-center">
                 <p className="text-lg font-semibold text-gray-400">Coloring pages are new!</p>

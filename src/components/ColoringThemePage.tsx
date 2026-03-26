@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { CategoryNav } from "./CategoryNav";
 import type { DbCategory } from "@/lib/categories";
-import { downloadClip } from "@/utils/downloadClip";
+import { ImageCard } from "@/components/ImageCard";
+import { ImageGrid } from "@/components/ImageGrid";
 
 export interface ColoringGalleryImage {
   slug: string;
@@ -20,40 +20,6 @@ interface ColoringThemePageProps {
   theme: DbCategory;
   galleryImages?: ColoringGalleryImage[];
   relatedThemes?: DbCategory[];
-}
-
-function GalleryImageCard({ image, theme }: { image: ColoringGalleryImage; theme: string }) {
-  return (
-    <Link
-      href={`/coloring-pages/${theme}/${image.slug}`}
-      className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-lg"
-    >
-      <div className="relative aspect-[3/4] bg-gray-50">
-        <Image
-          src={image.url}
-          alt={`${image.title} — free ${theme} coloring page`}
-          fill
-          className="object-contain p-3 transition-transform group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
-          unoptimized
-        />
-      </div>
-      <div className="flex items-center justify-between px-3 py-2.5">
-        <p className="truncate text-xs font-medium text-gray-600">
-          {image.title}
-        </p>
-        <button
-          onClick={(e) => { e.preventDefault(); downloadClip(image.url, `${image.slug}.png`); }}
-          className="ml-2 flex-shrink-0 text-pink-500 hover:text-pink-700"
-          title="Download"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-        </button>
-      </div>
-    </Link>
-  );
 }
 
 export function ColoringThemePage({ theme, galleryImages = [], relatedThemes = [] }: ColoringThemePageProps) {
@@ -116,11 +82,24 @@ export function ColoringThemePage({ theme, galleryImages = [], relatedThemes = [
       {/* Gallery Grid */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
         {galleryImages.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <ImageGrid variant="coloring">
             {galleryImages.map((img) => (
-              <GalleryImageCard key={img.slug} image={img} theme={theme.slug} />
+              <ImageCard
+                key={img.slug}
+                image={{
+                  slug: img.slug,
+                  title: img.title,
+                  url: img.url,
+                  category: img.category,
+                  style: "coloring",
+                  aspect_ratio: img.aspect_ratio || "3:4",
+                }}
+                variant="coloring"
+                href={`/coloring-pages/${theme.slug}/${img.slug}`}
+                showStyleBadge={false}
+              />
             ))}
-          </div>
+          </ImageGrid>
         ) : (
           <div className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
             <p className="text-sm text-gray-400">

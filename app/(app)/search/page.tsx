@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { SearchBar } from "@/components/SearchBar";
 import { categories } from "@/data/categories";
-import { downloadClip } from "@/utils/downloadClip";
 import { useImageDrawer } from "@/stores/useImageDrawer";
+import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
+import { ImageGrid } from "@/components/ImageGrid";
 
 interface SearchResult {
   id: string;
@@ -32,40 +32,27 @@ function resolveApiCategory(slug: string): string {
   return slugToApiCategory[slug] || slug;
 }
 
-function ImageGrid({ items }: { items: SearchResult[] }) {
+function SearchImageGrid({ items }: { items: SearchResult[] }) {
   const openDrawer = useImageDrawer((s) => s.open);
   const safeItems = items.filter((item) => item.id && item.url);
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <ImageGrid>
       {safeItems.map((item) => (
-        <div key={item.id} className="card group overflow-hidden">
-          <button
-            onClick={() => openDrawer(item)}
-            className="relative block w-full aspect-square bg-gray-50 text-left"
-          >
-            <Image
-              src={item.url}
-              alt={item.title || "Clip art"}
-              fill
-              className="object-contain p-3 transition-transform group-hover:scale-105"
-              unoptimized
-            />
-          </button>
-          <div className="flex items-center justify-between p-3">
-            <p className="min-w-0 flex-1 truncate text-xs text-gray-500">
-              {item.title}
-            </p>
-            <button
-              onClick={() => downloadClip(item.url, `clip-art-${item.id}.png`)}
-              className="ml-2 shrink-0 text-xs font-medium text-pink-600 hover:text-pink-700"
-            >
-              Download
-            </button>
-          </div>
-        </div>
+        <ImageCard
+          key={item.id}
+          image={{
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            url: item.url,
+            category: item.category,
+            style: item.style,
+          }}
+          onClick={() => openDrawer(item)}
+        />
       ))}
-    </div>
+    </ImageGrid>
   );
 }
 
@@ -173,18 +160,13 @@ export default function SearchPage() {
       {/* Results grid */}
       <div className="mt-6">
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <ImageGrid>
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="card animate-pulse overflow-hidden">
-                <div className="aspect-square bg-gray-100" />
-                <div className="p-3">
-                  <div className="h-3 w-3/4 rounded bg-gray-100" />
-                </div>
-              </div>
+              <ImageCardSkeleton key={i} />
             ))}
-          </div>
+          </ImageGrid>
         ) : results.length > 0 ? (
-          <ImageGrid items={results} />
+          <SearchImageGrid items={results} />
         ) : hasSearched ? (
           <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
             <p className="text-lg font-medium text-gray-400">No results found</p>

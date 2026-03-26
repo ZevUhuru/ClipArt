@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import { useAppStore } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { createBrowserClient } from "@/lib/supabase/client";
-import { downloadClip } from "@/utils/downloadClip";
+import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
+import { ImageGrid } from "@/components/ImageGrid";
 
 export function HistoryGrid() {
   const { user, generations, generationsLoaded, setGenerations } = useAppStore();
@@ -39,16 +39,11 @@ export function HistoryGrid() {
 
   if (!generationsLoaded) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <ImageGrid>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="card animate-pulse overflow-hidden">
-            <div className="aspect-square bg-gray-100" />
-            <div className="p-3">
-              <div className="h-3 w-3/4 rounded bg-gray-100" />
-            </div>
-          </div>
+          <ImageCardSkeleton key={i} />
         ))}
-      </div>
+      </ImageGrid>
     );
   }
 
@@ -71,13 +66,13 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
   const safeGenerations = generations.filter((gen) => gen.id && gen.image_url);
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-      {safeGenerations.map((gen) => (
-        <div
-          key={gen.id}
-          className="card group cursor-pointer overflow-hidden"
-          onClick={() =>
-            openDrawer({
+    <ImageGrid>
+      {safeGenerations.map((gen) => {
+        const isColoring = gen.style === "coloring";
+        return (
+          <ImageCard
+            key={gen.id}
+            image={{
               id: gen.id,
               slug: gen.slug || gen.id,
               title: gen.prompt,
@@ -85,32 +80,22 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
               category: gen.category || "free",
               style: gen.style,
               aspect_ratio: gen.aspect_ratio,
-            })
-          }
-        >
-          <div className="relative aspect-square bg-gray-50">
-            <Image
-              src={gen.image_url}
-              alt={gen.prompt || "Clip art"}
-              fill
-              className="object-contain p-3 transition-transform group-hover:scale-105"
-              unoptimized
-            />
-          </div>
-          <div className="flex items-center justify-between p-3">
-            <p className="min-w-0 flex-1 truncate text-xs text-gray-500">{gen.prompt}</p>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadClip(gen.image_url, `clip-art-${gen.id}.png`);
-              }}
-              className="ml-2 shrink-0 text-xs font-medium text-pink-600 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              Download
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
+            }}
+            variant={isColoring ? "coloring" : "clipart"}
+            onClick={() =>
+              openDrawer({
+                id: gen.id,
+                slug: gen.slug || gen.id,
+                title: gen.prompt,
+                url: gen.image_url,
+                category: gen.category || "free",
+                style: gen.style,
+                aspect_ratio: gen.aspect_ratio,
+              })
+            }
+          />
+        );
+      })}
+    </ImageGrid>
   );
 }
