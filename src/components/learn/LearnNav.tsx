@@ -15,7 +15,7 @@ export function LearnNav() {
   ];
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#111111] backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#1c1c27] backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16">
         <div className="flex items-center gap-6 sm:gap-8">
           <Link href="/" className="flex items-center">

@@ -241,7 +241,14 @@ export default function LearnArticlePage({
                 </span>
                 {meta.author.role && (
                   <span className="text-xs leading-snug text-gray-400">
-                    {meta.author.role}
+                    {meta.author.role.includes("clip.art") ? (
+                      <>
+                        {meta.author.role.replace(", clip.art", "").replace("clip.art", "")},{" "}
+                        <Link href="/" className="text-pink-500 hover:text-pink-600 transition-colors">clip.art</Link>
+                      </>
+                    ) : (
+                      meta.author.role
+                    )}
                   </span>
                 )}
               </div>
