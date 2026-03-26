@@ -105,6 +105,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+async function getRelatedImages(category: string, excludeSlug: string) {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("generations")
+      .select("title, slug, category, image_url, aspect_ratio")
+      .eq("category", category)
+      .eq("is_public", true)
+      .neq("style", "coloring")
+      .neq("slug", excludeSlug)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    return (data || []).map((r: { title: string; slug: string; category: string; image_url: string; aspect_ratio: string }) => ({
+      title: r.title || "Clip art",
+      slug: r.slug,
+      category: r.category,
+      url: r.image_url,
+      aspect_ratio: r.aspect_ratio || "1:1",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function Page({ params }: PageProps) {
   const staticImage = imageBySlug.get(params.slug);
 
@@ -132,9 +157,18 @@ export default async function Page({ params }: PageProps) {
     aspect_ratio: dbRow.aspect_ratio || "1:1",
   };
 
+  const relatedImages = await getRelatedImages(
+    dbRow.category || params.category,
+    dbRow.slug || dbRow.id,
+  );
+
   return (
     <>
-      <ImageDetailPage image={image} categorySlug={params.category} />
+      <ImageDetailPage
+        image={image}
+        categorySlug={params.category}
+        relatedImages={relatedImages}
+      />
       <MarketingFooter />
     </>
   );

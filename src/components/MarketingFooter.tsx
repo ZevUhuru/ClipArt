@@ -12,7 +12,7 @@ export async function MarketingFooter() {
   const activeThemes = coloringThemes.filter((t) => t.slug !== "coloring-free");
 
   return (
-    <footer className="bg-[#0a0a0a] text-gray-400">
+    <footer className="bg-[#1c1c27] text-gray-400">
       <div className="mx-auto max-w-6xl px-4 pt-16 pb-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}

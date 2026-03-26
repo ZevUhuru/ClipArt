@@ -5,6 +5,13 @@ import { ImageDetailPage } from "@/components/ImageDetailPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
+function humanizeSlug(slug: string): string {
+  return slug
+    .replace(/^coloring-/, "")
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase()) || "Free";
+}
+
 export const revalidate = 60;
 export const dynamicParams = true;
 
@@ -77,6 +84,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+async function getRelatedImages(category: string, excludeSlug: string) {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("generations")
+      .select("title, slug, category, image_url, aspect_ratio")
+      .eq("style", "coloring")
+      .eq("category", category)
+      .eq("is_public", true)
+      .neq("slug", excludeSlug)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    return (data || []).map((r: { title: string; slug: string; category: string; image_url: string; aspect_ratio: string }) => ({
+      title: r.title || "Coloring page",
+      slug: r.slug,
+      category: r.category,
+      url: r.image_url,
+      aspect_ratio: r.aspect_ratio || "3:4",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function Page({ params }: PageProps) {
   const dbRow = await getDbImage(params.slug);
   if (!dbRow) notFound();
@@ -91,9 +123,23 @@ export default async function Page({ params }: PageProps) {
     aspect_ratio: dbRow.aspect_ratio || "3:4",
   };
 
+  const relatedImages = await getRelatedImages(
+    dbRow.category || params.theme,
+    dbRow.slug || dbRow.id,
+  );
+
+  const theme = await getColoringThemeBySlug(params.theme);
+  const themeName = theme?.name || humanizeSlug(params.theme);
+
   return (
     <>
-      <ImageDetailPage image={image} categorySlug={params.theme} isColoringPage />
+      <ImageDetailPage
+        image={image}
+        categorySlug={params.theme}
+        isColoringPage
+        relatedImages={relatedImages}
+        categoryName={themeName}
+      />
       <MarketingFooter />
     </>
   );

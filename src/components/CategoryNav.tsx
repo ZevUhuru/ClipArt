@@ -16,12 +16,12 @@ export function CategoryNav() {
   }
 
   return (
-    <nav className="sticky top-0 z-40 bg-white">
+    <nav className="sticky top-0 z-40 bg-[#1c1c27]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://assets.codepen.io/9394943/color-logo-no-bg.svg"
+            src="/logo-white.svg"
             className="h-8 sm:h-10"
             alt="clip.art"
           />
@@ -32,7 +32,7 @@ export function CategoryNav() {
             onClick={() =>
               user ? openBuyCreditsModal() : openAuthModal("signup")
             }
-            className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-1.5 pr-4 text-sm font-semibold uppercase tracking-wider text-gray-700 transition-all hover:bg-gray-100"
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] py-1.5 pl-1.5 pr-4 text-sm font-semibold uppercase tracking-wider text-gray-200 transition-all hover:bg-white/[0.12]"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400">
               <svg
@@ -55,13 +55,13 @@ export function CategoryNav() {
               <CreditBadge />
               <Link
                 href="/create"
-                className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
               >
                 Create
               </Link>
               <button
                 onClick={handleSignOut}
-                className="rounded-full px-4 py-2 text-sm font-medium text-gray-400 transition-colors hover:text-gray-600"
+                className="rounded-full px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-300"
               >
                 Sign out
               </button>
@@ -69,14 +69,13 @@ export function CategoryNav() {
           ) : (
             <button
               onClick={() => openAuthModal("signin")}
-              className="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
+              className="rounded-full border border-white/10 bg-white px-5 py-2 text-sm font-medium text-gray-900 shadow-sm transition-all hover:bg-gray-100"
             >
               Sign in
             </button>
           )}
         </div>
       </div>
-      <div className="h-[2px] bg-brand-gradient" />
     </nav>
   );
 }
