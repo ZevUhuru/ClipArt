@@ -82,11 +82,17 @@ export async function MarketingFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
-          <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} clip.art. All images are free for personal and commercial use.
-          </p>
-          <div className="flex items-center gap-5">
+        <div className="mt-12 flex flex-col items-center gap-4 border-t border-white/10 pt-8 sm:flex-row sm:justify-between">
+          <div className="flex flex-col items-center gap-1 sm:items-start">
+            <p className="text-xs text-gray-500">
+              &copy; {new Date().getFullYear()} clip.art. All images are free for personal and commercial use.
+            </p>
+            <p className="text-[11px] text-gray-600">
+              A division of{" "}
+              <a href="https://esy.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 transition-colors hover:text-white">ESY LLC</a>
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link href="/create" className="text-xs text-gray-500 transition-colors hover:text-white">Generator</Link>
             <Link href="/learn" className="text-xs text-gray-500 transition-colors hover:text-white">Learn</Link>
             <Link href="/coloring-pages" className="text-xs text-gray-500 transition-colors hover:text-white">Coloring Pages</Link>
