@@ -197,7 +197,7 @@ export default function LearnHub() {
       <section className="border-y border-white/10 bg-[#0a0a0a] py-12 sm:py-16">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="font-futura-bold text-xl font-semibold text-white sm:text-2xl lg:text-3xl">
-            Start creating. 10 free generations.
+            Start creating. 10 free credits.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-[15px] leading-relaxed text-white/70 sm:text-base">
             Describe what you want and download it in seconds. No attribution

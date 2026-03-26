@@ -24,7 +24,7 @@ export function SignUpCTA({ variant = "strip" }: SignUpCTAProps) {
           Start creating
         </p>
         <p className="mt-1 text-xs text-gray-500">
-          10 free generations included
+          10 free credits included
         </p>
         <button
           onClick={handleClick}
@@ -40,7 +40,7 @@ export function SignUpCTA({ variant = "strip" }: SignUpCTAProps) {
     <div className="flex flex-col items-center justify-between gap-3 border-b border-gray-100 bg-gray-50/80 px-4 py-3.5 sm:flex-row sm:px-6">
       <div>
         <p className="text-sm font-semibold text-gray-900">
-          Start creating — 10 free generations
+          Start creating — 10 free credits
         </p>
         <p className="text-xs text-gray-500">
           Describe what you want and download it in seconds.

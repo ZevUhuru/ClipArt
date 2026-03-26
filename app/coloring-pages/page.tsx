@@ -148,7 +148,7 @@ export default async function ColoringPagesLanding() {
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
               Describe any scene, character, or pattern and our AI will generate
-              a printable coloring page with bold outlines. 10 free generations
+              a printable coloring page with bold outlines. 10 free credits
               when you sign up.
             </p>
             <div className="mt-8">
