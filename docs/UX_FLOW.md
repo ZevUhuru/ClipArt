@@ -16,7 +16,9 @@ Complete user experience flow for clip.art — from first visit through generati
 ### Anonymous (no account)
 
 - Can browse all public gallery/category pages and image detail pages.
-- Clicking "Generate" opens the AuthModal (signup mode) — no generations without an account.
+- Gets **1 free generation** on the homepage without signing up (see [FREE_GENERATION.md](FREE_GENERATION.md)).
+- After the free generation, clicking "Generate" opens the AuthModal (signup mode).
+- The free generation result is shown on `/create` with a CTA to sign up for 10 credits.
 
 ### Authenticated (signed in)
 

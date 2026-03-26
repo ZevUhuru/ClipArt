@@ -12,6 +12,14 @@ import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import type { StyleKey } from "@/lib/styles";
 
+const ANON_RESULT_KEY = "clip_art_anon_result";
+
+interface AnonResult {
+  imageUrl: string;
+  prompt: string;
+  style: string;
+}
+
 const suggestedPrompts = [
   "a happy sun wearing sunglasses",
   "cute cat holding a book",
@@ -130,6 +138,46 @@ function CommunityGrid() {
 
 type Tab = "recents" | "community";
 
+function AnonResultBanner({ result, onSignup }: { result: AnonResult; onSignup: () => void }) {
+  return (
+    <div className="mb-6 overflow-hidden rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50">
+      <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:p-6">
+        <div className="w-full shrink-0 sm:w-48">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={result.imageUrl}
+            alt={result.prompt}
+            className="w-full rounded-xl shadow-md"
+          />
+        </div>
+        <div className="flex-1 text-center sm:text-left">
+          <p className="text-xs font-bold uppercase tracking-widest text-pink-500">
+            Your free generation
+          </p>
+          <h3 className="mt-1 text-lg font-bold text-gray-900">
+            Looking great!
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            &ldquo;{result.prompt}&rdquo;
+          </p>
+          <p className="mt-3 text-sm text-gray-600">
+            Sign up to <span className="font-semibold">save this image</span> and get <span className="font-semibold text-pink-600">10 free credits</span> to create more.
+          </p>
+          <button
+            onClick={onSignup}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+            Sign up &mdash; it&apos;s free
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
@@ -137,6 +185,7 @@ export default function CreatePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("recents");
+  const [anonResult, setAnonResult] = useState<AnonResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -148,6 +197,16 @@ export default function CreatePage() {
     generations,
     generationsLoaded,
   } = useAppStore();
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(ANON_RESULT_KEY);
+      if (raw) {
+        setAnonResult(JSON.parse(raw));
+        sessionStorage.removeItem(ANON_RESULT_KEY);
+      }
+    } catch { /* ignore parse errors */ }
+  }, []);
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim() || isGenerating) return;
@@ -275,8 +334,16 @@ export default function CreatePage() {
           )}
         </AnimatePresence>
 
+        {/* Anonymous free generation result */}
+        {anonResult && !user && (
+          <AnonResultBanner
+            result={anonResult}
+            onSignup={() => openAuthModal("signup")}
+          />
+        )}
+
         {/* Empty state with prompt chips */}
-        {showEmptyState && (
+        {showEmptyState && !anonResult && (
           <div className="py-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
               <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

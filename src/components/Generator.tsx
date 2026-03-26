@@ -1,19 +1,23 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { StylePicker } from "./StylePicker";
 import { GenerationResult } from "./GenerationResult";
 import { useAppStore } from "@/stores/useAppStore";
 import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
 
 const VALID_STYLES = Object.keys(STYLES) as StyleKey[];
+const FREE_GEN_KEY = "clip_art_free_gen";
+const ANON_RESULT_KEY = "clip_art_anon_result";
 
 export function Generator() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
   const [hydrated, setHydrated] = useState(false);
+  const [freeGenUsed, setFreeGenUsed] = useState(true);
 
   useEffect(() => {
     if (hydrated) return;
@@ -25,6 +29,7 @@ export function Generator() {
     if (pp) {
       setPrompt(pp);
     }
+    setFreeGenUsed(localStorage.getItem(FREE_GEN_KEY) === "1");
     setHydrated(true);
   }, [searchParams, hydrated]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -36,10 +41,12 @@ export function Generator() {
   const { openAuthModal, openBuyCreditsModal, setCredits, prependGeneration, user } =
     useAppStore();
 
+  const canFreeGen = !user && !freeGenUsed;
+
   async function handleGenerate() {
     if (!prompt.trim() || isGenerating) return;
 
-    if (!user) {
+    if (!user && !canFreeGen) {
       openAuthModal("signup");
       return;
     }
@@ -49,10 +56,13 @@ export function Generator() {
     setImageUrl(null);
 
     try {
+      const payload: Record<string, unknown> = { prompt: prompt.trim(), style };
+      if (canFreeGen) payload.freeGen = true;
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -69,6 +79,17 @@ export function Generator() {
 
       if (!res.ok) {
         throw new Error(data.error || "Generation failed");
+      }
+
+      if (data.freeGen) {
+        localStorage.setItem(FREE_GEN_KEY, "1");
+        setFreeGenUsed(true);
+        sessionStorage.setItem(
+          ANON_RESULT_KEY,
+          JSON.stringify({ imageUrl: data.imageUrl, prompt: prompt.trim(), style })
+        );
+        router.push("/create");
+        return;
       }
 
       setImageUrl(data.imageUrl);
@@ -91,6 +112,12 @@ export function Generator() {
       setIsGenerating(false);
     }
   }
+
+  const buttonLabel = isGenerating
+    ? null
+    : canFreeGen
+      ? "Generate Now"
+      : "Generate";
 
   return (
     <div className="space-y-3 sm:space-y-5">
@@ -161,9 +188,15 @@ export function Generator() {
             Generating...
           </span>
         ) : (
-          "Generate"
+          buttonLabel
         )}
       </button>
+
+      {canFreeGen && (
+        <p className="text-center text-[11px] text-gray-400 sm:text-xs">
+          No signup required for your first generation
+        </p>
+      )}
 
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm">
