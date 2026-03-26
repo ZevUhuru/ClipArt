@@ -2,6 +2,13 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 0;
 
+interface Profile {
+  id: string;
+  email: string;
+  credits: number;
+  created_at: string;
+}
+
 async function getUsers() {
   const admin = createSupabaseAdmin();
 
@@ -11,7 +18,7 @@ async function getUsers() {
     .not("email", "like", "%@esy.com")
     .order("created_at", { ascending: false });
 
-  return { users: users || [], total: count || 0 };
+  return { users: (users || []) as Profile[], total: count || 0 };
 }
 
 export default async function AdminUsersPage() {
