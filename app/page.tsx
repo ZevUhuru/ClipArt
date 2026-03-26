@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground } from "@/components/MosaicBackground";
@@ -8,7 +9,7 @@ import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { getAllCategories, getColoringThemes, type DbCategory } from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { sampleImages } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
 
@@ -85,6 +86,10 @@ const faqItems = [
 ];
 
 export default async function Home() {
+  const supabase = await createSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect("/create");
+
   const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts] = await Promise.all([
     getAllCategories(),
     getColoringThemes(),
