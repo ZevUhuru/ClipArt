@@ -108,6 +108,23 @@ User signs up → gets 15 free credits → generates images → gets hooked
 3. **Repeat purchase rate** -- % who buy again within 30 days (target: >25%)
 4. **Revenue per user** -- Total spend per user over first 90 days
 
+## Modal UX Decisions
+
+### Per-credit cost hidden from modals (2026-03-25)
+
+We intentionally **do not** show the per-credit cent breakdown (e.g. "5.0¢ each") in the Buy Credits modal. Reasons:
+
+1. **Commoditization risk** — showing "5¢ per image" anchors users to cost-of-production instead of value delivered. The value prop is precision + speed + uniqueness, not cheapness.
+2. **Breaks tier differentiation** — Sweet Spot and Binge are both 5.0¢/credit, so the math undermines the "Best Value" badge. Quick Hit at 6.6¢ looks like a bad deal instead of an impulse buy.
+3. **Invites free-tool comparison** — at the purchase moment, we don't want users mentally comparing to free AI generators. Our real anchor should be Etsy at ~39¢/image, not $0.
+4. **Impulse buyers don't need it** — users who care about unit economics will do the math themselves. The rest shouldn't be given a reason to pause.
+
+Instead, the modal reinforces: "No subscription" and "Credits never expire" — friction removers, not price justifications.
+
+### Future: dedicated /pricing page
+
+We may add a public `/pricing` or `/about#pricing` page that goes deeper on value comparison (vs Etsy, vs stock sites, vs other AI generators) for users who actively seek that info. This is the right place for per-credit breakdowns and competitive tables — not the checkout modal. Low priority for now.
+
 ## Recommendation
 
 **Optimize for volume and habit formation, not margin per transaction.** The goal is to make generating feel like pulling a slot machine — cheap, fast, addictive. Users who generate frequently become advocates and repeat buyers.

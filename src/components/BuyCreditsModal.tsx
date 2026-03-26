@@ -111,7 +111,7 @@ export function BuyCreditsModal() {
                     {pack.credits} credits
                   </span>
                   <span className="mt-3 text-xs text-gray-400">
-                    ${(parseFloat(pack.price.replace("$", "")) / pack.credits * 100).toFixed(1)}¢ each
+                    {pack.credits >= 200 ? "For heavy projects" : "No subscription"}
                   </span>
                   {loading === pack.priceId && (
                     <span className="mt-2 text-xs text-pink-600">

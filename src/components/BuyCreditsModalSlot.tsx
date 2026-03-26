@@ -122,7 +122,7 @@ function SlotReel({
           className="mt-2"
         >
           <span className="text-[11px] text-gray-400">
-            {(parseFloat(pack.price.replace("$", "")) / pack.credits * 100).toFixed(1)}¢ each
+            No subscription
           </span>
         </motion.div>
 
