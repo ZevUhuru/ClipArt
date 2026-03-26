@@ -43,10 +43,11 @@ async function resolveModel(style: StyleKey): Promise<ModelKey> {
 export async function generateImage(
   userPrompt: string,
   style: StyleKey,
+  aspectRatioOverride?: string,
 ): Promise<Buffer> {
   const model = await resolveModel(style);
   const prompt = buildPrompt(userPrompt, style);
-  const aspectRatio = STYLE_ASPECT_MAP[style] || "1:1";
+  const aspectRatio = aspectRatioOverride || STYLE_ASPECT_MAP[style] || "1:1";
 
   switch (model) {
     case "dalle":

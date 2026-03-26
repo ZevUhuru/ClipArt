@@ -9,7 +9,7 @@ import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, style, isPublic } = await request.json();
+    const { prompt, style, isPublic, aspectRatio: aspectRatioOverride } = await request.json();
 
     if (!prompt || typeof prompt !== "string" || prompt.length > 500) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
@@ -38,8 +38,10 @@ export async function POST(request: NextRequest) {
     }
 
     const styleKey = style as StyleKey;
-    const rawBuffer = await generateImage(prompt, styleKey);
-    const aspectRatio = STYLE_ASPECT_MAP[styleKey] || "1:1";
+    const validAspectRatios = ["1:1", "3:4", "4:3"];
+    const safeOverride = validAspectRatios.includes(aspectRatioOverride) ? aspectRatioOverride : undefined;
+    const rawBuffer = await generateImage(prompt, styleKey, safeOverride);
+    const aspectRatio = safeOverride || STYLE_ASPECT_MAP[styleKey] || "1:1";
 
     const webpBuffer = await sharp(rawBuffer)
       .webp({ quality: 85, effort: 4 })

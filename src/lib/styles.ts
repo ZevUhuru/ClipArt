@@ -22,7 +22,13 @@ export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
   coloring: "gemini",
 };
 
-export type AspectRatio = "1:1" | "3:4";
+export type AspectRatio = "1:1" | "3:4" | "4:3";
+
+export const COLORING_ASPECT_OPTIONS: { value: AspectRatio; label: string; icon: string }[] = [
+  { value: "3:4", label: "Portrait", icon: "portrait" },
+  { value: "4:3", label: "Landscape", icon: "landscape" },
+  { value: "1:1", label: "Square", icon: "square" },
+];
 
 export const STYLE_ASPECT_MAP: Record<StyleKey, AspectRatio> = {
   flat: "1:1",
