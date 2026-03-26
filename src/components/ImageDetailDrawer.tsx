@@ -39,8 +39,11 @@ export function ImageDetailDrawer() {
 
   if (!image) return null;
 
+  const isColoring = image.style === "coloring";
   const categorySlug = getCategorySlug(image.category);
-  const detailHref = `/${categorySlug}/${image.slug}`;
+  const detailHref = isColoring
+    ? `/coloring-pages/${image.category}/${image.slug}`
+    : `/${categorySlug}/${image.slug}`;
 
   return (
     <AnimatePresence>
@@ -85,6 +88,7 @@ export function ImageDetailDrawer() {
               image={image}
               categorySlug={categorySlug}
               detailHref={detailHref}
+              isColoring={isColoring}
               onClose={close}
             />
           </motion.aside>
@@ -112,6 +116,7 @@ export function ImageDetailDrawer() {
                 image={image}
                 categorySlug={categorySlug}
                 detailHref={detailHref}
+                isColoring={isColoring}
                 onClose={close}
               />
             </div>
@@ -126,10 +131,17 @@ interface DrawerContentProps {
   image: { id: string; slug: string; title: string; url: string; category: string; style: string; aspect_ratio?: string };
   categorySlug: string;
   detailHref: string;
+  isColoring: boolean;
   onClose: () => void;
 }
 
-function DrawerContent({ image, categorySlug, detailHref, onClose }: DrawerContentProps) {
+function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }: DrawerContentProps) {
+  const categoryHref = isColoring
+    ? `/coloring-pages/${image.category}`
+    : `/${categorySlug}`;
+  const categoryLabel = isColoring ? image.category : categorySlug;
+  const createHref = isColoring ? "/create/coloring-pages" : "/create";
+
   return (
     <div className="space-y-5 px-6 pb-8 pt-4">
       {/* Image */}
@@ -154,11 +166,11 @@ function DrawerContent({ image, categorySlug, detailHref, onClose }: DrawerConte
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
         <Link
-          href={`/${categorySlug}`}
+          href={categoryHref}
           onClick={onClose}
           className="inline-flex items-center rounded-full bg-brand-gradient px-3 py-1 text-xs font-semibold text-white"
         >
-          {categorySlug}
+          {categoryLabel}
         </Link>
         {image.style && (
           <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
@@ -180,7 +192,7 @@ function DrawerContent({ image, categorySlug, detailHref, onClose }: DrawerConte
 
       {/* Generate Similar */}
       <Link
-        href="/create"
+        href={createHref}
         onClick={onClose}
         className="btn-secondary flex w-full items-center justify-center py-3 text-sm"
       >
