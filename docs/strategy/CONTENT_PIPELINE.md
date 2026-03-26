@@ -236,7 +236,7 @@ Assuming ~30% rejection rate → need to generate ~1.3M images to publish 1M.
 
 ### Break-even Analysis
 
-At $0.016-$0.062 per image, a single credit purchase ($4.99 for 15 credits) covers the cost of 80-312 pipeline images. The pipeline pays for itself if even a tiny fraction of visitors convert.
+At $0.016-$0.062 per image, a single credit purchase ($4.99 for 100 credits) covers the cost of 80-312 pipeline images. The pipeline pays for itself if even a tiny fraction of visitors convert.
 
 More importantly: 1M keyword-targeted pages generating organic traffic at even $0.01 RPM (ad revenue) or 0.1% conversion to credit purchases would significantly exceed the pipeline cost.
 

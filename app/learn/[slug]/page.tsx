@@ -298,7 +298,7 @@ export default function LearnArticlePage({
                   Try this yourself
                 </h3>
                 <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
-                  15 free generations. Describe what you want and download it in
+                  10 free generations. Describe what you want and download it in
                   seconds.
                 </p>
                 <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">

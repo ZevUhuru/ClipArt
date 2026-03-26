@@ -85,7 +85,7 @@ Stripe fee = 2.9% + $0.30 per transaction. Smaller purchases lose a higher % to 
 ## Decision Framework
 
 ```
-User signs up → gets 15 free credits → generates images → gets hooked
+User signs up → gets 10 free credits → generates images → gets hooked
                                            │
                               Runs out of credits
                                            │
@@ -130,6 +130,6 @@ We may add a public `/pricing` or `/about#pricing` page that goes deeper on valu
 **Optimize for volume and habit formation, not margin per transaction.** The goal is to make generating feel like pulling a slot machine — cheap, fast, addictive. Users who generate frequently become advocates and repeat buyers.
 
 - $1.99 entry removes virtually all purchase friction
-- 15 free credits on signup gets users deep into the loop before the paywall hits
+- 10 free credits on signup gets users into the loop before the paywall hits — enough to see value, not enough to feel satisfied
 - High credit counts make users feel rich, not rationed
 - If margins are too thin at scale, raise the generation quality/speed rather than the price

@@ -219,8 +219,8 @@ export function ImageDetailPage({ image, categorySlug, isColoringPage = false }:
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
               {isColoringPage
-                ? "Describe any scene and our AI generates a printable coloring page with bold outlines. 15 free generations, no sign-up required."
-                : "Describe what you want and our AI generates it in seconds. 15 free generations, no sign-up required."}
+                ? "Describe any scene and our AI generates a printable coloring page with bold outlines. 10 free generations when you sign up."
+                : "Describe what you want and our AI generates it in seconds. 10 free generations when you sign up."}
             </p>
             <div className="mt-8">
               <Link

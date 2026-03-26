@@ -81,10 +81,10 @@ export const categories: Category[] = [
     metaDescription:
       "Download free clip art for any project. Generate custom illustrations with AI at no cost. No attribution required.",
     intro:
-      "Get free clip art for school projects, presentations, social media, and more. Every visitor gets 15 free AI generations — no sign-up required. Create exactly what you need.",
+      "Get free clip art for school projects, presentations, social media, and more. Every new user gets 10 free AI generations when they sign up. Create exactly what you need.",
     seoContent: [
       "Finding quality free clip art has always been a challenge. Most free clip art sites serve outdated, low-quality images with restrictive licenses. clip.art changes that by letting you generate exactly the clip art you need, for free, with no attribution required.",
-      "Every visitor gets 15 free generations with no account needed. Each generation creates a unique, high-quality PNG image tailored to your description. Whether you need clip art for a school report, a business presentation, or a social media post, you can create it here in seconds.",
+      "Every new user gets 10 free generations when they sign up. Each generation creates a unique, high-quality PNG image tailored to your description. Whether you need clip art for a school report, a business presentation, or a social media post, you can create it here in seconds.",
     ],
     suggestedPrompts: [
       "Colorful stack of books for a school project",

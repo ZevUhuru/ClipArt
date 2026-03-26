@@ -20,7 +20,7 @@ Complete user experience flow for clip.art — from first visit through generati
 
 ### Authenticated (signed in)
 
-- Starts with **15 credits** (set by the `handle_new_user` DB trigger on first signup).
+- Starts with **10 credits** (set by the `handle_new_user` DB trigger on first signup).
 - Each generation costs **1 credit**.
 - All generations are saved to the `generations` table and displayed in the History Grid on `/generator`.
 - Generated images are stored in R2 under `{category}/{slug}-{uid}.webp`.
@@ -92,7 +92,7 @@ Powered by Supabase Auth. Two methods:
 1. User clicks "Continue with Google" in AuthModal
 2. Redirects to Google consent screen
 3. Returns to `/auth/callback` → Supabase exchanges code for session
-4. `handle_new_user` trigger creates a `profiles` row with 15 credits
+4. `handle_new_user` trigger creates a `profiles` row with 10 credits
 5. User redirected to `/generator`
 
 ### Email Magic Link

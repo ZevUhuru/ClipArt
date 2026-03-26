@@ -58,7 +58,7 @@ async function getColoringGallery(): Promise<CommunityImage[]> {
 const faqItems = [
   {
     q: "Is clip.art really free?",
-    a: "Yes! You get 15 free generations with no sign-up required. After that, credit packs start at $1.99 for 30 generations. Every image you create is free for personal and commercial use — no attribution needed.",
+    a: "Yes! You get 10 free generations with no sign-up required. After that, credit packs start at $1.99 for 30 generations. Every image you create is free for personal and commercial use — no attribution needed.",
   },
   {
     q: "What can I use the clip art for?",
@@ -120,7 +120,7 @@ export default async function Home() {
                   </span>
                   <div className="text-left leading-tight">
                     <p className="text-[11px] font-bold uppercase tracking-wide text-amber-100 sm:text-xs">
-                      15 free generations
+                      10 free generations
                     </p>
                     <p className="text-[10px] text-amber-200/80 sm:text-[11px]">Included when you sign up</p>
                   </div>
@@ -392,7 +392,7 @@ export default async function Home() {
                   Ready to create something amazing?
                 </h2>
                 <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
-                  15 free generations. No sign-up required. Describe what you want and download it instantly.
+                  10 free generations. No sign-up required. Describe what you want and download it instantly.
                 </p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
                   <Link href="/create" className="btn-primary px-8 text-base">
