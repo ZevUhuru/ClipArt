@@ -9,11 +9,12 @@ async function getStats() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [totalGen, todayGen, totalPurchases, categoriesCount] = await Promise.all([
+  const [totalGen, todayGen, totalPurchases, categoriesCount, usersCount] = await Promise.all([
     admin.from("generations").select("id", { count: "exact", head: true }),
     admin.from("generations").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
     admin.from("purchases").select("amount_cents", { count: "exact" }),
     admin.from("categories").select("id", { count: "exact", head: true }).eq("is_active", true),
+    admin.from("profiles").select("id", { count: "exact", head: true }).not("email", "like", "%@esy.com"),
   ]);
 
   const totalRevenue = (totalPurchases.data || []).reduce(
@@ -26,6 +27,7 @@ async function getStats() {
     totalRevenue: totalRevenue / 100,
     totalPurchases: totalPurchases.count || 0,
     totalCategories: categoriesCount.count || 0,
+    totalUsers: usersCount.count || 0,
   };
 }
 
@@ -38,6 +40,7 @@ export default async function AdminDashboard() {
     { label: "Revenue", value: `$${stats.totalRevenue.toFixed(2)}`, href: "#" },
     { label: "Purchases", value: stats.totalPurchases.toLocaleString(), href: "#" },
     { label: "Categories", value: stats.totalCategories.toLocaleString(), href: "/admin/categories" },
+    { label: "Users", value: stats.totalUsers.toLocaleString(), href: "/admin/users" },
   ];
 
   return (
