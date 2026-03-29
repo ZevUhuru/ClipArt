@@ -29,14 +29,32 @@ interface CommunityImage {
 async function getCommunityGallery(): Promise<CommunityImage[]> {
   try {
     const admin = createSupabaseAdmin();
-    const { data } = await admin
+    const { data: featured } = await admin
+      .from("generations")
+      .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
+      .eq("is_public", true)
+      .eq("is_featured", true)
+      .neq("style", "coloring")
+      .order("featured_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    if (featured && featured.length >= 8) return featured as CommunityImage[];
+
+    const featuredList = (featured || []) as CommunityImage[];
+    const existing = new Set(featuredList.map((f) => f.id));
+    const remaining = 8 - featuredList.length;
+    const { data: recent } = await admin
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
       .eq("is_public", true)
       .neq("style", "coloring")
+      .eq("is_featured", false)
       .order("created_at", { ascending: false })
-      .limit(8);
-    return (data || []) as CommunityImage[];
+      .limit(remaining);
+
+    const recentList = (recent || []) as CommunityImage[];
+    return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 8);
   } catch {
     return [];
   }
@@ -45,14 +63,32 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
 async function getColoringGallery(): Promise<CommunityImage[]> {
   try {
     const admin = createSupabaseAdmin();
-    const { data } = await admin
+    const { data: featured } = await admin
+      .from("generations")
+      .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
+      .eq("is_public", true)
+      .eq("is_featured", true)
+      .eq("style", "coloring")
+      .order("featured_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    if (featured && featured.length >= 8) return featured as CommunityImage[];
+
+    const featuredList = (featured || []) as CommunityImage[];
+    const existing = new Set(featuredList.map((f) => f.id));
+    const remaining = 8 - featuredList.length;
+    const { data: recent } = await admin
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
       .eq("is_public", true)
       .eq("style", "coloring")
+      .eq("is_featured", false)
       .order("created_at", { ascending: false })
-      .limit(8);
-    return (data || []) as CommunityImage[];
+      .limit(remaining);
+
+    const recentList = (recent || []) as CommunityImage[];
+    return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 8);
   } catch {
     return [];
   }

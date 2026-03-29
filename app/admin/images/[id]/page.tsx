@@ -14,6 +14,8 @@ interface ImageData {
   style: string;
   category: string | null;
   is_public: boolean;
+  is_featured: boolean;
+  featured_order: number | null;
   created_at: string;
 }
 
@@ -31,6 +33,8 @@ export default function AdminImageEditPage() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [featuredOrder, setFeaturedOrder] = useState("");
 
   const fetchData = useCallback(async () => {
     const [imgRes, catRes] = await Promise.all([
@@ -48,6 +52,8 @@ export default function AdminImageEditPage() {
       setDescription(img.description || img.prompt || "");
       setCategory(img.category || "free");
       setIsPublic(img.is_public);
+      setIsFeatured(img.is_featured ?? false);
+      setFeaturedOrder(img.featured_order != null ? String(img.featured_order) : "");
     }
     setCategories(catData.categories || []);
     setLoading(false);
@@ -62,7 +68,15 @@ export default function AdminImageEditPage() {
     const res = await fetch(`/api/admin/images/${params.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, slug, description, category, is_public: isPublic }),
+      body: JSON.stringify({
+        title,
+        slug,
+        description,
+        category,
+        is_public: isPublic,
+        is_featured: isFeatured,
+        featured_order: featuredOrder ? parseInt(featuredOrder, 10) : null,
+      }),
     });
 
     const data = await res.json();
@@ -196,6 +210,37 @@ export default function AdminImageEditPage() {
               {isPublic ? "Public — visible in gallery" : "Hidden — not visible in gallery"}
             </span>
           </div>
+
+          <div className="flex items-center gap-3">
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                checked={isFeatured}
+                onChange={(e) => setIsFeatured(e.target.checked)}
+                className="peer sr-only"
+              />
+              <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-amber-500 peer-checked:after:translate-x-full" />
+            </label>
+            <span className="text-sm font-medium text-gray-700">
+              {isFeatured ? "★ Featured on homepage" : "Not featured"}
+            </span>
+          </div>
+
+          {isFeatured && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Featured order
+                <span className="ml-1 text-xs font-normal text-gray-400">Lower number = shown first</span>
+              </label>
+              <input
+                type="number"
+                value={featuredOrder}
+                onChange={(e) => setFeaturedOrder(e.target.value)}
+                placeholder="e.g. 1, 2, 3..."
+                className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+              />
+            </div>
+          )}
 
           {message && (
             <p className={`rounded-lg px-3 py-2 text-sm ${

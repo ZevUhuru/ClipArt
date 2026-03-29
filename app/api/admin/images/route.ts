@@ -27,19 +27,22 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("q")?.trim();
   const category = searchParams.get("category")?.trim();
   const isPublic = searchParams.get("is_public");
+  const isFeatured = searchParams.get("is_featured");
   const offset = (page - 1) * limit;
 
   const admin = createSupabaseAdmin();
 
   let query = admin
     .from("generations")
-    .select("id, prompt, title, slug, description, image_url, style, category, is_public, user_id, created_at", { count: "exact" })
+    .select("id, prompt, title, slug, description, image_url, style, category, is_public, is_featured, featured_order, user_id, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (category) query = query.eq("category", category);
   if (isPublic === "true") query = query.eq("is_public", true);
   if (isPublic === "false") query = query.eq("is_public", false);
+  if (isFeatured === "true") query = query.eq("is_featured", true);
+  if (isFeatured === "false") query = query.eq("is_featured", false);
   if (search) query = query.or(`title.ilike.%${search}%,prompt.ilike.%${search}%`);
 
   const { data, count, error } = await query;

@@ -13,6 +13,8 @@ interface Generation {
   style: string;
   category: string | null;
   is_public: boolean;
+  is_featured: boolean;
+  featured_order: number | null;
   created_at: string;
 }
 
@@ -24,6 +26,7 @@ export default function AdminImagesPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [publicFilter, setPublicFilter] = useState("");
+  const [featuredFilter, setFeaturedFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
   const fetchImages = useCallback(async () => {
@@ -32,6 +35,7 @@ export default function AdminImagesPage() {
     if (search) params.set("q", search);
     if (categoryFilter) params.set("category", categoryFilter);
     if (publicFilter) params.set("is_public", publicFilter);
+    if (featuredFilter) params.set("is_featured", featuredFilter);
 
     const res = await fetch(`/api/admin/images?${params}`);
     const data = await res.json();
@@ -39,7 +43,7 @@ export default function AdminImagesPage() {
     setTotal(data.total || 0);
     setTotalPages(data.totalPages || 1);
     setLoading(false);
-  }, [page, search, categoryFilter, publicFilter]);
+  }, [page, search, categoryFilter, publicFilter, featuredFilter]);
 
   useEffect(() => { fetchImages(); }, [fetchImages]);
 
@@ -51,6 +55,17 @@ export default function AdminImagesPage() {
     });
     setImages((prev) =>
       prev.map((img) => (img.id === id ? { ...img, is_public: !currentValue } : img))
+    );
+  }
+
+  async function toggleFeatured(id: string, currentValue: boolean) {
+    await fetch(`/api/admin/images/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_featured: !currentValue }),
+    });
+    setImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, is_featured: !currentValue } : img))
     );
   }
 
@@ -94,6 +109,15 @@ export default function AdminImagesPage() {
           <option value="true">Public</option>
           <option value="false">Hidden</option>
         </select>
+        <select
+          value={featuredFilter}
+          onChange={(e) => { setFeaturedFilter(e.target.value); setPage(1); }}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-1 focus:ring-pink-400"
+        >
+          <option value="">All featured</option>
+          <option value="true">Featured</option>
+          <option value="false">Not featured</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -106,6 +130,7 @@ export default function AdminImagesPage() {
               <th className="px-4 py-3 font-medium text-gray-500">Category</th>
               <th className="px-4 py-3 font-medium text-gray-500">Style</th>
               <th className="px-4 py-3 font-medium text-gray-500">Public</th>
+              <th className="px-4 py-3 font-medium text-gray-500">Featured</th>
               <th className="px-4 py-3 font-medium text-gray-500">Created</th>
               <th className="px-4 py-3 font-medium text-gray-500">Actions</th>
             </tr>
@@ -113,13 +138,13 @@ export default function AdminImagesPage() {
           <tbody className="divide-y divide-gray-100">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                   Loading...
                 </td>
               </tr>
             ) : images.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                   No images found
                 </td>
               </tr>
@@ -153,6 +178,18 @@ export default function AdminImagesPage() {
                       }`}
                     >
                       {img.is_public ? "Public" : "Hidden"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => toggleFeatured(img.id, img.is_featured)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        img.is_featured
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {img.is_featured ? `★ ${img.featured_order ?? ""}` : "—"}
                     </button>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-gray-500">

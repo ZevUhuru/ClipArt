@@ -78,6 +78,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (body.description !== undefined) updates.description = body.description;
   if (body.slug !== undefined) updates.slug = body.slug;
   if (body.is_public !== undefined) updates.is_public = body.is_public;
+  if (body.is_featured !== undefined) updates.is_featured = body.is_featured;
+  if (body.featured_order !== undefined) updates.featured_order = body.featured_order;
 
   if (body.category !== undefined && body.category !== existing.category) {
     updates.category = body.category;
