@@ -269,7 +269,7 @@ export default function CreatePage() {
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe your clip art... (e.g. a happy sun wearing sunglasses)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
-                maxLength={500}
+                maxLength={1000}
                 disabled={isGenerating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
