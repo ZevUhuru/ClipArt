@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { prompt, style, isPublic, aspectRatio: aspectRatioOverride, freeGen } = body;
 
-    if (!prompt || typeof prompt !== "string" || prompt.length > 500) {
+    if (!prompt || typeof prompt !== "string" || prompt.length > 1000) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
     }
 
