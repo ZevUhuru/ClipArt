@@ -10,6 +10,7 @@ import { useImageDrawer } from "@/stores/useImageDrawer";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import { GenerationProgress } from "@/components/GenerationProgress";
 import type { StyleKey } from "@/lib/styles";
 
 const ANON_RESULT_KEY = "clip_art_anon_result";
@@ -284,17 +285,7 @@ export default function CreatePage() {
               disabled={!prompt.trim() || isGenerating}
               className="shrink-0 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isGenerating ? (
-                <span className="flex items-center gap-2">
-                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Creating...
-                </span>
-              ) : (
-                "Create"
-              )}
+              {isGenerating ? "Creating…" : "Create"}
             </button>
           </div>
 
@@ -320,6 +311,13 @@ export default function CreatePage() {
 
       {/* Content area */}
       <div className="mx-auto max-w-5xl px-4 py-6">
+        {/* Generation progress */}
+        {isGenerating && (
+          <div className="mb-6 flex justify-center">
+            <GenerationProgress isGenerating={isGenerating} />
+          </div>
+        )}
+
         {/* Error */}
         <AnimatePresence>
           {error && (

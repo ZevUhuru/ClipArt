@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { StylePicker } from "./StylePicker";
 import { GenerationResult } from "./GenerationResult";
+import { GenerationProgress } from "./GenerationProgress";
 import { useAppStore } from "@/stores/useAppStore";
 import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
 
@@ -164,32 +165,7 @@ export function Generator() {
         disabled={!prompt.trim() || isGenerating}
         className="btn-primary w-full py-3 text-sm sm:py-4 sm:text-base"
       >
-        {isGenerating ? (
-          <span className="flex items-center gap-2">
-            <svg
-              className="h-4 w-4 animate-spin sm:h-5 sm:w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
-            Generating...
-          </span>
-        ) : (
-          buttonLabel
-        )}
+        {isGenerating ? "Creating…" : buttonLabel}
       </button>
 
       {canFreeGen && (
@@ -205,6 +181,7 @@ export function Generator() {
       )}
 
       <div ref={resultRef}>
+        <GenerationProgress isGenerating={isGenerating} />
         {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} aspectRatio={resultAspectRatio} />}
       </div>
     </div>
