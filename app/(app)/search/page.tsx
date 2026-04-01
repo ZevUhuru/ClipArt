@@ -7,6 +7,7 @@ import { categories } from "@/data/categories";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import type { StyleKey } from "@/lib/styles";
 
 interface SearchResult {
   id: string;
@@ -18,22 +19,43 @@ interface SearchResult {
   style: string;
 }
 
+type ContentType = "clipart" | "coloring";
+
 const PAGE_SIZE = 60;
-const categoryTags = categories.map((c) => ({ slug: c.slug, name: c.name }));
 
-function resolveApiCategory(slug: string): string {
-  return slug;
-}
+const clipartCategories = categories.map((c) => ({ slug: c.slug, name: c.name }));
 
-function SearchImageGrid({ items }: { items: SearchResult[] }) {
+const STYLE_OPTIONS: { key: StyleKey; label: string }[] = [
+  { key: "flat", label: "Flat" },
+  { key: "outline", label: "Outline" },
+  { key: "cartoon", label: "Cartoon" },
+  { key: "sticker", label: "Sticker" },
+  { key: "vintage", label: "Vintage" },
+  { key: "watercolor", label: "Watercolor" },
+  { key: "chibi", label: "Chibi" },
+  { key: "pixel", label: "Pixel Art" },
+  { key: "kawaii", label: "Kawaii" },
+  { key: "3d", label: "3D Render" },
+  { key: "doodle", label: "Doodle" },
+];
+
+function SearchImageGrid({
+  items,
+  contentType,
+}: {
+  items: SearchResult[];
+  contentType: ContentType;
+}) {
   const openDrawer = useImageDrawer((s) => s.open);
   const safeItems = items.filter((item) => item.id && item.url);
+  const isColoring = contentType === "coloring";
 
   return (
-    <ImageGrid>
+    <ImageGrid variant={isColoring ? "coloring" : "clipart"}>
       {safeItems.map((item) => (
         <ImageCard
           key={item.id}
+          variant={isColoring ? "coloring" : "clipart"}
           image={{
             id: item.id,
             slug: item.slug,
@@ -55,21 +77,44 @@ export default function SearchPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+
+  const [contentType, setContentType] = useState<ContentType>("clipart");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeStyle, setActiveStyle] = useState<string | null>(null);
+  const [coloringCategories, setColoringCategories] = useState<
+    { slug: string; name: string }[]
+  >([]);
 
   const currentQueryRef = useRef<string | undefined>();
   const currentCategoryRef = useRef<string | undefined>();
+  const currentStyleRef = useRef<string | undefined>();
+  const currentContentTypeRef = useRef<ContentType>("clipart");
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    fetch("/api/categories/coloring")
+      .then((r) => r.json())
+      .then((d) => setColoringCategories(d.categories || []))
+      .catch(() => {});
+  }, []);
+
   const fetchResults = useCallback(
-    async (query?: string, category?: string, offset = 0) => {
+    async (
+      query?: string,
+      category?: string,
+      style?: string,
+      ct: ContentType = "clipart",
+      offset = 0,
+    ) => {
       const params = new URLSearchParams();
+      params.set("content_type", ct);
       if (query) params.set("q", query);
       if (category) params.set("category", category);
-      if (!query && !category) return;
-
+      if (style && ct !== "coloring") params.set("style", style);
       params.set("limit", String(PAGE_SIZE));
       params.set("offset", String(offset));
+
+      if (!query && !category && !style && ct === "clipart") return;
 
       const isFirstPage = offset === 0;
       if (isFirstPage) {
@@ -82,6 +127,8 @@ export default function SearchPage() {
 
       currentQueryRef.current = query;
       currentCategoryRef.current = category;
+      currentStyleRef.current = style;
+      currentContentTypeRef.current = ct;
 
       try {
         const res = await fetch(`/api/search?${params.toString()}`);
@@ -110,6 +157,8 @@ export default function SearchPage() {
     fetchResults(
       currentQueryRef.current,
       currentCategoryRef.current,
+      currentStyleRef.current,
+      currentContentTypeRef.current,
       results.length,
     );
   }, [isLoadingMore, hasMore, results.length, fetchResults]);
@@ -132,13 +181,33 @@ export default function SearchPage() {
   const handleSearch = useCallback(
     (query: string) => {
       setActiveCategory(null);
+      setActiveStyle(null);
       if (!query.trim()) {
         setResults([]);
         setHasSearched(false);
         setHasMore(false);
         return;
       }
-      fetchResults(query);
+      fetchResults(query, undefined, undefined, contentType);
+    },
+    [fetchResults, contentType],
+  );
+
+  const handleContentTypeSwitch = useCallback(
+    (ct: ContentType) => {
+      setContentType(ct);
+      setActiveCategory(null);
+      setActiveStyle(null);
+      setResults([]);
+      setHasSearched(false);
+      setHasMore(false);
+
+      if (ct === "coloring") {
+        fetchResults(undefined, undefined, undefined, ct);
+      } else {
+        fetchResults(undefined, "free", undefined, ct);
+        setActiveCategory("free");
+      }
     },
     [fetchResults],
   );
@@ -148,35 +217,94 @@ export default function SearchPage() {
       const next = activeCategory === slug ? null : slug;
       setActiveCategory(next);
       if (next) {
-        fetchResults(undefined, resolveApiCategory(next));
+        fetchResults(undefined, next, activeStyle || undefined, contentType);
+      } else if (activeStyle) {
+        fetchResults(undefined, undefined, activeStyle, contentType);
+      } else if (contentType === "coloring") {
+        fetchResults(undefined, undefined, undefined, contentType);
       } else {
         setResults([]);
         setHasSearched(false);
         setHasMore(false);
       }
     },
-    [activeCategory, fetchResults],
+    [activeCategory, activeStyle, contentType, fetchResults],
   );
 
+  const handleStyleClick = useCallback(
+    (styleKey: string) => {
+      const next = activeStyle === styleKey ? null : styleKey;
+      setActiveStyle(next);
+      if (next) {
+        fetchResults(undefined, activeCategory || undefined, next, contentType);
+      } else if (activeCategory) {
+        fetchResults(undefined, activeCategory, undefined, contentType);
+      } else {
+        setResults([]);
+        setHasSearched(false);
+        setHasMore(false);
+      }
+    },
+    [activeStyle, activeCategory, contentType, fetchResults],
+  );
+
+  // Load default results on mount
   useEffect(() => {
-    fetchResults(undefined, "free");
+    fetchResults(undefined, "free", undefined, "clipart");
     setActiveCategory("free");
     setHasSearched(true);
   }, [fetchResults]);
 
-  const activeCategoryData = activeCategory
-    ? categories.find((c) => c.slug === activeCategory)
-    : null;
+  const activeCategoryData =
+    contentType === "clipart" && activeCategory
+      ? categories.find((c) => c.slug === activeCategory)
+      : null;
+
+  const currentCategories =
+    contentType === "coloring" ? coloringCategories : clipartCategories;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-8 pt-8">
       <div className="mx-auto max-w-2xl">
-        <SearchBar onSearch={handleSearch} placeholder="Search for clip art..." />
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder={
+            contentType === "coloring"
+              ? "Search coloring pages..."
+              : "Search for clip art..."
+          }
+        />
       </div>
 
-      {/* Category tags */}
-      <div className="mt-5 flex flex-wrap gap-2">
-        {categoryTags.map((tag) => (
+      {/* Tier 1: Content type toggle */}
+      <div className="mt-5 flex items-center gap-4">
+        <div className="inline-flex rounded-lg bg-gray-100 p-1">
+          <button
+            onClick={() => handleContentTypeSwitch("clipart")}
+            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
+              contentType === "clipart"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Clip Art
+          </button>
+          <button
+            onClick={() => handleContentTypeSwitch("coloring")}
+            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
+              contentType === "coloring"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Coloring Pages
+          </button>
+        </div>
+      </div>
+
+      {/* Tier 2: Category pills */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {currentCategories.map((tag) => (
           <button
             key={tag.slug}
             onClick={() => handleCategoryClick(tag.slug)}
@@ -190,6 +318,40 @@ export default function SearchPage() {
           </button>
         ))}
       </div>
+
+      {/* Tier 3: Style pills (clip art only) */}
+      {contentType === "clipart" && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            onClick={() => {
+              setActiveStyle(null);
+              if (activeCategory) {
+                fetchResults(undefined, activeCategory, undefined, contentType);
+              }
+            }}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              !activeStyle
+                ? "bg-pink-600 text-white"
+                : "border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            All Styles
+          </button>
+          {STYLE_OPTIONS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => handleStyleClick(s.key)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                activeStyle === s.key
+                  ? "bg-pink-600 text-white"
+                  : "border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Cross-link to SEO category page */}
       {activeCategoryData && activeCategoryData.slug !== "free" && (
@@ -209,23 +371,28 @@ export default function SearchPage() {
       {/* Results grid */}
       <div className="mt-6">
         {isLoading ? (
-          <ImageGrid>
+          <ImageGrid variant={contentType === "coloring" ? "coloring" : "clipart"}>
             {Array.from({ length: 10 }).map((_, i) => (
-              <ImageCardSkeleton key={i} />
+              <ImageCardSkeleton
+                key={i}
+                variant={contentType === "coloring" ? "coloring" : "clipart"}
+              />
             ))}
           </ImageGrid>
         ) : results.length > 0 ? (
           <>
-            <SearchImageGrid items={results} />
+            <SearchImageGrid items={results} contentType={contentType} />
 
-            {/* Infinite scroll sentinel */}
             <div ref={sentinelRef} className="h-px" />
 
             {isLoadingMore && (
               <div className="mt-6">
-                <ImageGrid>
+                <ImageGrid variant={contentType === "coloring" ? "coloring" : "clipart"}>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <ImageCardSkeleton key={`more-${i}`} />
+                    <ImageCardSkeleton
+                      key={`more-${i}`}
+                      variant={contentType === "coloring" ? "coloring" : "clipart"}
+                    />
                   ))}
                 </ImageGrid>
               </div>

@@ -11,6 +11,11 @@ const STYLE_LABELS: Record<string, string> = {
   sticker: "Sticker",
   vintage: "Vintage",
   watercolor: "Watercolor",
+  chibi: "Chibi",
+  pixel: "Pixel Art",
+  kawaii: "Kawaii",
+  "3d": "3D Render",
+  doodle: "Doodle",
   coloring: "Coloring Page",
 };
 

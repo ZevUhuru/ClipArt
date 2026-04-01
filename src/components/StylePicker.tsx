@@ -2,7 +2,10 @@
 
 import { type StyleKey } from "@/lib/styles";
 
-const CLIP_ART_STYLES: StyleKey[] = ["flat", "outline", "cartoon", "sticker", "vintage", "watercolor"];
+const CLIP_ART_STYLES: StyleKey[] = [
+  "flat", "outline", "cartoon", "sticker", "vintage", "watercolor",
+  "chibi", "pixel", "kawaii", "3d", "doodle",
+];
 
 interface StylePickerProps {
   selected: StyleKey;
@@ -17,6 +20,11 @@ const styleLabels: Record<StyleKey, string> = {
   sticker: "Sticker",
   vintage: "Vintage",
   watercolor: "Watercolor",
+  chibi: "Chibi",
+  pixel: "Pixel Art",
+  kawaii: "Kawaii",
+  "3d": "3D Render",
+  doodle: "Doodle",
   coloring: "Coloring Page",
 };
 

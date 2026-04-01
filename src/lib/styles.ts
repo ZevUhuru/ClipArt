@@ -5,6 +5,11 @@ export const STYLES = {
   sticker: "sticker illustration style, white background, thick outline, vibrant colors, cute",
   vintage: "vintage retro illustration, muted colors, textured, nostalgic style",
   watercolor: "watercolor painting illustration, soft edges, paint splashes, delicate brushstrokes, pastel and vibrant watercolor tones, white paper background",
+  chibi: "chibi anime illustration, cute big head small body, white background, bold outlines, colorful",
+  pixel: "pixel art illustration, retro 8-bit style, clean pixels, white background, no anti-aliasing",
+  kawaii: "kawaii style illustration, super cute, pastel colors, rounded shapes, white background, happy expression",
+  "3d": "3D rendered illustration, soft lighting, smooth materials, white background, clean render, no shadows on background",
+  doodle: "hand-drawn doodle illustration, sketchy lines, playful, black ink on white background, casual style",
   coloring: "black and white coloring book page, thick clean outlines, large enclosed areas for coloring, no fills, no shading, no color, no gradients, simple bold line art, white background",
 } as const;
 
@@ -19,6 +24,11 @@ export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
   sticker: "gemini",
   vintage: "gemini",
   watercolor: "gemini",
+  chibi: "gemini",
+  pixel: "gemini",
+  kawaii: "gemini",
+  "3d": "gemini",
+  doodle: "gemini",
   coloring: "gemini",
 };
 
@@ -37,6 +47,11 @@ export const STYLE_ASPECT_MAP: Record<StyleKey, AspectRatio> = {
   sticker: "1:1",
   vintage: "1:1",
   watercolor: "1:1",
+  chibi: "1:1",
+  pixel: "1:1",
+  kawaii: "1:1",
+  "3d": "1:1",
+  doodle: "1:1",
   coloring: "3:4",
 };
 
@@ -56,6 +71,11 @@ const STYLE_TEMPLATE_MAP: Record<StyleKey, TemplateKey> = {
   sticker: "clipart",
   vintage: "illustration",
   watercolor: "illustration",
+  chibi: "clipart",
+  pixel: "clipart",
+  kawaii: "clipart",
+  "3d": "illustration",
+  doodle: "clipart",
   coloring: "coloringpage",
 };
 

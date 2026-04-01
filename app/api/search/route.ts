@@ -6,14 +6,16 @@ const MAX_RESULTS = 60;
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim();
   const category = request.nextUrl.searchParams.get("category")?.trim();
+  const style = request.nextUrl.searchParams.get("style")?.trim();
+  const contentType = request.nextUrl.searchParams.get("content_type")?.trim() || "clipart";
   const limit = Math.min(
     parseInt(request.nextUrl.searchParams.get("limit") || String(MAX_RESULTS), 10),
     MAX_RESULTS,
   );
   const offset = parseInt(request.nextUrl.searchParams.get("offset") || "0", 10);
 
-  if (!q && !category) {
-    return NextResponse.json({ error: "Provide q or category" }, { status: 400 });
+  if (!q && !category && !style && contentType === "clipart") {
+    return NextResponse.json({ error: "Provide q, category, or style" }, { status: 400 });
   }
 
   try {
@@ -26,8 +28,18 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
+    if (contentType === "coloring") {
+      query = query.eq("style", "coloring");
+    } else {
+      query = query.neq("style", "coloring");
+    }
+
     if (category) {
       query = query.eq("category", category);
+    }
+
+    if (style && contentType !== "coloring") {
+      query = query.eq("style", style);
     }
 
     if (q) {
