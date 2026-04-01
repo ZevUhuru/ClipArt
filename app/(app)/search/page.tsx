@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { Suspense, useState, useCallback, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { SearchBar } from "@/components/SearchBar";
 import { categories } from "@/data/categories";
@@ -71,16 +72,46 @@ function SearchImageGrid({
   );
 }
 
+function updateURL(
+  router: ReturnType<typeof useRouter>,
+  params: { ct?: string; category?: string; style?: string; q?: string },
+) {
+  const sp = new URLSearchParams();
+  if (params.ct && params.ct !== "clipart") sp.set("type", params.ct);
+  if (params.category) sp.set("category", params.category);
+  if (params.style) sp.set("style", params.style);
+  if (params.q) sp.set("q", params.q);
+  const qs = sp.toString();
+  router.replace(qs ? `/search?${qs}` : "/search", { scroll: false });
+}
+
 export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchPageInner />
+    </Suspense>
+  );
+}
+
+function SearchPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const initialCt = (searchParams.get("type") === "coloring" ? "coloring" : "clipart") as ContentType;
+  const initialCategory = searchParams.get("category") || null;
+  const initialStyle = searchParams.get("style") || null;
+  const initialQuery = searchParams.get("q") || null;
+
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
-  const [contentType, setContentType] = useState<ContentType>("clipart");
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [activeStyle, setActiveStyle] = useState<string | null>(null);
+  const [contentType, setContentType] = useState<ContentType>(initialCt);
+  const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
+  const [activeStyle, setActiveStyle] = useState<string | null>(initialStyle);
+  const [searchQuery, setSearchQuery] = useState<string | null>(initialQuery);
   const [coloringCategories, setColoringCategories] = useState<
     { slug: string; name: string }[]
   >([]);
@@ -88,8 +119,9 @@ export default function SearchPage() {
   const currentQueryRef = useRef<string | undefined>();
   const currentCategoryRef = useRef<string | undefined>();
   const currentStyleRef = useRef<string | undefined>();
-  const currentContentTypeRef = useRef<ContentType>("clipart");
+  const currentContentTypeRef = useRef<ContentType>(initialCt);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     fetch("/api/categories/coloring")
@@ -108,13 +140,12 @@ export default function SearchPage() {
     ) => {
       const params = new URLSearchParams();
       params.set("content_type", ct);
+      params.set("browse", "1");
       if (query) params.set("q", query);
       if (category) params.set("category", category);
       if (style && ct !== "coloring") params.set("style", style);
       params.set("limit", String(PAGE_SIZE));
       params.set("offset", String(offset));
-
-      if (!query && !category && !style && ct === "clipart") return;
 
       const isFirstPage = offset === 0;
       if (isFirstPage) {
@@ -183,14 +214,19 @@ export default function SearchPage() {
       setActiveCategory(null);
       setActiveStyle(null);
       if (!query.trim()) {
+        setSearchQuery(null);
         setResults([]);
         setHasSearched(false);
         setHasMore(false);
+        fetchResults(undefined, undefined, undefined, contentType);
+        updateURL(router, { ct: contentType });
         return;
       }
+      setSearchQuery(query);
       fetchResults(query, undefined, undefined, contentType);
+      updateURL(router, { ct: contentType, q: query });
     },
-    [fetchResults, contentType],
+    [fetchResults, contentType, router],
   );
 
   const handleContentTypeSwitch = useCallback(
@@ -198,62 +234,79 @@ export default function SearchPage() {
       setContentType(ct);
       setActiveCategory(null);
       setActiveStyle(null);
+      setSearchQuery(null);
       setResults([]);
       setHasSearched(false);
       setHasMore(false);
-
-      if (ct === "coloring") {
-        fetchResults(undefined, undefined, undefined, ct);
-      } else {
-        fetchResults(undefined, "free", undefined, ct);
-        setActiveCategory("free");
-      }
+      fetchResults(undefined, undefined, undefined, ct);
+      updateURL(router, { ct });
     },
-    [fetchResults],
+    [fetchResults, router],
   );
 
   const handleCategoryClick = useCallback(
     (slug: string) => {
       const next = activeCategory === slug ? null : slug;
       setActiveCategory(next);
+      setSearchQuery(null);
       if (next) {
         fetchResults(undefined, next, activeStyle || undefined, contentType);
       } else if (activeStyle) {
         fetchResults(undefined, undefined, activeStyle, contentType);
-      } else if (contentType === "coloring") {
-        fetchResults(undefined, undefined, undefined, contentType);
       } else {
-        setResults([]);
-        setHasSearched(false);
-        setHasMore(false);
+        fetchResults(undefined, undefined, undefined, contentType);
       }
+      updateURL(router, {
+        ct: contentType,
+        category: next || undefined,
+        style: activeStyle || undefined,
+      });
     },
-    [activeCategory, activeStyle, contentType, fetchResults],
+    [activeCategory, activeStyle, contentType, fetchResults, router],
   );
 
   const handleStyleClick = useCallback(
     (styleKey: string) => {
       const next = activeStyle === styleKey ? null : styleKey;
       setActiveStyle(next);
-      if (next) {
-        fetchResults(undefined, activeCategory || undefined, next, contentType);
-      } else if (activeCategory) {
-        fetchResults(undefined, activeCategory, undefined, contentType);
-      } else {
-        setResults([]);
-        setHasSearched(false);
-        setHasMore(false);
-      }
+      setSearchQuery(null);
+      fetchResults(
+        undefined,
+        activeCategory || undefined,
+        next || undefined,
+        contentType,
+      );
+      updateURL(router, {
+        ct: contentType,
+        category: activeCategory || undefined,
+        style: next || undefined,
+      });
     },
-    [activeStyle, activeCategory, contentType, fetchResults],
+    [activeStyle, activeCategory, contentType, fetchResults, router],
   );
 
-  // Load default results on mount
+  const handleAllStylesClick = useCallback(() => {
+    setActiveStyle(null);
+    setSearchQuery(null);
+    fetchResults(undefined, activeCategory || undefined, undefined, contentType);
+    updateURL(router, {
+      ct: contentType,
+      category: activeCategory || undefined,
+    });
+  }, [activeCategory, contentType, fetchResults, router]);
+
+  // Load initial results on mount from URL params or default browse
   useEffect(() => {
-    fetchResults(undefined, "free", undefined, "clipart");
-    setActiveCategory("free");
-    setHasSearched(true);
-  }, [fetchResults]);
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+
+    fetchResults(
+      initialQuery || undefined,
+      initialCategory || undefined,
+      initialStyle || undefined,
+      initialCt,
+    );
+  }, [fetchResults, initialQuery, initialCategory, initialStyle, initialCt]);
 
   const activeCategoryData =
     contentType === "clipart" && activeCategory
@@ -273,6 +326,7 @@ export default function SearchPage() {
               ? "Search coloring pages..."
               : "Search for clip art..."
           }
+          defaultValue={searchQuery || ""}
         />
       </div>
 
@@ -323,12 +377,7 @@ export default function SearchPage() {
       {contentType === "clipart" && (
         <div className="mt-3 flex flex-wrap gap-2">
           <button
-            onClick={() => {
-              setActiveStyle(null);
-              if (activeCategory) {
-                fetchResults(undefined, activeCategory, undefined, contentType);
-              }
-            }}
+            onClick={handleAllStylesClick}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               !activeStyle
                 ? "bg-pink-600 text-white"

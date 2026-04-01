@@ -14,8 +14,10 @@ export async function GET(request: NextRequest) {
   );
   const offset = parseInt(request.nextUrl.searchParams.get("offset") || "0", 10);
 
-  if (!q && !category && !style && contentType === "clipart") {
-    return NextResponse.json({ error: "Provide q, category, or style" }, { status: 400 });
+  const browse = request.nextUrl.searchParams.get("browse") === "1";
+
+  if (!q && !category && !style && !browse) {
+    return NextResponse.json({ error: "Provide q, category, style, or browse=1" }, { status: 400 });
   }
 
   try {
