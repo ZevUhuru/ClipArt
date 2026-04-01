@@ -12,26 +12,48 @@ function getCategorySlug(category: string): string {
   return internalToSlug[category] || "free";
 }
 
+function ChevronLeft({ className }: { className?: string }) {
+  return (
+    <svg className={className || "h-5 w-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  );
+}
+
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg className={className || "h-5 w-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
 export function ImageDetailDrawer() {
   const image = useImageDrawer((s) => s.image);
   const close = useImageDrawer((s) => s.close);
+  const next = useImageDrawer((s) => s.next);
+  const prev = useImageDrawer((s) => s.prev);
+  const hasNext = useImageDrawer((s) => s.hasNext);
+  const hasPrev = useImageDrawer((s) => s.hasPrev);
 
-  const handleEscape = useCallback(
+  const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
+      if (e.key === "ArrowRight" && hasNext()) next();
+      if (e.key === "ArrowLeft" && hasPrev()) prev();
     },
-    [close],
+    [close, next, prev, hasNext, hasPrev],
   );
 
   useEffect(() => {
     if (!image) return;
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [image, handleEscape]);
+  }, [image, handleKeyDown]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.y > 100) close();
@@ -44,6 +66,9 @@ export function ImageDetailDrawer() {
   const detailHref = isColoring
     ? `/coloring-pages/${image.category}/${image.slug}`
     : `/${categorySlug}/${image.slug}`;
+
+  const canPrev = hasPrev();
+  const canNext = hasNext();
 
   return (
     <AnimatePresence>
@@ -69,11 +94,26 @@ export function ImageDetailDrawer() {
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed right-0 top-0 z-50 hidden h-full w-[420px] flex-col overflow-y-auto bg-white shadow-2xl md:flex"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <h2 className="truncate text-sm font-semibold text-gray-900">
-                Image Details
-              </h2>
+            {/* Header with nav */}
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={prev}
+                  disabled={!canPrev}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                  title="Previous (←)"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={next}
+                  disabled={!canNext}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                  title="Next (→)"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
               <button
                 onClick={close}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
@@ -106,9 +146,33 @@ export function ImageDetailDrawer() {
             onDragEnd={handleDragEnd}
             className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[85vh] flex-col rounded-t-2xl bg-white shadow-2xl md:hidden"
           >
-            {/* Drag handle */}
-            <div className="flex shrink-0 items-center justify-center pb-2 pt-3">
+            {/* Drag handle + mobile nav */}
+            <div className="flex shrink-0 items-center justify-between px-4 pb-1 pt-3">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={prev}
+                  disabled={!canPrev}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={next}
+                  disabled={!canNext}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 disabled:opacity-30"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
               <div className="h-1 w-10 rounded-full bg-gray-300" />
+              <button
+                onClick={close}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -194,7 +258,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
           )}
         </div>
 
-        {/* Download button */}
+        {/* Primary action: Download */}
         <button
           onClick={() => downloadClip(image.url, `${image.slug}.png`)}
           className="btn-primary w-full py-3.5 text-sm"
@@ -202,8 +266,36 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
           <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Download Free PNG
+          {isColoring ? "Download Free Coloring Page" : "Download Free PNG"}
         </button>
+
+        {/* Secondary actions row: Edit + Animate */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            disabled
+            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-400 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+            </svg>
+            Edit
+            <span className="absolute right-2 top-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-400">
+              Soon
+            </span>
+          </button>
+          <button
+            disabled
+            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-400 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-2.625 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-2.625 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5c0 .621-.504 1.125-1.125 1.125m1.5 0h12m-12 0c-.621 0-1.125.504-1.125 1.125M18 12h1.5m-1.5 0c.621 0 1.125.504 1.125 1.125m0 0v1.5c0 .621-.504 1.125-1.125 1.125M18 12c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5m1.5 0c.621 0 1.125.504 1.125 1.125" />
+            </svg>
+            Animate
+            <span className="absolute right-2 top-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-400">
+              Soon
+            </span>
+          </button>
+        </div>
 
         {/* Generate Similar */}
         <Link

@@ -51,33 +51,36 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
   const safeItems = items.filter((gen) => gen.id && gen.image_url);
 
+  const drawerList = safeItems.map((gen) => ({
+    id: gen.id,
+    slug: gen.slug || gen.id,
+    title: gen.prompt,
+    url: gen.image_url,
+    category: gen.category || "free",
+    style: gen.style,
+    aspect_ratio: gen.aspect_ratio,
+  }));
+
   return (
     <ImageGrid>
-      {safeItems.map((gen) => (
-        <ImageCard
-          key={gen.id}
-          image={{
-            id: gen.id,
-            slug: gen.slug || gen.id,
-            title: gen.prompt,
-            url: gen.image_url,
-            category: gen.category || "free",
-            style: gen.style,
-            aspect_ratio: gen.aspect_ratio,
-          }}
-          onClick={() =>
-            openDrawer({
-              id: gen.id,
-              slug: gen.slug || gen.id,
-              title: gen.prompt,
-              url: gen.image_url,
-              category: gen.category || "free",
-              style: gen.style,
-              aspect_ratio: gen.aspect_ratio,
-            })
-          }
-        />
-      ))}
+      {safeItems.map((gen) => {
+        const img = {
+          id: gen.id,
+          slug: gen.slug || gen.id,
+          title: gen.prompt,
+          url: gen.image_url,
+          category: gen.category || "free",
+          style: gen.style,
+          aspect_ratio: gen.aspect_ratio,
+        };
+        return (
+          <ImageCard
+            key={gen.id}
+            image={img}
+            onClick={() => openDrawer(img, drawerList)}
+          />
+        );
+      })}
     </ImageGrid>
   );
 }

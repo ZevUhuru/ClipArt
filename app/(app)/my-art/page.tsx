@@ -142,6 +142,16 @@ function CreationsGrid() {
 
   const safeItems = items.filter((gen) => gen.id && gen.image_url);
 
+  const drawerList = safeItems.map((gen) => ({
+    id: gen.id,
+    slug: gen.slug || gen.id,
+    title: gen.prompt,
+    url: gen.image_url,
+    category: gen.category || "free",
+    style: gen.style,
+    aspect_ratio: gen.aspect_ratio,
+  }));
+
   return (
     <>
       {/* Content type filter */}
@@ -191,8 +201,8 @@ function CreationsGrid() {
                     aspect_ratio: gen.aspect_ratio,
                   }}
                   variant={isColoring ? "coloring" : "clipart"}
-                  onClick={() =>
-                    openDrawer({
+                  onClick={() => {
+                    const img = {
                       id: gen.id,
                       slug: gen.slug || gen.id,
                       title: gen.prompt,
@@ -200,8 +210,9 @@ function CreationsGrid() {
                       category: gen.category || "free",
                       style: gen.style,
                       aspect_ratio: gen.aspect_ratio,
-                    })
-                  }
+                    };
+                    openDrawer(img, drawerList);
+                  }}
                 />
               );
             })}

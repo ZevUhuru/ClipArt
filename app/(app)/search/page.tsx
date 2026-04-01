@@ -65,7 +65,7 @@ function SearchImageGrid({
             category: item.category,
             style: item.style,
           }}
-          onClick={() => openDrawer(item)}
+          onClick={() => openDrawer(item, safeItems)}
         />
       ))}
     </ImageGrid>

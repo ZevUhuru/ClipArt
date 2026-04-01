@@ -12,12 +12,55 @@ export interface DrawerImage {
 
 interface ImageDrawerState {
   image: DrawerImage | null;
-  open: (image: DrawerImage) => void;
+  list: DrawerImage[];
+  index: number;
+  open: (image: DrawerImage, list?: DrawerImage[]) => void;
   close: () => void;
+  next: () => void;
+  prev: () => void;
+  hasNext: () => boolean;
+  hasPrev: () => boolean;
 }
 
-export const useImageDrawer = create<ImageDrawerState>((set) => ({
+export const useImageDrawer = create<ImageDrawerState>((set, get) => ({
   image: null,
-  open: (image) => set({ image }),
-  close: () => set({ image: null }),
+  list: [],
+  index: -1,
+
+  open: (image, list) => {
+    if (list && list.length > 0) {
+      const idx = list.findIndex((i) => i.id === image.id);
+      set({ image, list, index: idx >= 0 ? idx : 0 });
+    } else {
+      set({ image, list: [], index: -1 });
+    }
+  },
+
+  close: () => set({ image: null, list: [], index: -1 }),
+
+  next: () => {
+    const { list, index } = get();
+    if (index >= 0 && index < list.length - 1) {
+      const nextIdx = index + 1;
+      set({ image: list[nextIdx], index: nextIdx });
+    }
+  },
+
+  prev: () => {
+    const { list, index } = get();
+    if (index > 0) {
+      const prevIdx = index - 1;
+      set({ image: list[prevIdx], index: prevIdx });
+    }
+  },
+
+  hasNext: () => {
+    const { list, index } = get();
+    return index >= 0 && index < list.length - 1;
+  },
+
+  hasPrev: () => {
+    const { list, index } = get();
+    return index > 0;
+  },
 }));
