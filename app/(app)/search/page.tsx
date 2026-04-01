@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { SearchBar } from "@/components/SearchBar";
 import { categories } from "@/data/categories";
@@ -18,6 +18,7 @@ interface SearchResult {
   style: string;
 }
 
+const PAGE_SIZE = 60;
 const categoryTags = categories.map((c) => ({ slug: c.slug, name: c.name }));
 
 const slugToApiCategory: Record<string, string> = {
@@ -59,28 +60,82 @@ function SearchImageGrid({ items }: { items: SearchResult[] }) {
 export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const fetchResults = useCallback(async (query?: string, category?: string) => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (category) params.set("category", category);
-    if (!query && !category) return;
+  const currentQueryRef = useRef<string | undefined>();
+  const currentCategoryRef = useRef<string | undefined>();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-    setIsLoading(true);
-    setHasSearched(true);
+  const fetchResults = useCallback(
+    async (query?: string, category?: string, offset = 0) => {
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      if (category) params.set("category", category);
+      if (!query && !category) return;
 
-    try {
-      const res = await fetch(`/api/search?${params.toString()}`);
-      const data = await res.json();
-      setResults(data.results || []);
-    } catch {
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String(offset));
+
+      const isFirstPage = offset === 0;
+      if (isFirstPage) {
+        setIsLoading(true);
+        setResults([]);
+      } else {
+        setIsLoadingMore(true);
+      }
+      setHasSearched(true);
+
+      currentQueryRef.current = query;
+      currentCategoryRef.current = category;
+
+      try {
+        const res = await fetch(`/api/search?${params.toString()}`);
+        const data = await res.json();
+        const newResults: SearchResult[] = data.results || [];
+
+        if (isFirstPage) {
+          setResults(newResults);
+        } else {
+          setResults((prev) => [...prev, ...newResults]);
+        }
+        setHasMore(newResults.length >= PAGE_SIZE);
+      } catch {
+        if (isFirstPage) setResults([]);
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [],
+  );
+
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    fetchResults(
+      currentQueryRef.current,
+      currentCategoryRef.current,
+      results.length,
+    );
+  }, [isLoadingMore, hasMore, results.length, fetchResults]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "400px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const handleSearch = useCallback(
     (query: string) => {
@@ -88,6 +143,7 @@ export default function SearchPage() {
       if (!query.trim()) {
         setResults([]);
         setHasSearched(false);
+        setHasMore(false);
         return;
       }
       fetchResults(query);
@@ -104,6 +160,7 @@ export default function SearchPage() {
       } else {
         setResults([]);
         setHasSearched(false);
+        setHasMore(false);
       }
     },
     [activeCategory, fetchResults],
@@ -166,7 +223,22 @@ export default function SearchPage() {
             ))}
           </ImageGrid>
         ) : results.length > 0 ? (
-          <SearchImageGrid items={results} />
+          <>
+            <SearchImageGrid items={results} />
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="h-px" />
+
+            {isLoadingMore && (
+              <div className="mt-6">
+                <ImageGrid>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <ImageCardSkeleton key={`more-${i}`} />
+                  ))}
+                </ImageGrid>
+              </div>
+            )}
+          </>
         ) : hasSearched ? (
           <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
             <p className="text-lg font-medium text-gray-400">No results found</p>
