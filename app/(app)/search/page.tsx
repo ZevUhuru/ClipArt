@@ -21,16 +21,8 @@ interface SearchResult {
 const PAGE_SIZE = 60;
 const categoryTags = categories.map((c) => ({ slug: c.slug, name: c.name }));
 
-const slugToApiCategory: Record<string, string> = {
-  christmas: "christmas",
-  halloween: "halloween",
-  flower: "flowers",
-  cat: "cats",
-  thanksgiving: "food",
-};
-
 function resolveApiCategory(slug: string): string {
-  return slugToApiCategory[slug] || slug;
+  return slug;
 }
 
 function SearchImageGrid({ items }: { items: SearchResult[] }) {
