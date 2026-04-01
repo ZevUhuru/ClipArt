@@ -23,7 +23,7 @@ const SLOT_PACKS = [
   },
   {
     name: "Binge",
-    credits: 200,
+    credits: 250,
     price: "$9.99",
     priceId: "power",
     badge: "Most Credits",

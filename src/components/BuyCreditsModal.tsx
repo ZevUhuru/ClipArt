@@ -14,7 +14,7 @@ const PACKS = [
   },
   {
     name: "Pro",
-    credits: 200,
+    credits: 250,
     price: "$9.99",
     priceId: "pro",
     popular: true,

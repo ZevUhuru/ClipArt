@@ -21,7 +21,7 @@ export const CREDIT_PACKS: Record<
   },
   pro: {
     priceId: process.env.STRIPE_PRO_PRICE_ID || "",
-    credits: 200,
+    credits: 250,
     amountCents: 999,
   },
   // Slot modal packs
@@ -37,7 +37,7 @@ export const CREDIT_PACKS: Record<
   },
   power: {
     priceId: process.env.STRIPE_POWER_PRICE_ID || "",
-    credits: 200,
+    credits: 250,
     amountCents: 999,
   },
 };
