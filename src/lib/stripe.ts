@@ -27,8 +27,8 @@ export const CREDIT_PACKS: Record<
   // Slot modal packs
   mini: {
     priceId: process.env.STRIPE_MINI_PRICE_ID || "",
-    credits: 30,
-    amountCents: 199,
+    credits: 15,
+    amountCents: 99,
   },
   value: {
     priceId: process.env.STRIPE_VALUE_PRICE_ID || "",

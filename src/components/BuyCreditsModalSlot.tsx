@@ -7,8 +7,8 @@ import { useAppStore } from "@/stores/useAppStore";
 const SLOT_PACKS = [
   {
     name: "Quick Hit",
-    credits: 30,
-    price: "$1.99",
+    credits: 15,
+    price: "$0.99",
     priceId: "mini",
     badge: null,
     highlight: false,

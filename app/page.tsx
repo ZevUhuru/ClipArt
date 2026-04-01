@@ -97,7 +97,7 @@ async function getColoringGallery(): Promise<CommunityImage[]> {
 const faqItems = [
   {
     q: "Is clip.art really free?",
-    a: "Yes! You get 10 free credits with no sign-up required. After that, credit packs start at $1.99 for 30 generations. Every image you create is free for personal and commercial use — no attribution needed.",
+    a: "Yes! You get 10 free credits with no sign-up required. After that, credit packs start at $0.99 for 15 generations. Every image you create is free for personal and commercial use — no attribution needed.",
   },
   {
     q: "What can I use the clip art for?",
