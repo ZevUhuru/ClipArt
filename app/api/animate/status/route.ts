@@ -4,6 +4,8 @@ import { checkAnimationStatus, type AnimationModel } from "@/lib/fal";
 import { uploadToR2 } from "@/lib/r2";
 import { generateThumbnail } from "@/lib/videoProcessing";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const animationId = request.nextUrl.searchParams.get("id");
