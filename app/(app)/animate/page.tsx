@@ -367,8 +367,8 @@ function AnimatePageInner() {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Describe how the image should move... or use AI suggestions below"
-                    className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
-                    rows={3}
+                    className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
+                    rows={prompt.length > 200 ? 6 : prompt.length > 100 ? 4 : 3}
                     maxLength={1000}
                     disabled={isAnimating}
                     onKeyDown={(e) => {
@@ -417,10 +417,14 @@ function AnimatePageInner() {
                     </button>
                   ) : suggestionsLoading ? (
                     <div className="space-y-2">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="animate-pulse rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                          <div className="mb-1.5 h-3 w-20 rounded bg-gray-200" />
-                          <div className="h-3 w-full rounded bg-gray-100" />
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="animate-pulse rounded-xl border border-gray-100 bg-gray-50 px-4 py-4">
+                          <div className="mb-2 h-3.5 w-24 rounded bg-gray-200" />
+                          <div className="space-y-1.5">
+                            <div className="h-3 w-full rounded bg-gray-100" />
+                            <div className="h-3 w-5/6 rounded bg-gray-100" />
+                            <div className="h-3 w-4/6 rounded bg-gray-100" />
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -435,26 +439,36 @@ function AnimatePageInner() {
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-1.5">
-                      {suggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setPrompt(s.prompt)}
-                          disabled={isAnimating}
-                          className={`w-full rounded-xl border px-3.5 py-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm disabled:opacity-50 ${
-                            prompt === s.prompt
-                              ? "border-pink-300 bg-pink-50 ring-1 ring-pink-100"
-                              : "border-gray-100 bg-white hover:border-pink-200"
-                          }`}
-                        >
-                          <p className={`text-xs font-bold ${prompt === s.prompt ? "text-pink-700" : "text-gray-700"}`}>
-                            {s.title}
-                          </p>
-                          <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-gray-400">
-                            {s.prompt}
-                          </p>
-                        </button>
-                      ))}
+                    <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+                      {suggestions.map((s, i) => {
+                        const isSelected = prompt === s.prompt;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setPrompt(s.prompt)}
+                            disabled={isAnimating}
+                            className={`group w-full rounded-xl border px-4 py-3 text-left transition-all hover:-translate-y-px hover:shadow-sm disabled:opacity-50 ${
+                              isSelected
+                                ? "border-pink-300 bg-pink-50 ring-1 ring-pink-100"
+                                : "border-gray-100 bg-white hover:border-pink-200"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <p className={`text-xs font-bold ${isSelected ? "text-pink-700" : "text-gray-700"}`}>
+                                {s.title}
+                              </p>
+                              {isSelected && (
+                                <span className="shrink-0 rounded-full bg-pink-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-pink-600">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                            <p className={`mt-1 text-[11px] leading-relaxed ${isSelected ? "text-pink-600/70" : "text-gray-400"}`}>
+                              {s.prompt}
+                            </p>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
