@@ -37,6 +37,9 @@ export default async function AdminLayout({
             <a href="/admin/models" className="text-sm font-medium text-gray-600 hover:text-gray-900">
               Models
             </a>
+            <a href="/admin/animations" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+              Animations
+            </a>
             <a href="/admin/users" className="text-sm font-medium text-gray-600 hover:text-gray-900">
               Users
             </a>

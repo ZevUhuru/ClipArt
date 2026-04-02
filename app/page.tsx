@@ -105,38 +105,93 @@ interface HomepageAnimation {
   slug: string;
 }
 
-async function getAnimationShowcase(): Promise<HomepageAnimation[]> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapAnimation(a: any): HomepageAnimation {
+  const src = a.source as Record<string, string> | null;
+  return {
+    id: a.id,
+    videoUrl: a.preview_url || a.video_url,
+    posterUrl: src?.image_url || a.thumbnail_url || "",
+    prompt: src?.prompt || a.prompt,
+    style: src?.style || "flat",
+    category: src?.category || "free",
+    slug: src?.slug || a.id,
+  };
+}
+
+const ANIMATION_SELECT =
+  "id, prompt, video_url, preview_url, thumbnail_url, " +
+  "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug)";
+
+async function getFeaturedAnimations(): Promise<HomepageAnimation[]> {
   try {
     const admin = createSupabaseAdmin();
-    const { data } = await admin
+
+    const { data: featured } = await admin
       .from("animations")
-      .select(
-        "id, prompt, video_url, preview_url, thumbnail_url, " +
-          "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug)",
-      )
+      .select(ANIMATION_SELECT)
+      .eq("status", "completed")
+      .eq("is_public", true)
+      .eq("is_featured", true)
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    if (featured && featured.length > 0) return featured.map(mapAnimation);
+
+    const { data: fallback } = await admin
+      .from("animations")
+      .select(ANIMATION_SELECT)
       .eq("status", "completed")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(12);
 
-    if (!data) return [];
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return data.map((a: any) => {
-      const src = a.source as Record<string, string> | null;
-      return {
-        id: a.id,
-        videoUrl: a.preview_url || a.video_url,
-        posterUrl: src?.image_url || a.thumbnail_url || "",
-        prompt: src?.prompt || a.prompt,
-        style: src?.style || "flat",
-        category: src?.category || "free",
-        slug: src?.slug || a.id,
-      };
-    });
+    return (fallback || []).map(mapAnimation);
   } catch {
     return [];
   }
+}
+
+async function getMosaicAnimations(): Promise<HomepageAnimation[]> {
+  try {
+    const admin = createSupabaseAdmin();
+
+    const { data: mosaic } = await admin
+      .from("animations")
+      .select(ANIMATION_SELECT)
+      .eq("status", "completed")
+      .eq("is_public", true)
+      .eq("is_mosaic", true)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (mosaic && mosaic.length > 0) return mosaic.map(mapAnimation);
+
+    const { data: fallback } = await admin
+      .from("animations")
+      .select(ANIMATION_SELECT)
+      .eq("status", "completed")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    return (fallback || []).map(mapAnimation);
+  } catch {
+    return [];
+  }
+}
+
+async function getHomepageConfig(): Promise<{ mosaic_animation_slots: number }> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "homepage_config")
+      .single();
+    if (data?.value?.mosaic_animation_slots != null) return data.value;
+  } catch { /* ignore */ }
+  return { mosaic_animation_slots: 6 };
 }
 
 const faqItems = [
@@ -171,13 +226,15 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect("/create");
 
-  const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts, animationItems] = await Promise.all([
+  const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts, featuredAnimations, mosaicAnimationItems, homepageConfig] = await Promise.all([
     getAllCategories(),
     getColoringThemes(),
     getCommunityGallery(),
     getColoringGallery(),
     Promise.resolve(getAllPosts()),
-    getAnimationShowcase(),
+    getFeaturedAnimations(),
+    getMosaicAnimations(),
+    getHomepageConfig(),
   ]);
 
   const activeThemes = coloringThemes.filter((t) => t.slug !== "coloring-free");
@@ -186,10 +243,12 @@ export default async function Home() {
 
   const fallbackClipArt = sampleImages.slice(0, 8);
 
-  const mosaicAnimations: MosaicAnimation[] = animationItems.map((a) => ({
-    videoUrl: a.videoUrl,
-    posterUrl: a.posterUrl,
-  }));
+  const mosaicAnimations: MosaicAnimation[] = mosaicAnimationItems
+    .slice(0, homepageConfig.mosaic_animation_slots)
+    .map((a) => ({
+      videoUrl: a.videoUrl,
+      posterUrl: a.posterUrl,
+    }));
 
   return (
     <main className="relative bg-[#0a0a0a]">
@@ -316,7 +375,7 @@ export default async function Home() {
       </div>
 
       {/* ───── ANIMATIONS ZONE ───── */}
-      {animationItems.length > 0 && (
+      {featuredAnimations.length > 0 && (
         <>
           <div className="relative z-10">
             <div className="h-24 bg-gradient-to-b from-white to-[#0a0a0a] sm:h-32" />
@@ -351,7 +410,7 @@ export default async function Home() {
                   </Link>
                 </div>
 
-                <AnimationGrid animations={animationItems.map((a) => ({
+                <AnimationGrid animations={featuredAnimations.map((a) => ({
                   id: a.id,
                   prompt: a.prompt,
                   videoUrl: a.videoUrl,
