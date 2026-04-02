@@ -7,7 +7,6 @@ import { StylePicker } from "@/components/StylePicker";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { GenerationProgress } from "@/components/GenerationProgress";
@@ -25,6 +24,41 @@ interface CommunityItem extends Generation {
   animationPreviewUrl?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mergeAnimations(gens: CommunityItem[], rawAnims: any[]): CommunityItem[] {
+  const animCards: CommunityItem[] = rawAnims.map((a) => {
+    const src = a.source as Record<string, string> | null;
+    return {
+      id: `anim-${a.id}`,
+      image_url: src?.image_url || a.thumbnail_url || "",
+      prompt: src?.prompt || a.prompt,
+      style: src?.style || "flat",
+      category: src?.category || "free",
+      slug: src?.slug || a.id,
+      aspect_ratio: src?.aspect_ratio,
+      created_at: a.created_at,
+      animationPreviewUrl: a.preview_url || a.video_url,
+    } as CommunityItem;
+  });
+
+  const merged = [...gens];
+  const usedAnimIds = new Set<string>();
+  let animIdx = 0;
+  for (let pos = 5; pos < merged.length + animCards.length && animIdx < animCards.length; pos += 7) {
+    const anim = animCards[animIdx];
+    if (!usedAnimIds.has(anim.id)) {
+      merged.splice(pos, 0, anim);
+      usedAnimIds.add(anim.id);
+      animIdx++;
+    }
+  }
+  while (animIdx < animCards.length) {
+    if (!usedAnimIds.has(animCards[animIdx].id)) merged.push(animCards[animIdx]);
+    animIdx++;
+  }
+  return merged;
+}
+
 function CommunityGrid() {
   const openDrawer = useImageDrawer((s) => s.open);
   const storeGenerations = useAppStore((s) => s.generations);
@@ -34,66 +68,17 @@ function CommunityGrid() {
 
   useEffect(() => {
     async function fetchCommunity() {
-      const supabase = createBrowserClient();
-      if (!supabase) return;
-
-      const [genResult, animResult] = await Promise.all([
-        supabase
-          .from("generations")
-          .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
-          .eq("is_public", true)
-          .order("created_at", { ascending: false })
-          .limit(50),
-        supabase
-          .from("animations")
-          .select(
-            "id, prompt, video_url, preview_url, thumbnail_url, model, created_at, " +
-            "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug, aspect_ratio)",
-          )
-          .eq("status", "completed")
-          .eq("is_public", true)
-          .order("created_at", { ascending: false })
-          .limit(8),
-      ]);
-
-      const gens: CommunityItem[] = (genResult.data || []).map((g) => g as CommunityItem);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const animCards: CommunityItem[] = (animResult.data || []).map((a: any) => {
-        const src = a.source as Record<string, string> | null;
-        return {
-          id: `anim-${a.id}`,
-          image_url: src?.image_url || a.thumbnail_url || "",
-          prompt: src?.prompt || a.prompt,
-          style: src?.style || "flat",
-          category: src?.category || "free",
-          slug: src?.slug || a.id,
-          aspect_ratio: src?.aspect_ratio,
-          created_at: a.created_at,
-          animationPreviewUrl: a.preview_url || a.video_url,
-        } as CommunityItem;
-      });
-
-      const merged: CommunityItem[] = [...gens];
-      const usedAnimIds = new Set<string>();
-      let animIdx = 0;
-      for (let pos = 5; pos < merged.length + animCards.length && animIdx < animCards.length; pos += 7) {
-        const anim = animCards[animIdx];
-        if (!usedAnimIds.has(anim.id)) {
-          merged.splice(pos, 0, anim);
-          usedAnimIds.add(anim.id);
-          animIdx++;
-        }
+      try {
+        const res = await fetch("/api/community");
+        if (!res.ok) throw new Error("fetch failed");
+        const { generations, animations } = await res.json();
+        const gens: CommunityItem[] = (generations || []).map((g: CommunityItem) => g);
+        const merged = mergeAnimations(gens, animations || []);
+        fetchedIdsRef.current = new Set(merged.map((m) => m.id));
+        setCommunityItems(merged);
+      } catch {
+        setCommunityItems([]);
       }
-      while (animIdx < animCards.length) {
-        if (!usedAnimIds.has(animCards[animIdx].id)) {
-          merged.push(animCards[animIdx]);
-        }
-        animIdx++;
-      }
-
-      fetchedIdsRef.current = new Set(merged.map((m) => m.id));
-      setCommunityItems(merged);
       setLoading(false);
     }
 
