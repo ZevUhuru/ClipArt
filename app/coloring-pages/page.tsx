@@ -133,7 +133,6 @@ export default async function ColoringPagesLanding() {
                 }}
                 variant="coloring"
                 href={`/coloring-pages/${img.category}/${img.slug || img.id}`}
-                showStyleBadge={false}
               />
             ))}
           </ImageGrid>

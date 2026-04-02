@@ -298,7 +298,6 @@ export default async function Home() {
                     }}
                     variant="coloring"
                     href={`/coloring-pages/${img.category}/${img.slug || img.id}`}
-                    showStyleBadge={false}
                   />
                 ))}
               </ImageGrid>

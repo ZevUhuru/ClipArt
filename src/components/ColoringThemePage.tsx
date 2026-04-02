@@ -96,7 +96,6 @@ export function ColoringThemePage({ theme, galleryImages = [], relatedThemes = [
                 }}
                 variant="coloring"
                 href={`/coloring-pages/${theme.slug}/${img.slug}`}
-                showStyleBadge={false}
               />
             ))}
           </ImageGrid>

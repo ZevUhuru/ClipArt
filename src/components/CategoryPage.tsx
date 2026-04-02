@@ -142,7 +142,6 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
                 category: img.category,
               }}
               href={`/${img.category}/${img.slug}`}
-              showStyleBadge={false}
             />
           ))}
           {displaySamples.map((img) => {
@@ -157,7 +156,6 @@ export function CategoryPage({ category, galleryImages = [], relatedCategories =
                   category: catSlug,
                 }}
                 href={`/${catSlug}/${img.slug}`}
-                showStyleBadge={false}
               />
             );
           })}

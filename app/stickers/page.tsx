@@ -142,7 +142,6 @@ export default async function StickersLanding() {
                   aspect_ratio: img.aspect_ratio || "1:1",
                 }}
                 href={`/${img.category}/${img.slug || img.id}`}
-                showStyleBadge={false}
               />
             ))}
           </ImageGrid>
