@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
@@ -360,8 +361,31 @@ export default function CreatePage() {
           />
         )}
 
+        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Community creations
+        </p>
+
         <div ref={resultRef}>
           <CommunityGrid />
+        </div>
+
+        {/* Browse more clip art */}
+        <div className="mt-12 rounded-2xl bg-white px-6 py-10 text-center">
+          <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+            Browse thousands of free clip art
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
+            Discover clip art for classrooms, worksheets, presentations, and more — all created by our community.
+          </p>
+          <Link
+            href="/search"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            Browse clip art
+          </Link>
         </div>
       </div>
     </div>
