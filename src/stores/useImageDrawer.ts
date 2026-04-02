@@ -8,6 +8,7 @@ export interface DrawerImage {
   category: string;
   style: string;
   aspect_ratio?: string;
+  videoUrl?: string;
 }
 
 interface ImageDrawerState {

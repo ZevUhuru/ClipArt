@@ -1,0 +1,8 @@
+---
+description: Never push to remote without explicit user approval
+alwaysApply: true
+---
+
+# Git Push Policy
+
+Never run `git push` to the remote repository without first asking the user for explicit confirmation. Always commit locally, then ask "Ready to push?" or similar before executing the push.

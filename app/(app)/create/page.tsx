@@ -129,17 +129,16 @@ function CommunityGrid() {
 
   const safeItems = items.filter((gen) => gen.id && gen.image_url);
 
-  const drawerList = safeItems
-    .filter((gen) => !gen.animationPreviewUrl)
-    .map((gen) => ({
-      id: gen.id,
-      slug: gen.slug || gen.id,
-      title: gen.prompt,
-      url: gen.image_url,
-      category: gen.category || "free",
-      style: gen.style,
-      aspect_ratio: gen.aspect_ratio,
-    }));
+  const drawerList = safeItems.map((gen) => ({
+    id: gen.id,
+    slug: gen.slug || gen.id,
+    title: gen.prompt,
+    url: gen.image_url,
+    category: gen.category || "free",
+    style: gen.style,
+    aspect_ratio: gen.aspect_ratio,
+    videoUrl: gen.animationPreviewUrl,
+  }));
 
   return (
     <ImageGrid>
@@ -152,6 +151,7 @@ function CommunityGrid() {
           category: gen.category || "free",
           style: gen.style,
           aspect_ratio: gen.aspect_ratio,
+          videoUrl: gen.animationPreviewUrl,
         };
         return (
           <ImageCard

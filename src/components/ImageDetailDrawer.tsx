@@ -192,7 +192,7 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string; aspect_ratio?: string };
+  image: { id: string; slug: string; title: string; url: string; category: string; style: string; aspect_ratio?: string; videoUrl?: string };
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
@@ -203,6 +203,7 @@ import { MagnifyIcon, ImageLightbox } from "@/components/ImageLightbox";
 
 function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }: DrawerContentProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const isAnimation = !!image.videoUrl;
 
   const categoryHref = isColoring
     ? `/coloring-pages/${image.category}`
@@ -213,21 +214,33 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
   return (
     <>
       <div className="space-y-5 px-6 pb-8 pt-4">
-        {/* Image with magnify overlay */}
+        {/* Preview: video for animations, image otherwise */}
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
           className="group relative w-full overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 transition-all hover:border-gray-200 hover:shadow-md"
         >
           <div className={`relative w-full ${image.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
-            <Image
-              src={image.url}
-              alt={image.title}
-              fill
-              className="object-contain p-4"
-              sizes="420px"
-              unoptimized
-            />
+            {isAnimation ? (
+              <video
+                src={image.videoUrl}
+                poster={image.url}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            ) : (
+              <Image
+                src={image.url}
+                alt={image.title}
+                fill
+                className="object-contain p-4"
+                sizes="420px"
+                unoptimized
+              />
+            )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/5">
             <span className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-gray-600 opacity-0 shadow-sm backdrop-blur-sm transition-all group-hover:opacity-100">
@@ -256,42 +269,63 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
               {image.style}
             </span>
           )}
+          {isAnimation && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-600">
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
+              Animation
+            </span>
+          )}
         </div>
 
         {/* Primary action: Download */}
-        <button
-          onClick={() => downloadClip(image.url, `${image.slug}.png`)}
-          className="btn-primary w-full py-3.5 text-sm"
-        >
-          <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          {isColoring ? "Download Free Coloring Page" : "Download Free PNG"}
-        </button>
+        {isAnimation ? (
+          <a
+            href={image.videoUrl}
+            download={`${image.slug}-animation.mp4`}
+            className="btn-primary flex w-full items-center justify-center py-3.5 text-sm"
+          >
+            <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download Animation
+          </a>
+        ) : (
+          <button
+            onClick={() => downloadClip(image.url, `${image.slug}.png`)}
+            className="btn-primary w-full py-3.5 text-sm"
+          >
+            <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {isColoring ? "Download Free Coloring Page" : "Download Free PNG"}
+          </button>
+        )}
 
-        {/* Secondary actions row: Edit + Animate */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link
-            href={`/edit?id=${image.id}`}
-            onClick={onClose}
-            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-colors hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-            </svg>
-            Edit
-          </Link>
-          <Link
-            href={`/animate?id=${image.id}`}
-            onClick={onClose}
-            className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-colors hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-2.625 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-2.625 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5c0 .621-.504 1.125-1.125 1.125m1.5 0h12m-12 0c-.621 0-1.125.504-1.125 1.125M18 12h1.5m-1.5 0c.621 0 1.125.504 1.125 1.125m0 0v1.5c0 .621-.504 1.125-1.125 1.125M18 12c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5m1.5 0c.621 0 1.125.504 1.125 1.125" />
-            </svg>
-            Animate
-          </Link>
-        </div>
+        {/* Secondary actions — hide Edit/Animate for animation cards */}
+        {!isAnimation && (
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href={`/edit?id=${image.id}`}
+              onClick={onClose}
+              className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-colors hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+              </svg>
+              Edit
+            </Link>
+            <Link
+              href={`/animate?id=${image.id}`}
+              onClick={onClose}
+              className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-colors hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-2.625 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-2.625 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5c0 .621-.504 1.125-1.125 1.125m1.5 0h12m-12 0c-.621 0-1.125.504-1.125 1.125M18 12h1.5m-1.5 0c.621 0 1.125.504 1.125 1.125m0 0v1.5c0 .621-.504 1.125-1.125 1.125M18 12c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5m1.5 0c.621 0 1.125.504 1.125 1.125" />
+              </svg>
+              Animate
+            </Link>
+          </div>
+        )}
 
         {/* Generate Similar */}
         <Link
@@ -302,17 +336,19 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
           Generate Similar with AI
         </Link>
 
-        {/* View full page */}
-        <Link
-          href={detailHref}
-          onClick={onClose}
-          className="flex items-center justify-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-gray-600"
-        >
-          View full page
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-          </svg>
-        </Link>
+        {/* View full page — only for non-animation items */}
+        {!isAnimation && (
+          <Link
+            href={detailHref}
+            onClick={onClose}
+            className="flex items-center justify-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-gray-600"
+          >
+            View full page
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </Link>
+        )}
 
         {/* License */}
         <p className="text-center text-xs text-gray-300">
@@ -323,8 +359,9 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
       <AnimatePresence>
         {lightboxOpen && (
           <ImageLightbox
-            src={image.url}
+            src={isAnimation ? image.videoUrl! : image.url}
             alt={image.title}
+            isVideo={isAnimation}
             onClose={() => setLightboxOpen(false)}
           />
         )}

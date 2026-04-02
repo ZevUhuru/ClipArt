@@ -11,7 +11,7 @@ export function MagnifyIcon({ className }: { className?: string }) {
   );
 }
 
-export function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+export function ImageLightbox({ src, alt, isVideo, onClose }: { src: string; alt: string; isVideo?: boolean; onClose: () => void }) {
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -46,13 +46,25 @@ export function ImageLightbox({ src, alt, onClose }: { src: string; alt: string;
         className="relative max-h-[90vh] max-w-[90vw]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt}
-          className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-          draggable={false}
-        />
+        {isVideo ? (
+          <video
+            src={src}
+            autoPlay
+            loop
+            muted
+            playsInline
+            controls
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src}
+            alt={alt}
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+            draggable={false}
+          />
+        )}
       </motion.div>
 
       <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-white/50">
