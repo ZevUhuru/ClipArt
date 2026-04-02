@@ -168,6 +168,7 @@ export default async function Page({ params }: PageProps) {
         image={image}
         categorySlug={params.category}
         relatedImages={relatedImages}
+        imageId={dbRow.id}
       />
       <MarketingFooter />
     </>

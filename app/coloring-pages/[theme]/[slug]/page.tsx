@@ -139,6 +139,7 @@ export default async function Page({ params }: PageProps) {
         isColoringPage
         relatedImages={relatedImages}
         categoryName={themeName}
+        imageId={dbRow.id}
       />
       <MarketingFooter />
     </>

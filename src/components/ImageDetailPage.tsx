@@ -28,6 +28,7 @@ interface ImageDetailPageProps {
   isColoringPage?: boolean;
   relatedImages?: RelatedImage[];
   categoryName?: string;
+  imageId?: string;
 }
 
 function humanizeTag(tag: string): string {
@@ -42,6 +43,7 @@ export function ImageDetailPage({
   isColoringPage = false,
   relatedImages: relatedFromServer,
   categoryName: categoryNameProp,
+  imageId,
 }: ImageDetailPageProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -204,18 +206,15 @@ export function ImageDetailPage({
 
             {/* Edit + Animate */}
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <button
-                disabled
-                className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3.5 text-sm font-semibold text-gray-400 transition-colors"
+              <Link
+                href={imageId ? `/edit?id=${imageId}` : "/edit"}
+                className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3.5 text-sm font-semibold text-gray-700 transition-colors hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 </svg>
                 Edit
-                <span className="absolute right-2 top-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-400">
-                  Soon
-                </span>
-              </button>
+              </Link>
               <button
                 disabled
                 className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-gray-200 bg-white py-3.5 text-sm font-semibold text-gray-400 transition-colors"
