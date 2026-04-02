@@ -3,10 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
-import { MosaicBackground } from "@/components/MosaicBackground";
+import { MosaicBackground, type MosaicAnimation } from "@/components/MosaicBackground";
 import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
+import { AnimationGrid } from "./animations/AnimationGrid";
 import { getAllCategories, getColoringThemes, type DbCategory } from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
@@ -94,6 +95,50 @@ async function getColoringGallery(): Promise<CommunityImage[]> {
   }
 }
 
+interface HomepageAnimation {
+  id: string;
+  videoUrl: string;
+  posterUrl: string;
+  prompt: string;
+  style: string;
+  category: string;
+  slug: string;
+}
+
+async function getAnimationShowcase(): Promise<HomepageAnimation[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("animations")
+      .select(
+        "id, prompt, video_url, preview_url, thumbnail_url, " +
+          "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug)",
+      )
+      .eq("status", "completed")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    if (!data) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.map((a: any) => {
+      const src = a.source as Record<string, string> | null;
+      return {
+        id: a.id,
+        videoUrl: a.preview_url || a.video_url,
+        posterUrl: src?.image_url || a.thumbnail_url || "",
+        prompt: src?.prompt || a.prompt,
+        style: src?.style || "flat",
+        category: src?.category || "free",
+        slug: src?.slug || a.id,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 const faqItems = [
   {
     q: "Is clip.art really free?",
@@ -126,12 +171,13 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect("/create");
 
-  const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts] = await Promise.all([
+  const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts, animationItems] = await Promise.all([
     getAllCategories(),
     getColoringThemes(),
     getCommunityGallery(),
     getColoringGallery(),
     Promise.resolve(getAllPosts()),
+    getAnimationShowcase(),
   ]);
 
   const activeThemes = coloringThemes.filter((t) => t.slug !== "coloring-free");
@@ -140,9 +186,14 @@ export default async function Home() {
 
   const fallbackClipArt = sampleImages.slice(0, 8);
 
+  const mosaicAnimations: MosaicAnimation[] = animationItems.map((a) => ({
+    videoUrl: a.videoUrl,
+    posterUrl: a.posterUrl,
+  }));
+
   return (
     <main className="relative bg-[#0a0a0a]">
-      <MosaicBackground />
+      <MosaicBackground animations={mosaicAnimations} />
 
       {/* ───── DARK ZONE: Hero + Generator ───── */}
       <div className="relative z-10 flex min-h-[100dvh] flex-col">
@@ -238,13 +289,7 @@ export default async function Home() {
                 return (
                   <ImageCard
                     key={key}
-                    image={{
-                      slug: slug,
-                      title: title,
-                      url: src,
-                      category: cat,
-                      style: style,
-                    }}
+                    image={{ slug, title, url: src, category: cat, style }}
                     href={`/${cat}/${slug}`}
                   />
                 );
@@ -378,8 +423,77 @@ export default async function Home() {
           </div>
         </section>
 
+      </div>
+
+      {/* ───── ANIMATIONS ZONE ───── */}
+      {animationItems.length > 0 && (
+        <>
+          <div className="relative z-10">
+            <div className="h-24 bg-gradient-to-b from-white to-[#0a0a0a] sm:h-32" />
+          </div>
+
+          <div className="relative z-10 bg-[#0a0a0a]">
+            <section className="py-16 sm:py-20">
+              <div className="mx-auto max-w-6xl px-4">
+                <div className="mb-10 flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-purple-400/30 bg-purple-400/10 px-3 py-1">
+                      <svg className="h-3 w-3 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5.14v14l11-7-11-7z" />
+                      </svg>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-purple-300">
+                        New
+                      </span>
+                    </div>
+                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                      Animated clip art
+                    </h2>
+                    <p className="mt-2 max-w-lg text-sm text-gray-400">
+                      Bring your clip art to life with AI-powered animations.
+                      Perfect for presentations, social media, and engaging classroom content.
+                    </p>
+                  </div>
+                  <Link
+                    href="/animations"
+                    className="shrink-0 text-sm font-semibold text-purple-400 transition-colors hover:text-purple-300"
+                  >
+                    View all animations &rarr;
+                  </Link>
+                </div>
+
+                <AnimationGrid animations={animationItems.map((a) => ({
+                  id: a.id,
+                  prompt: a.prompt,
+                  videoUrl: a.videoUrl,
+                  posterUrl: a.posterUrl,
+                  style: a.style,
+                  category: a.category,
+                  slug: a.slug,
+                  createdAt: "",
+                }))} />
+
+                <div className="mt-10 text-center">
+                  <Link
+                    href="/create"
+                    className="btn-primary px-8 text-sm sm:text-base"
+                  >
+                    Create &amp; Animate Your Own
+                  </Link>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="relative z-10">
+            <div className="h-24 bg-gradient-to-b from-[#0a0a0a] to-white sm:h-32" />
+          </div>
+        </>
+      )}
+
+      {/* ───── WHITE ZONE (continued) ───── */}
+      <div className="relative z-10 bg-white">
         {/* ── SEO CONTENT ── */}
-        <section className="border-t border-gray-100 bg-gray-50/60 py-20">
+        <section className={`${animationItems.length > 0 ? "" : "border-t border-gray-100 "}bg-gray-50/60 py-20`}>
           <div className="mx-auto max-w-3xl px-4">
             <h2 className="mb-6 text-center text-2xl font-bold text-gray-900 sm:text-3xl">
               Free AI Clip Art &amp; Coloring Page Generator

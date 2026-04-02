@@ -174,6 +174,7 @@ export function Nav() {
                 <div className="space-y-1">
                   <MenuLink href="/create" onClick={close}>Create Clip Art</MenuLink>
                   <MenuLink href="/create/coloring-pages" onClick={close}>Create Coloring Pages</MenuLink>
+                  <MenuLink href="/animations" onClick={close}>Animations</MenuLink>
                   <MenuLink href="/my-art" onClick={close}>My Art</MenuLink>
                   <MenuLink href="/search" onClick={close}>Browse</MenuLink>
                   <MenuLink href="/learn" onClick={close}>Learn</MenuLink>
@@ -209,6 +210,7 @@ export function Nav() {
 
                 <div className="mt-3 space-y-1">
                   <MenuLink href="/create" onClick={close}>Create</MenuLink>
+                  <MenuLink href="/animations" onClick={close}>Animations</MenuLink>
                   <MenuLink href="/coloring-pages" onClick={close}>Coloring Pages</MenuLink>
                   <MenuLink href="/search" onClick={close}>Browse</MenuLink>
                   <MenuLink href="/learn" onClick={close}>Learn</MenuLink>

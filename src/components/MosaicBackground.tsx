@@ -1,9 +1,46 @@
 "use client";
 
+import { useMemo } from "react";
 import Image from "next/image";
 import { sampleImages } from "@/data/sampleGallery";
 
 const COLUMN_COUNT = 6;
+const columnSpeeds = [60, 55, 65, 50, 58, 62];
+
+export interface MosaicAnimation {
+  videoUrl: string;
+  posterUrl: string;
+}
+
+interface MosaicTile {
+  type: "image" | "video";
+  url: string;
+  title: string;
+  videoUrl?: string;
+}
+
+function buildTiles(animations: MosaicAnimation[]): MosaicTile[] {
+  const tiles: MosaicTile[] = sampleImages.map((img) => ({
+    type: "image" as const,
+    url: img.url,
+    title: img.title,
+  }));
+
+  if (animations.length === 0) return tiles;
+
+  const step = Math.max(Math.floor(tiles.length / animations.length), 4);
+  animations.forEach((anim, i) => {
+    const pos = Math.min(3 + i * step, tiles.length);
+    tiles.splice(pos, 0, {
+      type: "video",
+      url: anim.posterUrl,
+      title: "Animated clip art",
+      videoUrl: anim.videoUrl,
+    });
+  });
+
+  return tiles;
+}
 
 function splitIntoColumns<T>(items: T[], columns: number): T[][] {
   const cols: T[][] = Array.from({ length: columns }, () => []);
@@ -13,11 +50,12 @@ function splitIntoColumns<T>(items: T[], columns: number): T[][] {
   return cols;
 }
 
-const columns = splitIntoColumns(sampleImages, COLUMN_COUNT);
+export function MosaicBackground({ animations = [] }: { animations?: MosaicAnimation[] }) {
+  const columns = useMemo(() => {
+    const tiles = buildTiles(animations);
+    return splitIntoColumns(tiles, COLUMN_COUNT);
+  }, [animations]);
 
-const columnSpeeds = [60, 55, 65, 50, 58, 62];
-
-export function MosaicBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden">
       <div className="flex h-full w-full gap-3 px-3">
@@ -46,18 +84,31 @@ export function MosaicBackground() {
                   animation: `${animationName} ${speed}s linear infinite`,
                 }}
               >
-                {[...col, ...col].map((img, i) => (
+                {[...col, ...col].map((tile, i) => (
                   <div
-                    key={`${img.url}-${i}`}
+                    key={`${tile.url}-${i}`}
                     className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/5"
                   >
-                    <Image
-                      src={img.url}
-                      alt={`${img.title} clip art`}
-                      fill
-                      className="rounded-2xl object-contain p-2"
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
-                    />
+                    {tile.type === "video" && tile.videoUrl ? (
+                      <video
+                        src={tile.videoUrl}
+                        poster={tile.url}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="none"
+                        className="absolute inset-0 h-full w-full rounded-2xl object-contain"
+                      />
+                    ) : (
+                      <Image
+                        src={tile.url}
+                        alt={`${tile.title} clip art`}
+                        fill
+                        className="rounded-2xl object-contain p-2"
+                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -66,10 +117,10 @@ export function MosaicBackground() {
         })}
       </div>
 
-      {/* Base dark wash -- dims everything uniformly (stronger on mobile for legibility) */}
+      {/* Base dark wash */}
       <div className="absolute inset-0 bg-[#0a0a0a]/60 sm:bg-[#0a0a0a]/50" />
 
-      {/* Studio spotlight -- bright center, dark edges like Doodles */}
+      {/* Studio spotlight */}
       <div
         className="absolute inset-0"
         style={{
@@ -78,7 +129,7 @@ export function MosaicBackground() {
         }}
       />
 
-      {/* Corner shadows for extra depth */}
+      {/* Corner shadows */}
       <div
         className="absolute inset-0"
         style={{
@@ -90,7 +141,7 @@ export function MosaicBackground() {
         }}
       />
 
-      {/* Extra dark zone behind steps + card area (lower center) */}
+      {/* Extra dark zone behind steps + card area */}
       <div
         className="absolute inset-0"
         style={{
@@ -99,7 +150,7 @@ export function MosaicBackground() {
         }}
       />
 
-      {/* Subtle center glow for the "studio light" feel */}
+      {/* Subtle center glow */}
       <div
         className="absolute inset-0"
         style={{

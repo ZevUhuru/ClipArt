@@ -32,6 +32,7 @@ export async function MarketingFooter() {
             <ul className="space-y-2.5">
               <li><Link href="/create" className="text-sm transition-colors hover:text-white">AI Clip Art Generator</Link></li>
               <li><Link href="/create/coloring-pages" className="text-sm transition-colors hover:text-white">Coloring Page Generator</Link></li>
+              <li><Link href="/animations" className="text-sm transition-colors hover:text-white">Animated Clip Art</Link></li>
               <li><Link href="/stickers" className="text-sm transition-colors hover:text-white">AI Sticker Generator</Link></li>
             </ul>
           </div>
@@ -94,6 +95,7 @@ export async function MarketingFooter() {
           </div>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2">
             <Link href="/create" className="text-xs text-gray-500 transition-colors hover:text-white">Generator</Link>
+            <Link href="/animations" className="text-xs text-gray-500 transition-colors hover:text-white">Animations</Link>
             <Link href="/learn" className="text-xs text-gray-500 transition-colors hover:text-white">Learn</Link>
             <Link href="/coloring-pages" className="text-xs text-gray-500 transition-colors hover:text-white">Coloring Pages</Link>
             <Link href="/stickers" className="text-xs text-gray-500 transition-colors hover:text-white">Stickers</Link>
