@@ -115,29 +115,137 @@ function RecentsGrid() {
   );
 }
 
+interface CommunityItem extends Generation {
+  animationPreviewUrl?: string;
+}
+
 function CommunityGrid() {
-  const [items, setItems] = useState<Generation[]>([]);
+  const openDrawer = useImageDrawer((s) => s.open);
+  const [items, setItems] = useState<CommunityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCommunity() {
       const supabase = createBrowserClient();
       if (!supabase) return;
-      const { data } = await supabase
-        .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
-        .eq("is_public", true)
-        .order("created_at", { ascending: false })
-        .limit(50);
 
-      setItems(data || []);
+      const [genResult, animResult] = await Promise.all([
+        supabase
+          .from("generations")
+          .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+          .eq("is_public", true)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("animations")
+          .select(
+            "id, prompt, video_url, preview_url, thumbnail_url, model, created_at, " +
+            "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug, aspect_ratio)",
+          )
+          .eq("status", "completed")
+          .eq("is_public", true)
+          .order("created_at", { ascending: false })
+          .limit(8),
+      ]);
+
+      const gens: CommunityItem[] = (genResult.data || []).map((g) => g as CommunityItem);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const animCards: CommunityItem[] = (animResult.data || []).map((a: any) => {
+        const src = a.source as Record<string, string> | null;
+        return {
+          id: `anim-${a.id}`,
+          image_url: src?.image_url || a.thumbnail_url || "",
+          prompt: src?.prompt || a.prompt,
+          style: src?.style || "flat",
+          category: src?.category || "free",
+          slug: src?.slug || a.id,
+          aspect_ratio: src?.aspect_ratio,
+          created_at: a.created_at,
+          animationPreviewUrl: a.preview_url || a.video_url,
+        } as CommunityItem;
+      });
+
+      // Interleave: insert an animated card every ~6 items
+      const merged: CommunityItem[] = [...gens];
+      const usedAnimIds = new Set<string>();
+      let animIdx = 0;
+      for (let pos = 5; pos < merged.length + animCards.length && animIdx < animCards.length; pos += 7) {
+        const anim = animCards[animIdx];
+        if (!usedAnimIds.has(anim.id)) {
+          merged.splice(pos, 0, anim);
+          usedAnimIds.add(anim.id);
+          animIdx++;
+        }
+      }
+      // Append remaining animations at end
+      while (animIdx < animCards.length) {
+        if (!usedAnimIds.has(animCards[animIdx].id)) {
+          merged.push(animCards[animIdx]);
+        }
+        animIdx++;
+      }
+
+      setItems(merged);
       setLoading(false);
     }
 
     fetchCommunity();
   }, []);
 
-  return <GenerationGrid items={items} loading={loading} />;
+  if (loading) {
+    return (
+      <ImageGrid>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <ImageCardSkeleton key={i} />
+        ))}
+      </ImageGrid>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="py-12 text-center text-sm text-gray-400">Nothing here yet.</p>
+    );
+  }
+
+  const safeItems = items.filter((gen) => gen.id && gen.image_url);
+
+  const drawerList = safeItems
+    .filter((gen) => !gen.animationPreviewUrl)
+    .map((gen) => ({
+      id: gen.id,
+      slug: gen.slug || gen.id,
+      title: gen.prompt,
+      url: gen.image_url,
+      category: gen.category || "free",
+      style: gen.style,
+      aspect_ratio: gen.aspect_ratio,
+    }));
+
+  return (
+    <ImageGrid>
+      {safeItems.map((gen) => {
+        const img = {
+          id: gen.id,
+          slug: gen.slug || gen.id,
+          title: gen.prompt,
+          url: gen.image_url,
+          category: gen.category || "free",
+          style: gen.style,
+          aspect_ratio: gen.aspect_ratio,
+        };
+        return (
+          <ImageCard
+            key={gen.id}
+            image={img}
+            onClick={() => openDrawer(img, drawerList)}
+            animationPreviewUrl={gen.animationPreviewUrl}
+          />
+        );
+      })}
+    </ImageGrid>
+  );
 }
 
 type Tab = "recents" | "community";
