@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/stores/useAppStore";
+import { useAnimationQueue, type QueuedAnimation } from "@/stores/useAnimationQueue";
 import { createBrowserClient } from "@/lib/supabase/client";
-import { AnimationProgress } from "@/components/AnimationProgress";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ImageImportModal, type ImportableImage } from "@/components/ImageImportModal";
+import { AnimationQueue } from "@/components/AnimationQueue";
 import {
   ANIMATION_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -37,19 +38,19 @@ function AnimatePageInner() {
   const sourceId = searchParams.get("id");
 
   const { user, openAuthModal, openBuyCreditsModal, setCredits } = useAppStore();
+  const addJob = useAnimationQueue((s) => s.addJob);
+  const queueJobs = useAnimationQueue((s) => s.jobs);
 
   const [source, setSource] = useState<ImportableImage | null>(null);
   const [sourceLoading, setSourceLoading] = useState(!!sourceId);
   const [importOpen, setImportOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<AnimModel>("kling-3.0-standard");
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [animationId, setAnimationId] = useState<string | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [viewingVideo, setViewingVideo] = useState<string | null>(null);
   const [showSource, setShowSource] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [suggestions, setSuggestions] = useState<PromptSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
@@ -65,6 +66,12 @@ function AnimatePageInner() {
     templateCategory === "all"
       ? ANIMATION_TEMPLATES
       : ANIMATION_TEMPLATES.filter((t) => t.category === templateCategory);
+
+  const sourceJobs = source
+    ? queueJobs.filter((j) => j.sourceUrl === source.url)
+    : [];
+  const latestCompleted = sourceJobs.find((j) => j.status === "completed");
+  const activeVideoUrl = viewingVideo || latestCompleted?.videoUrl || null;
 
   useEffect(() => {
     if (!sourceId) return;
@@ -145,45 +152,8 @@ function AnimatePageInner() {
     setSuggestionsLoading(false);
   }, [source, suggestionsLoading, user, openAuthModal]);
 
-  const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
-
-  const startPolling = useCallback((id: string) => {
-    stopPolling();
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/animate/status?id=${id}`);
-        const data = await res.json();
-
-        if (data.status === "completed" && data.videoUrl) {
-          stopPolling();
-          setVideoUrl(data.videoUrl);
-          setIsAnimating(false);
-          setShowSource(false);
-          setTimeout(() => {
-            resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 100);
-        } else if (data.status === "failed") {
-          stopPolling();
-          setIsAnimating(false);
-          setError(data.error || "Animation failed. Credits have been refunded.");
-        }
-      } catch {
-        // Silently retry on next poll
-      }
-    }, 5000);
-  }, [stopPolling]);
-
-  useEffect(() => {
-    return () => stopPolling();
-  }, [stopPolling]);
-
   const handleAnimate = useCallback(async () => {
-    if (!prompt.trim() || isAnimating || !source) return;
+    if (!prompt.trim() || submitting || !source) return;
 
     if (!user) {
       openAuthModal("signup");
@@ -191,9 +161,7 @@ function AnimatePageInner() {
     }
 
     setError(null);
-    setIsAnimating(true);
-    setVideoUrl(null);
-    setAnimationId(null);
+    setSubmitting(true);
 
     try {
       const res = await fetch("/api/animate", {
@@ -212,37 +180,49 @@ function AnimatePageInner() {
 
       if (res.status === 401 && data.requiresAuth) {
         openAuthModal("signup");
-        setIsAnimating(false);
+        setSubmitting(false);
         return;
       }
       if (res.status === 402 && data.requiresCredits) {
         openBuyCreditsModal();
-        setIsAnimating(false);
+        setSubmitting(false);
         return;
       }
       if (!res.ok) throw new Error(data.error || "Animation failed");
 
       if (typeof data.creditsRemaining === "number") setCredits(data.creditsRemaining);
 
-      setAnimationId(data.animationId);
-      startPolling(data.animationId);
+      addJob({
+        id: data.animationId,
+        sourceUrl: source.url,
+        sourceTitle: source.title,
+        prompt: prompt.trim(),
+        model,
+        status: "processing",
+        startedAt: Date.now(),
+      });
+
+      setPrompt("");
+      setSelectedPromptId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      setIsAnimating(false);
     }
-  }, [prompt, model, isAnimating, source, user, selectedPromptId, openAuthModal, openBuyCreditsModal, setCredits, startPolling]);
+    setSubmitting(false);
+  }, [prompt, model, submitting, source, user, selectedPromptId, openAuthModal, openBuyCreditsModal, setCredits, addJob]);
 
-  const handleAnimateAgain = () => {
-    setVideoUrl(null);
-    setAnimationId(null);
-    setPrompt("");
-    setError(null);
+  const handleViewResult = (job: QueuedAnimation) => {
+    if (job.videoUrl) {
+      setViewingVideo(job.videoUrl);
+      setShowSource(false);
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
   };
 
   const handleImport = (img: ImportableImage) => {
     setSource(img);
-    setVideoUrl(null);
-    setAnimationId(null);
+    setViewingVideo(null);
     setPrompt("");
     setError(null);
     setShowSource(false);
@@ -256,7 +236,7 @@ function AnimatePageInner() {
   if (sourceLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+        <p className="text-sm text-gray-400">Loading image...</p>
       </div>
     );
   }
@@ -277,8 +257,7 @@ function AnimatePageInner() {
           {source && (
             <button
               onClick={() => setImportOpen(true)}
-              disabled={isAnimating}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -321,10 +300,10 @@ function AnimatePageInner() {
                     Or use Edit/Animate on any image across the site
                   </p>
                 </div>
-              ) : videoUrl && !showSource ? (
+              ) : activeVideoUrl && !showSource ? (
                 <div className={`relative w-full ${aspectClass}`}>
                   <VideoPlayer
-                    src={videoUrl}
+                    src={activeVideoUrl}
                     poster={source.url}
                     mode="detail"
                     className="absolute inset-0"
@@ -344,7 +323,7 @@ function AnimatePageInner() {
               )}
             </div>
 
-            {videoUrl && (
+            {activeVideoUrl && (
               <div className="mt-3 flex items-center justify-center gap-2">
                 <button
                   onClick={() => setShowSource(false)}
@@ -381,6 +360,11 @@ function AnimatePageInner() {
               </div>
             ) : (
               <>
+                {/* Animation Queue */}
+                {sourceJobs.length > 0 && (
+                  <AnimationQueue onViewResult={handleViewResult} />
+                )}
+
                 {/* Motion prompt */}
                 <div>
                   <label htmlFor="motion-prompt" className="mb-2 block text-sm font-semibold text-gray-700">
@@ -394,7 +378,7 @@ function AnimatePageInner() {
                     className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                     rows={prompt.length > 200 ? 6 : prompt.length > 100 ? 4 : 3}
                     maxLength={1000}
-                    disabled={isAnimating}
+                    disabled={submitting}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                         e.preventDefault();
@@ -417,7 +401,7 @@ function AnimatePageInner() {
                     {suggestions.length > 0 && (
                       <button
                         onClick={() => fetchSuggestions(true)}
-                        disabled={suggestionsLoading || isAnimating}
+                        disabled={suggestionsLoading || submitting}
                         className="text-[11px] font-medium text-pink-500 transition-colors hover:text-pink-700 disabled:opacity-50"
                       >
                         Regenerate
@@ -428,7 +412,7 @@ function AnimatePageInner() {
                   {suggestions.length === 0 && !suggestionsLoading ? (
                     <button
                       onClick={() => fetchSuggestions()}
-                      disabled={suggestionsLoading || isAnimating}
+                      disabled={suggestionsLoading || submitting}
                       className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gradient-to-br from-white to-purple-50/30 px-4 py-3.5 text-sm font-medium text-gray-600 transition-all hover:border-pink-200 hover:from-pink-50/40 hover:to-purple-50/40 hover:text-pink-600 disabled:opacity-50"
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -473,7 +457,7 @@ function AnimatePageInner() {
                               setPrompt(s.prompt);
                               setSelectedPromptId(s.id || null);
                             }}
-                            disabled={isAnimating}
+                            disabled={submitting}
                             className={`group w-full rounded-xl border px-4 py-3 text-left transition-all hover:-translate-y-px hover:shadow-sm disabled:opacity-50 ${
                               isSelected
                                 ? "border-pink-300 bg-pink-50 ring-1 ring-pink-100"
@@ -561,7 +545,7 @@ function AnimatePageInner() {
                             <button
                               key={t.id}
                               onClick={() => { setPrompt(t.prompt); setSelectedPromptId(null); }}
-                              disabled={isAnimating}
+                              disabled={submitting}
                               className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-50 ${
                                 prompt === t.prompt
                                   ? "border-pink-300 bg-pink-50 text-pink-600"
@@ -587,7 +571,7 @@ function AnimatePageInner() {
                       <button
                         key={m.id}
                         onClick={() => setModel(m.id)}
-                        disabled={isAnimating}
+                        disabled={submitting}
                         className={`relative rounded-xl border px-3 py-3 text-center transition-all ${
                           model === m.id
                             ? "border-pink-300 bg-pink-50 ring-2 ring-pink-100"
@@ -609,22 +593,15 @@ function AnimatePageInner() {
                 {/* Animate button */}
                 <button
                   onClick={handleAnimate}
-                  disabled={!prompt.trim() || isAnimating}
+                  disabled={!prompt.trim() || submitting}
                   className="w-full rounded-xl bg-brand-gradient px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isAnimating ? "Animating…" : `Animate — ${selectedModel.credits} credits`}
+                  {submitting ? "Submitting…" : `Animate — ${selectedModel.credits} credits`}
                 </button>
 
                 <p className="text-center text-xs text-gray-300">
-                  5-second MP4 video. Duration: ~1–2 minutes.
+                  5-second MP4 video. Duration: ~1–2 minutes. Queue multiple at once.
                 </p>
-
-                {/* Progress */}
-                {isAnimating && (
-                  <div className="flex justify-center">
-                    <AnimationProgress isAnimating={isAnimating} />
-                  </div>
-                )}
 
                 {/* Error */}
                 <AnimatePresence>
@@ -640,8 +617,8 @@ function AnimatePageInner() {
                   )}
                 </AnimatePresence>
 
-                {/* Result actions */}
-                {videoUrl && (
+                {/* Result actions for viewed video */}
+                {activeVideoUrl && source && (
                   <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -652,7 +629,7 @@ function AnimatePageInner() {
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       <a
-                        href={videoUrl}
+                        href={activeVideoUrl}
                         download={`${source.slug}-animation.mp4`}
                         className="btn-primary flex items-center justify-center py-3 text-sm"
                       >
@@ -661,19 +638,13 @@ function AnimatePageInner() {
                         </svg>
                         Download MP4
                       </a>
-                      <button
-                        onClick={handleAnimateAgain}
-                        className="btn-secondary py-3 text-sm"
+                      <Link
+                        href="/my-art"
+                        className="btn-secondary flex items-center justify-center py-3 text-sm"
                       >
-                        Animate Again
-                      </button>
+                        My Creations
+                      </Link>
                     </div>
-                    <Link
-                      href="/my-art"
-                      className="block text-center text-xs text-gray-400 transition-colors hover:text-gray-600"
-                    >
-                      View in My Creations →
-                    </Link>
                   </motion.div>
                 )}
               </>
@@ -696,7 +667,7 @@ export default function AnimatePage() {
     <Suspense
       fallback={
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+          <p className="text-sm text-gray-400">Loading...</p>
         </div>
       }
     >

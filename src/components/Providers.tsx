@@ -3,6 +3,7 @@
 import { ReactNode, useCallback, useEffect, useRef } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/stores/useAppStore";
+import { useAnimationQueue } from "@/stores/useAnimationQueue";
 import { AuthModal } from "./AuthModal";
 import { BuyCreditsModal } from "./BuyCreditsModal";
 import { BuyCreditsModalSlot } from "./BuyCreditsModalSlot";
@@ -12,6 +13,8 @@ const useSlotModal = process.env.NEXT_PUBLIC_CREDITS_MODAL_VARIANT === "slot";
 
 export function Providers({ children }: { children: ReactNode }) {
   const { setUser, setCredits, resetUserState } = useAppStore();
+  const loadPending = useAnimationQueue((s) => s.loadPending);
+  const stopPolling = useAnimationQueue((s) => s.stopPolling);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchCredits = useCallback(async () => {
@@ -23,6 +26,18 @@ export function Providers({ children }: { children: ReactNode }) {
       }
     } catch { /* ignore */ }
   }, [setCredits]);
+
+  const fetchPendingAnimations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me/animations/pending");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.jobs) && data.jobs.length > 0) {
+          loadPending(data.jobs);
+        }
+      }
+    } catch { /* ignore */ }
+  }, [loadPending]);
 
   const subscribeToCredits = useCallback((supabase: ReturnType<typeof createBrowserClient>, userId: string) => {
     if (!supabase) return;
@@ -70,6 +85,7 @@ export function Providers({ children }: { children: ReactNode }) {
         setUser({ id: user.id, email: user.email ?? "" });
         await fetchCredits();
         subscribeToCredits(supabase, user.id);
+        fetchPendingAnimations();
       }
     }
 
@@ -82,8 +98,10 @@ export function Providers({ children }: { children: ReactNode }) {
         setUser({ id: session.user.id, email: session.user.email ?? "" });
         await fetchCredits();
         subscribeToCredits(supabase, session.user.id);
+        fetchPendingAnimations();
       } else {
         resetUserState();
+        stopPolling();
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;
@@ -97,7 +115,7 @@ export function Providers({ children }: { children: ReactNode }) {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [setUser, setCredits, resetUserState, fetchCredits, subscribeToCredits]);
+  }, [setUser, setCredits, resetUserState, fetchCredits, subscribeToCredits, fetchPendingAnimations, stopPolling]);
 
   return (
     <>
