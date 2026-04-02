@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
@@ -19,91 +18,6 @@ interface AnonResult {
   imageUrl: string;
   prompt: string;
   style: string;
-}
-
-function GenerationGrid({ items, loading }: { items: Generation[]; loading: boolean }) {
-  const openDrawer = useImageDrawer((s) => s.open);
-
-  if (loading) {
-    return (
-      <ImageGrid>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <ImageCardSkeleton key={i} />
-        ))}
-      </ImageGrid>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-gray-400">Nothing here yet.</p>
-    );
-  }
-
-  const safeItems = items.filter((gen) => gen.id && gen.image_url);
-
-  const drawerList = safeItems.map((gen) => ({
-    id: gen.id,
-    slug: gen.slug || gen.id,
-    title: gen.prompt,
-    url: gen.image_url,
-    category: gen.category || "free",
-    style: gen.style,
-    aspect_ratio: gen.aspect_ratio,
-  }));
-
-  return (
-    <ImageGrid>
-      {safeItems.map((gen) => {
-        const img = {
-          id: gen.id,
-          slug: gen.slug || gen.id,
-          title: gen.prompt,
-          url: gen.image_url,
-          category: gen.category || "free",
-          style: gen.style,
-          aspect_ratio: gen.aspect_ratio,
-        };
-        return (
-          <ImageCard
-            key={gen.id}
-            image={img}
-            onClick={() => openDrawer(img, drawerList)}
-          />
-        );
-      })}
-    </ImageGrid>
-  );
-}
-
-function RecentsGrid() {
-  const { user, generations, generationsLoaded, setGenerations } = useAppStore();
-
-  useEffect(() => {
-    if (!user || generationsLoaded) return;
-
-    async function fetchGenerations() {
-      const supabase = createBrowserClient();
-      if (!supabase) return;
-      const { data } = await supabase
-        .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      setGenerations(data || []);
-    }
-
-    fetchGenerations();
-  }, [user, generationsLoaded, setGenerations]);
-
-  return (
-    <GenerationGrid
-      items={generations}
-      loading={!generationsLoaded && !!user}
-    />
-  );
 }
 
 interface CommunityItem extends Generation {
@@ -251,8 +165,6 @@ function CommunityGrid() {
   );
 }
 
-type Tab = "recents" | "community";
-
 function AnonResultBanner({ result, onSignup }: { result: AnonResult; onSignup: () => void }) {
   return (
     <div className="mb-6 overflow-hidden rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50">
@@ -299,7 +211,6 @@ export default function CreatePage() {
   const [isPublic, setIsPublic] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("recents");
   const [anonResult, setAnonResult] = useState<AnonResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -309,8 +220,6 @@ export default function CreatePage() {
     setCredits,
     prependGeneration,
     user,
-    generations,
-    generationsLoaded,
   } = useAppStore();
 
   useEffect(() => {
@@ -366,7 +275,6 @@ export default function CreatePage() {
     }
   }, [prompt, style, isPublic, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
 
-  const hasRecents = generationsLoaded && generations.length > 0;
   return (
     <div className="min-h-screen">
       {/* Compact generator bar */}
@@ -452,47 +360,9 @@ export default function CreatePage() {
           />
         )}
 
-        {/* Tabbed grids — show when user has recents */}
-        {hasRecents && (
-          <div ref={resultRef}>
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-                {(["recents", "community"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                      activeTab === tab
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {tab === "recents" ? "Recents" : "Community"}
-                  </button>
-                ))}
-              </div>
-              {activeTab === "recents" && (
-                <Link
-                  href="/my-art"
-                  className="text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
-                >
-                  View all →
-                </Link>
-              )}
-            </div>
-            {activeTab === "recents" ? <RecentsGrid /> : <CommunityGrid />}
-          </div>
-        )}
-
-        {/* Community grid — always visible when user has no recents (signed out or new) */}
-        {!hasRecents && (
-          <div className="mt-2">
-            <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Community creations
-            </p>
-            <CommunityGrid />
-          </div>
-        )}
+        <div ref={resultRef}>
+          <CommunityGrid />
+        </div>
       </div>
     </div>
   );
