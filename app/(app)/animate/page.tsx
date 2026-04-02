@@ -33,6 +33,69 @@ interface PromptSuggestion {
   is_ai_generated?: boolean;
 }
 
+const SUGGESTION_STAGES = [
+  { at: 0, msg: "Analyzing your image..." },
+  { at: 15, msg: "Identifying subjects and composition..." },
+  { at: 35, msg: "Crafting animation directions..." },
+  { at: 60, msg: "Writing scene details..." },
+  { at: 80, msg: "Polishing 5 unique prompts..." },
+  { at: 95, msg: "Almost ready..." },
+];
+
+function useSuggestionProgress(startedAt: number, active: boolean) {
+  const [progress, setProgress] = useState(0);
+  const raf = useRef(0);
+
+  useEffect(() => {
+    if (!active || !startedAt) { setProgress(0); return; }
+
+    function tick() {
+      const elapsed = (Date.now() - startedAt) / 1000;
+      let v: number;
+      if (elapsed < 2) v = 15 * (elapsed / 2);
+      else if (elapsed < 5) v = 15 + 25 * ((elapsed - 2) / 3);
+      else if (elapsed < 10) v = 40 + 35 * ((elapsed - 5) / 5);
+      else if (elapsed < 15) v = 75 + 18 * ((elapsed - 10) / 5);
+      else v = 93 + 6 * (1 - Math.exp(-(elapsed - 15) / 8));
+      setProgress(Math.min(v, 99));
+      raf.current = requestAnimationFrame(tick);
+    }
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [startedAt, active]);
+
+  const stage = SUGGESTION_STAGES.reduce(
+    (acc, s) => (progress >= s.at ? s.msg : acc),
+    SUGGESTION_STAGES[0].msg,
+  );
+
+  return { progress: Math.round(progress), stage };
+}
+
+function SuggestionsProgress({ startedAt }: { startedAt: number }) {
+  const { progress, stage } = useSuggestionProgress(startedAt, true);
+
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-semibold text-gray-600">{stage}</p>
+        <span className="text-xs font-bold tabular-nums text-gray-400">{progress}%</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-pink-400 to-purple-400"
+          initial={{ width: "0%" }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+      </div>
+      <p className="mt-2.5 text-center text-[10px] text-gray-300">
+        AI is studying your image to write tailored prompts
+      </p>
+    </div>
+  );
+}
+
 function AnimatePageInner() {
   const searchParams = useSearchParams();
   const sourceId = searchParams.get("id");
@@ -55,6 +118,7 @@ function AnimatePageInner() {
 
   const [suggestions, setSuggestions] = useState<PromptSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsStarted, setSuggestionsStarted] = useState(0);
   const [suggestionsError, setSuggestionsError] = useState(false);
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
   const [templateCategory, setTemplateCategory] = useState<TemplateCategory | "all">("all");
@@ -120,6 +184,7 @@ function AnimatePageInner() {
     }
 
     setSuggestionsLoading(true);
+    setSuggestionsStarted(Date.now());
     setSuggestionsError(false);
     setSuggestions([]);
     setSelectedPromptId(null);
@@ -425,18 +490,7 @@ function AnimatePageInner() {
                       </span>
                     </button>
                   ) : suggestionsLoading ? (
-                    <div className="space-y-2">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="animate-pulse rounded-xl border border-gray-100 bg-gray-50 px-4 py-4">
-                          <div className="mb-2 h-3.5 w-24 rounded bg-gray-200" />
-                          <div className="space-y-1.5">
-                            <div className="h-3 w-full rounded bg-gray-100" />
-                            <div className="h-3 w-5/6 rounded bg-gray-100" />
-                            <div className="h-3 w-4/6 rounded bg-gray-100" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <SuggestionsProgress startedAt={suggestionsStarted} />
                   ) : suggestionsError ? (
                     <div className="rounded-xl border border-red-100 bg-red-50/50 px-4 py-3 text-center">
                       <p className="text-xs text-red-400">Failed to generate suggestions</p>
