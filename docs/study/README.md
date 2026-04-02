@@ -11,6 +11,7 @@ Use these to study software engineering patterns, tradeoffs, and mental models. 
 | [Data Fetching & Caching](./data-fetching-and-caching.md) | Where and when to fetch data in a web app | Client vs server fetching, caching layers, stale-while-revalidate |
 | [Rendering Strategies](./rendering-strategies.md) | How pages get built and delivered | SSR, SSG, CSR, ISR — when to use each and why |
 | [RLS & Auth Architecture](./rls-and-auth-architecture.md) | Why browser-side auth queries fail silently | Row Level Security, auth session timing, the server verification pattern |
+| [AI-Assisted Prompt Engineering](./ai-assisted-prompt-engineering.md) | Using one AI to write prompts for another | Knowledge distillation, system prompts, vision-language models, the meta-prompting pattern |
 
 ## How to Read These
 
