@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { downloadClip } from "@/utils/downloadClip";
@@ -52,6 +53,7 @@ interface ImageCardProps {
   showStyleBadge?: boolean;
   sizes?: string;
   className?: string;
+  animationPreviewUrl?: string;
 }
 
 export function ImageCard({
@@ -63,7 +65,35 @@ export function ImageCard({
   showStyleBadge = true,
   sizes,
   className = "",
+  animationPreviewUrl,
 }: ImageCardProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!animationPreviewUrl) return;
+    const video = videoRef.current;
+    const container = cardRef.current;
+    if (!video || !container) return;
+
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.3 },
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [animationPreviewUrl]);
+
   const isColoring = variant === "coloring";
   const isLandscape = isColoring && image.aspect_ratio === "4:3";
   const aspectClass = isColoring ? getAspectClass(image.aspect_ratio) : "aspect-square";
@@ -79,17 +109,38 @@ export function ImageCard({
 
   const cardContent = (
     <>
-      {/* Image area — inset with rounding for a framed look */}
-      <div className="p-2 pb-0">
+      {/* Image/Video area — inset with rounding for a framed look */}
+      <div className="p-2 pb-0" ref={cardRef}>
         <div className={`relative overflow-hidden rounded-xl ${aspectClass} ${bgClass}`}>
-          <Image
-            src={image.url}
-            alt={`${image.title} — free ${isColoring ? "coloring page" : "clip art"}`}
-            fill
-            className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
-            sizes={sizes || defaultSizes}
-            unoptimized
-          />
+          {animationPreviewUrl ? (
+            <>
+              <video
+                ref={videoRef}
+                src={animationPreviewUrl}
+                poster={image.url}
+                muted
+                loop
+                playsInline
+                preload="none"
+                className="absolute inset-0 h-full w-full object-contain p-3"
+              />
+              <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5.14v14l11-7-11-7z" />
+                </svg>
+                Video
+              </span>
+            </>
+          ) : (
+            <Image
+              src={image.url}
+              alt={`${image.title} — free ${isColoring ? "coloring page" : "clip art"}`}
+              fill
+              className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+              sizes={sizes || defaultSizes}
+              unoptimized
+            />
+          )}
         </div>
       </div>
 

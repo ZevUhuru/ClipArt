@@ -1,0 +1,113 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
+import { checkPromptSafety } from "@/lib/promptSafety";
+import { submitAnimation, type AnimationModel, MODEL_CREDITS } from "@/lib/fal";
+
+const VALID_MODELS: AnimationModel[] = ["kling-2.5-turbo", "kling-3.0-standard", "kling-3.0-pro"];
+const ALLOWED_IMAGE_HOST = "images.clip.art";
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { sourceUrl, prompt, model: rawModel, duration: rawDuration } = body;
+
+    if (!sourceUrl || typeof sourceUrl !== "string") {
+      return NextResponse.json({ error: "Missing source image URL" }, { status: 400 });
+    }
+
+    if (!prompt || typeof prompt !== "string" || prompt.length > 1000) {
+      return NextResponse.json({ error: "Invalid animation prompt" }, { status: 400 });
+    }
+
+    const safety = checkPromptSafety(prompt);
+    if (!safety.safe) {
+      return NextResponse.json({ error: safety.reason }, { status: 400 });
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(sourceUrl);
+    } catch {
+      return NextResponse.json({ error: "Invalid source URL" }, { status: 400 });
+    }
+
+    if (parsedUrl.hostname !== ALLOWED_IMAGE_HOST) {
+      return NextResponse.json({ error: "Source must be a clip.art image" }, { status: 400 });
+    }
+
+    const model: AnimationModel = VALID_MODELS.includes(rawModel) ? rawModel : "kling-3.0-standard";
+    const duration = 5;
+    const creditsNeeded = MODEL_CREDITS[model];
+
+    const supabase = await createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ requiresAuth: true }, { status: 401 });
+    }
+
+    const admin = createSupabaseAdmin();
+
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("credits")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.credits < creditsNeeded) {
+      return NextResponse.json({ requiresCredits: true, creditsNeeded }, { status: 402 });
+    }
+
+    const { data: sourceGen } = await admin
+      .from("generations")
+      .select("id, category, style, title, slug")
+      .eq("image_url", sourceUrl)
+      .single();
+
+    const { requestId } = await submitAnimation(sourceUrl, prompt, model, duration);
+
+    await admin
+      .from("profiles")
+      .update({ credits: profile.credits - creditsNeeded })
+      .eq("id", user.id);
+
+    const { data: animation } = await admin
+      .from("animations")
+      .insert({
+        user_id: user.id,
+        source_generation_id: sourceGen?.id || null,
+        prompt,
+        model,
+        duration,
+        generate_audio: false,
+        status: "processing",
+        fal_request_id: requestId,
+        credits_charged: creditsNeeded,
+        is_public: true,
+      })
+      .select("id, status, created_at")
+      .single();
+
+    return NextResponse.json({
+      animationId: animation?.id,
+      status: "processing",
+      creditsRemaining: profile.credits - creditsNeeded,
+    });
+  } catch (err) {
+    console.error("Animate error:", err);
+
+    const message = err instanceof Error ? err.message : String(err);
+
+    if (message.includes("429") || message.includes("rate")) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment and try again." },
+        { status: 429 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Animation failed to start. Please try again." },
+      { status: 500 },
+    );
+  }
+}

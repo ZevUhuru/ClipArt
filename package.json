@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "latest",
+    "@fal-ai/client": "^1.9.5",
+    "@fal-ai/server-proxy": "^1.2.1",
     "@google/genai": "latest",
     "@mux/mux-player-react": "^3.11.6",
     "@supabase/ssr": "latest",
