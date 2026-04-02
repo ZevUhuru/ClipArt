@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
@@ -112,8 +112,10 @@ interface CommunityItem extends Generation {
 
 function CommunityGrid() {
   const openDrawer = useImageDrawer((s) => s.open);
-  const [items, setItems] = useState<CommunityItem[]>([]);
+  const storeGenerations = useAppStore((s) => s.generations);
+  const [communityItems, setCommunityItems] = useState<CommunityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const fetchedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchCommunity() {
@@ -157,7 +159,6 @@ function CommunityGrid() {
         } as CommunityItem;
       });
 
-      // Interleave: insert an animated card every ~6 items
       const merged: CommunityItem[] = [...gens];
       const usedAnimIds = new Set<string>();
       let animIdx = 0;
@@ -169,7 +170,6 @@ function CommunityGrid() {
           animIdx++;
         }
       }
-      // Append remaining animations at end
       while (animIdx < animCards.length) {
         if (!usedAnimIds.has(animCards[animIdx].id)) {
           merged.push(animCards[animIdx]);
@@ -177,12 +177,24 @@ function CommunityGrid() {
         animIdx++;
       }
 
-      setItems(merged);
+      fetchedIdsRef.current = new Set(merged.map((m) => m.id));
+      setCommunityItems(merged);
       setLoading(false);
     }
 
     fetchCommunity();
   }, []);
+
+  const items = useMemo(() => {
+    if (loading) return [];
+    const newFromStore = storeGenerations.filter(
+      (g) => g.id && g.image_url && !fetchedIdsRef.current.has(g.id),
+    ) as CommunityItem[];
+    if (newFromStore.length === 0) return communityItems;
+    const combined = [...newFromStore, ...communityItems];
+    newFromStore.forEach((g) => fetchedIdsRef.current.add(g.id));
+    return combined;
+  }, [storeGenerations, communityItems, loading]);
 
   if (loading) {
     return (
