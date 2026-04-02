@@ -10,6 +10,11 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { AnimationProgress } from "@/components/AnimationProgress";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ImageImportModal, type ImportableImage } from "@/components/ImageImportModal";
+import {
+  ANIMATION_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  type TemplateCategory,
+} from "@/data/animationTemplates";
 
 type AnimModel = "kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro";
 
@@ -19,13 +24,10 @@ const MODELS: { id: AnimModel; label: string; credits: number; description: stri
   { id: "kling-3.0-pro", label: "Pro", credits: 12, description: "Highest quality" },
 ];
 
-const MOTION_PRESETS = [
-  { label: "Gentle idle", instruction: "Gentle breathing idle animation, subtle movement" },
-  { label: "Wave hello", instruction: "Character waves hello and smiles" },
-  { label: "Slow zoom", instruction: "Camera slowly zooms in with soft focus" },
-  { label: "Bouncing", instruction: "Bouncing and bobbing playful motion" },
-  { label: "Turn around", instruction: "Character turns around slowly" },
-];
+interface PromptSuggestion {
+  title: string;
+  prompt: string;
+}
 
 function AnimatePageInner() {
   const searchParams = useSearchParams();
@@ -46,7 +48,18 @@ function AnimatePageInner() {
   const resultRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [suggestions, setSuggestions] = useState<PromptSuggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState(false);
+  const [templateCategory, setTemplateCategory] = useState<TemplateCategory | "all">("all");
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+
   const selectedModel = MODELS.find((m) => m.id === model) || MODELS[1];
+
+  const filteredTemplates =
+    templateCategory === "all"
+      ? ANIMATION_TEMPLATES
+      : ANIMATION_TEMPLATES.filter((t) => t.category === templateCategory);
 
   useEffect(() => {
     if (!sourceId) return;
@@ -78,6 +91,39 @@ function AnimatePageInner() {
 
     loadSource();
   }, [sourceId]);
+
+  const fetchSuggestions = useCallback(async () => {
+    if (!source || suggestionsLoading) return;
+
+    if (!user) {
+      openAuthModal("signup");
+      return;
+    }
+
+    setSuggestionsLoading(true);
+    setSuggestionsError(false);
+    setSuggestions([]);
+
+    try {
+      const res = await fetch("/api/animate/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: source.url }),
+      });
+
+      if (res.status === 401) {
+        openAuthModal("signup");
+        setSuggestionsLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      setSuggestions(data.suggestions || []);
+    } catch {
+      setSuggestionsError(true);
+    }
+    setSuggestionsLoading(false);
+  }, [source, suggestionsLoading, user, openAuthModal]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -179,6 +225,8 @@ function AnimatePageInner() {
     setPrompt("");
     setError(null);
     setShowSource(false);
+    setSuggestions([]);
+    setSuggestionsError(false);
   };
 
   if (sourceLoading) {
@@ -224,7 +272,6 @@ function AnimatePageInner() {
               className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
             >
               {!source ? (
-                /* ── Empty canvas state ── */
                 <div className="flex aspect-square flex-col items-center justify-center gap-4 p-8 text-center">
                   <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50">
                     <svg className="h-10 w-10 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -298,13 +345,12 @@ function AnimatePageInner() {
           {/* Right: Controls */}
           <div className="space-y-5">
             {!source ? (
-              /* ── Empty controls hint ── */
               <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 p-8 text-center">
                 <p className="text-sm text-gray-400">Import an image to see animation controls</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {MOTION_PRESETS.slice(0, 3).map((p) => (
-                    <span key={p.label} className="rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-300">
-                      {p.label}
+                  {ANIMATION_TEMPLATES.slice(0, 3).map((t) => (
+                    <span key={t.id} className="rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-300">
+                      {t.label}
                     </span>
                   ))}
                 </div>
@@ -320,7 +366,7 @@ function AnimatePageInner() {
                     id="motion-prompt"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe how the image should move... (e.g. character waves hello and smiles)"
+                    placeholder="Describe how the image should move... or use AI suggestions below"
                     className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                     rows={3}
                     maxLength={1000}
@@ -338,23 +384,151 @@ function AnimatePageInner() {
                   </div>
                 </div>
 
-                {/* Motion presets */}
+                {/* AI Suggestions */}
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                    Quick motions
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {MOTION_PRESETS.map((preset) => (
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      AI Suggestions
+                    </p>
+                    {suggestions.length > 0 && (
                       <button
-                        key={preset.label}
-                        onClick={() => setPrompt(preset.instruction)}
-                        disabled={isAnimating}
-                        className="rounded-full border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-600 transition-all hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600 disabled:opacity-50"
+                        onClick={fetchSuggestions}
+                        disabled={suggestionsLoading || isAnimating}
+                        className="text-[11px] font-medium text-pink-500 transition-colors hover:text-pink-700 disabled:opacity-50"
                       >
-                        {preset.label}
+                        Regenerate
                       </button>
-                    ))}
+                    )}
                   </div>
+
+                  {suggestions.length === 0 && !suggestionsLoading ? (
+                    <button
+                      onClick={fetchSuggestions}
+                      disabled={suggestionsLoading || isAnimating}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gradient-to-br from-white to-purple-50/30 px-4 py-3.5 text-sm font-medium text-gray-600 transition-all hover:border-pink-200 hover:from-pink-50/40 hover:to-purple-50/40 hover:text-pink-600 disabled:opacity-50"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                      </svg>
+                      Suggest prompts for this image
+                      <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600">
+                        FREE
+                      </span>
+                    </button>
+                  ) : suggestionsLoading ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="animate-pulse rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                          <div className="mb-1.5 h-3 w-20 rounded bg-gray-200" />
+                          <div className="h-3 w-full rounded bg-gray-100" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : suggestionsError ? (
+                    <div className="rounded-xl border border-red-100 bg-red-50/50 px-4 py-3 text-center">
+                      <p className="text-xs text-red-400">Failed to generate suggestions</p>
+                      <button
+                        onClick={fetchSuggestions}
+                        className="mt-1 text-xs font-medium text-pink-500 hover:text-pink-700"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setPrompt(s.prompt)}
+                          disabled={isAnimating}
+                          className={`w-full rounded-xl border px-3.5 py-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm disabled:opacity-50 ${
+                            prompt === s.prompt
+                              ? "border-pink-300 bg-pink-50 ring-1 ring-pink-100"
+                              : "border-gray-100 bg-white hover:border-pink-200"
+                          }`}
+                        >
+                          <p className={`text-xs font-bold ${prompt === s.prompt ? "text-pink-700" : "text-gray-700"}`}>
+                            {s.title}
+                          </p>
+                          <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-gray-400">
+                            {s.prompt}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Templates */}
+                <div>
+                  <button
+                    onClick={() => setTemplatesOpen(!templatesOpen)}
+                    className="mb-2 flex w-full items-center justify-between"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      Templates
+                    </p>
+                    <svg
+                      className={`h-3.5 w-3.5 text-gray-400 transition-transform ${templatesOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <AnimatePresence>
+                    {templatesOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mb-2 flex flex-wrap gap-1.5">
+                          <button
+                            onClick={() => setTemplateCategory("all")}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                              templateCategory === "all"
+                                ? "bg-gray-900 text-white"
+                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                            }`}
+                          >
+                            All
+                          </button>
+                          {TEMPLATE_CATEGORIES.map((cat) => (
+                            <button
+                              key={cat.key}
+                              onClick={() => setTemplateCategory(cat.key)}
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                                templateCategory === cat.key
+                                  ? "bg-gray-900 text-white"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              }`}
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {filteredTemplates.map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => setPrompt(t.prompt)}
+                              disabled={isAnimating}
+                              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-50 ${
+                                prompt === t.prompt
+                                  ? "border-pink-300 bg-pink-50 text-pink-600"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
+                              }`}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Model selector */}
