@@ -36,6 +36,7 @@ interface PromptSuggestion {
 function AnimatePageInner() {
   const searchParams = useSearchParams();
   const sourceId = searchParams.get("id");
+  const initialPrompt = searchParams.get("prompt") || "";
 
   const { user, openAuthModal, openBuyCreditsModal, setCredits } = useAppStore();
   const addJob = useAnimationQueue((s) => s.addJob);
@@ -44,7 +45,7 @@ function AnimatePageInner() {
   const [source, setSource] = useState<ImportableImage | null>(null);
   const [sourceLoading, setSourceLoading] = useState(!!sourceId);
   const [importOpen, setImportOpen] = useState(false);
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(initialPrompt);
   const [model, setModel] = useState<AnimModel>("kling-3.0-standard");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
