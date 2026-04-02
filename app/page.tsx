@@ -117,7 +117,7 @@ async function getAnimationShowcase(): Promise<HomepageAnimation[]> {
       .eq("status", "completed")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
-      .limit(6);
+      .limit(12);
 
     if (!data) return [];
 
