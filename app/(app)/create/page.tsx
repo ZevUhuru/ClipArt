@@ -476,21 +476,13 @@ export default function CreatePage() {
                 </button>
               ))}
             </div>
-            <div className="mt-8">
-              <Link
-                href="/search"
-                className="text-sm text-gray-400 transition-colors hover:text-gray-600"
-              >
-                Or browse community creations →
-              </Link>
-            </div>
           </div>
         )}
 
-        {/* Tabbed grids */}
-        {!showEmptyState && (
-          <>
-            <div ref={resultRef} className="mb-4 flex items-center justify-between">
+        {/* Tabbed grids — show when user has recents */}
+        {hasRecents && (
+          <div ref={resultRef}>
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
                 {(["recents", "community"] as const).map((tab) => (
                   <button
@@ -516,7 +508,17 @@ export default function CreatePage() {
               )}
             </div>
             {activeTab === "recents" ? <RecentsGrid /> : <CommunityGrid />}
-          </>
+          </div>
+        )}
+
+        {/* Community grid — always visible when user has no recents (signed out or new) */}
+        {!hasRecents && (
+          <div className="mt-2">
+            <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Community creations
+            </p>
+            <CommunityGrid />
+          </div>
         )}
       </div>
     </div>
