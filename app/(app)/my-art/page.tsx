@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -81,63 +80,52 @@ function CreationsGrid() {
   const fetchPage = useCallback(
     async (contentFilter: ContentFilter, offset: number) => {
       if (!user) return;
-      const supabase = createBrowserClient();
-      if (!supabase) return;
-
-      let query = supabase
-        .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1);
-
-      if (contentFilter === "coloring") {
-        query = query.eq("style", "coloring");
-      } else if (contentFilter === "clipart") {
-        query = query.neq("style", "coloring");
+      try {
+        const params = new URLSearchParams({
+          filter: contentFilter,
+          offset: String(offset),
+          limit: String(PAGE_SIZE),
+        });
+        const res = await fetch(`/api/me/images?${params}`);
+        if (!res.ok) return [];
+        const { images } = await res.json();
+        return (images || []) as Generation[];
+      } catch {
+        return [];
       }
-
-      const { data } = await query;
-      return (data || []) as Generation[];
     },
     [user],
   );
 
   const fetchAnimations = useCallback(async () => {
     if (!user) return;
-    const supabase = createBrowserClient();
-    if (!supabase) return;
+    try {
+      const res = await fetch("/api/me/images?filter=animations");
+      if (!res.ok) return;
+      const { animations: data } = await res.json();
 
-    const { data } = await supabase
-      .from("animations")
-      .select(
-        "id, prompt, model, video_url, preview_url, thumbnail_url, created_at, " +
-        "source:generations!animations_source_generation_id_fkey(image_url, title, slug, category)",
-      )
-      .eq("user_id", user.id)
-      .eq("status", "completed")
-      .order("created_at", { ascending: false })
-      .limit(PAGE_SIZE);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items: AnimationItem[] = (data || []).map((row: any) => {
+        const source = row.source as Record<string, string> | null;
+        return {
+          id: row.id as string,
+          prompt: row.prompt as string,
+          model: row.model as string,
+          video_url: row.video_url as string,
+          preview_url: row.preview_url as string,
+          thumbnail_url: row.thumbnail_url as string | null,
+          source_image_url: source?.image_url || null,
+          source_title: source?.title || null,
+          source_slug: source?.slug || null,
+          source_category: source?.category || null,
+          created_at: row.created_at as string,
+        };
+      });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const items: AnimationItem[] = (data || []).map((row: any) => {
-      const source = row.source as Record<string, string> | null;
-      return {
-        id: row.id as string,
-        prompt: row.prompt as string,
-        model: row.model as string,
-        video_url: row.video_url as string,
-        preview_url: row.preview_url as string,
-        thumbnail_url: row.thumbnail_url as string | null,
-        source_image_url: source?.image_url || null,
-        source_title: source?.title || null,
-        source_slug: source?.slug || null,
-        source_category: source?.category || null,
-        created_at: row.created_at as string,
-      };
-    });
-
-    setAnimations(items);
+      setAnimations(items);
+    } catch {
+      setAnimations([]);
+    }
   }, [user]);
 
   const loadInitial = useCallback(
