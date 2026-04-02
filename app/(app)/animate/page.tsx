@@ -25,8 +25,11 @@ const MODELS: { id: AnimModel; label: string; credits: number; description: stri
 ];
 
 interface PromptSuggestion {
+  id?: string;
   title: string;
   prompt: string;
+  use_count?: number;
+  is_ai_generated?: boolean;
 }
 
 function AnimatePageInner() {
@@ -51,8 +54,10 @@ function AnimatePageInner() {
   const [suggestions, setSuggestions] = useState<PromptSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState(false);
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
   const [templateCategory, setTemplateCategory] = useState<TemplateCategory | "all">("all");
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const suggestionsCache = useRef<Map<string, PromptSuggestion[]>>(new Map());
 
   const selectedModel = MODELS.find((m) => m.id === model) || MODELS[1];
 
@@ -92,7 +97,7 @@ function AnimatePageInner() {
     loadSource();
   }, [sourceId]);
 
-  const fetchSuggestions = useCallback(async () => {
+  const fetchSuggestions = useCallback(async (regenerate = false) => {
     if (!source || suggestionsLoading) return;
 
     if (!user) {
@@ -100,15 +105,26 @@ function AnimatePageInner() {
       return;
     }
 
+    const cacheKey = source.id;
+    if (!regenerate && cacheKey && suggestionsCache.current.has(cacheKey)) {
+      setSuggestions(suggestionsCache.current.get(cacheKey)!);
+      return;
+    }
+
     setSuggestionsLoading(true);
     setSuggestionsError(false);
     setSuggestions([]);
+    setSelectedPromptId(null);
 
     try {
       const res = await fetch("/api/animate/suggestions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: source.url }),
+        body: JSON.stringify({
+          imageUrl: source.url,
+          generationId: source.id,
+          regenerate,
+        }),
       });
 
       if (res.status === 401) {
@@ -118,7 +134,11 @@ function AnimatePageInner() {
       }
 
       const data = await res.json();
-      setSuggestions(data.suggestions || []);
+      const results: PromptSuggestion[] = data.suggestions || [];
+      setSuggestions(results);
+      if (cacheKey && results.length > 0) {
+        suggestionsCache.current.set(cacheKey, results);
+      }
     } catch {
       setSuggestionsError(true);
     }
@@ -184,6 +204,7 @@ function AnimatePageInner() {
           prompt: prompt.trim(),
           model,
           duration: 5,
+          promptId: selectedPromptId || undefined,
         }),
       });
 
@@ -209,7 +230,7 @@ function AnimatePageInner() {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setIsAnimating(false);
     }
-  }, [prompt, model, isAnimating, source, user, openAuthModal, openBuyCreditsModal, setCredits, startPolling]);
+  }, [prompt, model, isAnimating, source, user, selectedPromptId, openAuthModal, openBuyCreditsModal, setCredits, startPolling]);
 
   const handleAnimateAgain = () => {
     setVideoUrl(null);
@@ -225,8 +246,11 @@ function AnimatePageInner() {
     setPrompt("");
     setError(null);
     setShowSource(false);
-    setSuggestions([]);
     setSuggestionsError(false);
+    setSelectedPromptId(null);
+
+    const cached = suggestionsCache.current.get(img.id);
+    setSuggestions(cached || []);
   };
 
   if (sourceLoading) {
@@ -365,7 +389,7 @@ function AnimatePageInner() {
                   <textarea
                     id="motion-prompt"
                     value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
+                    onChange={(e) => { setPrompt(e.target.value); setSelectedPromptId(null); }}
                     placeholder="Describe how the image should move... or use AI suggestions below"
                     className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                     rows={prompt.length > 200 ? 6 : prompt.length > 100 ? 4 : 3}
@@ -392,7 +416,7 @@ function AnimatePageInner() {
                     </p>
                     {suggestions.length > 0 && (
                       <button
-                        onClick={fetchSuggestions}
+                        onClick={() => fetchSuggestions(true)}
                         disabled={suggestionsLoading || isAnimating}
                         className="text-[11px] font-medium text-pink-500 transition-colors hover:text-pink-700 disabled:opacity-50"
                       >
@@ -403,7 +427,7 @@ function AnimatePageInner() {
 
                   {suggestions.length === 0 && !suggestionsLoading ? (
                     <button
-                      onClick={fetchSuggestions}
+                      onClick={() => fetchSuggestions()}
                       disabled={suggestionsLoading || isAnimating}
                       className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gradient-to-br from-white to-purple-50/30 px-4 py-3.5 text-sm font-medium text-gray-600 transition-all hover:border-pink-200 hover:from-pink-50/40 hover:to-purple-50/40 hover:text-pink-600 disabled:opacity-50"
                     >
@@ -432,7 +456,7 @@ function AnimatePageInner() {
                     <div className="rounded-xl border border-red-100 bg-red-50/50 px-4 py-3 text-center">
                       <p className="text-xs text-red-400">Failed to generate suggestions</p>
                       <button
-                        onClick={fetchSuggestions}
+                        onClick={() => fetchSuggestions()}
                         className="mt-1 text-xs font-medium text-pink-500 hover:text-pink-700"
                       >
                         Try again
@@ -444,8 +468,11 @@ function AnimatePageInner() {
                         const isSelected = prompt === s.prompt;
                         return (
                           <button
-                            key={i}
-                            onClick={() => setPrompt(s.prompt)}
+                            key={s.id || i}
+                            onClick={() => {
+                              setPrompt(s.prompt);
+                              setSelectedPromptId(s.id || null);
+                            }}
                             disabled={isAnimating}
                             className={`group w-full rounded-xl border px-4 py-3 text-left transition-all hover:-translate-y-px hover:shadow-sm disabled:opacity-50 ${
                               isSelected
@@ -456,6 +483,11 @@ function AnimatePageInner() {
                             <div className="flex items-start justify-between gap-2">
                               <p className={`text-xs font-bold ${isSelected ? "text-pink-700" : "text-gray-700"}`}>
                                 {s.title}
+                                {(s.use_count ?? 0) > 0 && (
+                                  <span className="ml-1.5 text-[10px] font-normal text-gray-300">
+                                    used {s.use_count}x
+                                  </span>
+                                )}
                               </p>
                               {isSelected && (
                                 <span className="shrink-0 rounded-full bg-pink-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-pink-600">
@@ -528,7 +560,7 @@ function AnimatePageInner() {
                           {filteredTemplates.map((t) => (
                             <button
                               key={t.id}
-                              onClick={() => setPrompt(t.prompt)}
+                              onClick={() => { setPrompt(t.prompt); setSelectedPromptId(null); }}
                               disabled={isAnimating}
                               className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-50 ${
                                 prompt === t.prompt

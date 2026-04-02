@@ -9,7 +9,7 @@ const ALLOWED_IMAGE_HOST = "images.clip.art";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sourceUrl, prompt, model: rawModel, duration: rawDuration } = body;
+    const { sourceUrl, prompt, model: rawModel, duration: rawDuration, promptId } = body;
 
     if (!sourceUrl || typeof sourceUrl !== "string") {
       return NextResponse.json({ error: "Missing source image URL" }, { status: 400 });
@@ -87,6 +87,20 @@ export async function POST(request: NextRequest) {
       })
       .select("id, status, created_at")
       .single();
+
+    if (promptId && typeof promptId === "string") {
+      const { data: row } = await admin
+        .from("animation_prompts")
+        .select("use_count")
+        .eq("id", promptId)
+        .single();
+      if (row) {
+        await admin
+          .from("animation_prompts")
+          .update({ use_count: (row.use_count || 0) + 1 })
+          .eq("id", promptId);
+      }
+    }
 
     return NextResponse.json({
       animationId: animation?.id,

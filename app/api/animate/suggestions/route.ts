@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { getAnimationSystemPrompt } from "@/lib/promptKnowledge";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +16,11 @@ function getAI() {
 const MODEL = "gemini-2.5-flash";
 
 interface Suggestion {
+  id?: string;
   title: string;
   prompt: string;
+  use_count?: number;
+  is_ai_generated?: boolean;
 }
 
 async function downloadImageAsBase64(url: string): Promise<{ base64: string; mimeType: string }> {
@@ -29,6 +32,83 @@ async function downloadImageAsBase64(url: string): Promise<{ base64: string; mim
   const base64 = Buffer.from(buffer).toString("base64");
 
   return { base64, mimeType: contentType.split(";")[0] };
+}
+
+async function getCachedPrompts(generationId: string): Promise<Suggestion[] | null> {
+  const admin = createSupabaseAdmin();
+  const { data } = await admin
+    .from("animation_prompts")
+    .select("id, title, prompt, use_count, is_ai_generated")
+    .eq("generation_id", generationId)
+    .eq("is_public", true)
+    .order("use_count", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (data && data.length > 0) return data;
+  return null;
+}
+
+async function persistPrompts(
+  generationId: string,
+  userId: string,
+  suggestions: Suggestion[],
+): Promise<Suggestion[]> {
+  const admin = createSupabaseAdmin();
+  const rows = suggestions.map((s) => ({
+    generation_id: generationId,
+    created_by: userId,
+    title: s.title,
+    prompt: s.prompt,
+    is_ai_generated: true,
+    is_public: true,
+  }));
+
+  const { data } = await admin
+    .from("animation_prompts")
+    .insert(rows)
+    .select("id, title, prompt, use_count, is_ai_generated");
+
+  return data || suggestions;
+}
+
+async function generateWithGemini(imageUrl: string): Promise<Suggestion[]> {
+  const { base64, mimeType } = await downloadImageAsBase64(imageUrl);
+
+  const response = await getAI().models.generateContent({
+    model: MODEL,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { inlineData: { mimeType, data: base64 } },
+          { text: "Study this image carefully. Identify the subject, their pose, any objects, and the energy of the scene. Then write 5 comprehensive animation prompts (60-150 words each) that would bring this specific image to life as a 5-second video clip. Each prompt should take a completely different creative approach — action, emotional, cinematic, playful, and dramatic. Write rich scene direction with physical motion, camera behavior, and atmospheric detail." },
+        ],
+      },
+    ],
+    config: {
+      systemInstruction: getAnimationSystemPrompt(),
+      temperature: 0.9,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
+  });
+
+  const rawText = response.candidates?.[0]?.content?.parts?.[0];
+  if (!rawText || !("text" in rawText) || !rawText.text) {
+    throw new Error("No text in Gemini response");
+  }
+
+  const cleaned = rawText.text.replace(/```json\n?|```\n?/g, "").trim();
+  const parsed = JSON.parse(cleaned) as Suggestion[];
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("Gemini returned invalid format");
+  }
+
+  return parsed.slice(0, 5).map((s) => ({
+    title: typeof s.title === "string" ? s.title.slice(0, 50) : "Suggestion",
+    prompt: typeof s.prompt === "string" ? s.prompt.slice(0, 1000) : "",
+  })).filter((s) => s.prompt.length > 0);
 }
 
 export async function POST(req: NextRequest) {
@@ -43,72 +123,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { imageUrl } = await req.json();
+    const { imageUrl, generationId, regenerate } = await req.json();
     if (!imageUrl || typeof imageUrl !== "string") {
       return NextResponse.json({ error: "imageUrl is required" }, { status: 400 });
     }
 
-    const { base64, mimeType } = await downloadImageAsBase64(imageUrl);
-
-    console.log("[suggestions] Calling Gemini with image:", mimeType, "base64 length:", base64.length);
-
-    const response = await getAI().models.generateContent({
-      model: MODEL,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { inlineData: { mimeType, data: base64 } },
-            { text: "Study this image carefully. Identify the subject, their pose, any objects, and the energy of the scene. Then write 5 comprehensive animation prompts (60-150 words each) that would bring this specific image to life as a 5-second video clip. Each prompt should take a completely different creative approach — action, emotional, cinematic, playful, and dramatic. Write rich scene direction with physical motion, camera behavior, and atmospheric detail." },
-          ],
-        },
-      ],
-      config: {
-        systemInstruction: getAnimationSystemPrompt(),
-        temperature: 0.9,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    });
-
-    const rawText = response.candidates?.[0]?.content?.parts?.[0];
-    console.log("[suggestions] Gemini raw response type:", rawText ? typeof rawText : "null");
-
-    if (!rawText || !("text" in rawText) || !rawText.text) {
-      const debugInfo = JSON.stringify(response.candidates?.[0]?.content?.parts?.slice(0, 1));
-      console.error("[suggestions] No text in Gemini response:", debugInfo);
-      return NextResponse.json({ suggestions: getFallbackSuggestions(), _debug: { error: "No text in Gemini response", details: debugInfo } });
+    if (generationId && !regenerate) {
+      const cached = await getCachedPrompts(generationId);
+      if (cached) {
+        return NextResponse.json({ suggestions: cached, source: "cache" });
+      }
     }
 
-    console.log("[suggestions] Gemini text length:", rawText.text.length, "preview:", rawText.text.slice(0, 200));
+    const suggestions = await generateWithGemini(imageUrl);
 
-    const cleaned = rawText.text.replace(/```json\n?|```\n?/g, "").trim();
-
-    let parsed: Suggestion[];
-    try {
-      parsed = JSON.parse(cleaned) as Suggestion[];
-    } catch (parseErr) {
-      console.error("[suggestions] JSON parse failed. Cleaned text:", cleaned.slice(0, 500));
-      return NextResponse.json({ suggestions: getFallbackSuggestions() });
+    if (generationId) {
+      const persisted = await persistPrompts(generationId, user.id, suggestions);
+      return NextResponse.json({ suggestions: persisted, source: "ai" });
     }
 
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      console.error("[suggestions] Parsed result is not a valid array:", typeof parsed);
-      return NextResponse.json({ suggestions: getFallbackSuggestions() });
-    }
-
-    const suggestions = parsed.slice(0, 5).map((s) => ({
-      title: typeof s.title === "string" ? s.title.slice(0, 50) : "Suggestion",
-      prompt: typeof s.prompt === "string" ? s.prompt.slice(0, 1000) : "",
-    })).filter((s) => s.prompt.length > 0);
-
-    console.log("[suggestions] Returning", suggestions.length, "suggestions. First title:", suggestions[0]?.title);
-    return NextResponse.json({ suggestions });
+    return NextResponse.json({ suggestions, source: "ai" });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[suggestions] CAUGHT ERROR:", message);
-    console.error("[suggestions] Stack:", err instanceof Error ? err.stack : "n/a");
+    console.error("[suggestions] Error:", message);
     return NextResponse.json({
       suggestions: getFallbackSuggestions(),
+      source: "fallback",
       _debug: { error: message },
     });
   }
