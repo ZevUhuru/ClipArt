@@ -13,7 +13,7 @@ function getAI() {
   return _ai;
 }
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-2.5-flash";
 
 interface Suggestion {
   title: string;
@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
 
     const { base64, mimeType } = await downloadImageAsBase64(imageUrl);
 
+    console.log("[suggestions] Calling Gemini with image:", mimeType, "base64 length:", base64.length);
+
     const response = await getAI().models.generateContent({
       model: MODEL,
       contents: [
@@ -64,18 +66,33 @@ export async function POST(req: NextRequest) {
       config: {
         systemInstruction: getAnimationSystemPrompt(),
         temperature: 0.9,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     });
 
-    const part = response.candidates?.[0]?.content?.parts?.[0];
-    if (!part || !("text" in part) || !part.text) {
+    const rawText = response.candidates?.[0]?.content?.parts?.[0];
+    console.log("[suggestions] Gemini raw response type:", rawText ? typeof rawText : "null");
+
+    if (!rawText || !("text" in rawText) || !rawText.text) {
+      const debugInfo = JSON.stringify(response.candidates?.[0]?.content?.parts?.slice(0, 1));
+      console.error("[suggestions] No text in Gemini response:", debugInfo);
+      return NextResponse.json({ suggestions: getFallbackSuggestions(), _debug: { error: "No text in Gemini response", details: debugInfo } });
+    }
+
+    console.log("[suggestions] Gemini text length:", rawText.text.length, "preview:", rawText.text.slice(0, 200));
+
+    const cleaned = rawText.text.replace(/```json\n?|```\n?/g, "").trim();
+
+    let parsed: Suggestion[];
+    try {
+      parsed = JSON.parse(cleaned) as Suggestion[];
+    } catch (parseErr) {
+      console.error("[suggestions] JSON parse failed. Cleaned text:", cleaned.slice(0, 500));
       return NextResponse.json({ suggestions: getFallbackSuggestions() });
     }
 
-    const cleaned = part.text.replace(/```json\n?|```\n?/g, "").trim();
-    const parsed = JSON.parse(cleaned) as Suggestion[];
-
     if (!Array.isArray(parsed) || parsed.length === 0) {
+      console.error("[suggestions] Parsed result is not a valid array:", typeof parsed);
       return NextResponse.json({ suggestions: getFallbackSuggestions() });
     }
 
@@ -84,10 +101,16 @@ export async function POST(req: NextRequest) {
       prompt: typeof s.prompt === "string" ? s.prompt.slice(0, 1000) : "",
     })).filter((s) => s.prompt.length > 0);
 
+    console.log("[suggestions] Returning", suggestions.length, "suggestions. First title:", suggestions[0]?.title);
     return NextResponse.json({ suggestions });
   } catch (err) {
-    console.error("Prompt suggestion failed:", err);
-    return NextResponse.json({ suggestions: getFallbackSuggestions() });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[suggestions] CAUGHT ERROR:", message);
+    console.error("[suggestions] Stack:", err instanceof Error ? err.stack : "n/a");
+    return NextResponse.json({
+      suggestions: getFallbackSuggestions(),
+      _debug: { error: message },
+    });
   }
 }
 

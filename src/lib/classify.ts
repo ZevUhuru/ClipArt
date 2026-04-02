@@ -10,7 +10,7 @@ function getAI() {
   return _ai;
 }
 
-const TEXT_MODEL = "gemini-2.0-flash";
+const TEXT_MODEL = "gemini-2.5-flash";
 
 export interface Classification {
   title: string;
@@ -96,6 +96,7 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.1,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     });
 
@@ -153,6 +154,7 @@ Return ONLY valid JSON.`;
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.3,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     });
 
