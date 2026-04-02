@@ -7,8 +7,23 @@ import { useImageDrawer } from "@/stores/useImageDrawer";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import { VideoPlayer } from "@/components/VideoPlayer";
 
-type ContentFilter = "all" | "clipart" | "coloring";
+interface AnimationItem {
+  id: string;
+  prompt: string;
+  model: string;
+  video_url: string;
+  preview_url: string;
+  thumbnail_url: string | null;
+  source_image_url: string | null;
+  source_title: string | null;
+  source_slug: string | null;
+  source_category: string | null;
+  created_at: string;
+}
+
+type ContentFilter = "all" | "clipart" | "coloring" | "animations";
 
 const PAGE_SIZE = 60;
 
@@ -61,6 +76,8 @@ function CreationsGrid() {
   const filterRef = useRef<ContentFilter>("all");
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  const [animations, setAnimations] = useState<AnimationItem[]>([]);
+
   const fetchPage = useCallback(
     async (contentFilter: ContentFilter, offset: number) => {
       if (!user) return;
@@ -86,12 +103,55 @@ function CreationsGrid() {
     [user],
   );
 
+  const fetchAnimations = useCallback(async () => {
+    if (!user) return;
+    const supabase = createBrowserClient();
+    if (!supabase) return;
+
+    const { data } = await supabase
+      .from("animations")
+      .select(
+        "id, prompt, model, video_url, preview_url, thumbnail_url, created_at, " +
+        "source:generations!animations_source_generation_id_fkey(image_url, title, slug, category)",
+      )
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items: AnimationItem[] = (data || []).map((row: any) => {
+      const source = row.source as Record<string, string> | null;
+      return {
+        id: row.id as string,
+        prompt: row.prompt as string,
+        model: row.model as string,
+        video_url: row.video_url as string,
+        preview_url: row.preview_url as string,
+        thumbnail_url: row.thumbnail_url as string | null,
+        source_image_url: source?.image_url || null,
+        source_title: source?.title || null,
+        source_slug: source?.slug || null,
+        source_category: source?.category || null,
+        created_at: row.created_at as string,
+      };
+    });
+
+    setAnimations(items);
+  }, [user]);
+
   const loadInitial = useCallback(
     async (contentFilter: ContentFilter) => {
       setIsLoading(true);
       setItems([]);
       setHasMore(false);
       filterRef.current = contentFilter;
+
+      if (contentFilter === "animations") {
+        await fetchAnimations();
+        setIsLoading(false);
+        return;
+      }
 
       const data = await fetchPage(contentFilter, 0);
       if (!data || filterRef.current !== contentFilter) return;
@@ -100,7 +160,7 @@ function CreationsGrid() {
       setHasMore(data.length >= PAGE_SIZE);
       setIsLoading(false);
     },
-    [fetchPage],
+    [fetchPage, fetchAnimations],
   );
 
   const loadMore = useCallback(async () => {
@@ -161,6 +221,7 @@ function CreationsGrid() {
             { key: "all", label: "All" },
             { key: "clipart", label: "Clip Art" },
             { key: "coloring", label: "Coloring Pages" },
+            { key: "animations", label: "Animations" },
           ] as const
         ).map((tab) => (
           <button
@@ -183,6 +244,57 @@ function CreationsGrid() {
             <ImageCardSkeleton key={i} />
           ))}
         </ImageGrid>
+      ) : filter === "animations" ? (
+        animations.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {animations.map((anim) => (
+              <div
+                key={anim.id}
+                className="group overflow-hidden rounded-2xl border border-gray-100/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                <div className="relative aspect-square bg-gray-50/80">
+                  <VideoPlayer
+                    src={anim.video_url}
+                    poster={anim.source_image_url || anim.thumbnail_url || undefined}
+                    mode="preview"
+                    className="absolute inset-0"
+                  />
+                </div>
+                <div className="px-3.5 pb-3 pt-2.5">
+                  <p className="line-clamp-1 text-[13px] font-semibold leading-snug text-gray-800">
+                    {anim.source_title || anim.prompt}
+                  </p>
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="inline-block rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-purple-500">
+                      {anim.model.replace("kling-", "Kling ")}
+                    </span>
+                    <a
+                      href={anim.video_url}
+                      download={`animation-${anim.id}.mp4`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-gray-300 opacity-0 transition-all hover:bg-pink-50 hover:text-pink-600 group-hover:opacity-100"
+                      title="Download MP4"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+            <p className="text-lg font-medium text-gray-400">No animations yet</p>
+            <p className="mt-1 text-sm text-gray-300">
+              Animate your clip art to see them here.
+            </p>
+            <Link href="/animate" className="btn-primary mt-4 inline-block text-sm">
+              Animate an image
+            </Link>
+          </div>
+        )
       ) : safeItems.length > 0 ? (
         <>
           <ImageGrid>

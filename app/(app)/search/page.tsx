@@ -18,9 +18,11 @@ interface SearchResult {
   description: string;
   category: string;
   style: string;
+  videoUrl?: string;
+  previewUrl?: string;
 }
 
-type ContentType = "clipart" | "coloring";
+type ContentType = "clipart" | "coloring" | "animations";
 
 const PAGE_SIZE = 60;
 
@@ -48,7 +50,7 @@ function SearchImageGrid({
   contentType: ContentType;
 }) {
   const openDrawer = useImageDrawer((s) => s.open);
-  const safeItems = items.filter((item) => item.id && item.url);
+  const safeItems = items.filter((item) => item.id && (item.url || item.videoUrl));
   const isColoring = contentType === "coloring";
 
   return (
@@ -66,6 +68,7 @@ function SearchImageGrid({
             style: item.style,
           }}
           onClick={() => openDrawer(item, safeItems)}
+          animationPreviewUrl={item.previewUrl || undefined}
         />
       ))}
     </ImageGrid>
@@ -78,8 +81,10 @@ function updateURL(
 ) {
   const sp = new URLSearchParams();
   if (params.ct && params.ct !== "clipart") sp.set("type", params.ct);
-  if (params.category) sp.set("category", params.category);
-  if (params.style) sp.set("style", params.style);
+  if (params.ct !== "animations") {
+    if (params.category) sp.set("category", params.category);
+    if (params.style) sp.set("style", params.style);
+  }
   if (params.q) sp.set("q", params.q);
   const qs = sp.toString();
   router.replace(qs ? `/search?${qs}` : "/search", { scroll: false });
@@ -97,7 +102,8 @@ function SearchPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialCt = (searchParams.get("type") === "coloring" ? "coloring" : "clipart") as ContentType;
+  const rawType = searchParams.get("type");
+  const initialCt: ContentType = rawType === "coloring" ? "coloring" : rawType === "animations" ? "animations" : "clipart";
   const initialCategory = searchParams.get("category") || null;
   const initialStyle = searchParams.get("style") || null;
   const initialQuery = searchParams.get("q") || null;
@@ -333,45 +339,46 @@ function SearchPageInner() {
       {/* Tier 1: Content type toggle */}
       <div className="mt-5 flex items-center gap-4">
         <div className="inline-flex rounded-lg bg-gray-100 p-1">
-          <button
-            onClick={() => handleContentTypeSwitch("clipart")}
-            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
-              contentType === "clipart"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Clip Art
-          </button>
-          <button
-            onClick={() => handleContentTypeSwitch("coloring")}
-            className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
-              contentType === "coloring"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Coloring Pages
-          </button>
+          {(
+            [
+              { key: "clipart" as ContentType, label: "Clip Art" },
+              { key: "coloring" as ContentType, label: "Coloring Pages" },
+              { key: "animations" as ContentType, label: "Animations" },
+            ]
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => handleContentTypeSwitch(tab.key)}
+              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
+                contentType === tab.key
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Tier 2: Category pills */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {currentCategories.map((tag) => (
-          <button
-            key={tag.slug}
-            onClick={() => handleCategoryClick(tag.slug)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              activeCategory === tag.slug
-                ? "bg-gray-900 text-white"
-                : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            {tag.name}
-          </button>
-        ))}
-      </div>
+      {/* Tier 2: Category pills (not for animations) */}
+      {contentType !== "animations" && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {currentCategories.map((tag) => (
+            <button
+              key={tag.slug}
+              onClick={() => handleCategoryClick(tag.slug)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeCategory === tag.slug
+                  ? "bg-gray-900 text-white"
+                  : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {tag.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Tier 3: Style pills (clip art only) */}
       {contentType === "clipart" && (
@@ -403,7 +410,7 @@ function SearchPageInner() {
       )}
 
       {/* Cross-link to SEO category page */}
-      {activeCategoryData && activeCategoryData.slug !== "free" && (
+      {contentType !== "animations" && activeCategoryData && activeCategoryData.slug !== "free" && (
         <div className="mt-4">
           <Link
             href={`/${activeCategoryData.slug}`}

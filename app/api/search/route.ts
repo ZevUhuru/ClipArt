@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
   try {
     const admin = createSupabaseAdmin();
 
+    if (contentType === "animations") {
+      return handleAnimationsSearch(admin, { q, limit, offset });
+    }
+
     let query = admin
       .from("generations")
       .select("id, prompt, title, image_url, style, category, created_at")
@@ -74,6 +78,57 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results, total: results.length });
   } catch (err) {
     console.error("Search error:", err);
+    return NextResponse.json({ results: [], total: 0 }, { status: 500 });
+  }
+}
+
+async function handleAnimationsSearch(
+  admin: ReturnType<typeof createSupabaseAdmin>,
+  opts: { q?: string; limit: number; offset: number },
+) {
+  try {
+    let query = admin
+      .from("animations")
+      .select(
+        "id, prompt, video_url, preview_url, thumbnail_url, model, source_generation_id, created_at, " +
+        "source:generations!animations_source_generation_id_fkey(image_url, title, category, slug)",
+      )
+      .eq("status", "completed")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .range(opts.offset, opts.offset + opts.limit - 1);
+
+    if (opts.q) {
+      query = query.ilike("prompt", `%${opts.q}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Animations search error:", error);
+      return NextResponse.json({ results: [] });
+    }
+
+    const results = (data || []).map((row: Record<string, unknown>) => {
+      const source = row.source as Record<string, string> | null;
+      return {
+        id: row.id as string,
+        slug: row.id as string,
+        title: source?.title || (row.prompt as string),
+        url: source?.image_url || (row.thumbnail_url as string) || "",
+        description: row.prompt as string,
+        category: source?.category || "free",
+        style: "animation",
+        videoUrl: row.video_url as string,
+        previewUrl: row.preview_url as string,
+        thumbnailUrl: row.thumbnail_url as string,
+        model: row.model as string,
+      };
+    });
+
+    return NextResponse.json({ results, total: results.length });
+  } catch (err) {
+    console.error("Animations search error:", err);
     return NextResponse.json({ results: [], total: 0 }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 # Animations Feature
 
-**Date:** 2026-03-22
+**Date:** 2026-04-02
 **Status:** SHIPPED (April 2026)
 
 This feature has been fully implemented. See [docs/features/ANIMATION.md](../features/ANIMATION.md) for complete documentation.
