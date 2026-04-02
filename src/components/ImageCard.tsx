@@ -76,7 +76,7 @@ export function ImageCard({
     : "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw";
 
   const cardContent = (
-    <div className={`relative overflow-hidden rounded-xl ${aspectClass} ${bgClass}`} ref={cardRef}>
+    <div className={`relative ${aspectClass}`} ref={cardRef}>
       {animationPreviewUrl ? (
         <>
           <video
@@ -101,7 +101,7 @@ export function ImageCard({
           src={image.url}
           alt={`${image.title} — free ${isColoring ? "coloring page" : "clip art"}`}
           fill
-          className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+          className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
           sizes={sizes || defaultSizes}
           unoptimized
         />
@@ -117,8 +117,9 @@ export function ImageCard({
   );
 
   const cardClasses = [
-    "group relative overflow-hidden rounded-2xl border border-gray-100/80 bg-white shadow-sm",
-    "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl",
+    "group relative overflow-hidden rounded-2xl",
+    bgClass,
+    "transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2",
     isLandscape ? "md:col-span-2" : "",
     onClick || href ? "cursor-pointer" : "",
@@ -154,10 +155,11 @@ interface ImageCardSkeletonProps {
 
 export function ImageCardSkeleton({ variant = "clipart" }: ImageCardSkeletonProps) {
   const aspectClass = variant === "coloring" ? "aspect-[3/4]" : "aspect-square";
+  const bgClass = variant === "coloring" ? "bg-white" : "bg-gray-50/80";
 
   return (
-    <div className="animate-pulse overflow-hidden rounded-2xl border border-gray-100/80 bg-white">
-      <div className={`${aspectClass} rounded-xl bg-gray-100`} />
+    <div className={`animate-pulse overflow-hidden rounded-2xl ${bgClass}`}>
+      <div className={`${aspectClass}`} />
     </div>
   );
 }

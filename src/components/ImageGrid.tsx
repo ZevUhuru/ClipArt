@@ -5,8 +5,8 @@ interface ImageGridProps {
 }
 
 const GRID_CLASSES: Record<string, string> = {
-  clipart: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4",
-  coloring: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4",
+  clipart: "grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4",
+  coloring: "grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4",
 };
 
 export function ImageGrid({ children, variant = "clipart", className = "" }: ImageGridProps) {
