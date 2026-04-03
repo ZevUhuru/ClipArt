@@ -5,7 +5,7 @@ import { ImageDetailDrawer } from "@/components/ImageDetailDrawer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-dvh bg-gray-100">
       <AppSidebar />
       <AppMain>{children}</AppMain>
       <AppBottomNav />

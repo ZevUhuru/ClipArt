@@ -48,6 +48,16 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-futura;
   }
+
+  .mobile-main {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.5rem);
+  }
+
+  @media (min-width: 768px) {
+    .mobile-main {
+      padding-bottom: 0;
+    }
+  }
 }
 
 @layer components {
