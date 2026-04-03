@@ -426,11 +426,6 @@ function AnimatePageInner() {
               </div>
             ) : (
               <>
-                {/* Animation Queue */}
-                {sourceJobs.length > 0 && (
-                  <AnimationQueue onViewResult={handleViewResult} />
-                )}
-
                 {/* Motion prompt */}
                 <div>
                   <label htmlFor="motion-prompt" className="mb-2 block text-sm font-semibold text-gray-700">
@@ -706,6 +701,13 @@ function AnimatePageInner() {
             )}
           </div>
         </div>
+
+        {/* Animation Queue — full width, below the fold */}
+        {queueJobs.length > 0 && (
+          <div className="mt-8 border-t border-gray-100 pt-6">
+            <AnimationQueue onViewResult={handleViewResult} />
+          </div>
+        )}
       </div>
 
       <ImageImportModal
