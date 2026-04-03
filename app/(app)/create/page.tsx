@@ -6,10 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { StylePicker } from "@/components/StylePicker";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
+import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import { GenerationProgress } from "@/components/GenerationProgress";
+import { GenerationQueue } from "@/components/GenerationQueue";
 import type { StyleKey } from "@/lib/styles";
 
 const ANON_RESULT_KEY = "clip_art_anon_result";
@@ -195,18 +196,13 @@ export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
   const [isPublic, setIsPublic] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [anonResult, setAnonResult] = useState<AnonResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const {
-    openAuthModal,
-    openBuyCreditsModal,
-    setCredits,
-    prependGeneration,
-    user,
-  } = useAppStore();
+  const { openAuthModal, user } = useAppStore();
+  const addJob = useGenerationQueue((s) => s.addJob);
+  const queueJobs = useGenerationQueue((s) => s.jobs);
 
   useEffect(() => {
     try {
@@ -218,8 +214,8 @@ export default function CreatePage() {
     } catch { /* ignore parse errors */ }
   }, []);
 
-  const handleGenerate = useCallback(async () => {
-    if (!prompt.trim() || isGenerating) return;
+  const handleGenerate = useCallback(() => {
+    if (!prompt.trim()) return;
 
     if (!user) {
       openAuthModal("signup");
@@ -227,39 +223,9 @@ export default function CreatePage() {
     }
 
     setError(null);
-    setIsGenerating(true);
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style, isPublic }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 401 && data.requiresAuth) {
-        openAuthModal("signup");
-        return;
-      }
-      if (res.status === 402 && data.requiresCredits) {
-        openBuyCreditsModal();
-        return;
-      }
-      if (!res.ok) throw new Error(data.error || "Generation failed");
-
-      if (typeof data.credits === "number") setCredits(data.credits);
-      if (data.generation) prependGeneration(data.generation);
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [prompt, style, isPublic, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
+    addJob(prompt.trim(), style, isPublic);
+    setPrompt("");
+  }, [prompt, style, isPublic, user, openAuthModal, addJob]);
 
   return (
     <div className="min-h-screen">
@@ -277,7 +243,6 @@ export default function CreatePage() {
                 placeholder="Describe your clip art... (e.g. a happy sun wearing sunglasses)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                 maxLength={1000}
-                disabled={isGenerating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -288,10 +253,10 @@ export default function CreatePage() {
             </div>
             <button
               onClick={handleGenerate}
-              disabled={!prompt.trim() || isGenerating}
+              disabled={!prompt.trim()}
               className="shrink-0 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isGenerating ? "Creating…" : "Create"}
+              Create
             </button>
           </div>
 
@@ -317,10 +282,10 @@ export default function CreatePage() {
 
       {/* Content area */}
       <div className="mx-auto max-w-5xl px-4 py-6">
-        {/* Generation progress */}
-        {isGenerating && (
-          <div className="mb-6 flex justify-center">
-            <GenerationProgress isGenerating={isGenerating} />
+        {/* Generation Queue */}
+        {queueJobs.length > 0 && (
+          <div className="mb-6">
+            <GenerationQueue />
           </div>
         )}
 
