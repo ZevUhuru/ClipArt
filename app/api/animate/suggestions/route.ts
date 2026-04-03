@@ -34,12 +34,13 @@ async function downloadImageAsBase64(url: string): Promise<{ base64: string; mim
   return { base64, mimeType: contentType.split(";")[0] };
 }
 
-async function getCachedPrompts(generationId: string): Promise<Suggestion[] | null> {
+async function getCachedPrompts(generationId: string, duration: number): Promise<Suggestion[] | null> {
   const admin = createSupabaseAdmin();
   const { data } = await admin
     .from("animation_prompts")
     .select("id, title, prompt, use_count, is_ai_generated")
     .eq("generation_id", generationId)
+    .eq("duration", duration)
     .eq("is_public", true)
     .order("use_count", { ascending: false })
     .order("created_at", { ascending: false })
@@ -53,6 +54,7 @@ async function persistPrompts(
   generationId: string,
   userId: string,
   suggestions: Suggestion[],
+  duration: number,
 ): Promise<Suggestion[]> {
   const admin = createSupabaseAdmin();
   const rows = suggestions.map((s) => ({
@@ -60,6 +62,7 @@ async function persistPrompts(
     created_by: userId,
     title: s.title,
     prompt: s.prompt,
+    duration,
     is_ai_generated: true,
     is_public: true,
   }));
@@ -138,7 +141,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (generationId && !regenerate) {
-      const cached = await getCachedPrompts(generationId);
+      const cached = await getCachedPrompts(generationId, duration);
       if (cached) {
         return NextResponse.json({ suggestions: cached, source: "cache" });
       }
@@ -147,7 +150,7 @@ export async function POST(req: NextRequest) {
     const suggestions = await generateWithGemini(imageUrl, duration);
 
     if (generationId) {
-      const persisted = await persistPrompts(generationId, user.id, suggestions);
+      const persisted = await persistPrompts(generationId, user.id, suggestions, duration);
       return NextResponse.json({ suggestions: persisted, source: "ai" });
     }
 

@@ -12,10 +12,12 @@ CREATE TABLE IF NOT EXISTS public.animation_prompts (
   is_ai_generated boolean NOT NULL DEFAULT true,
   is_public boolean NOT NULL DEFAULT true,
   use_count integer NOT NULL DEFAULT 0,
+  duration integer NOT NULL DEFAULT 5,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_animation_prompts_generation ON public.animation_prompts(generation_id);
+CREATE INDEX IF NOT EXISTS idx_animation_prompts_gen_duration ON public.animation_prompts(generation_id, duration);
 CREATE INDEX IF NOT EXISTS idx_animation_prompts_popular ON public.animation_prompts(use_count DESC);
 
 -- RLS policies
