@@ -1,5 +1,8 @@
 import { create } from "zustand";
 
+const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+const TIMEOUT_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutes
+
 export interface QueuedAnimation {
   id: string;
   sourceUrl: string;
@@ -12,6 +15,14 @@ export interface QueuedAnimation {
   startedAt: number;
 }
 
+export function isStale(job: QueuedAnimation): boolean {
+  return job.status === "processing" && Date.now() - job.startedAt >= STALE_THRESHOLD_MS;
+}
+
+export function isTimedOut(job: QueuedAnimation): boolean {
+  return job.status === "processing" && Date.now() - job.startedAt >= TIMEOUT_THRESHOLD_MS;
+}
+
 interface AnimationQueueState {
   jobs: QueuedAnimation[];
   _pollTimer: ReturnType<typeof setInterval> | null;
@@ -19,6 +30,8 @@ interface AnimationQueueState {
   addJob: (job: QueuedAnimation) => void;
   updateJob: (id: string, partial: Partial<QueuedAnimation>) => void;
   removeJob: (id: string) => void;
+  cancelJob: (id: string) => void;
+  retryJob: (id: string) => void;
   loadPending: (jobs: QueuedAnimation[]) => void;
   startPolling: () => void;
   stopPolling: () => void;
@@ -67,6 +80,20 @@ export const useAnimationQueue = create<AnimationQueueState>((set, get) => ({
     if (get().activeJobs().length === 0) get().stopPolling();
   },
 
+  cancelJob: (id) => {
+    get().updateJob(id, { status: "failed", error: "Cancelled by user" });
+    if (get().activeJobs().length === 0) get().stopPolling();
+  },
+
+  retryJob: (id) => {
+    const original = get().jobs.find((j) => j.id === id);
+    if (!original) return;
+
+    get().removeJob(id);
+
+    return original;
+  },
+
   loadPending: (pending) => {
     set((s) => {
       const existingIds = new Set(s.jobs.map((j) => j.id));
@@ -89,8 +116,23 @@ export const useAnimationQueue = create<AnimationQueueState>((set, get) => ({
         return;
       }
 
+      for (const job of active) {
+        if (isTimedOut(job)) {
+          get().updateJob(job.id, {
+            status: "failed",
+            error: "Timed out after 20 minutes. Check My Creations for a refund.",
+          });
+        }
+      }
+
+      const stillActive = get().activeJobs();
+      if (stillActive.length === 0) {
+        get().stopPolling();
+        return;
+      }
+
       const results = await Promise.all(
-        active.map(async (job) => {
+        stillActive.map(async (job) => {
           const update = await pollJob(job.id);
           return update ? { id: job.id, update } : null;
         }),

@@ -53,6 +53,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ status: "processing" });
     }
 
+    const SERVER_TIMEOUT_MS = 20 * 60 * 1000;
+    const createdAt = new Date(animation.created_at).getTime();
+    if (Date.now() - createdAt > SERVER_TIMEOUT_MS) {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("credits")
+        .eq("id", user.id)
+        .single();
+
+      if (profile) {
+        await admin
+          .from("profiles")
+          .update({ credits: profile.credits + animation.credits_charged })
+          .eq("id", user.id);
+      }
+
+      await admin
+        .from("animations")
+        .update({
+          status: "refunded",
+          error_message: "Timed out after 20 minutes",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", animationId);
+
+      return NextResponse.json({
+        status: "failed",
+        error: "Animation timed out after 20 minutes. Credits have been refunded.",
+      });
+    }
+
     const falStatus = await checkAnimationStatus(
       animation.model as AnimationModel,
       animation.fal_request_id,

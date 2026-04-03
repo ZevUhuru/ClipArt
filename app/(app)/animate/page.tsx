@@ -286,6 +286,57 @@ function AnimatePageInner() {
     }
   };
 
+  const handleRetry = useCallback(
+    async (job: QueuedAnimation) => {
+      if (!user) {
+        openAuthModal("signup");
+        return;
+      }
+
+      setError(null);
+
+      try {
+        const res = await fetch("/api/animate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sourceUrl: job.sourceUrl,
+            prompt: job.prompt,
+            model: job.model,
+            duration: 5,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.status === 401 && data.requiresAuth) {
+          openAuthModal("signup");
+          return;
+        }
+        if (res.status === 402 && data.requiresCredits) {
+          openBuyCreditsModal();
+          return;
+        }
+        if (!res.ok) throw new Error(data.error || "Animation failed");
+
+        if (typeof data.creditsRemaining === "number") setCredits(data.creditsRemaining);
+
+        addJob({
+          id: data.animationId,
+          sourceUrl: job.sourceUrl,
+          sourceTitle: job.sourceTitle,
+          prompt: job.prompt,
+          model: job.model,
+          status: "processing",
+          startedAt: Date.now(),
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Retry failed");
+      }
+    },
+    [user, openAuthModal, openBuyCreditsModal, setCredits, addJob],
+  );
+
   const handleImport = (img: ImportableImage) => {
     setSource(img);
     setViewingVideo(null);
@@ -705,7 +756,7 @@ function AnimatePageInner() {
         {/* Animation Queue — full width, below the fold */}
         {queueJobs.length > 0 && (
           <div className="mt-8 border-t border-gray-100 pt-6">
-            <AnimationQueue onViewResult={handleViewResult} />
+            <AnimationQueue onViewResult={handleViewResult} onRetry={handleRetry} />
           </div>
         )}
       </div>
