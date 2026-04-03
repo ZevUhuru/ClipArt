@@ -12,6 +12,7 @@ Use these to study software engineering patterns, tradeoffs, and mental models. 
 | [Rendering Strategies](./rendering-strategies.md) | How pages get built and delivered | SSR, SSG, CSR, ISR — when to use each and why |
 | [RLS & Auth Architecture](./rls-and-auth-architecture.md) | Why browser-side auth queries fail silently | Row Level Security, auth session timing, the server verification pattern |
 | [AI-Assisted Prompt Engineering](./ai-assisted-prompt-engineering.md) | Using one AI to write prompts for another | Knowledge distillation, system prompts, vision-language models, the meta-prompting pattern |
+| [Error Monitoring & Observability](./error-monitoring-and-observability.md) | Knowing when things break before users tell you | Sentry, structured error capture, tags vs extra data, the error funnel |
 
 ## How to Read These
 
