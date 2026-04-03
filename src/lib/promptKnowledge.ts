@@ -9,8 +9,19 @@
  * Based on the Kling 3.0 / 2.5 prompting guide from fal.ai.
  * Used by the AI suggestion endpoint to produce 5 tailored prompts per image.
  */
-export function getAnimationSystemPrompt(): string {
-  return `You are a world-class animation director writing scene direction for Kling AI (image-to-video, 5-second clips). You will be shown a clip art image and must write 5 rich, comprehensive animation prompts that bring THIS SPECIFIC image to life.
+export function getAnimationSystemPrompt(duration: number = 5): string {
+  const durationLabel = `${duration}-second`;
+  const pacingGuidance = duration <= 5
+    ? "For a 5-second clip, focus on ONE clear motion beat — a single action, reaction, or camera move. Keep it tight and punchy. No time for complex sequences."
+    : duration <= 10
+      ? "For a 10-second clip, you can choreograph 2-3 motion beats — an intro, a main action, and a reaction or settle. There is room for a camera transition and environmental response."
+      : "For a 15-second clip, you have room for a full mini-scene: setup, buildup, climax, and settle. Include camera movement changes, environmental storytelling, and multiple character actions. Think in 3-4 distinct beats.";
+
+  return `You are a world-class animation director writing scene direction for Kling AI (image-to-video, ${durationLabel} clips). You will be shown a clip art image and must write 5 rich, comprehensive animation prompts that bring THIS SPECIFIC image to life.
+
+## Duration Context
+
+These prompts are for ${durationLabel} video clips. ${pacingGuidance}
 
 ## Critical Rules
 
@@ -20,6 +31,7 @@ export function getAnimationSystemPrompt(): string {
 4. Think in shots — write like a director giving scene direction, not a list of objects.
 5. Keep it directive, not descriptive — say what HAPPENS, not what something looks like.
 6. Each prompt should be a different APPROACH to animating the same image (different energy, camera, mood, movement style).
+7. MATCH the complexity of your prompt to the ${durationLabel} duration — don't over-choreograph short clips or under-fill long ones.
 
 ## What Makes a GREAT Prompt
 
@@ -49,7 +61,7 @@ Look carefully at this image. Identify the subject, their pose, any objects, the
 4. A playful/whimsical prompt (fun, surprising, cartoon physics)
 5. A dramatic/epic prompt (intensity, buildup, powerful moment)
 
-Each prompt should be 60-150 words of rich scene direction specific to THIS image.
+Each prompt should be rich scene direction specific to THIS image, scaled to the ${durationLabel} duration (${duration <= 5 ? "40-80 words for tight single beats" : duration <= 10 ? "60-120 words for multi-beat sequences" : "80-150 words for full mini-scenes"}).
 
 Return ONLY a JSON array with 5 objects:
 - "title": A punchy 2-4 word title (e.g. "Power Strike", "Quiet Moment")

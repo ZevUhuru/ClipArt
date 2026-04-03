@@ -213,8 +213,8 @@ function AnimatePageInner() {
       return;
     }
 
-    const cacheKey = source.id;
-    if (!regenerate && cacheKey && suggestionsCache.current.has(cacheKey)) {
+    const cacheKey = `${source.id}:${duration}`;
+    if (!regenerate && suggestionsCache.current.has(cacheKey)) {
       setSuggestions(suggestionsCache.current.get(cacheKey)!);
       return;
     }
@@ -233,6 +233,7 @@ function AnimatePageInner() {
           imageUrl: source.url,
           generationId: source.id,
           regenerate,
+          duration,
         }),
       });
 
@@ -252,7 +253,7 @@ function AnimatePageInner() {
       setSuggestionsError(true);
     }
     setSuggestionsLoading(false);
-  }, [source, suggestionsLoading, user, openAuthModal]);
+  }, [source, duration, suggestionsLoading, user, openAuthModal]);
 
   const handleAnimate = useCallback(async () => {
     if (!prompt.trim() || submitting || !source) return;
@@ -388,7 +389,7 @@ function AnimatePageInner() {
     setSuggestionsError(false);
     setSelectedPromptId(null);
 
-    const cached = suggestionsCache.current.get(img.id);
+    const cached = suggestionsCache.current.get(`${img.id}:${duration}`);
     setSuggestions(cached || []);
   };
 

@@ -72,8 +72,15 @@ async function persistPrompts(
   return data || suggestions;
 }
 
-async function generateWithGemini(imageUrl: string): Promise<Suggestion[]> {
+async function generateWithGemini(imageUrl: string, duration: number = 5): Promise<Suggestion[]> {
   const { base64, mimeType } = await downloadImageAsBase64(imageUrl);
+
+  const durationLabel = `${duration}-second`;
+  const complexityHint = duration <= 5
+    ? "Focus each prompt on ONE clear motion beat — keep it tight."
+    : duration <= 10
+      ? "Each prompt can choreograph 2-3 motion beats with camera transitions."
+      : "Each prompt should describe a full mini-scene with setup, action, and settle.";
 
   const response = await getAI().models.generateContent({
     model: MODEL,
@@ -82,12 +89,12 @@ async function generateWithGemini(imageUrl: string): Promise<Suggestion[]> {
         role: "user",
         parts: [
           { inlineData: { mimeType, data: base64 } },
-          { text: "Study this image carefully. Identify the subject, their pose, any objects, and the energy of the scene. Then write 5 comprehensive animation prompts (60-150 words each) that would bring this specific image to life as a 5-second video clip. Each prompt should take a completely different creative approach — action, emotional, cinematic, playful, and dramatic. Write rich scene direction with physical motion, camera behavior, and atmospheric detail." },
+          { text: `Study this image carefully. Identify the subject, their pose, any objects, and the energy of the scene. Then write 5 comprehensive animation prompts that would bring this specific image to life as a ${durationLabel} video clip. ${complexityHint} Each prompt should take a completely different creative approach — action, emotional, cinematic, playful, and dramatic. Write rich scene direction with physical motion, camera behavior, and atmospheric detail.` },
         ],
       },
     ],
     config: {
-      systemInstruction: getAnimationSystemPrompt(),
+      systemInstruction: getAnimationSystemPrompt(duration),
       temperature: 0.9,
       thinkingConfig: { thinkingBudget: 0 },
     },
@@ -123,7 +130,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { imageUrl, generationId, regenerate } = await req.json();
+    const { imageUrl, generationId, regenerate, duration: rawDuration } = await req.json();
+    const duration = typeof rawDuration === "number" && rawDuration >= 5 && rawDuration <= 15
+      ? Math.round(rawDuration) : 5;
     if (!imageUrl || typeof imageUrl !== "string") {
       return NextResponse.json({ error: "imageUrl is required" }, { status: 400 });
     }
@@ -135,7 +144,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const suggestions = await generateWithGemini(imageUrl);
+    const suggestions = await generateWithGemini(imageUrl, duration);
 
     if (generationId) {
       const persisted = await persistPrompts(generationId, user.id, suggestions);
