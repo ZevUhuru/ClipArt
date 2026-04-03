@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { checkPromptSafety } from "@/lib/promptSafety";
-import { submitAnimation, type AnimationModel, MODEL_CREDITS } from "@/lib/fal";
+import { submitAnimation, type AnimationModel, calculateCredits, MAX_DURATION, AUDIO_SUPPORTED } from "@/lib/fal";
 
 const VALID_MODELS: AnimationModel[] = ["kling-2.5-turbo", "kling-3.0-standard", "kling-3.0-pro"];
 const ALLOWED_IMAGE_HOST = "images.clip.art";
@@ -10,7 +10,7 @@ const ALLOWED_IMAGE_HOST = "images.clip.art";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sourceUrl, prompt, model: rawModel, duration: rawDuration, promptId } = body;
+    const { sourceUrl, prompt, model: rawModel, duration: rawDuration, audio: rawAudio, promptId } = body;
 
     if (!sourceUrl || typeof sourceUrl !== "string") {
       return NextResponse.json({ error: "Missing source image URL" }, { status: 400 });
@@ -37,8 +37,12 @@ export async function POST(request: NextRequest) {
     }
 
     const model: AnimationModel = VALID_MODELS.includes(rawModel) ? rawModel : "kling-3.0-standard";
-    const duration = 5;
-    const creditsNeeded = MODEL_CREDITS[model];
+    const maxDur = MAX_DURATION[model];
+    const duration = typeof rawDuration === "number" && rawDuration >= 5 && rawDuration <= maxDur
+      ? Math.round(rawDuration)
+      : 5;
+    const audio = rawAudio === true && AUDIO_SUPPORTED[model];
+    const creditsNeeded = calculateCredits(model, duration, audio);
 
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
@@ -65,7 +69,7 @@ export async function POST(request: NextRequest) {
       .eq("image_url", sourceUrl)
       .single();
 
-    const { requestId } = await submitAnimation(sourceUrl, prompt, model, duration);
+    const { requestId } = await submitAnimation(sourceUrl, prompt, model, duration, audio);
 
     await admin
       .from("profiles")
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
         prompt,
         model,
         duration,
-        generate_audio: false,
+        generate_audio: audio,
         status: "processing",
         fal_request_id: requestId,
         credits_charged: creditsNeeded,

@@ -19,7 +19,7 @@ export async function GET() {
     const { data: processing } = await admin
       .from("animations")
       .select(
-        "id, prompt, model, status, created_at, video_url, " +
+        "id, prompt, model, duration, generate_audio, status, created_at, video_url, " +
         "source:generations!animations_source_generation_id_fkey(image_url, title)",
       )
       .eq("user_id", user.id)
@@ -30,7 +30,7 @@ export async function GET() {
     const { data: recent } = await admin
       .from("animations")
       .select(
-        "id, prompt, model, status, created_at, video_url, error_message, " +
+        "id, prompt, model, duration, generate_audio, status, created_at, video_url, error_message, " +
         "source:generations!animations_source_generation_id_fkey(image_url, title)",
       )
       .eq("user_id", user.id)
@@ -48,6 +48,8 @@ export async function GET() {
         sourceTitle: src?.title || "Untitled",
         prompt: a.prompt,
         model: a.model,
+        duration: a.duration || 5,
+        audio: a.generate_audio || false,
         status: a.status === "refunded" ? "failed" : a.status,
         videoUrl: a.video_url || undefined,
         error: a.error_message || undefined,

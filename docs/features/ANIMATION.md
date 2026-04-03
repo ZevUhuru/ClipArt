@@ -3,7 +3,7 @@
 **Shipped:** April 2026
 **Status:** Live
 
-Animate any generated clip art into a 5-second MP4 video using Kling AI (2.5 Turbo, 3.0 Standard, 3.0 Pro) through the Fal.ai platform. Users describe motion in natural language, select a quality tier, and receive a downloadable video in ~1–2 minutes.
+Animate any generated clip art into a 5–15 second MP4 video using Kling AI (2.5 Turbo, 3.0 Standard, 3.0 Pro) through the Fal.ai platform. Users describe motion in natural language, select a quality tier, choose their preferred duration (5–15 seconds), and optionally enable native AI audio. Downloadable video is ready in ~1–3 minutes depending on length.
 
 ---
 
@@ -122,7 +122,7 @@ Fal.ai eliminates infrastructure complexity and allows us to launch with zero mo
 ### Request flow
 
 1. User selects an image and describes the desired motion
-2. Frontend POSTs to `/api/animate` with `sourceUrl`, `prompt`, `model`, `duration`
+2. Frontend POSTs to `/api/animate` with `sourceUrl`, `prompt`, `model`, `duration`, `audio`
 3. Backend validates, deducts credits, submits to Fal.ai queue, inserts DB row
 4. Frontend polls `/api/animate/status?id={animationId}` every 5 seconds
 5. When Fal.ai completes, status endpoint downloads video, generates thumbnail, uploads to R2
@@ -136,7 +136,7 @@ Animations live in a separate `animations` table, not in `generations`. Rational
 
 - **Different media type**: Video vs image — different storage, processing, and display logic
 - **Different lifecycle**: Async queue (1–2 min) vs synchronous generation (~5s)
-- **Different cost structure**: 5–12 credits vs 1 credit
+- **Different cost structure**: 5–54 credits vs 1 credit (varies by model, duration, and audio)
 - **Clean separation**: No nullable columns polluting the generations table
 
 ### Schema
@@ -182,8 +182,8 @@ CREATE INDEX idx_animations_source ON public.animations(source_generation_id)
 | `source_generation_id` | uuid | Links to the source clip art image in `generations` |
 | `prompt` | text | The natural language motion description |
 | `model` | text | One of: `kling-2.5-turbo`, `kling-3.0-standard`, `kling-3.0-pro` |
-| `duration` | integer | Video length in seconds (5 at launch) |
-| `generate_audio` | boolean | Audio generation flag (disabled at launch) |
+| `duration` | integer | Video length in seconds (5–15, default 5; max 10 for Kling 2.5) |
+| `generate_audio` | boolean | Native AI audio generation (sound effects + voice; Kling 3.0 only) |
 | `status` | text | Lifecycle state: `processing` → `completed` or `failed` → `refunded` |
 | `fal_request_id` | text | Fal.ai queue request ID, used for status polling |
 | `video_url` | text | Full-quality MP4 URL in R2 (set on completion) |
@@ -201,17 +201,38 @@ CREATE INDEX idx_animations_source ON public.animations(source_generation_id)
 
 ## Credit Pricing
 
-| Model | Duration | Credits | Our Revenue (at 5¢/credit) | Fal.ai Cost | Margin |
-|-------|----------|---------|---------------------------|-------------|--------|
-| Kling 2.5 Turbo (Fast) | 5s | 5 | 25¢ | ~35¢ | -10¢ |
-| Kling 3.0 Standard | 5s | 8 | 40¢ | ~42¢ | -2¢ |
-| Kling 3.0 Pro | 5s | 12 | 60¢ | ~56¢ | +4¢ |
+### Per-second credit model
+
+Animation credits scale linearly with duration. Each model has a base credit rate per second. Enabling native audio adds a 50% surcharge (matching fal.ai's ~50% audio markup on their per-second pricing).
+
+**Base rates (credits per second):**
+
+| Model | Credits/sec (silent) | Credits/sec (audio) |
+|-------|---------------------|---------------------|
+| Kling 2.5 Fast | 1.0 | N/A (no audio support) |
+| Kling 3.0 Standard | 1.6 | 2.4 |
+| Kling 3.0 Pro | 2.4 | 3.6 |
+
+**Formula:** `credits = round(base_per_sec * duration * (audio ? 1.5 : 1.0))`
+
+### Full credit matrix
+
+| Model | 5s silent | 5s audio | 10s silent | 10s audio | 15s silent | 15s audio |
+|-------|-----------|----------|------------|-----------|------------|-----------|
+| Fast | 5 | N/A | 10 | N/A | N/A | N/A |
+| Standard | 8 | 12 | 16 | 24 | 24 | 36 |
+| Pro | 12 | 18 | 24 | 36 | 36 | 54 |
+
+**Model constraints:**
+- Kling 2.5 Fast: max 10s duration, no native audio
+- Kling 3.0 Standard/Pro: 5–15s duration, native audio supported
 
 ### Pricing philosophy
 
 - **Optimize for volume and habit formation**, not margin-per-unit
 - Kling 2.5 and 3.0 Standard are intentionally near break-even or slightly underwater to encourage experimentation
 - Kling 3.0 Pro has a small positive margin for users who want highest quality
+- Longer durations and audio provide progressively better margins
 - Same strategy as image generation — build user habits first, optimize pricing later
 - Credits deducted upfront when the job is submitted
 - Credits automatically refunded to user profile if Fal.ai reports failure
@@ -224,7 +245,7 @@ Most AI video companies (Pika, Runway, etc.) operate at a loss on generation cos
 2. Absorb storage and delivery costs as platform overhead
 3. Offset with subscription tiers and volume commitment
 
-For clip.art, our 5-second maximum duration and R2's zero egress fees keep ongoing costs minimal (~$0.015/GB/month storage).
+For clip.art, R2's zero egress fees keep ongoing costs minimal (~$0.015/GB/month storage). Longer videos (~10–15 MB at 15s) scale storage cost linearly but delivery remains free.
 
 ---
 
@@ -337,9 +358,11 @@ Uses `@fal-ai/server-proxy/nextjs` to create a route handler that:
 Exports:
 
 - `AnimationModel` type: `"kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro"`
-- `MODEL_CREDITS`: Credit cost lookup per model
+- `calculateCredits(model, duration, audio)`: Dynamic credit calculation based on per-second rates
+- `MAX_DURATION`: Max duration per model (10 for Fast, 15 for Standard/Pro)
+- `AUDIO_SUPPORTED`: Audio capability per model (false for Fast, true for Standard/Pro)
 - `MODEL_LABELS`: Human-readable labels per model
-- `submitAnimation(imageUrl, prompt, model, duration)`: Submits to Fal.ai queue, returns `{ requestId }`
+- `submitAnimation(imageUrl, prompt, model, duration, audio)`: Submits to Fal.ai queue, returns `{ requestId }`
 - `checkAnimationStatus(model, requestId)`: Polls Fal.ai queue, returns status and video URL when complete
 
 ### Model endpoint mapping
@@ -355,9 +378,9 @@ Exports:
 The `buildInput()` function handles the API shape differences:
 
 - **Kling 2.5 Turbo**: Uses `image_url` parameter for source image
-- **Kling 3.0 (Standard/Pro)**: Uses `start_image_url` parameter, supports `generate_audio` toggle
+- **Kling 3.0 (Standard/Pro)**: Uses `start_image_url` parameter, supports `generate_audio` toggle and durations 5–15s
 
-Both share: `prompt`, `duration` (as string "5" or "10"), `negative_prompt`, `cfg_scale`
+Both share: `prompt`, `duration` (as string "5" through "15"), `negative_prompt`, `cfg_scale`
 
 ### Async queue flow
 
@@ -381,7 +404,8 @@ Both share: `prompt`, `duration` (as string "5" or "10"), `negative_prompt`, `cf
   "sourceUrl": "https://images.clip.art/free/cute-cat-abc123.webp",
   "prompt": "Character waves hello and smiles",
   "model": "kling-3.0-standard",
-  "duration": 5
+  "duration": 10,
+  "audio": true
 }
 ```
 
@@ -408,7 +432,8 @@ Both share: `prompt`, `duration` (as string "5" or "10"), `negative_prompt`, `cf
 - `sourceUrl`: Required, must be a valid URL with hostname `images.clip.art`
 - `prompt`: Required, string, max 1000 characters, must pass `checkPromptSafety()`
 - `model`: Optional, defaults to `kling-3.0-standard` if invalid or missing
-- `duration`: Fixed at 5 seconds (parameter accepted but overridden)
+- `duration`: Integer 5–15 (clamped to model max: 10 for Fast, 15 for Standard/Pro)
+- `audio`: Boolean, enables native AI audio (forced false for Kling 2.5 Fast)
 
 **Flow**:
 1. Parse and validate request body
@@ -522,12 +547,15 @@ Two-column on desktop (`lg:grid-cols-2`), stacked on mobile.
 
 **Right column**:
 - Motion prompt textarea (1000 char max, Cmd+Enter shortcut)
-- Quick motion presets (5 clip art-specific suggestions)
-- Model selector (3 pill buttons with credit costs)
-- "Animate" CTA button showing credit cost
-- `AnimationProgress` component during processing
+- AI Suggestions (free, image-specific, powered by Gemini 2.5 Flash)
+- Templates (collapsible categorized motion presets)
+- Model selector (3 pill buttons with dynamic credit costs)
+- Duration slider (5–15s range input with gradient-filled track)
+- Audio toggle (native AI audio switch, auto-disabled for Fast model)
+- "Animate — X credits" CTA button (dynamically updates as settings change)
+- Helper text showing selected duration + audio status
 - Error display with Framer Motion animation
-- Result actions: Download MP4, Animate Again, View in My Creations
+- Result actions: Download MP4, View in My Creations
 
 #### Entry points
 
@@ -557,15 +585,37 @@ These are optimized for clip art — simple, contained movements that work well 
 
 #### Model selector
 
-Three pill-style buttons in a grid:
+Three pill-style buttons in a grid. Credit costs update dynamically based on the current duration and audio settings:
 
-| Button | Model | Credits | Label |
-|--------|-------|---------|-------|
+| Button | Model | Credits (5s silent) | Label |
+|--------|-------|---------------------|-------|
 | Fast | `kling-2.5-turbo` | 5 | Quick preview |
 | Standard | `kling-3.0-standard` | 8 | Best value |
 | Pro | `kling-3.0-pro` | 12 | Highest quality |
 
 Default selection: Standard (best value).
+
+When switching models:
+- Duration clamps to model max (Fast: 10s, Standard/Pro: 15s)
+- Audio toggle auto-disables if the model doesn't support it
+
+#### Duration slider
+
+Range input with 1-second increments, gradient-filled track (pink-to-purple), and a prominent `Xs` badge:
+
+- Min: 5s (all models)
+- Max: 10s (Fast) or 15s (Standard/Pro)
+- Tick marks at 5s, 10s, and max duration
+- Automatically adjusts max when model changes
+
+#### Audio toggle
+
+Switch-style toggle with speaker icon:
+
+- **Enabled state**: Purple accent, "AI generates sound effects and voice" subtitle
+- **Disabled state**: Gray, standard appearance
+- **Unavailable state**: 50% opacity, "Not available with Fast model" subtitle
+- Automatically forced off when Kling 2.5 Fast is selected
 
 #### Polling mechanism
 
@@ -742,13 +792,13 @@ supabase db push
 
 ### Phase 2 — Near-term
 
-| Feature | Description | Complexity |
-|---------|-------------|------------|
-| FFmpeg preview generation | 480p compressed loop (~200–400 KB) for grid autoplay | Medium |
-| Audio generation | Kling 3.0 supports audio — add toggle to UI | Low |
-| 10-second duration | Add duration selector, adjust credit pricing | Low |
-| GIF export | Convert MP4 to GIF for social/messaging use | Medium |
-| Video-to-video style transfer | Apply style changes to existing animations | High |
+| Feature | Description | Complexity | Status |
+|---------|-------------|------------|--------|
+| FFmpeg preview generation | 480p compressed loop (~200–400 KB) for grid autoplay | Medium | Planned |
+| Audio generation | Kling 3.0 native audio toggle | Low | **Shipped** |
+| Variable duration (5–15s) | Duration slider, per-second credit pricing | Low | **Shipped** |
+| GIF export | Convert MP4 to GIF for social/messaging use | Medium | Planned |
+| Video-to-video style transfer | Apply style changes to existing animations | High | Planned |
 
 ### Phase 3 — Medium-term
 

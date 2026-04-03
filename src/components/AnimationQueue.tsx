@@ -151,9 +151,19 @@ function QueueCard({
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-semibold text-gray-700">
-            {job.sourceTitle}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-xs font-semibold text-gray-700">
+              {job.sourceTitle}
+            </p>
+            <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-gray-500">
+              {job.duration || 5}s
+            </span>
+            {job.audio && (
+              <span className="shrink-0 rounded bg-purple-50 px-1.5 py-0.5 text-[9px] font-bold text-purple-500">
+                Audio
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-gray-400">
             {job.prompt}
           </p>

@@ -125,6 +125,47 @@ Instead, the modal reinforces: "No subscription" and "Credits never expire" — 
 
 We may add a public `/pricing` or `/about#pricing` page that goes deeper on value comparison (vs Etsy, vs stock sites, vs other AI generators) for users who actively seek that info. This is the right place for per-credit breakdowns and competitive tables — not the checkout modal. Low priority for now.
 
+## Animation Pricing (2026-04)
+
+### Per-second credit model
+
+Animations use a per-second pricing model. Each model has a base credit rate per second of video, and enabling native audio adds a 50% surcharge (matching fal.ai's ~50% audio markup).
+
+### Base rates
+
+| Model | Fal.ai $/sec (no audio) | Fal.ai $/sec (audio) | Credits/sec (no audio) | Credits/sec (audio) |
+|-------|------------------------|---------------------|----------------------|---------------------|
+| Kling 2.5 Fast | $0.07 | N/A | 1.0 | N/A |
+| Kling 3.0 Standard | $0.084 | $0.126 | 1.6 | 2.4 |
+| Kling 3.0 Pro | $0.112 | $0.14 | 2.4 | 3.6 |
+
+### Full credit matrix
+
+| Model | 5s silent | 5s audio | 10s silent | 10s audio | 15s silent | 15s audio |
+|-------|-----------|----------|------------|-----------|------------|-----------|
+| Fast | 5 | N/A | 10 | N/A | N/A | N/A |
+| Standard | 8 | 12 | 16 | 24 | 24 | 36 |
+| Pro | 12 | 18 | 24 | 36 | 36 | 54 |
+
+Notes:
+- Kling 2.5 Fast max duration is 10s and does not support native audio
+- Kling 3.0 models support 5-15s durations and native audio generation
+- Credits are calculated as `round(base_per_sec * duration * (audio ? 1.5 : 1))`
+- At the Sweet Spot tier (5¢/credit), a 10s Standard animation = 16 credits = $0.80
+
+### Fal.ai cost vs our revenue per animation (Sweet Spot tier)
+
+| Config | Fal.ai cost | Our revenue | Margin |
+|--------|------------|-------------|--------|
+| 5s Standard silent | $0.42 | $0.40 | -5% |
+| 5s Standard audio | $0.63 | $0.60 | -5% |
+| 10s Standard silent | $0.84 | $0.80 | -5% |
+| 10s Standard audio | $1.26 | $1.20 | -5% |
+| 10s Pro silent | $1.12 | $1.20 | +7% |
+| 15s Pro audio | $2.10 | $2.70 | +29% |
+
+Longer, higher-quality animations have better margins. Fast/Standard at short durations are loss leaders by design (consistent with our volume-first philosophy).
+
 ## Recommendation
 
 **Optimize for volume and habit formation, not margin per transaction.** The goal is to make generating feel like pulling a slot machine — cheap, fast, addictive. Users who generate frequently become advocates and repeat buyers.

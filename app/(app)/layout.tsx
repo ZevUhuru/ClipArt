@@ -1,12 +1,13 @@
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppBottomNav } from "@/components/AppBottomNav";
+import { AppMain } from "@/components/AppMain";
 import { ImageDetailDrawer } from "@/components/ImageDetailDrawer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-100">
       <AppSidebar />
-      <main className="min-h-screen pb-20 md:ml-60 md:pb-0">{children}</main>
+      <AppMain>{children}</AppMain>
       <AppBottomNav />
       <ImageDetailDrawer />
     </div>

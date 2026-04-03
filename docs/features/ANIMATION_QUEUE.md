@@ -59,6 +59,8 @@ interface QueuedAnimation {
   sourceTitle: string;
   prompt: string;
   model: string;
+  duration: number;     // 5–15 seconds
+  audio: boolean;       // native AI audio enabled
   status: "processing" | "completed" | "failed";
   videoUrl?: string;
   error?: string;
@@ -74,6 +76,8 @@ No spinners. The queue cards use:
 - **Stage-based status messages**: "Queued" → "Generating frames" → "Rendering video" → "Almost done" → "Complete"
 - **Elapsed time counter** in human-readable form ("1m 23s")
 - **Percentage display** in tabular-nums for clean alignment
+- **Duration badge** (e.g. "10s") shown inline with the source title
+- **Audio badge** (purple "Audio" pill) shown when the job has native audio enabled
 
 ## Key Behaviors
 

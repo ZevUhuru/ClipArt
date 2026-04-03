@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -19,11 +19,35 @@ import {
 
 type AnimModel = "kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro";
 
-const MODELS: { id: AnimModel; label: string; credits: number; description: string }[] = [
-  { id: "kling-2.5-turbo", label: "Fast", credits: 5, description: "Quick preview" },
-  { id: "kling-3.0-standard", label: "Standard", credits: 8, description: "Best value" },
-  { id: "kling-3.0-pro", label: "Pro", credits: 12, description: "Highest quality" },
+const MODELS: { id: AnimModel; label: string; description: string }[] = [
+  { id: "kling-2.5-turbo", label: "Fast", description: "Quick preview" },
+  { id: "kling-3.0-standard", label: "Standard", description: "Best value" },
+  { id: "kling-3.0-pro", label: "Pro", description: "Highest quality" },
 ];
+
+const BASE_CREDITS_PER_SEC: Record<AnimModel, number> = {
+  "kling-2.5-turbo": 1,
+  "kling-3.0-standard": 1.6,
+  "kling-3.0-pro": 2.4,
+};
+
+const MODEL_MAX_DURATION: Record<AnimModel, number> = {
+  "kling-2.5-turbo": 10,
+  "kling-3.0-standard": 15,
+  "kling-3.0-pro": 15,
+};
+
+const MODEL_AUDIO_SUPPORTED: Record<AnimModel, boolean> = {
+  "kling-2.5-turbo": false,
+  "kling-3.0-standard": true,
+  "kling-3.0-pro": true,
+};
+
+function calcCredits(model: AnimModel, duration: number, audio: boolean): number {
+  const base = Math.round(BASE_CREDITS_PER_SEC[model] * duration);
+  const safeAudio = audio && MODEL_AUDIO_SUPPORTED[model];
+  return safeAudio ? Math.round(base * 1.5) : base;
+}
 
 interface PromptSuggestion {
   id?: string;
@@ -110,6 +134,8 @@ function AnimatePageInner() {
   const [importOpen, setImportOpen] = useState(false);
   const [prompt, setPrompt] = useState(initialPrompt);
   const [model, setModel] = useState<AnimModel>("kling-3.0-standard");
+  const [duration, setDuration] = useState(5);
+  const [audio, setAudio] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewingVideo, setViewingVideo] = useState<string | null>(null);
@@ -125,7 +151,17 @@ function AnimatePageInner() {
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const suggestionsCache = useRef<Map<string, PromptSuggestion[]>>(new Map());
 
-  const selectedModel = MODELS.find((m) => m.id === model) || MODELS[1];
+  const maxDuration = MODEL_MAX_DURATION[model];
+  const audioSupported = MODEL_AUDIO_SUPPORTED[model];
+  const totalCredits = useMemo(() => calcCredits(model, duration, audio), [model, duration, audio]);
+
+  useEffect(() => {
+    if (duration > maxDuration) setDuration(maxDuration);
+  }, [model, duration, maxDuration]);
+
+  useEffect(() => {
+    if (!audioSupported && audio) setAudio(false);
+  }, [model, audioSupported, audio]);
 
   const filteredTemplates =
     templateCategory === "all"
@@ -237,7 +273,8 @@ function AnimatePageInner() {
           sourceUrl: source.url,
           prompt: prompt.trim(),
           model,
-          duration: 5,
+          duration,
+          audio: audio && audioSupported,
           promptId: selectedPromptId || undefined,
         }),
       });
@@ -264,6 +301,8 @@ function AnimatePageInner() {
         sourceTitle: source.title,
         prompt: prompt.trim(),
         model,
+        duration,
+        audio: audio && audioSupported,
         status: "processing",
         startedAt: Date.now(),
       });
@@ -274,7 +313,7 @@ function AnimatePageInner() {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
     setSubmitting(false);
-  }, [prompt, model, submitting, source, user, selectedPromptId, openAuthModal, openBuyCreditsModal, setCredits, addJob]);
+  }, [prompt, model, duration, audio, audioSupported, submitting, source, user, selectedPromptId, openAuthModal, openBuyCreditsModal, setCredits, addJob]);
 
   const handleViewResult = (job: QueuedAnimation) => {
     if (job.videoUrl) {
@@ -303,7 +342,8 @@ function AnimatePageInner() {
             sourceUrl: job.sourceUrl,
             prompt: job.prompt,
             model: job.model,
-            duration: 5,
+            duration: job.duration || 5,
+            audio: job.audio || false,
           }),
         });
 
@@ -327,6 +367,8 @@ function AnimatePageInner() {
           sourceTitle: job.sourceTitle,
           prompt: job.prompt,
           model: job.model,
+          duration: job.duration || 5,
+          audio: job.audio || false,
           status: "processing",
           startedAt: Date.now(),
         });
@@ -359,6 +401,7 @@ function AnimatePageInner() {
   }
 
   const aspectClass = source?.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square";
+  const sliderPercent = ((duration - 5) / (maxDuration - 5)) * 100;
 
   return (
     <div className="min-h-screen">
@@ -668,27 +711,104 @@ function AnimatePageInner() {
                     Quality
                   </p>
                   <div className="grid grid-cols-3 gap-2">
-                    {MODELS.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => setModel(m.id)}
-                        disabled={submitting}
-                        className={`relative rounded-xl border px-3 py-3 text-center transition-all ${
-                          model === m.id
-                            ? "border-pink-300 bg-pink-50 ring-2 ring-pink-100"
-                            : "border-gray-200 bg-white hover:border-gray-300"
-                        }`}
-                      >
-                        <p className={`text-sm font-semibold ${model === m.id ? "text-pink-700" : "text-gray-700"}`}>
-                          {m.label}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-gray-400">{m.description}</p>
-                        <p className={`mt-1 text-xs font-bold ${model === m.id ? "text-pink-600" : "text-gray-500"}`}>
-                          {m.credits} credits
-                        </p>
-                      </button>
-                    ))}
+                    {MODELS.map((m) => {
+                      const isActive = model === m.id;
+                      const modelCredits = calcCredits(m.id, Math.min(duration, MODEL_MAX_DURATION[m.id]), audio && MODEL_AUDIO_SUPPORTED[m.id]);
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => setModel(m.id)}
+                          disabled={submitting}
+                          className={`relative rounded-xl border px-3 py-3 text-center transition-all ${
+                            isActive
+                              ? "border-pink-300 bg-pink-50 ring-2 ring-pink-100"
+                              : "border-gray-200 bg-white hover:border-gray-300"
+                          }`}
+                        >
+                          <p className={`text-sm font-semibold ${isActive ? "text-pink-700" : "text-gray-700"}`}>
+                            {m.label}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-gray-400">{m.description}</p>
+                          <p className={`mt-1 text-xs font-bold ${isActive ? "text-pink-600" : "text-gray-500"}`}>
+                            {modelCredits} credits
+                          </p>
+                        </button>
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Duration slider */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      Duration
+                    </p>
+                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold tabular-nums text-gray-700">
+                      {duration}s
+                    </span>
+                  </div>
+                  <div className="relative px-0.5">
+                    <div className="relative h-2 rounded-full bg-gray-100">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-pink-400 to-purple-400"
+                        style={{ width: `${sliderPercent}%` }}
+                      />
+                    </div>
+                    <input
+                      type="range"
+                      min={5}
+                      max={maxDuration}
+                      step={1}
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      disabled={submitting}
+                      className="absolute inset-0 h-2 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-pink-500 [&::-moz-range-thumb]:shadow-md [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-pink-500 [&::-webkit-slider-thumb]:shadow-md"
+                    />
+                  </div>
+                  <div className="mt-1.5 flex justify-between text-[10px] text-gray-300">
+                    <span>5s</span>
+                    {maxDuration >= 10 && <span>10s</span>}
+                    <span>{maxDuration}s</span>
+                  </div>
+                </div>
+
+                {/* Audio toggle */}
+                <div
+                  className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-all ${
+                    audio && audioSupported
+                      ? "border-purple-200 bg-purple-50/50"
+                      : "border-gray-200 bg-white"
+                  } ${!audioSupported ? "opacity-50" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className={`h-5 w-5 ${audio && audioSupported ? "text-purple-500" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                    </svg>
+                    <div>
+                      <p className={`text-sm font-semibold ${audio && audioSupported ? "text-purple-700" : "text-gray-700"}`}>
+                        Native Audio
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {audioSupported ? "AI generates sound effects and voice" : "Not available with Fast model"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => audioSupported && setAudio(!audio)}
+                    disabled={submitting || !audioSupported}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:cursor-not-allowed ${
+                      audio && audioSupported ? "bg-purple-500" : "bg-gray-200"
+                    }`}
+                    role="switch"
+                    aria-checked={audio && audioSupported}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                        audio && audioSupported ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </div>
 
                 {/* Animate button */}
@@ -697,11 +817,11 @@ function AnimatePageInner() {
                   disabled={!prompt.trim() || submitting}
                   className="w-full rounded-xl bg-brand-gradient px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {submitting ? "Submitting…" : `Animate — ${selectedModel.credits} credits`}
+                  {submitting ? "Submitting…" : `Animate — ${totalCredits} credits`}
                 </button>
 
                 <p className="text-center text-xs text-gray-300">
-                  5-second MP4 video. Duration: ~1–2 minutes. Queue multiple at once.
+                  {duration}-second MP4{audio && audioSupported ? " with audio" : ""}. Duration: ~1–{Math.max(2, Math.ceil(duration / 3))} minutes. Queue multiple at once.
                 </p>
 
                 {/* Error */}

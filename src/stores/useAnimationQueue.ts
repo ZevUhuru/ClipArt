@@ -9,6 +9,8 @@ export interface QueuedAnimation {
   sourceTitle: string;
   prompt: string;
   model: string;
+  duration: number;
+  audio: boolean;
   status: "processing" | "completed" | "failed";
   videoUrl?: string;
   error?: string;

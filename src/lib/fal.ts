@@ -12,11 +12,33 @@ const MODEL_ENDPOINTS: Record<AnimationModel, string> = {
   "kling-3.0-pro": "fal-ai/kling-video/v3/pro/image-to-video",
 };
 
-export const MODEL_CREDITS: Record<AnimationModel, number> = {
-  "kling-2.5-turbo": 5,
-  "kling-3.0-standard": 8,
-  "kling-3.0-pro": 12,
+const BASE_CREDITS_PER_SEC: Record<AnimationModel, number> = {
+  "kling-2.5-turbo": 1,
+  "kling-3.0-standard": 1.6,
+  "kling-3.0-pro": 2.4,
 };
+
+export const MAX_DURATION: Record<AnimationModel, number> = {
+  "kling-2.5-turbo": 10,
+  "kling-3.0-standard": 15,
+  "kling-3.0-pro": 15,
+};
+
+export const AUDIO_SUPPORTED: Record<AnimationModel, boolean> = {
+  "kling-2.5-turbo": false,
+  "kling-3.0-standard": true,
+  "kling-3.0-pro": true,
+};
+
+export function calculateCredits(
+  model: AnimationModel,
+  duration: number,
+  audio: boolean,
+): number {
+  const base = Math.round(BASE_CREDITS_PER_SEC[model] * duration);
+  const safeAudio = audio && AUDIO_SUPPORTED[model];
+  return safeAudio ? Math.round(base * 1.5) : base;
+}
 
 export const MODEL_LABELS: Record<AnimationModel, string> = {
   "kling-2.5-turbo": "Kling 2.5 Fast",
@@ -28,12 +50,18 @@ function getEndpoint(model: AnimationModel): string {
   return MODEL_ENDPOINTS[model] || MODEL_ENDPOINTS["kling-3.0-standard"];
 }
 
-function buildInput(imageUrl: string, prompt: string, model: AnimationModel, duration: number) {
+function buildInput(
+  imageUrl: string,
+  prompt: string,
+  model: AnimationModel,
+  duration: number,
+  audio: boolean,
+) {
   if (model === "kling-2.5-turbo") {
     return {
       prompt,
       image_url: imageUrl,
-      duration: String(duration) as "5" | "10",
+      duration: String(Math.min(duration, 10)) as "5" | "10",
       negative_prompt: "blur, distort, and low quality",
       cfg_scale: 0.5,
     };
@@ -43,7 +71,7 @@ function buildInput(imageUrl: string, prompt: string, model: AnimationModel, dur
     prompt,
     start_image_url: imageUrl,
     duration: String(duration),
-    generate_audio: false,
+    generate_audio: audio && AUDIO_SUPPORTED[model],
     negative_prompt: "blur, distort, and low quality",
     cfg_scale: 0.5,
   };
@@ -54,9 +82,10 @@ export async function submitAnimation(
   prompt: string,
   model: AnimationModel,
   duration: number = 5,
+  audio: boolean = false,
 ): Promise<{ requestId: string }> {
   const endpoint = getEndpoint(model);
-  const input = buildInput(imageUrl, prompt, model, duration);
+  const input = buildInput(imageUrl, prompt, model, duration, audio);
 
   const { request_id } = await fal.queue.submit(endpoint, { input });
 
