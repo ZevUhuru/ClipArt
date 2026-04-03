@@ -547,7 +547,7 @@ Two-column on desktop (`lg:grid-cols-2`), stacked on mobile.
 
 **Right column**:
 - Motion prompt textarea (1000 char max, Cmd+Enter shortcut)
-- AI Suggestions (free, image-specific, powered by Gemini 2.5 Flash)
+- AI Suggestions (free, image-specific, duration-aware, powered by Gemini 2.5 Flash)
 - Templates (collapsible categorized motion presets)
 - Model selector (3 pill buttons with dynamic credit costs)
 - Duration slider (5–15s range input with gradient-filled track)
