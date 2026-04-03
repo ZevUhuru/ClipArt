@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
@@ -129,6 +130,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ imageUrl, freeGen: true });
   } catch (err) {
+    Sentry.captureException(err, {
+      tags: { type: "generation_error" },
+    });
     console.error("Generation error:", err);
 
     const message = err instanceof Error ? err.message : String(err);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { checkPromptSafety } from "@/lib/promptSafety";
 import { submitAnimation, type AnimationModel, MODEL_CREDITS } from "@/lib/fal";
@@ -108,6 +109,9 @@ export async function POST(request: NextRequest) {
       creditsRemaining: profile.credits - creditsNeeded,
     });
   } catch (err) {
+    Sentry.captureException(err, {
+      tags: { type: "animation_submit_error" },
+    });
     console.error("Animate error:", err);
 
     const message = err instanceof Error ? err.message : String(err);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { checkAnimationStatus, type AnimationModel } from "@/lib/fal";
 import { uploadToR2 } from "@/lib/r2";
@@ -77,6 +78,19 @@ export async function GET(request: NextRequest) {
           completed_at: new Date().toISOString(),
         })
         .eq("id", animationId);
+
+      Sentry.captureMessage("Animation timed out", {
+        level: "warning",
+        tags: { type: "animation_timeout", model: animation.model },
+        extra: {
+          animationId,
+          userId: user.id,
+          model: animation.model,
+          creditsRefunded: animation.credits_charged,
+          elapsedMinutes: Math.round((Date.now() - createdAt) / 60000),
+          falRequestId: animation.fal_request_id,
+        },
+      });
 
       return NextResponse.json({
         status: "failed",
@@ -178,6 +192,18 @@ export async function GET(request: NextRequest) {
           .eq("id", animationId);
       }
 
+      Sentry.captureMessage("Animation failed on Fal.ai", {
+        level: "error",
+        tags: { type: "animation_fal_failure", model: animation.model },
+        extra: {
+          animationId,
+          userId: user.id,
+          model: animation.model,
+          creditsRefunded: animation.credits_charged,
+          falRequestId: animation.fal_request_id,
+        },
+      });
+
       return NextResponse.json({
         status: "failed",
         error: "Animation generation failed. Credits have been refunded.",
@@ -189,6 +215,9 @@ export async function GET(request: NextRequest) {
       logs: falStatus.logs,
     });
   } catch (err) {
+    Sentry.captureException(err, {
+      tags: { type: "animation_status_error" },
+    });
     console.error("Animate status error:", err);
     return NextResponse.json(
       { error: "Could not check animation status" },
