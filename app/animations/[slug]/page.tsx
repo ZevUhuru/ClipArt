@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/seo";
 import { buildVideoJsonLd } from "@/lib/seo-jsonld";
+import { CategoryNav } from "@/components/CategoryNav";
+import { MarketingFooter } from "@/components/MarketingFooter";
 import { AnimationDetailClient } from "./AnimationDetailClient";
 
 export const revalidate = 60;
@@ -34,6 +37,14 @@ interface AnimationRow {
     category: string;
     slug: string | null;
   } | null;
+}
+
+interface RelatedAnimation {
+  id: string;
+  slug: string;
+  videoUrl: string;
+  posterUrl: string;
+  prompt: string;
 }
 
 async function getAnimation(slug: string): Promise<AnimationRow | null> {
@@ -70,14 +81,6 @@ async function getAnimation(slug: string): Promise<AnimationRow | null> {
   }
 }
 
-interface RelatedAnimation {
-  id: string;
-  slug: string;
-  videoUrl: string;
-  posterUrl: string;
-  prompt: string;
-}
-
 async function getRelatedAnimations(
   currentId: string,
   category: string,
@@ -96,9 +99,7 @@ async function getRelatedAnimations(
       .eq("status", "completed")
       .eq("is_public", true)
       .neq("id", currentId)
-      .or(
-        `prompt.ilike.${catPattern}`,
-      )
+      .or(`prompt.ilike.${catPattern}`)
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -126,10 +127,10 @@ export async function generateMetadata({
   const anim = await getAnimation(params.slug);
   if (!anim) return {};
 
+  const animTitle = anim.source?.title || anim.prompt;
   const title =
-    (anim.source?.title || anim.prompt).slice(0, 55) +
-    " — Animated Clip Art | clip.art";
-  const description = `Watch and download this free animated clip art: ${anim.source?.title || anim.prompt}. Created with AI at clip.art.`;
+    animTitle.slice(0, 50) + " — Free Animated Clip Art | clip.art";
+  const description = `Watch and download this free animated clip art: ${animTitle}. Created with AI at clip.art — free for personal and commercial use.`;
   const path = `animations/${anim.slug || anim.id}`;
   const posterUrl =
     anim.source?.image_url || anim.thumbnail_url || undefined;
@@ -145,14 +146,9 @@ export async function generateMetadata({
       siteName: "clip.art",
       type: "article",
       ...(posterUrl && {
-        images: [{ url: posterUrl, alt: anim.source?.title || anim.prompt }],
+        images: [{ url: posterUrl, alt: animTitle }],
       }),
-      videos: [
-        {
-          url: anim.video_url,
-          type: "video/mp4",
-        },
-      ],
+      videos: [{ url: anim.video_url, type: "video/mp4" }],
     },
     twitter: {
       card: "player",
@@ -161,6 +157,26 @@ export async function generateMetadata({
       ...(posterUrl && { images: [posterUrl] }),
     },
   };
+}
+
+function Chevron() {
+  return (
+    <li aria-hidden="true">
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5l7 7-7 7"
+        />
+      </svg>
+    </li>
+  );
 }
 
 export default async function AnimationDetailPage({ params }: PageProps) {
@@ -174,6 +190,13 @@ export default async function AnimationDetailPage({ params }: PageProps) {
   const related = await getRelatedAnimations(anim.id, category);
   const detailPath = `/animations/${anim.slug || anim.id}`;
 
+  const tags = [
+    category,
+    "animation",
+    anim.model,
+    `${anim.duration}s`,
+  ].filter(Boolean);
+
   const videoJsonLd = buildVideoJsonLd({
     title: animTitle,
     description: anim.prompt,
@@ -184,80 +207,107 @@ export default async function AnimationDetailPage({ params }: PageProps) {
   });
 
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            ...videoJsonLd,
-          }),
-        }}
-      />
+    <div className="min-h-screen bg-white">
+      <CategoryNav />
 
-      <div className="mx-auto max-w-5xl px-4 pb-16 pt-8">
-        {/* Breadcrumb */}
-        <nav className="mb-6 text-sm text-gray-400">
-          <Link href="/" className="hover:text-gray-600">
-            Home
-          </Link>
-          <span className="mx-2">/</span>
-          <Link href="/animations" className="hover:text-gray-600">
-            Animations
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-gray-600">{animTitle}</span>
-        </nav>
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="mx-auto max-w-6xl px-4 py-4">
+        <ol className="flex items-center gap-1.5 text-sm text-gray-400">
+          <li>
+            <Link href="/" className="hover:text-gray-600">
+              Home
+            </Link>
+          </li>
+          <Chevron />
+          <li>
+            <Link href="/animations" className="hover:text-gray-600">
+              Animations
+            </Link>
+          </li>
+          <Chevron />
+          <li className="truncate text-gray-600">{animTitle}</li>
+        </ol>
+      </nav>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-          {/* Video */}
-          <div className="overflow-hidden rounded-2xl bg-gray-900">
-            <video
-              src={videoUrl}
-              poster={posterUrl}
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="aspect-video w-full object-contain"
-            />
+      {/* Hero: two-column */}
+      <section className="mx-auto max-w-6xl px-4 pb-12">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Left: Gradient-framed video */}
+          <div className="rounded-3xl bg-brand-gradient p-[2px]">
+            <div className="relative overflow-hidden rounded-[22px] bg-gray-950">
+              <span className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-full bg-purple-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                <svg
+                  className="h-2.5 w-2.5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M8 5.14v14l11-7-11-7z" />
+                </svg>
+                Animated
+              </span>
+
+              <video
+                src={videoUrl}
+                poster={posterUrl}
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="aspect-square w-full object-contain"
+              />
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-5">
-            <h1 className="font-futura text-2xl font-bold text-gray-900">
+          {/* Right: Details + Actions */}
+          <div className="flex flex-col justify-center">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl">
               {animTitle}
             </h1>
 
-            <p className="text-sm leading-relaxed text-gray-500">
+            {/* Category badge */}
+            <div className="mt-4">
+              <Link
+                href="/animations"
+                className="inline-flex items-center rounded-full bg-brand-gradient px-3 py-1 text-xs font-semibold text-white"
+              >
+                Animated Clip Art
+              </Link>
+            </div>
+
+            {/* Description */}
+            <p className="mt-5 text-base leading-relaxed text-gray-600">
               {anim.prompt}
             </p>
 
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-purple-700">
-                {category}
-              </span>
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-                {anim.model}
-              </span>
-              <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">
-                {anim.duration}s
-              </span>
+            {/* Tags */}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500"
+                >
+                  {tag.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </span>
+              ))}
             </div>
 
             {/* Source image */}
             {anim.source && (
               <Link
                 href={`/${category}/${anim.source.slug || anim.source.id}`}
-                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 transition-colors hover:border-gray-200"
+                className="mt-5 flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 transition-colors hover:border-gray-200"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={anim.source.image_url}
-                  alt=""
-                  className="h-12 w-12 rounded-lg object-cover"
-                />
+                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                  <Image
+                    src={anim.source.image_url}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                    unoptimized
+                  />
+                </div>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium text-gray-700">
                     Source image
@@ -269,50 +319,77 @@ export default async function AnimationDetailPage({ params }: PageProps) {
               </Link>
             )}
 
-            {/* Actions — client component for interactivity */}
+            {/* Download + Share (client) */}
             <AnimationDetailClient
-              animationId={anim.id}
-              title={animTitle}
-              prompt={anim.prompt}
-              category={category}
-              videoUrl={anim.video_url}
-              thumbnailUrl={posterUrl}
               slug={anim.slug || anim.id}
+              videoUrl={anim.video_url}
               detailPath={detailPath}
+              title={animTitle}
             />
+
+            {/* Trust strip */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-400">
+              <span className="inline-flex items-center gap-1">
+                <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Free for commercial use
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                No attribution required
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                MP4 video download
+              </span>
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Related animations */}
-        {related.length > 0 && (
-          <div className="mt-12">
-            <h2 className="mb-4 font-futura text-lg font-bold text-gray-900">
-              Related Animations
+      {/* Gradient divider */}
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+      </div>
+
+      {/* Related Animations */}
+      {related.length > 0 && (
+        <section className="bg-gray-50/40">
+          <div className="mx-auto max-w-6xl px-4 py-14">
+            <h2 className="mb-8 text-xl font-bold text-gray-900 sm:text-2xl">
+              More animated clip art
             </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {related.map((r) => (
                 <Link
                   key={r.id}
                   href={`/animations/${r.slug}`}
-                  className="group relative aspect-square overflow-hidden rounded-2xl bg-gray-900/5 ring-1 ring-gray-200 transition-all hover:-translate-y-0.5 hover:ring-2 hover:ring-purple-400/40"
+                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <video
-                    src={r.videoUrl}
-                    poster={r.posterUrl}
-                    muted
-                    loop
-                    playsInline
-                    preload="none"
-                    className="absolute inset-0 h-full w-full object-contain"
-                    onMouseOver={(e) =>
-                      (e.target as HTMLVideoElement).play().catch(() => {})
-                    }
-                    onMouseOut={(e) =>
-                      (e.target as HTMLVideoElement).pause()
-                    }
-                  />
-                  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
-                    <p className="line-clamp-2 text-xs font-medium text-white">
+                  <div className="relative aspect-square bg-gray-950">
+                    <video
+                      src={r.videoUrl}
+                      poster={r.posterUrl}
+                      muted
+                      loop
+                      playsInline
+                      preload="none"
+                      className="absolute inset-0 h-full w-full object-contain"
+                      onMouseOver={(e) =>
+                        (e.target as HTMLVideoElement).play().catch(() => {})
+                      }
+                      onMouseOut={(e) =>
+                        (e.target as HTMLVideoElement).pause()
+                      }
+                    />
+                  </div>
+                  <div className="px-3 py-2.5">
+                    <p className="truncate text-xs font-medium text-gray-600">
                       {r.prompt}
                     </p>
                   </div>
@@ -320,13 +397,41 @@ export default async function AnimationDetailPage({ params }: PageProps) {
               ))}
             </div>
           </div>
-        )}
+        </section>
+      )}
 
-        {/* License */}
-        <p className="mt-10 text-center text-xs text-gray-300">
-          Free for personal and commercial use. No attribution required.
-        </p>
-      </div>
-    </>
+      {/* Generate CTA */}
+      <section className="mx-auto max-w-3xl px-4 py-16">
+        <div className="rounded-3xl bg-brand-gradient p-[2px]">
+          <div className="rounded-[22px] bg-white p-8 text-center sm:p-10">
+            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              Create your own animated clip art
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
+              Generate clip art with AI, then bring it to life with animation.
+              10 free credits when you sign up.
+            </p>
+            <div className="mt-8">
+              <Link href="/animate" className="btn-primary px-8 text-base">
+                Start Animating — It&apos;s Free
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <MarketingFooter />
+
+      {/* JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            ...videoJsonLd,
+          }),
+        }}
+      />
+    </div>
   );
 }
