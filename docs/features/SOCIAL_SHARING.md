@@ -1,11 +1,16 @@
-# Social Sharing Feature
+# Social Sharing & YouTube Upload
 
-**Status**: Implemented (YouTube), extensible to Instagram/TikTok
+**Status**: Implemented (YouTube upload), extensible to Instagram/TikTok
 **Date**: April 4, 2026
 
 ## Overview
 
-Users can share their clip art animations directly to social platforms from within clip.art. The system is built with a multi-platform provider architecture — YouTube is the first integration, with Instagram and TikTok designed to slot in by adding a single provider file.
+Two distinct actions for animations:
+
+- **Share** (consumer) — Lightweight popover with social links (X, Facebook, WhatsApp, copy link). Available on all animations for all users.
+- **Upload to YouTube** (creator) — Full metadata form + OAuth flow to publish the video to YouTube. **Only available to the user who generated the animation** (enforced in both UI and API).
+
+The upload system is built with a multi-platform provider architecture — YouTube is the first integration, with Instagram and TikTok designed to slot in by adding a single provider file.
 
 ## Architecture
 
@@ -70,9 +75,20 @@ Supporting routes:
 
 ## UI Components
 
-### ShareModal (`src/components/ShareModal.tsx`)
+### SharePopover (`src/components/SharePopover.tsx`)
 
-Full-featured modal with:
+Lightweight popover for social link sharing:
+- **X (Twitter)** — Opens tweet compose with animation URL + title
+- **Facebook** — Opens Facebook share dialog
+- **WhatsApp** — Opens WhatsApp with pre-filled message
+- **Copy Link** — Copies the animation page URL to clipboard
+- **Native Share** — Uses `navigator.share()` on supported devices (mobile)
+
+Available on **all animations for all users** (no ownership restriction).
+
+### UploadModal (`src/components/UploadModal.tsx`)
+
+Full-featured modal for publishing video to YouTube:
 - **Platform picker** — Shows available providers with connection status
 - **Connect flow** — Redirects to OAuth if not connected
 - **Metadata form** — Pre-filled from template, respects per-platform constraints:
@@ -82,11 +98,18 @@ Full-featured modal with:
   - Privacy: Public / Unlisted / Private (platform-dependent)
 - **Upload progress** — Spinner during upload, success state with link
 
+### Access Control
+
+**Upload to YouTube is restricted to the animation creator:**
+- **UI**: The "Upload to YouTube" button only renders when `isOwner` is true in the drawer store. The drawer store receives `isOwner: true` only when opened from `/my-art` (My Creations).
+- **API**: The upload route enforces `.eq("user_id", user.id)` on the animation query, so even if the UI check were bypassed, the server rejects uploads for animations the user doesn't own.
+- **Share popover** is unrestricted — anyone can share a link to any animation.
+
 ### Integration Points
 
-The Share button appears in two places:
-- **Image Detail Drawer** — Below "Download Animation" for animation cards
-- **Animate Page** — In the "Animation complete" action area
+Both buttons appear in:
+- **Image Detail Drawer** — Share (all users) + Upload to YouTube (owner only)
+- **Animate Page** — In the "Animation complete" action area (always owner context)
 
 ### Shared Tab in My Creations
 
@@ -126,8 +149,8 @@ The mobile menu shows connected social accounts with disconnect buttons. Loads o
 3. Add provider CHECK constraint value in `db/add-social-sharing.sql`
 4. Add env vars for OAuth credentials
 5. Add icon to `public/icons/{platform}.svg`
-6. Add to `PROVIDERS_META` in `ShareModal.tsx`
-7. It automatically appears in the Share modal and Connected Accounts
+6. Add to `PROVIDERS_META` in `UploadModal.tsx`
+7. It automatically appears in the Upload modal and Connected Accounts
 
 ## Files Created
 
@@ -144,16 +167,18 @@ The mobile menu shows connected social accounts with disconnect buttons. Loads o
 | `app/api/social/[provider]/upload/route.ts` | Platform upload |
 | `app/api/me/social/uploads/route.ts` | Upload history |
 | `app/api/me/social/connections/route.ts` | Connection list |
-| `src/components/ShareModal.tsx` | Share UI modal |
+| `src/components/UploadModal.tsx` | YouTube upload modal |
+| `src/components/SharePopover.tsx` | Social link sharing popover |
 | `public/icons/youtube.svg` | YouTube icon |
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/ImageDetailDrawer.tsx` | Added Share button for animations |
-| `app/(app)/animate/page.tsx` | Added Share button in completion area |
-| `app/(app)/my-art/page.tsx` | Added "Shared" tab with upload history |
+| `src/components/ImageDetailDrawer.tsx` | Share popover + Upload to YouTube (owner only) |
+| `src/stores/useImageDrawer.ts` | Added `isOwner` flag for ownership-gated UI |
+| `app/(app)/animate/page.tsx` | Share popover + Upload to YouTube in completion area |
+| `app/(app)/my-art/page.tsx` | "Shared" tab, passes `isOwner: true` to drawer |
 | `src/components/Nav.tsx` | Added Connected Accounts to mobile menu |
 | `.env.local` | Added `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET` placeholders |
 | `package.json` | Added `googleapis` dependency |

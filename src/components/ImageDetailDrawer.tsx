@@ -37,6 +37,7 @@ export function ImageDetailDrawer() {
   const prev = useImageDrawer((s) => s.prev);
   const hasNext = useImageDrawer((s) => s.hasNext);
   const hasPrev = useImageDrawer((s) => s.hasPrev);
+  const isOwner = useImageDrawer((s) => s.isOwner);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -135,6 +136,7 @@ export function ImageDetailDrawer() {
               categorySlug={categorySlug}
               detailHref={detailHref}
               isColoring={isColoring}
+              isOwner={isOwner}
               onClose={close}
             />
           </motion.aside>
@@ -187,6 +189,7 @@ export function ImageDetailDrawer() {
                 categorySlug={categorySlug}
                 detailHref={detailHref}
                 isColoring={isColoring}
+                isOwner={isOwner}
                 onClose={close}
               />
             </div>
@@ -202,12 +205,13 @@ interface DrawerContentProps {
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
+  isOwner: boolean;
   onClose: () => void;
 }
 
 import { MagnifyIcon, ImageLightbox } from "@/components/ImageLightbox";
 
-function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }: DrawerContentProps) {
+function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, onClose }: DrawerContentProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -326,7 +330,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
           </div>
         )}
 
-        {isAnimation && (
+        {isAnimation && isOwner && (
           <button
             onClick={() => setUploadOpen(true)}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600"

@@ -399,8 +399,8 @@ function CreationsGrid() {
                   key={anim.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => openDrawer(drawerItem, animDrawerList)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(drawerItem, animDrawerList); }}
+                  onClick={() => openDrawer(drawerItem, animDrawerList, true)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(drawerItem, animDrawerList, true); }}
                   className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
                 >
                   <div
@@ -475,7 +475,7 @@ function CreationsGrid() {
                       style: gen.style,
                       aspect_ratio: gen.aspect_ratio,
                     };
-                    openDrawer(img, drawerList);
+                    openDrawer(img, drawerList, true);
                   }}
                 />
               );
