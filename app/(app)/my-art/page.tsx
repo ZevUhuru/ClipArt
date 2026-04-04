@@ -19,6 +19,7 @@ interface AnimationItem {
   source_title: string | null;
   source_slug: string | null;
   source_category: string | null;
+  source_aspect_ratio: string | null;
   created_at: string;
 }
 
@@ -118,6 +119,7 @@ function CreationsGrid() {
           source_title: source?.title || null,
           source_slug: source?.slug || null,
           source_category: source?.category || null,
+          source_aspect_ratio: source?.aspect_ratio || null,
           created_at: row.created_at as string,
         };
       });
@@ -251,6 +253,7 @@ function CreationsGrid() {
                 url: anim.source_image_url || anim.thumbnail_url || "",
                 category: anim.source_category || "free",
                 style: "animation",
+                aspect_ratio: anim.source_aspect_ratio || undefined,
                 videoUrl: anim.video_url,
               };
               const animDrawerList = animations.map((a) => ({
@@ -260,6 +263,7 @@ function CreationsGrid() {
                 url: a.source_image_url || a.thumbnail_url || "",
                 category: a.source_category || "free",
                 style: "animation",
+                aspect_ratio: a.source_aspect_ratio || undefined,
                 videoUrl: a.video_url,
               }));
 
@@ -272,7 +276,10 @@ function CreationsGrid() {
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(drawerItem, animDrawerList); }}
                   className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
                 >
-                  <div className="relative aspect-square">
+                  <div
+                    className="relative"
+                    style={{ aspectRatio: anim.source_aspect_ratio ? anim.source_aspect_ratio.replace(":", "/") : "1/1" }}
+                  >
                     <VideoPlayer
                       src={anim.video_url}
                       poster={anim.source_image_url || anim.thumbnail_url || undefined}

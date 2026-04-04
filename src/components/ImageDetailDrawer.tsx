@@ -224,7 +224,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
           onClick={() => setLightboxOpen(true)}
           className="group relative w-full overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 transition-all hover:border-gray-200 hover:shadow-md"
         >
-          <div className={`relative w-full ${image.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
+          <div className="relative w-full" style={{ aspectRatio: image.aspect_ratio ? image.aspect_ratio.replace(":", "/") : "1/1" }}>
             {isAnimation ? (
               <video
                 src={image.videoUrl}
