@@ -144,8 +144,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         .eq("id", uploadRecord.id);
     }
 
+    const errMsg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: "Upload failed. Please try again." },
+      { error: `Upload failed: ${errMsg.slice(0, 300)}` },
       { status: 500 },
     );
   }
