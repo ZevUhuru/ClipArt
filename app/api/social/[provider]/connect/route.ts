@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getProvider } from "@/lib/social/registry";
 import crypto from "crypto";
@@ -23,27 +22,29 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 
   const state = crypto.randomBytes(32).toString("hex");
-  const cookieStore = await cookies();
-  cookieStore.set("social_oauth_state", state, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 600,
-    path: "/",
-  });
-
   const returnTo = request.nextUrl.searchParams.get("returnTo") || "/my-art";
-  cookieStore.set("social_oauth_return", returnTo, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 600,
-    path: "/",
-  });
-
   const origin = request.nextUrl.origin;
   const redirectUri = `${origin}/api/social/${params.provider}/callback`;
   const authUrl = provider.getAuthUrl(state, redirectUri);
 
-  return NextResponse.redirect(authUrl);
+  const isProduction = process.env.NODE_ENV === "production";
+  const response = NextResponse.redirect(authUrl);
+
+  response.cookies.set("social_oauth_state", state, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+
+  response.cookies.set("social_oauth_return", returnTo, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+
+  return response;
 }

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { getProvider } from "@/lib/social/registry";
 
@@ -9,13 +8,15 @@ interface RouteContext {
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const origin = request.nextUrl.origin;
-  const cookieStore = await cookies();
-  const returnTo = cookieStore.get("social_oauth_return")?.value || "/my-art";
+  const returnTo = request.cookies.get("social_oauth_return")?.value || "/my-art";
 
   function errorRedirect(msg: string) {
     const url = new URL(returnTo, origin);
     url.searchParams.set("social_error", msg);
-    return NextResponse.redirect(url);
+    const res = NextResponse.redirect(url);
+    res.cookies.delete("social_oauth_state");
+    res.cookies.delete("social_oauth_return");
+    return res;
   }
 
   const provider = getProvider(params.provider);
@@ -23,10 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
-  const savedState = cookieStore.get("social_oauth_state")?.value;
-
-  cookieStore.delete("social_oauth_state");
-  cookieStore.delete("social_oauth_return");
+  const savedState = request.cookies.get("social_oauth_state")?.value;
 
   if (!code || !state || state !== savedState) {
     return errorRedirect("Invalid OAuth state");
@@ -58,7 +56,10 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     const url = new URL(returnTo, origin);
     url.searchParams.set("social_connected", params.provider);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    response.cookies.delete("social_oauth_state");
+    response.cookies.delete("social_oauth_return");
+    return response;
   } catch (err) {
     console.error(`OAuth callback error for ${params.provider}:`, err);
     return errorRedirect("Failed to connect account");
