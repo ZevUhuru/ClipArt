@@ -7,6 +7,7 @@ export interface Generation {
   image_url: string;
   prompt: string;
   style: string;
+  content_type?: string;
   category: string | null;
   slug: string | null;
   aspect_ratio?: string;

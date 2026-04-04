@@ -73,7 +73,7 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 function RecentsGrid() {
   const { user, generations, generationsLoaded, setGenerations } = useAppStore();
   const illustrationGenerations = generations.filter(
-    (g) => (g as Generation & { content_type?: string }).content_type === "illustration",
+    (g) => g.content_type === "illustration",
   );
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function IllustrationsCreatePage() {
   }, [prompt, style, isPublic, aspectRatio, user, openAuthModal, addJob]);
 
   const illustrationGenerations = generations.filter(
-    (g) => (g as Generation & { content_type?: string }).content_type === "illustration",
+    (g) => g.content_type === "illustration",
   );
   const hasRecents = generationsLoaded && illustrationGenerations.length > 0;
   const showEmptyState = !user || (generationsLoaded && illustrationGenerations.length === 0 && queueJobs.length === 0);
