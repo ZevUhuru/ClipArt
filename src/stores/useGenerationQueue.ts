@@ -12,9 +12,14 @@ export interface QueuedGeneration {
   startedAt: number;
 }
 
+interface AddJobOptions {
+  contentType?: string;
+  aspectRatio?: string;
+}
+
 interface GenerationQueueState {
   jobs: QueuedGeneration[];
-  addJob: (prompt: string, style: string, isPublic: boolean) => void;
+  addJob: (prompt: string, style: string, isPublic: boolean, options?: AddJobOptions) => void;
   updateJob: (id: string, partial: Partial<QueuedGeneration>) => void;
   removeJob: (id: string) => void;
   clearCompleted: () => void;
@@ -23,7 +28,7 @@ interface GenerationQueueState {
 export const useGenerationQueue = create<GenerationQueueState>((set, get) => ({
   jobs: [],
 
-  addJob: (prompt, style, isPublic) => {
+  addJob: (prompt, style, isPublic, options) => {
     const id = crypto.randomUUID();
     const job: QueuedGeneration = {
       id,
@@ -35,10 +40,14 @@ export const useGenerationQueue = create<GenerationQueueState>((set, get) => ({
 
     set((s) => ({ jobs: [job, ...s.jobs] }));
 
+    const body: Record<string, unknown> = { prompt, style, isPublic };
+    if (options?.contentType) body.contentType = options.contentType;
+    if (options?.aspectRatio) body.aspectRatio = options.aspectRatio;
+
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, style, isPublic }),
+      body: JSON.stringify(body),
     })
       .then(async (res) => {
         const data = await res.json();

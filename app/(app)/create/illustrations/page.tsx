@@ -1,16 +1,17 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
+import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
 import { StylePicker } from "@/components/StylePicker";
+import { GenerationQueue } from "@/components/GenerationQueue";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import { GenerationProgress } from "@/components/GenerationProgress";
 import { ILLUSTRATION_ASPECT_OPTIONS, VALID_STYLES, type AspectRatio, type StyleKey } from "@/lib/styles";
 
 const ILLUSTRATION_STYLES = VALID_STYLES.illustration;
@@ -57,24 +58,13 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
   return (
     <ImageGrid>
-      {safeItems.map((gen) => {
-        const img = {
-          id: gen.id,
-          slug: gen.slug || gen.id,
-          title: gen.prompt,
-          url: gen.image_url,
-          category: gen.category || "illustration-free",
-          style: gen.style,
-          aspect_ratio: gen.aspect_ratio,
-        };
-        return (
-          <ImageCard
-            key={gen.id}
-            image={img}
-            onClick={() => openDrawer(img, drawerList)}
-          />
-        );
-      })}
+      {safeItems.map((gen, idx) => (
+        <ImageCard
+          key={gen.id}
+          image={drawerList[idx]}
+          onClick={() => openDrawer(drawerList[idx], drawerList)}
+        />
+      ))}
     </ImageGrid>
   );
 }
@@ -115,6 +105,7 @@ function RecentsGrid() {
 function CommunityGrid() {
   const [items, setItems] = useState<Generation[]>([]);
   const [loading, setLoading] = useState(true);
+  const storeGenerations = useAppStore((s) => s.generations);
 
   useEffect(() => {
     async function fetchCommunity() {
@@ -135,7 +126,22 @@ function CommunityGrid() {
     fetchCommunity();
   }, []);
 
-  return <GenerationGrid items={items} loading={loading} />;
+  const mergedItems = useMemo(() => {
+    if (loading) return [];
+
+    const communityIds = new Set(items.map((c) => c.id));
+    const newFromStore = storeGenerations.filter(
+      (g) =>
+        g.id &&
+        g.image_url &&
+        !communityIds.has(g.id) &&
+        (g as Generation & { content_type?: string }).content_type === "illustration",
+    );
+
+    return newFromStore.length > 0 ? [...newFromStore, ...items] : items;
+  }, [storeGenerations, items, loading]);
+
+  return <GenerationGrid items={mergedItems} loading={loading} />;
 }
 
 type Tab = "recents" | "community";
@@ -145,23 +151,16 @@ export default function IllustrationsCreatePage() {
   const [style, setStyle] = useState<StyleKey>("storybook");
   const [isPublic, setIsPublic] = useState(true);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("4:3");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("recents");
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const {
-    openAuthModal,
-    openBuyCreditsModal,
-    setCredits,
-    prependGeneration,
-    user,
-    generations,
-    generationsLoaded,
-  } = useAppStore();
+  const { openAuthModal, user, generations, generationsLoaded } = useAppStore();
+  const addJob = useGenerationQueue((s) => s.addJob);
+  const queueJobs = useGenerationQueue((s) => s.jobs);
 
-  const handleGenerate = useCallback(async () => {
-    if (!prompt.trim() || isGenerating) return;
+  const handleGenerate = useCallback(() => {
+    if (!prompt.trim()) return;
 
     if (!user) {
       openAuthModal("signup");
@@ -169,51 +168,18 @@ export default function IllustrationsCreatePage() {
     }
 
     setError(null);
-    setIsGenerating(true);
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          style,
-          contentType: "illustration",
-          isPublic,
-          aspectRatio,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 401 && data.requiresAuth) {
-        openAuthModal("signup");
-        return;
-      }
-      if (res.status === 402 && data.requiresCredits) {
-        openBuyCreditsModal();
-        return;
-      }
-      if (!res.ok) throw new Error(data.error || "Generation failed");
-
-      if (typeof data.credits === "number") setCredits(data.credits);
-      if (data.generation) prependGeneration(data.generation);
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [prompt, style, isPublic, aspectRatio, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
+    addJob(prompt.trim(), style, isPublic, {
+      contentType: "illustration",
+      aspectRatio,
+    });
+    setPrompt("");
+  }, [prompt, style, isPublic, aspectRatio, user, openAuthModal, addJob]);
 
   const illustrationGenerations = generations.filter(
     (g) => (g as Generation & { content_type?: string }).content_type === "illustration",
   );
   const hasRecents = generationsLoaded && illustrationGenerations.length > 0;
-  const showEmptyState = !user || (generationsLoaded && illustrationGenerations.length === 0);
+  const showEmptyState = !user || (generationsLoaded && illustrationGenerations.length === 0 && queueJobs.length === 0);
 
   return (
     <div className="min-h-screen">
@@ -231,7 +197,6 @@ export default function IllustrationsCreatePage() {
                 placeholder="Describe your illustration... (e.g. cozy cottage in a snowy forest at dusk)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                 maxLength={1000}
-                disabled={isGenerating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -242,10 +207,10 @@ export default function IllustrationsCreatePage() {
             </div>
             <button
               onClick={handleGenerate}
-              disabled={!prompt.trim() || isGenerating}
+              disabled={!prompt.trim()}
               className="shrink-0 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isGenerating ? "Creating…" : "Create"}
+              Create
             </button>
           </div>
 
@@ -305,10 +270,10 @@ export default function IllustrationsCreatePage() {
 
       {/* Content area */}
       <div className="mx-auto max-w-5xl px-4 py-6">
-        {/* Generation progress */}
-        {isGenerating && (
-          <div className="mb-6 flex justify-center">
-            <GenerationProgress isGenerating={isGenerating} />
+        {/* Generation Queue */}
+        {queueJobs.length > 0 && (
+          <div className="mb-6">
+            <GenerationQueue />
           </div>
         )}
 
