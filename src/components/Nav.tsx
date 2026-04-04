@@ -29,9 +29,17 @@ function CloseIcon() {
   );
 }
 
+interface SocialConnection {
+  provider: string;
+  account_name: string | null;
+}
+
 export function Nav() {
   const { openAuthModal, openBuyCreditsModal, user, credits, resetUserState } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
+  const [socialLoaded, setSocialLoaded] = useState(false);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
 
   const close = useCallback(() => setMenuOpen(false), []);
 
@@ -45,6 +53,25 @@ export function Nav() {
       document.body.style.overflow = "";
     };
   }, [menuOpen, close]);
+
+  useEffect(() => {
+    if (menuOpen && user && !socialLoaded) {
+      fetch("/api/me/social/connections")
+        .then((r) => r.json())
+        .then((d) => setSocialConnections(d.connections || []))
+        .catch(() => {})
+        .finally(() => setSocialLoaded(true));
+    }
+  }, [menuOpen, user, socialLoaded]);
+
+  async function handleDisconnect(provider: string) {
+    setDisconnecting(provider);
+    try {
+      await fetch(`/api/social/${provider}/disconnect`, { method: "DELETE" });
+      setSocialConnections((prev) => prev.filter((c) => c.provider !== provider));
+    } catch { /* ignore */ }
+    setDisconnecting(null);
+  }
 
   async function handleSignOut() {
     const supabase = createBrowserClient();
@@ -181,6 +208,51 @@ export function Nav() {
                 </div>
 
                 <div className="my-4 border-t border-white/10" />
+
+                {/* Connected Accounts */}
+                {socialLoaded && (
+                  <div className="mb-3">
+                    <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                      Connected Accounts
+                    </p>
+                    {socialConnections.length > 0 ? (
+                      <div className="space-y-1">
+                        {socialConnections.map((conn) => (
+                          <div
+                            key={conn.provider}
+                            className="flex items-center justify-between rounded-lg px-3 py-2"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-5 w-5 items-center justify-center">
+                                {conn.provider === "youtube" && (
+                                  <svg className="h-4 w-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                  </svg>
+                                )}
+                              </span>
+                              <span className="text-xs font-medium text-white/60">
+                                {conn.account_name || conn.provider}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleDisconnect(conn.provider)}
+                              disabled={disconnecting === conn.provider}
+                              className="text-[10px] font-medium text-white/30 transition-colors hover:text-red-400"
+                            >
+                              {disconnecting === conn.provider ? "..." : "Disconnect"}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="px-3 text-xs text-white/20">
+                        No accounts connected
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="my-2 border-t border-white/10" />
 
                 <button
                   onClick={handleSignOut}

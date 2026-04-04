@@ -11,6 +11,7 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ImageImportModal, type ImportableImage } from "@/components/ImageImportModal";
 import { AnimationQueue } from "@/components/AnimationQueue";
+import { ShareModal } from "@/components/ShareModal";
 import {
   ANIMATION_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -184,7 +185,9 @@ function AnimatePageInner() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewingVideo, setViewingVideo] = useState<string | null>(null);
+  const [viewingAnimationId, setViewingAnimationId] = useState<string | null>(null);
   const [showSource, setShowSource] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const [suggestions, setSuggestions] = useState<PromptSuggestion[]>([]);
@@ -370,6 +373,7 @@ function AnimatePageInner() {
   const handleViewResult = (job: QueuedAnimation) => {
     if (job.videoUrl) {
       setViewingVideo(job.videoUrl);
+      setViewingAnimationId(job.id);
       setShowSource(false);
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -925,12 +929,15 @@ function AnimatePageInner() {
                         </svg>
                         Download MP4
                       </button>
-                      <Link
-                        href="/my-art"
-                        className="btn-secondary flex items-center justify-center py-3 text-sm"
+                      <button
+                        onClick={() => setShareOpen(true)}
+                        className="btn-secondary flex items-center justify-center gap-1.5 py-3 text-sm"
                       >
-                        My Creations
-                      </Link>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                        Share
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -952,6 +959,22 @@ function AnimatePageInner() {
         onClose={() => setImportOpen(false)}
         onSelect={handleImport}
       />
+
+      <AnimatePresence>
+        {shareOpen && activeVideoUrl && (
+          <ShareModal
+            animation={{
+              id: viewingAnimationId || latestCompleted?.id || "",
+              title: source?.title || prompt || "Clip Art Animation",
+              prompt: prompt || source?.title || "",
+              category: source?.category || "free",
+              videoUrl: activeVideoUrl,
+              thumbnailUrl: source?.url || undefined,
+            }}
+            onClose={() => setShareOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

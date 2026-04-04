@@ -23,7 +23,31 @@ interface AnimationItem {
   created_at: string;
 }
 
-type ContentFilter = "all" | "clipart" | "illustrations" | "coloring" | "animations";
+type ContentFilter = "all" | "clipart" | "illustrations" | "coloring" | "animations" | "shared";
+
+interface SocialUpload {
+  id: string;
+  provider: string;
+  platform_video_id: string | null;
+  platform_url: string | null;
+  title: string | null;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+  animation: {
+    id: string;
+    video_url: string;
+    thumbnail_url: string | null;
+    prompt: string;
+    source: { image_url: string; title: string } | null;
+  } | null;
+}
+
+const PROVIDER_LABELS: Record<string, string> = {
+  youtube: "YouTube",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+};
 
 const PAGE_SIZE = 60;
 
@@ -77,6 +101,8 @@ function CreationsGrid() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [animations, setAnimations] = useState<AnimationItem[]>([]);
+  const [sharedUploads, setSharedUploads] = useState<SocialUpload[]>([]);
+  const [sharedLoading, setSharedLoading] = useState(false);
 
   const fetchPage = useCallback(
     async (contentFilter: ContentFilter, offset: number) => {
@@ -140,6 +166,21 @@ function CreationsGrid() {
       if (contentFilter === "animations") {
         await fetchAnimations();
         setIsLoading(false);
+        return;
+      }
+
+      if (contentFilter === "shared") {
+        setSharedLoading(true);
+        try {
+          const res = await fetch("/api/me/social/uploads");
+          const data = await res.json();
+          setSharedUploads(data.uploads || []);
+        } catch {
+          setSharedUploads([]);
+        } finally {
+          setSharedLoading(false);
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -220,6 +261,7 @@ function CreationsGrid() {
             { key: "illustrations", label: "Illustrations" },
             { key: "coloring", label: "Coloring Pages" },
             { key: "animations", label: "Animations" },
+            { key: "shared", label: "Shared" },
           ] as const
         ).map((tab) => (
           <button
@@ -242,6 +284,91 @@ function CreationsGrid() {
             <ImageCardSkeleton key={i} variant={gridVariant === "illustration" ? "illustration" : "clipart"} />
           ))}
         </ImageGrid>
+      ) : filter === "shared" ? (
+        sharedLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+          </div>
+        ) : sharedUploads.length > 0 ? (
+          <div className="space-y-3">
+            {sharedUploads.map((upload) => {
+              const thumb =
+                upload.animation?.source?.image_url ||
+                upload.animation?.thumbnail_url ||
+                null;
+              const uploadTitle =
+                upload.title ||
+                upload.animation?.source?.title ||
+                upload.animation?.prompt ||
+                "Untitled";
+              return (
+                <div
+                  key={upload.id}
+                  className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-md"
+                >
+                  {thumb && (
+                    <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {uploadTitle}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
+                      <span className="font-medium text-gray-500">
+                        {PROVIDER_LABELS[upload.provider] || upload.provider}
+                      </span>
+                      <span>&middot;</span>
+                      <span>
+                        {new Date(upload.created_at).toLocaleDateString()}
+                      </span>
+                      <span>&middot;</span>
+                      <span
+                        className={
+                          upload.status === "published"
+                            ? "text-emerald-500"
+                            : upload.status === "failed"
+                              ? "text-red-500"
+                              : "text-amber-500"
+                        }
+                      >
+                        {upload.status}
+                      </span>
+                    </div>
+                  </div>
+                  {upload.platform_url && (
+                    <a
+                      href={upload.platform_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                    >
+                      View
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+            <svg className="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <p className="mt-4 text-lg font-medium text-gray-400">
+              No shared animations yet
+            </p>
+            <p className="mt-1 text-sm text-gray-300">
+              Share your animations to YouTube and other platforms to see them here.
+            </p>
+          </div>
+        )
       ) : filter === "animations" ? (
         animations.length > 0 ? (
           <div className="columns-2 gap-2.5 sm:columns-3 md:columns-4 [&>*]:mb-2.5 [&>*]:break-inside-avoid">
