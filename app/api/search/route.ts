@@ -43,7 +43,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (category) {
-      query = query.eq("category", category);
+      const catPattern = `%${category.replace(/-/g, " ")}%`;
+      query = query.or(
+        `category.eq.${category},prompt.ilike.${catPattern},title.ilike.${catPattern}`,
+      );
     }
 
     if (style && contentType !== "coloring") {

@@ -47,12 +47,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 async function getGalleryImages(themeSlug: string) {
   try {
     const admin = createSupabaseAdmin();
+    const catPattern = `%${themeSlug.replace(/-/g, " ")}%`;
     const { data } = await admin
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio, created_at")
-      .eq("category", themeSlug)
       .eq("content_type", "coloring")
       .eq("is_public", true)
+      .or(
+        `category.eq.${themeSlug},prompt.ilike.${catPattern},title.ilike.${catPattern}`,
+      )
       .order("created_at", { ascending: false })
       .limit(60);
 

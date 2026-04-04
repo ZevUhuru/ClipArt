@@ -909,16 +909,22 @@ function AnimatePageInner() {
                       Animation complete
                     </p>
                     <div className="grid grid-cols-2 gap-3">
-                      <a
-                        href={activeVideoUrl}
-                        download={`${source?.slug || "clip-art"}-animation.mp4`}
+                      <button
+                        onClick={() => {
+                          const a = document.createElement("a");
+                          a.href = `/api/download?url=${encodeURIComponent(activeVideoUrl!)}`;
+                          a.download = `${source?.slug || "clip-art"}-animation.mp4`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
                         className="btn-primary flex items-center justify-center py-3 text-sm"
                       >
                         <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         Download MP4
-                      </a>
+                      </button>
                       <Link
                         href="/my-art"
                         className="btn-secondary flex items-center justify-center py-3 text-sm"

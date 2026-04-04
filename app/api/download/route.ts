@@ -3,6 +3,8 @@ import sharp from "sharp";
 
 const ALLOWED_HOSTS = new Set(["images.clip.art"]);
 
+const VIDEO_EXTENSIONS = new Set([".mp4", ".webm", ".mov"]);
+
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url");
 
@@ -24,7 +26,24 @@ export async function GET(request: NextRequest) {
   const upstream = await fetch(url);
 
   if (!upstream.ok) {
-    return NextResponse.json({ error: "Image not found" }, { status: 404 });
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  }
+
+  const segments = parsed.pathname.split("/");
+  const rawFilename = segments[segments.length - 1] || "clip-art";
+  const basename = rawFilename.replace(/\.[^.]+$/, "");
+  const ext = rawFilename.includes(".") ? rawFilename.slice(rawFilename.lastIndexOf(".")) : "";
+
+  if (VIDEO_EXTENSIONS.has(ext.toLowerCase())) {
+    const contentType = upstream.headers.get("content-type") || "video/mp4";
+    const body = upstream.body;
+    return new NextResponse(body, {
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": `attachment; filename="${basename}${ext}"`,
+        "Cache-Control": "private, no-cache",
+      },
+    });
   }
 
   const rawBuffer = Buffer.from(await upstream.arrayBuffer());
@@ -33,9 +52,6 @@ export async function GET(request: NextRequest) {
   const isPng = contentType === "image/png" || url.endsWith(".png");
   let outputBuffer: Buffer;
   let outputFilename: string;
-
-  const segments = parsed.pathname.split("/");
-  const basename = (segments[segments.length - 1] || "clip-art").replace(/\.[^.]+$/, "");
 
   if (isPng || contentType === "image/png") {
     outputBuffer = rawBuffer;

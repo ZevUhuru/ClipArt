@@ -108,12 +108,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 async function getRelatedImages(category: string, excludeSlug: string) {
   try {
     const admin = createSupabaseAdmin();
+    const catPattern = `%${category.replace(/-/g, " ")}%`;
     const { data } = await admin
       .from("generations")
       .select("title, slug, category, image_url, aspect_ratio")
-      .eq("category", category)
       .eq("is_public", true)
       .eq("content_type", "clipart")
+      .or(
+        `category.eq.${category},prompt.ilike.${catPattern},title.ilike.${catPattern}`,
+      )
       .neq("slug", excludeSlug)
       .order("created_at", { ascending: false })
       .limit(8);
