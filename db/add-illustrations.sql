@@ -13,15 +13,15 @@ CREATE INDEX IF NOT EXISTS idx_generations_content_type_public ON public.generat
   WHERE is_public = true;
 
 -- Seed illustration categories
-INSERT INTO public.categories (slug, name, type, is_active, sort_order) VALUES
-  ('fantasy-scenes', 'Fantasy Scenes', 'illustration', true, 1),
-  ('nature-landscapes', 'Nature & Landscapes', 'illustration', true, 2),
-  ('urban-scenes', 'Urban & City', 'illustration', true, 3),
-  ('characters', 'Characters & People', 'illustration', true, 4),
-  ('animals-scenes', 'Animals in Nature', 'illustration', true, 5),
-  ('food-kitchen', 'Food & Kitchen', 'illustration', true, 6),
-  ('seasonal', 'Seasonal & Holiday', 'illustration', true, 7),
-  ('storybook-scenes', 'Storybook Scenes', 'illustration', true, 8),
-  ('abstract-art', 'Abstract Art', 'illustration', true, 9),
-  ('illustration-free', 'Other Illustrations', 'illustration', true, 0)
+INSERT INTO public.categories (slug, name, h1, type, is_active, sort_order) VALUES
+  ('fantasy-scenes', 'Fantasy Scenes', 'Fantasy Scene Illustrations', 'illustration', true, 1),
+  ('nature-landscapes', 'Nature & Landscapes', 'Nature & Landscape Illustrations', 'illustration', true, 2),
+  ('urban-scenes', 'Urban & City', 'Urban & City Illustrations', 'illustration', true, 3),
+  ('characters', 'Characters & People', 'Character & People Illustrations', 'illustration', true, 4),
+  ('animals-scenes', 'Animals in Nature', 'Animals in Nature Illustrations', 'illustration', true, 5),
+  ('food-kitchen', 'Food & Kitchen', 'Food & Kitchen Illustrations', 'illustration', true, 6),
+  ('seasonal', 'Seasonal & Holiday', 'Seasonal & Holiday Illustrations', 'illustration', true, 7),
+  ('storybook-scenes', 'Storybook Scenes', 'Storybook Scene Illustrations', 'illustration', true, 8),
+  ('abstract-art', 'Abstract Art', 'Abstract Art Illustrations', 'illustration', true, 9),
+  ('illustration-free', 'Other Illustrations', 'Other Illustrations', 'illustration', true, 0)
 ON CONFLICT (slug) DO NOTHING;
