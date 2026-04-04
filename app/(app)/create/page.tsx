@@ -65,7 +65,6 @@ function CommunityGrid() {
   const storeGenerations = useAppStore((s) => s.generations);
   const [communityItems, setCommunityItems] = useState<CommunityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const fetchedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchCommunity() {
@@ -74,9 +73,7 @@ function CommunityGrid() {
         if (!res.ok) throw new Error("fetch failed");
         const { generations, animations } = await res.json();
         const gens: CommunityItem[] = (generations || []).map((g: CommunityItem) => g);
-        const merged = mergeAnimations(gens, animations || []);
-        fetchedIdsRef.current = new Set(merged.map((m) => m.id));
-        setCommunityItems(merged);
+        setCommunityItems(mergeAnimations(gens, animations || []));
       } catch {
         setCommunityItems([]);
       }
@@ -88,13 +85,12 @@ function CommunityGrid() {
 
   const items = useMemo(() => {
     if (loading) return [];
+    const communityIds = new Set(communityItems.map((c) => c.id));
     const newFromStore = storeGenerations.filter(
-      (g) => g.id && g.image_url && !fetchedIdsRef.current.has(g.id),
+      (g) => g.id && g.image_url && !communityIds.has(g.id),
     ) as CommunityItem[];
     if (newFromStore.length === 0) return communityItems;
-    const combined = [...newFromStore, ...communityItems];
-    newFromStore.forEach((g) => fetchedIdsRef.current.add(g.id));
-    return combined;
+    return [...newFromStore, ...communityItems];
   }, [storeGenerations, communityItems, loading]);
 
   if (loading) {
