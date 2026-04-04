@@ -65,7 +65,7 @@ function ProviderIcon({
   return null;
 }
 
-export function ShareModal({
+export function UploadModal({
   animation,
   onClose,
 }: {
@@ -267,7 +267,7 @@ export function ShareModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="text-lg font-bold text-gray-900">
-            Share Animation
+            Upload to YouTube
           </h2>
           <button
             onClick={onClose}
