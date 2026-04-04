@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { packId } = await request.json();
+    const { packId, returnPath } = await request.json();
     const pack = CREDIT_PACKS[packId];
 
     if (!pack || !pack.priceId) {
@@ -26,6 +26,9 @@ export async function POST(request: NextRequest) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://clip.art";
+    const safePath = typeof returnPath === "string" && returnPath.startsWith("/")
+      ? returnPath : "/create";
+    const separator = safePath.includes("?") ? "&" : "?";
 
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
@@ -35,8 +38,8 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         credits: String(pack.credits),
       },
-      success_url: `${appUrl}/create?success=true`,
-      cancel_url: `${appUrl}/create`,
+      success_url: `${appUrl}${safePath}${separator}success=true`,
+      cancel_url: `${appUrl}${safePath}`,
     });
 
     return NextResponse.json({ url: session.url });

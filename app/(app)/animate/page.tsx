@@ -132,10 +132,55 @@ function AnimatePageInner() {
   const [source, setSource] = useState<ImportableImage | null>(null);
   const [sourceLoading, setSourceLoading] = useState(!!sourceId);
   const [importOpen, setImportOpen] = useState(false);
-  const [prompt, setPrompt] = useState(initialPrompt);
-  const [model, setModel] = useState<AnimModel>("kling-3.0-standard");
-  const [duration, setDuration] = useState(5);
-  const [audio, setAudio] = useState(false);
+  const [prompt, setPrompt] = useState(() => {
+    if (initialPrompt) return initialPrompt;
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("animate:draft");
+        if (saved) {
+          const draft = JSON.parse(saved);
+          if (draft.sourceId === sourceId) return draft.prompt || "";
+        }
+      } catch { /* ignore */ }
+    }
+    return "";
+  });
+  const [model, setModel] = useState<AnimModel>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("animate:draft");
+        if (saved) {
+          const draft = JSON.parse(saved);
+          if (draft.sourceId === sourceId && draft.model) return draft.model;
+        }
+      } catch { /* ignore */ }
+    }
+    return "kling-3.0-standard";
+  });
+  const [duration, setDuration] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("animate:draft");
+        if (saved) {
+          const draft = JSON.parse(saved);
+          if (draft.sourceId === sourceId && typeof draft.duration === "number") return draft.duration;
+        }
+      } catch { /* ignore */ }
+    }
+    return 5;
+  });
+  const [audio, setAudio] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("animate:draft");
+        if (saved) {
+          const draft = JSON.parse(saved);
+          if (draft.sourceId === sourceId) return draft.audio === true;
+        }
+      } catch { /* ignore */ }
+    }
+    return false;
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewingVideo, setViewingVideo] = useState<string | null>(null);
@@ -288,6 +333,11 @@ function AnimatePageInner() {
         return;
       }
       if (res.status === 402 && data.requiresCredits) {
+        try {
+          sessionStorage.setItem("animate:draft", JSON.stringify({
+            sourceId, prompt: prompt.trim(), model, duration, audio: audio && audioSupported,
+          }));
+        } catch { /* quota exceeded — non-critical */ }
         openBuyCreditsModal();
         setSubmitting(false);
         return;
@@ -310,11 +360,12 @@ function AnimatePageInner() {
 
       setPrompt("");
       setSelectedPromptId(null);
+      try { sessionStorage.removeItem("animate:draft"); } catch { /* ignore */ }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
     setSubmitting(false);
-  }, [prompt, model, duration, audio, audioSupported, submitting, source, user, selectedPromptId, openAuthModal, openBuyCreditsModal, setCredits, addJob]);
+  }, [prompt, model, duration, audio, audioSupported, submitting, source, user, selectedPromptId, sourceId, openAuthModal, openBuyCreditsModal, setCredits, addJob]);
 
   const handleViewResult = (job: QueuedAnimation) => {
     if (job.videoUrl) {

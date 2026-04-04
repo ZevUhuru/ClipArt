@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/stores/useAppStore";
 
@@ -23,6 +24,8 @@ const PACKS = [
 
 export function BuyCreditsModal() {
   const { isBuyCreditsOpen, closeBuyCreditsModal } = useAppStore();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,10 +33,14 @@ export function BuyCreditsModal() {
     setLoading(packId);
     setError(null);
     try {
+      const currentPath = searchParams?.toString()
+        ? `${pathname}?${searchParams.toString()}`
+        : pathname;
+
       const res = await fetch("/api/credits/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId }),
+        body: JSON.stringify({ packId, returnPath: currentPath }),
       });
       const data = await res.json();
       if (data.url) {
