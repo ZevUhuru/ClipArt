@@ -10,6 +10,7 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 
 interface AnimationItem {
   id: string;
+  slug: string | null;
   prompt: string;
   model: string;
   video_url: string;
@@ -136,6 +137,7 @@ function CreationsGrid() {
         const source = row.source as Record<string, string> | null;
         return {
           id: row.id as string,
+          slug: (row.slug || null) as string | null,
           prompt: row.prompt as string,
           model: row.model as string,
           video_url: row.video_url as string,
@@ -375,7 +377,7 @@ function CreationsGrid() {
             {animations.map((anim) => {
               const drawerItem: import("@/stores/useImageDrawer").DrawerImage = {
                 id: anim.id,
-                slug: anim.id,
+                slug: anim.slug || anim.source_slug || anim.id,
                 title: anim.source_title || anim.prompt,
                 url: anim.source_image_url || anim.thumbnail_url || "",
                 category: anim.source_category || "free",
@@ -385,7 +387,7 @@ function CreationsGrid() {
               };
               const animDrawerList = animations.map((a) => ({
                 id: a.id,
-                slug: a.id,
+                slug: a.slug || a.source_slug || a.id,
                 title: a.source_title || a.prompt,
                 url: a.source_image_url || a.thumbnail_url || "",
                 category: a.source_category || "free",

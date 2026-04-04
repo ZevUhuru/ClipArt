@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       const { data } = await admin
         .from("animations")
         .select(
-          "id, prompt, model, video_url, preview_url, thumbnail_url, created_at, " +
+          "id, slug, prompt, model, video_url, preview_url, thumbnail_url, created_at, " +
           "source:generations!animations_source_generation_id_fkey(image_url, title, slug, category, aspect_ratio)",
         )
         .eq("user_id", user.id)

@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import type { AnimationItem } from "./page";
 
 function AnimationCard({ anim }: { anim: AnimationItem }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     const video = videoRef.current;
-    const card = cardRef.current;
+    const card = wrapperRef.current;
     if (!video || !card) return;
 
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -31,8 +32,9 @@ function AnimationCard({ anim }: { anim: AnimationItem }) {
   }, []);
 
   return (
-    <div
-      ref={cardRef}
+    <Link
+      href={`/animations/${anim.slug}`}
+      ref={wrapperRef}
       className="group relative aspect-square overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-purple-400/40"
     >
       <video
@@ -79,7 +81,7 @@ function AnimationCard({ anim }: { anim: AnimationItem }) {
         </svg>
         Video
       </span>
-    </div>
+    </Link>
   );
 }
 

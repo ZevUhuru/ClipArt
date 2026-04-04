@@ -943,7 +943,7 @@ function AnimatePageInner() {
                         </button>
                         {sharePopoverOpen && (
                           <SharePopover
-                            url={`/animations`}
+                            url={`/animations/${latestCompleted?.id || ""}`}
                             title={source?.title || prompt || "Clip Art Animation"}
                             onClose={() => setSharePopoverOpen(false)}
                           />
