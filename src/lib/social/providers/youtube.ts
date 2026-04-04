@@ -52,22 +52,13 @@ export const youtubeProvider: SocialProvider = {
     const client = getOAuth2Client(redirectUri);
     const { tokens } = await client.getToken(code);
 
-    client.setCredentials(tokens);
-    const yt = google.youtube({ version: "v3", auth: client });
-    const channelRes = await yt.channels.list({
-      part: ["snippet"],
-      mine: true,
-    });
-    const channel = channelRes.data.items?.[0];
-
     return {
       accessToken: tokens.access_token!,
       refreshToken: tokens.refresh_token || undefined,
       expiresAt: tokens.expiry_date
         ? new Date(tokens.expiry_date)
         : undefined,
-      accountId: channel?.id || undefined,
-      accountName: channel?.snippet?.title || undefined,
+      accountName: "YouTube",
     };
   },
 
