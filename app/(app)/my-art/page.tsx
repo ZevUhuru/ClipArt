@@ -6,7 +6,7 @@ import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-
+import { VideoPlayer } from "@/components/VideoPlayer";
 
 interface AnimationItem {
   id: string;
@@ -263,7 +263,6 @@ function CreationsGrid() {
                 videoUrl: a.video_url,
               }));
 
-              const poster = anim.source_image_url || anim.thumbnail_url || "";
               return (
                 <div
                   key={anim.id}
@@ -274,11 +273,12 @@ function CreationsGrid() {
                   className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
                 >
                   <div className="relative aspect-square">
-                    {/* Static poster — video plays on hover via ImageCard pattern */}
-                    {poster && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={poster} alt="" className="h-full w-full object-cover" />
-                    )}
+                    <VideoPlayer
+                      src={anim.video_url}
+                      poster={anim.source_image_url || anim.thumbnail_url || undefined}
+                      mode="preview"
+                      className="absolute inset-0"
+                    />
                   </div>
                   <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
                     <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor">
