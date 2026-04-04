@@ -486,7 +486,15 @@ function AnimatePageInner() {
               ref={resultRef}
               className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
             >
-              {!source ? (
+              {!source && viewingVideo ? (
+                <div className="relative aspect-square w-full">
+                  <VideoPlayer
+                    src={viewingVideo}
+                    mode="detail"
+                    className="absolute inset-0"
+                  />
+                </div>
+              ) : !source ? (
                 <div className="flex aspect-square flex-col items-center justify-center gap-4 p-8 text-center">
                   <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50">
                     <svg className="h-10 w-10 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -535,7 +543,7 @@ function AnimatePageInner() {
               )}
             </div>
 
-            {activeVideoUrl && (
+            {activeVideoUrl && source && (
               <div className="mt-3 flex items-center justify-center gap-2">
                 <button
                   onClick={() => setShowSource(false)}
@@ -891,7 +899,7 @@ function AnimatePageInner() {
                 </AnimatePresence>
 
                 {/* Result actions for viewed video */}
-                {activeVideoUrl && source && (
+                {activeVideoUrl && (
                   <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -903,7 +911,7 @@ function AnimatePageInner() {
                     <div className="grid grid-cols-2 gap-3">
                       <a
                         href={activeVideoUrl}
-                        download={`${source.slug}-animation.mp4`}
+                        download={`${source?.slug || "clip-art"}-animation.mp4`}
                         className="btn-primary flex items-center justify-center py-3 text-sm"
                       >
                         <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
