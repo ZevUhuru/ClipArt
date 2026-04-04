@@ -1,15 +1,16 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
+import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
+import { GenerationQueue } from "@/components/GenerationQueue";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import { GenerationProgress } from "@/components/GenerationProgress";
 import { COLORING_ASPECT_OPTIONS, type AspectRatio } from "@/lib/styles";
 
 const suggestedPrompts = [
@@ -54,25 +55,14 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
   return (
     <ImageGrid variant="coloring">
-      {safeItems.map((gen) => {
-        const img = {
-          id: gen.id,
-          slug: gen.slug || gen.id,
-          title: gen.prompt,
-          url: gen.image_url,
-          category: gen.category || "free",
-          style: gen.style,
-          aspect_ratio: gen.aspect_ratio,
-        };
-        return (
-          <ImageCard
-            key={gen.id}
-            image={img}
-            variant="coloring"
-            onClick={() => openDrawer(img, drawerList)}
-          />
-        );
-      })}
+      {safeItems.map((gen, idx) => (
+        <ImageCard
+          key={gen.id}
+          image={drawerList[idx]}
+          variant="coloring"
+          onClick={() => openDrawer(drawerList[idx], drawerList)}
+        />
+      ))}
     </ImageGrid>
   );
 }
@@ -89,7 +79,7 @@ function RecentsGrid() {
       if (!supabase) return;
       const { data } = await supabase
         .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -111,6 +101,7 @@ function RecentsGrid() {
 function CommunityGrid() {
   const [items, setItems] = useState<Generation[]>([]);
   const [loading, setLoading] = useState(true);
+  const storeGenerations = useAppStore((s) => s.generations);
 
   useEffect(() => {
     async function fetchCommunity() {
@@ -118,7 +109,7 @@ function CommunityGrid() {
       if (!supabase) return;
       const { data } = await supabase
         .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
         .eq("is_public", true)
         .eq("content_type", "coloring")
         .order("created_at", { ascending: false })
@@ -131,7 +122,18 @@ function CommunityGrid() {
     fetchCommunity();
   }, []);
 
-  return <GenerationGrid items={items} loading={loading} />;
+  const mergedItems = useMemo(() => {
+    if (loading) return [];
+
+    const communityIds = new Set(items.map((c) => c.id));
+    const newFromStore = storeGenerations.filter(
+      (g) => g.id && g.image_url && !communityIds.has(g.id) && g.style === "coloring",
+    );
+
+    return newFromStore.length > 0 ? [...newFromStore, ...items] : items;
+  }, [storeGenerations, items, loading]);
+
+  return <GenerationGrid items={mergedItems} loading={loading} />;
 }
 
 type Tab = "recents" | "community";
@@ -140,25 +142,18 @@ export default function ColoringPagesCreatePage() {
   const [prompt, setPrompt] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("3:4");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("recents");
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const {
-    openAuthModal,
-    openBuyCreditsModal,
-    setCredits,
-    prependGeneration,
-    user,
-    generations,
-    generationsLoaded,
-  } = useAppStore();
+  const { openAuthModal, user, generations, generationsLoaded } = useAppStore();
+  const addJob = useGenerationQueue((s) => s.addJob);
+  const queueJobs = useGenerationQueue((s) => s.jobs);
 
   const style = "coloring" as const;
 
-  const handleGenerate = useCallback(async () => {
-    if (!prompt.trim() || isGenerating) return;
+  const handleGenerate = useCallback(() => {
+    if (!prompt.trim()) return;
 
     if (!user) {
       openAuthModal("signup");
@@ -166,43 +161,15 @@ export default function ColoringPagesCreatePage() {
     }
 
     setError(null);
-    setIsGenerating(true);
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style, isPublic, aspectRatio }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 401 && data.requiresAuth) {
-        openAuthModal("signup");
-        return;
-      }
-      if (res.status === 402 && data.requiresCredits) {
-        openBuyCreditsModal();
-        return;
-      }
-      if (!res.ok) throw new Error(data.error || "Generation failed");
-
-      if (typeof data.credits === "number") setCredits(data.credits);
-      if (data.generation) prependGeneration(data.generation);
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [prompt, isPublic, aspectRatio, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
+    addJob(prompt.trim(), style, isPublic, {
+      contentType: "coloring",
+      aspectRatio,
+    });
+    setPrompt("");
+  }, [prompt, style, isPublic, aspectRatio, user, openAuthModal, addJob]);
 
   const coloringGenerations = generations.filter((g) => g.style === "coloring");
-  const hasRecents = generationsLoaded && coloringGenerations.length > 0;
-  const showEmptyState = !user || (generationsLoaded && coloringGenerations.length === 0);
+  const showEmptyState = !user || (generationsLoaded && coloringGenerations.length === 0 && queueJobs.length === 0);
 
   return (
     <div className="min-h-screen">
@@ -220,7 +187,6 @@ export default function ColoringPagesCreatePage() {
                 placeholder="Describe your coloring page... (e.g. dinosaur in a jungle scene)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                 maxLength={1000}
-                disabled={isGenerating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -231,14 +197,14 @@ export default function ColoringPagesCreatePage() {
             </div>
             <button
               onClick={handleGenerate}
-              disabled={!prompt.trim() || isGenerating}
+              disabled={!prompt.trim()}
               className="shrink-0 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isGenerating ? "Creating…" : "Create"}
+              Create
             </button>
           </div>
 
-          {/* Mode label + share toggle */}
+          {/* Aspect ratio + share toggle */}
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 p-0.5">
@@ -289,10 +255,10 @@ export default function ColoringPagesCreatePage() {
 
       {/* Content area */}
       <div className="mx-auto max-w-5xl px-4 py-6">
-        {/* Generation progress */}
-        {isGenerating && (
-          <div className="mb-6 flex justify-center">
-            <GenerationProgress isGenerating={isGenerating} variant="coloring" />
+        {/* Generation Queue */}
+        {queueJobs.length > 0 && (
+          <div className="mb-6">
+            <GenerationQueue />
           </div>
         )}
 
