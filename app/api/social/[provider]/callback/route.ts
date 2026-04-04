@@ -61,7 +61,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     response.cookies.delete("social_oauth_return");
     return response;
   } catch (err) {
-    console.error(`OAuth callback error for ${params.provider}:`, err);
-    return errorRedirect("Failed to connect account");
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`OAuth callback error for ${params.provider}:`, msg, err);
+    return errorRedirect(`Failed to connect: ${msg.slice(0, 200)}`);
   }
 }
