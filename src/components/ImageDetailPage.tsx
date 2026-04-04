@@ -22,10 +22,13 @@ interface RelatedImage {
   aspect_ratio?: string;
 }
 
+type ContentVariant = "clipart" | "coloring" | "illustration";
+
 interface ImageDetailPageProps {
   image: SampleImage;
   categorySlug: string;
   isColoringPage?: boolean;
+  contentType?: ContentVariant;
   relatedImages?: RelatedImage[];
   categoryName?: string;
   imageId?: string;
@@ -41,17 +44,33 @@ export function ImageDetailPage({
   image,
   categorySlug,
   isColoringPage = false,
+  contentType: contentTypeProp,
   relatedImages: relatedFromServer,
   categoryName: categoryNameProp,
   imageId,
 }: ImageDetailPageProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const variant: ContentVariant = contentTypeProp || (isColoringPage ? "coloring" : "clipart");
+  const isIllustration = variant === "illustration";
+
   const category = categoryMap.get(categorySlug);
   const categoryName = categoryNameProp || category?.name || categorySlug;
-  const categoryHref = isColoringPage ? `/coloring-pages/${categorySlug}` : `/${categorySlug}`;
-  const categoryLabel = isColoringPage ? `${categoryName} Coloring Pages` : `${categoryName} Clip Art`;
-  const createHref = isColoringPage ? "/create/coloring-pages" : "/create";
+  const categoryHref = variant === "coloring"
+    ? `/coloring-pages/${categorySlug}`
+    : isIllustration
+      ? `/illustrations/${categorySlug}`
+      : `/${categorySlug}`;
+  const categoryLabel = variant === "coloring"
+    ? `${categoryName} Coloring Pages`
+    : isIllustration
+      ? `${categoryName} Illustrations`
+      : `${categoryName} Clip Art`;
+  const createHref = variant === "coloring"
+    ? "/create/coloring-pages"
+    : isIllustration
+      ? "/create/illustrations"
+      : "/create";
 
   const relatedImages: RelatedImage[] = relatedFromServer && relatedFromServer.length > 0
     ? relatedFromServer
@@ -269,27 +288,42 @@ export function ImageDetailPage({
         <section className="bg-gray-50/40">
           <div className="mx-auto max-w-6xl px-4 py-14">
             <h2 className="mb-8 text-xl font-bold text-gray-900 sm:text-2xl">
-              {isColoringPage
+              {variant === "coloring"
                 ? `More ${categoryName} coloring pages`
-                : `More ${categoryName} clip art`}
+                : isIllustration
+                  ? `More ${categoryName} illustrations`
+                  : `More ${categoryName} clip art`}
             </h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            <div className={
+              isIllustration
+                ? "columns-2 gap-4 sm:columns-3 md:columns-4 [&>*]:mb-4 [&>*]:break-inside-avoid"
+                : "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
+            }>
               {relatedImages.map((img) => {
-                const href = isColoringPage
+                const href = variant === "coloring"
                   ? `/coloring-pages/${img.category}/${img.slug}`
-                  : `/${getCategorySlugForImage(img as SampleImage)}/${img.slug}`;
+                  : isIllustration
+                    ? `/illustrations/${img.category}/${img.slug}`
+                    : `/${getCategorySlugForImage(img as SampleImage)}/${img.slug}`;
+                const aspectClass = isIllustration
+                  ? (img.aspect_ratio === "3:4" ? "aspect-[3/4]" : img.aspect_ratio === "4:3" ? "aspect-[4/3]" : "aspect-square")
+                  : (img.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square");
                 return (
                   <Link
                     key={img.slug}
                     href={href}
-                    className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    className={`group overflow-hidden border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg ${
+                      isIllustration ? "rounded-xl" : "rounded-2xl"
+                    }`}
                   >
-                    <div className={`relative bg-gray-50 ${img.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
+                    <div className={`relative ${isIllustration ? "bg-gray-900/5" : "bg-gray-50"} ${aspectClass}`}>
                       <Image
                         src={img.url}
                         alt={img.title}
                         fill
-                        className="object-contain p-3 transition-transform group-hover:scale-105"
+                        className={`transition-transform group-hover:scale-105 ${
+                          isIllustration ? "object-cover" : "object-contain p-3"
+                        }`}
                         sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                       />
                     </div>

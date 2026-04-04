@@ -22,7 +22,7 @@ export interface ImageCardImage {
 
 interface ImageCardProps {
   image: ImageCardImage;
-  variant?: "clipart" | "coloring";
+  variant?: "clipart" | "coloring" | "illustration";
   href?: string;
   onClick?: () => void;
   sizes?: string;
@@ -67,9 +67,14 @@ export function ImageCard({
   }, [animationPreviewUrl]);
 
   const isColoring = variant === "coloring";
+  const isIllustration = variant === "illustration";
   const isLandscape = isColoring && image.aspect_ratio === "4:3";
-  const aspectClass = isColoring ? getAspectClass(image.aspect_ratio) : "aspect-square";
-  const bgClass = isColoring ? "bg-white" : "bg-gray-50/80";
+  const aspectClass = isIllustration
+    ? getAspectClass(image.aspect_ratio || "4:3")
+    : isColoring
+      ? getAspectClass(image.aspect_ratio)
+      : "aspect-square";
+  const bgClass = isColoring ? "bg-white" : isIllustration ? "bg-gray-900/5" : "bg-gray-50/80";
 
   const defaultSizes = isColoring
     ? "(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
@@ -99,9 +104,11 @@ export function ImageCard({
       ) : (
         <Image
           src={image.url}
-          alt={`${image.title} — free ${isColoring ? "coloring page" : "clip art"}`}
+          alt={`${image.title} — free ${isColoring ? "coloring page" : isIllustration ? "illustration" : "clip art"}`}
           fill
-          className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+          className={`transition-transform duration-300 group-hover:scale-105 ${
+            isIllustration ? "object-cover" : "object-contain p-2"
+          }`}
           sizes={sizes || defaultSizes}
           unoptimized
         />
@@ -117,7 +124,8 @@ export function ImageCard({
   );
 
   const cardClasses = [
-    "group relative overflow-hidden rounded-2xl",
+    "group relative overflow-hidden",
+    isIllustration ? "rounded-xl" : "rounded-2xl",
     bgClass,
     "transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2",
@@ -150,10 +158,21 @@ export function ImageCard({
 /* ── Skeleton loader ── */
 
 interface ImageCardSkeletonProps {
-  variant?: "clipart" | "coloring";
+  variant?: "clipart" | "coloring" | "illustration";
 }
 
+const SKELETON_ASPECTS = ["aspect-[4/3]", "aspect-square", "aspect-[3/4]"];
+
 export function ImageCardSkeleton({ variant = "clipart" }: ImageCardSkeletonProps) {
+  if (variant === "illustration") {
+    const aspect = SKELETON_ASPECTS[Math.floor(Math.random() * SKELETON_ASPECTS.length)];
+    return (
+      <div className="animate-pulse overflow-hidden rounded-xl bg-gray-100">
+        <div className={aspect} />
+      </div>
+    );
+  }
+
   const aspectClass = variant === "coloring" ? "aspect-[3/4]" : "aspect-square";
   const bgClass = variant === "coloring" ? "bg-white" : "bg-gray-50/80";
 

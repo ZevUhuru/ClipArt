@@ -119,10 +119,11 @@ export default async function IllustrationsLanding() {
           <h2 className="mb-6 text-center text-xl font-bold text-gray-900 sm:text-2xl">
             Recently created illustrations
           </h2>
-          <ImageGrid>
+          <ImageGrid variant="illustration">
             {featured.map((img) => (
               <ImageCard
                 key={img.id}
+                variant="illustration"
                 image={{
                   slug: img.slug || img.id,
                   title: img.title || img.prompt,

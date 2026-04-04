@@ -78,10 +78,11 @@ export function IllustrationCategoryPage({
       {/* Gallery */}
       {galleryImages.length > 0 ? (
         <section className="mx-auto max-w-6xl px-4 pb-16">
-          <ImageGrid>
+          <ImageGrid variant="illustration">
             {galleryImages.map((img) => (
               <ImageCard
                 key={img.slug}
+                variant="illustration"
                 image={{
                   slug: img.slug,
                   title: img.title,

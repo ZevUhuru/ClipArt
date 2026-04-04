@@ -129,6 +129,7 @@ export default async function Page({ params }: PageProps) {
       <ImageDetailPage
         image={image}
         categorySlug={params.category}
+        contentType="illustration"
         relatedImages={relatedImages}
         categoryName={categoryName}
         imageId={dbRow.id}

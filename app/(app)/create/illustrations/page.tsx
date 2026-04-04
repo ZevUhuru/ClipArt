@@ -30,9 +30,9 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
   if (loading) {
     return (
-      <ImageGrid>
+      <ImageGrid variant="illustration">
         {Array.from({ length: 8 }).map((_, i) => (
-          <ImageCardSkeleton key={i} />
+          <ImageCardSkeleton key={i} variant="illustration" />
         ))}
       </ImageGrid>
     );
@@ -57,11 +57,12 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
   }));
 
   return (
-    <ImageGrid>
+    <ImageGrid variant="illustration">
       {safeItems.map((gen, idx) => (
         <ImageCard
           key={gen.id}
           image={drawerList[idx]}
+          variant="illustration"
           onClick={() => openDrawer(drawerList[idx], drawerList)}
         />
       ))}
