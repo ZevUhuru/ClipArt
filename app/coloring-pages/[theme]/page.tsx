@@ -4,6 +4,7 @@ import { getColoringThemeBySlug, getColoringThemes, type DbCategory } from "@/li
 import { ColoringThemePage } from "@/components/ColoringThemePage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { buildListingMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -20,28 +21,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const theme = await getColoringThemeBySlug(params.theme);
   if (!theme) return {};
 
-  const title = theme.meta_title || `${theme.name} Coloring Pages`;
-  const description = theme.meta_description || `Free ${theme.name.toLowerCase()} coloring pages. Create and download printable ${theme.name.toLowerCase()} coloring sheets with AI.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `https://clip.art/coloring-pages/${theme.slug}`,
-      siteName: "clip.art",
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-    },
-    alternates: {
-      canonical: `https://clip.art/coloring-pages/${theme.slug}`,
-    },
-  };
+  return buildListingMetadata({
+    title: theme.meta_title,
+    description: theme.meta_description,
+    categoryName: theme.name,
+    contentType: "coloring",
+    path: `coloring-pages/${theme.slug}`,
+  });
 }
 
 async function getGalleryImages(themeSlug: string) {

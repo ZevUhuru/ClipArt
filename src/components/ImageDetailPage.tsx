@@ -13,6 +13,8 @@ import {
   getCategorySlugForImage,
 } from "@/data/categories";
 import { downloadClip } from "@/utils/downloadClip";
+import { buildImageJsonLd, buildDetailBreadcrumb } from "@/lib/seo-jsonld";
+import type { ContentType } from "@/lib/seo";
 
 interface RelatedImage {
   title: string;
@@ -56,8 +58,9 @@ export function ImageDetailPage({
 
   const category = categoryMap.get(categorySlug);
   const categoryName = categoryNameProp || category?.name || categorySlug;
+  const safeCategorySlug = variant === "coloring" && categorySlug === "free" ? "" : categorySlug;
   const categoryHref = variant === "coloring"
-    ? `/coloring-pages/${categorySlug}`
+    ? (safeCategorySlug ? `/coloring-pages/${safeCategorySlug}` : "/coloring-pages")
     : isIllustration
       ? `/illustrations/${categorySlug}`
       : `/${categorySlug}`;
@@ -379,42 +382,19 @@ export function ImageDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
-            {
-              "@context": "https://schema.org",
-              "@type": "ImageObject",
-              name: image.title,
+            buildImageJsonLd({
+              title: image.title,
               description: image.description,
-              contentUrl: image.url,
-              thumbnailUrl: image.url,
-              author: {
-                "@type": "Organization",
-                name: "clip.art",
-                url: "https://clip.art",
-              },
-              copyrightHolder: {
-                "@type": "Organization",
-                name: "clip.art",
-              },
-              license: "https://clip.art/free",
-              acquireLicensePage: "https://clip.art/free",
-              keywords: image.tags.join(", "),
-            },
-            {
-              "@context": "https://schema.org",
-              "@type": "BreadcrumbList",
-              itemListElement: isColoringPage
-                ? [
-                    { "@type": "ListItem", position: 1, name: "Home", item: "https://clip.art" },
-                    { "@type": "ListItem", position: 2, name: "Coloring Pages", item: "https://clip.art/coloring-pages" },
-                    { "@type": "ListItem", position: 3, name: categoryLabel, item: `https://clip.art/coloring-pages/${categorySlug}` },
-                    { "@type": "ListItem", position: 4, name: image.title, item: `https://clip.art/coloring-pages/${categorySlug}/${image.slug}` },
-                  ]
-                : [
-                    { "@type": "ListItem", position: 1, name: "Home", item: "https://clip.art" },
-                    { "@type": "ListItem", position: 2, name: `${categoryName} Clip Art`, item: `https://clip.art/${categorySlug}` },
-                    { "@type": "ListItem", position: 3, name: image.title, item: `https://clip.art/${categorySlug}/${image.slug}` },
-                  ],
-            },
+              imageUrl: image.url,
+              tags: image.tags,
+            }),
+            buildDetailBreadcrumb({
+              contentType: variant as ContentType,
+              categorySlug,
+              categoryName,
+              imageTitle: image.title,
+              imageSlug: image.slug,
+            }),
           ]),
         }}
       />

@@ -1,0 +1,50 @@
+---
+description: Enforce SEO metadata conventions on all public page.tsx files
+globs: app/**/page.tsx
+alwaysApply: true
+---
+
+# SEO Page Rules
+
+Every public-facing `page.tsx` in the `app/` directory must follow these conventions.
+
+## Required Exports
+
+1. **`generateMetadata`** (or static `metadata`) must be exported.
+2. Metadata must include a **canonical URL** via `alternates.canonical`.
+3. Metadata must include **Open Graph** tags (`title`, `description`, `url`, `siteName`).
+
+## Use the SEO Utility Layer
+
+- Import `buildPageMetadata` from `@/lib/seo` for detail pages.
+- Import `buildListingMetadata` from `@/lib/seo` for category/listing pages.
+- Do NOT hardcode `https://clip.art` in metadata — use the `path` parameter and let the builder construct the full URL.
+- Do NOT manually interpolate title suffixes like `| clip.art` — the builder handles this.
+
+## Title Rules
+
+- Titles must be under 60 characters.
+- Use `buildTitle()` (called internally by `buildPageMetadata`) to avoid the "Free Free" duplication bug.
+- Pattern: `{Subject} — Free {Category} {ContentType Label} | clip.art`
+
+## JSON-LD Structured Data
+
+- Image detail pages: include `ImageObject` + `BreadcrumbList` via `buildImageJsonLd()` and `buildDetailBreadcrumb()` from `@/lib/seo-jsonld`.
+- Video/learn pages: include `VideoObject` via `buildVideoJsonLd()` — only include optional fields when they have values.
+
+## H1 Tag
+
+- Every public page must render exactly one `<h1>` tag.
+- The `<h1>` must be in the initial server-rendered HTML (not behind client-side state).
+
+## Sitemap
+
+- After creating a new public page, add it to `app/sitemap.ts`.
+
+## Content Type Paths
+
+When setting the `path` parameter:
+- Clip art: `{category}/{slug}`
+- Coloring: `coloring-pages/{theme}/{slug}`
+- Illustrations: `illustrations/{category}/{slug}`
+- Learn: `learn/{slug}`

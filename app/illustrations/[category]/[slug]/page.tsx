@@ -4,6 +4,7 @@ import { getIllustrationCategoryBySlug } from "@/lib/categories";
 import { ImageDetailPage } from "@/components/ImageDetailPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -52,29 +53,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const categoryName = category?.name || params.category;
   const imageTitle = dbImage.title || dbImage.prompt;
   const imageDesc = dbImage.description || dbImage.prompt;
-  const title = `${imageTitle} — Free ${categoryName} Illustration | clip.art`;
 
-  return {
-    title,
+  return buildPageMetadata({
+    subject: imageTitle,
     description: imageDesc,
-    openGraph: {
-      title,
-      description: imageDesc,
-      url: `https://clip.art/illustrations/${params.category}/${dbImage.slug || dbImage.id}`,
-      siteName: "clip.art",
-      type: "article",
-      images: [{ url: dbImage.image_url, alt: imageTitle }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description: imageDesc,
-      images: [dbImage.image_url],
-    },
-    alternates: {
-      canonical: `https://clip.art/illustrations/${params.category}/${dbImage.slug || dbImage.id}`,
-    },
-  };
+    contentType: "illustration",
+    categoryName,
+    path: `illustrations/${params.category}/${dbImage.slug || dbImage.id}`,
+    image: { url: dbImage.image_url, alt: imageTitle },
+  });
 }
 
 async function getRelatedImages(category: string, excludeSlug: string) {

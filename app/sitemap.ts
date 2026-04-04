@@ -128,6 +128,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  /* --- Animations --- */
+
+  const animationsLanding: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/animations`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+  ];
+
   /* --- Stickers --- */
 
   const stickersLanding: MetadataRoute.Sitemap = [
@@ -136,6 +147,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
+    },
+  ];
+
+  /* --- Hub pages --- */
+
+  const hubPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/create`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/search`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
   ];
 
@@ -169,7 +197,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...illustrationsLanding,
     ...illustrationCategoryPages,
     ...illustrationDetailPages,
+    ...animationsLanding,
     ...stickersLanding,
+    ...hubPages,
     ...learnHub,
     ...learnArticlePages,
   ];

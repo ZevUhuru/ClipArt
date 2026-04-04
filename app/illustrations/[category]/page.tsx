@@ -4,6 +4,7 @@ import { getIllustrationCategoryBySlug, getIllustrationCategories, type DbCatego
 import { IllustrationCategoryPage } from "@/components/IllustrationCategoryPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { buildListingMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -20,28 +21,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const category = await getIllustrationCategoryBySlug(params.category);
   if (!category) return {};
 
-  const title = category.meta_title || `${category.name} Illustrations — Free AI Illustrations`;
-  const description = category.meta_description || `Free ${category.name.toLowerCase()} illustrations. Create and download AI-generated ${category.name.toLowerCase()} illustrations with detailed backgrounds.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `https://clip.art/illustrations/${category.slug}`,
-      siteName: "clip.art",
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-    },
-    alternates: {
-      canonical: `https://clip.art/illustrations/${category.slug}`,
-    },
-  };
+  return buildListingMetadata({
+    title: category.meta_title,
+    description: category.meta_description,
+    categoryName: category.name,
+    contentType: "illustration",
+    path: `illustrations/${category.slug}`,
+  });
 }
 
 async function getGalleryImages(categorySlug: string) {

@@ -7,6 +7,7 @@ import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { internalToSlug } from "@/data/categories";
 import { downloadClip } from "@/utils/downloadClip";
+import { ShareModal } from "@/components/ShareModal";
 
 function getCategorySlug(category: string): string {
   return internalToSlug[category] || "free";
@@ -207,6 +208,7 @@ import { MagnifyIcon, ImageLightbox } from "@/components/ImageLightbox";
 
 function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }: DrawerContentProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const isAnimation = !!image.videoUrl;
 
   const categoryHref = isColoring
@@ -299,7 +301,21 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
             </svg>
             Download Animation
           </button>
-        ) : (
+        ) : null}
+
+        {isAnimation && (
+          <button
+            onClick={() => setShareOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share
+          </button>
+        )}
+
+        {!isAnimation ? (
           <button
             onClick={() => downloadClip(image.url, `${image.slug}.png`)}
             className="btn-primary w-full py-3.5 text-sm"
@@ -309,7 +325,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
             </svg>
             {isColoring ? "Download Free Coloring Page" : "Download Free PNG"}
           </button>
-        )}
+        ) : null}
 
         {/* Secondary actions — hide Edit/Animate for animation cards */}
         {!isAnimation && (
@@ -373,6 +389,22 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, onClose }:
             alt={image.title}
             isVideo={isAnimation}
             onClose={() => setLightboxOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {shareOpen && isAnimation && (
+          <ShareModal
+            animation={{
+              id: image.id,
+              title: image.title,
+              prompt: image.title,
+              category: image.category,
+              videoUrl: image.videoUrl!,
+              thumbnailUrl: image.url || undefined,
+            }}
+            onClose={() => setShareOpen(false)}
           />
         )}
       </AnimatePresence>

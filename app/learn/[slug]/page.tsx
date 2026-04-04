@@ -96,25 +96,30 @@ export default function LearnArticlePage({
 
   const url = `https://clip.art/learn/${meta.slug}`;
 
+  const videoLd: Record<string, unknown> = {
+    "@type": "VideoObject",
+    name: meta.title,
+    description: meta.description || "A video tutorial from clip.art Learn.",
+    uploadDate: meta.date,
+    embedUrl: url,
+  };
+  if (meta.thumbnailUrl) {
+    videoLd.thumbnailUrl = meta.thumbnailUrl.startsWith("http")
+      ? meta.thumbnailUrl
+      : `https://clip.art${meta.thumbnailUrl}`;
+  }
+  if (meta.duration) {
+    const parts = meta.duration.split(":");
+    if (parts.length === 2) videoLd.duration = `PT${parts[0]}M${parts[1]}S`;
+  }
+  if (meta.muxPlaybackId) {
+    videoLd.contentUrl = `https://stream.mux.com/${meta.muxPlaybackId}.m3u8`;
+  }
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "VideoObject",
-        name: meta.title,
-        description: meta.description,
-        thumbnailUrl: meta.thumbnailUrl
-          ? `https://clip.art${meta.thumbnailUrl}`
-          : undefined,
-        uploadDate: meta.date,
-        duration: meta.duration
-          ? `PT${meta.duration.replace(":", "M")}S`
-          : undefined,
-        contentUrl: meta.muxPlaybackId
-          ? `https://stream.mux.com/${meta.muxPlaybackId}.m3u8`
-          : undefined,
-        embedUrl: url,
-      },
+      videoLd,
       {
         "@type": "Article",
         headline: meta.title,

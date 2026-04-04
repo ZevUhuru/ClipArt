@@ -4,6 +4,7 @@ import { getCategoryBySlug, getAllCategories, type DbCategory } from "@/lib/cate
 import { CategoryPage } from "@/components/CategoryPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { buildListingMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -20,17 +21,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const category = await getCategoryBySlug(params.category);
   if (!category) return {};
 
-  return {
-    title: category.meta_title || `${category.name} Clip Art`,
+  return buildListingMetadata({
+    title: category.meta_title,
     description: category.meta_description,
-    openGraph: {
-      title: category.meta_title || `${category.name} Clip Art`,
-      description: category.meta_description || undefined,
-      url: `https://clip.art/${category.slug}`,
-      siteName: "clip.art",
-      type: "website",
-    },
-  };
+    categoryName: category.name,
+    contentType: "clipart",
+    path: category.slug,
+  });
 }
 
 async function getGalleryImages(categorySlug: string) {

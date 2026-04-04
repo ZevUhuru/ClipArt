@@ -4,6 +4,7 @@ import { getColoringThemeBySlug } from "@/lib/categories";
 import { ImageDetailPage } from "@/components/ImageDetailPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { buildPageMetadata } from "@/lib/seo";
 
 function humanizeSlug(slug: string): string {
   return slug
@@ -59,29 +60,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const themeName = theme?.name || params.theme;
   const imageTitle = dbImage.title || dbImage.prompt;
   const imageDesc = dbImage.description || dbImage.prompt;
-  const title = `${imageTitle} — Free ${themeName} Coloring Page | clip.art`;
 
-  return {
-    title,
+  return buildPageMetadata({
+    subject: imageTitle,
     description: imageDesc,
-    openGraph: {
-      title,
-      description: imageDesc,
-      url: `https://clip.art/coloring-pages/${params.theme}/${dbImage.slug || dbImage.id}`,
-      siteName: "clip.art",
-      type: "article",
-      images: [{ url: dbImage.image_url, alt: imageTitle }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description: imageDesc,
-      images: [dbImage.image_url],
-    },
-    alternates: {
-      canonical: `https://clip.art/coloring-pages/${params.theme}/${dbImage.slug || dbImage.id}`,
-    },
-  };
+    contentType: "coloring",
+    categoryName: themeName,
+    path: `coloring-pages/${params.theme}/${dbImage.slug || dbImage.id}`,
+    image: { url: dbImage.image_url, alt: imageTitle },
+  });
 }
 
 async function getRelatedImages(category: string, excludeSlug: string) {

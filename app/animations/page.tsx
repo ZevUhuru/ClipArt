@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Free Animated Clip Art — Bring Your Images to Life | clip.art",
   description:
     "Browse free animated clip art created by our community. Download animated clip art for classrooms, presentations, social media, and more. Powered by AI.",
+  alternates: {
+    canonical: "https://clip.art/animations",
+  },
   openGraph: {
     title: "Free Animated Clip Art | clip.art",
     description:
@@ -18,6 +21,12 @@ export const metadata: Metadata = {
     url: "https://clip.art/animations",
     siteName: "clip.art",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free Animated Clip Art | clip.art",
+    description:
+      "Browse and download free animated clip art. Perfect for teachers, presentations, and creative projects.",
   },
 };
 

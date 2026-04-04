@@ -20,9 +20,16 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Clip Art — AI Clip Art Generator",
+  metadataBase: new URL("https://clip.art"),
+  title: {
+    default: "Clip Art — AI Clip Art Generator",
+    template: "%s | clip.art",
+  },
   description:
-    "Generate beautiful clip art in seconds. Describe what you want, pick a style, and download instantly. No license needed.",
+    "Generate beautiful clip art, illustrations, and coloring pages in seconds. Describe what you want, pick a style, and download instantly. No license needed.",
+  alternates: {
+    canonical: "https://clip.art",
+  },
   openGraph: {
     title: "Clip Art — AI Clip Art Generator",
     description:
@@ -30,6 +37,10 @@ export const metadata: Metadata = {
     url: "https://clip.art",
     siteName: "clip.art",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@clipart",
   },
 };
 
