@@ -10,8 +10,9 @@ export async function GET() {
     const [genResult, animResult] = await Promise.all([
       admin
         .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
         .eq("is_public", true)
+        .eq("content_type", "clipart")
         .order("created_at", { ascending: false })
         .limit(50),
       admin
