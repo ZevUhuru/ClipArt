@@ -6,7 +6,7 @@ import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import { VideoPlayer } from "@/components/VideoPlayer";
+
 
 interface AnimationItem {
   id: string;
@@ -263,6 +263,7 @@ function CreationsGrid() {
                 videoUrl: a.video_url,
               }));
 
+              const poster = anim.source_image_url || anim.thumbnail_url || "";
               return (
                 <div
                   key={anim.id}
@@ -273,18 +274,17 @@ function CreationsGrid() {
                   className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
                 >
                   <div className="relative aspect-square">
-                    <VideoPlayer
-                      src={anim.video_url}
-                      poster={anim.source_image_url || anim.thumbnail_url || undefined}
-                      mode="preview"
-                      className="absolute inset-0"
-                    />
+                    {/* Static poster — video plays on hover via ImageCard pattern */}
+                    {poster && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={poster} alt="" className="h-full w-full object-cover" />
+                    )}
                   </div>
                   <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
                     <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8 5.14v14l11-7-11-7z" />
                     </svg>
-                    Video
+                    Animated
                   </span>
                   <span className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
