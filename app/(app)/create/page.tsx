@@ -60,6 +60,19 @@ function mergeAnimations(gens: CommunityItem[], rawAnims: any[]): CommunityItem[
   return merged;
 }
 
+function toDrawerImage(gen: CommunityItem) {
+  return {
+    id: gen.id,
+    slug: gen.slug || gen.id,
+    title: gen.prompt,
+    url: gen.image_url,
+    category: gen.category || "free",
+    style: gen.style,
+    aspect_ratio: gen.aspect_ratio,
+    videoUrl: gen.animationPreviewUrl,
+  };
+}
+
 function CommunityGrid() {
   const openDrawer = useImageDrawer((s) => s.open);
   const storeGenerations = useAppStore((s) => s.generations);
@@ -83,14 +96,23 @@ function CommunityGrid() {
     fetchCommunity();
   }, []);
 
-  const items = useMemo(() => {
-    if (loading) return [];
+  const { safeItems, drawerList } = useMemo(() => {
+    if (loading) return { safeItems: [] as CommunityItem[], drawerList: [] as ReturnType<typeof toDrawerImage>[] };
+
     const communityIds = new Set(communityItems.map((c) => c.id));
     const newFromStore = storeGenerations.filter(
       (g) => g.id && g.image_url && !communityIds.has(g.id),
     ) as CommunityItem[];
-    if (newFromStore.length === 0) return communityItems;
-    return [...newFromStore, ...communityItems];
+
+    const merged = newFromStore.length > 0
+      ? [...newFromStore, ...communityItems]
+      : communityItems;
+
+    const safe = merged.filter((g) => g.id && g.image_url);
+    return {
+      safeItems: safe,
+      drawerList: safe.map(toDrawerImage),
+    };
   }, [storeGenerations, communityItems, loading]);
 
   if (loading) {
@@ -103,47 +125,22 @@ function CommunityGrid() {
     );
   }
 
-  if (items.length === 0) {
+  if (safeItems.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-gray-400">Nothing here yet.</p>
     );
   }
 
-  const safeItems = items.filter((gen) => gen.id && gen.image_url);
-
-  const drawerList = safeItems.map((gen) => ({
-    id: gen.id,
-    slug: gen.slug || gen.id,
-    title: gen.prompt,
-    url: gen.image_url,
-    category: gen.category || "free",
-    style: gen.style,
-    aspect_ratio: gen.aspect_ratio,
-    videoUrl: gen.animationPreviewUrl,
-  }));
-
   return (
     <ImageGrid>
-      {safeItems.map((gen) => {
-        const img = {
-          id: gen.id,
-          slug: gen.slug || gen.id,
-          title: gen.prompt,
-          url: gen.image_url,
-          category: gen.category || "free",
-          style: gen.style,
-          aspect_ratio: gen.aspect_ratio,
-          videoUrl: gen.animationPreviewUrl,
-        };
-        return (
-          <ImageCard
-            key={gen.id}
-            image={img}
-            onClick={() => openDrawer(img, drawerList)}
-            animationPreviewUrl={gen.animationPreviewUrl}
-          />
-        );
-      })}
+      {safeItems.map((gen, idx) => (
+        <ImageCard
+          key={gen.id}
+          image={drawerList[idx]}
+          onClick={() => openDrawer(drawerList[idx], drawerList)}
+          animationPreviewUrl={gen.animationPreviewUrl}
+        />
+      ))}
     </ImageGrid>
   );
 }
