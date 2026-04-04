@@ -92,6 +92,52 @@ export async function getColoringThemeBySlug(slug: string): Promise<DbCategory |
   }
 }
 
+export async function getIllustrationCategories(): Promise<DbCategory[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .eq("type", "illustration")
+      .order("sort_order");
+    return (data || []) as DbCategory[];
+  } catch {
+    return [];
+  }
+}
+
+export async function getIllustrationCategoryBySlug(slug: string): Promise<DbCategory | null> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("*")
+      .eq("slug", slug)
+      .eq("type", "illustration")
+      .eq("is_active", true)
+      .single();
+    return (data as DbCategory) || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getIllustrationCategorySlugs(): Promise<string[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("categories")
+      .select("slug")
+      .eq("is_active", true)
+      .eq("type", "illustration")
+      .order("sort_order");
+    return (data || []).map((r: { slug: string }) => r.slug);
+  } catch {
+    return [];
+  }
+}
+
 export async function getColoringThemeSlugs(): Promise<string[]> {
   try {
     const admin = createSupabaseAdmin();

@@ -12,6 +12,7 @@ interface ImageData {
   description: string | null;
   image_url: string;
   style: string;
+  content_type: string | null;
   category: string | null;
   is_public: boolean;
   is_featured: boolean;
@@ -268,11 +269,17 @@ export default function AdminImageEditPage() {
 
           <div className="border-t border-gray-100 pt-4">
             <p className="text-xs text-gray-400">
-              ID: {image.id} &middot; Style: {image.style} &middot; Created: {new Date(image.created_at).toLocaleString()}
+              ID: {image.id} &middot; Type: {image.content_type || "clipart"} &middot; Style: {image.style} &middot; Created: {new Date(image.created_at).toLocaleString()}
             </p>
             {image.category && slug && (
               <Link
-                href={`/${image.category}/${slug}`}
+                href={
+                  (image.content_type || (image.style === "coloring" ? "coloring" : "clipart")) === "coloring"
+                    ? `/coloring-pages/${image.category}/${slug}`
+                    : image.content_type === "illustration"
+                      ? `/illustrations/${image.category}/${slug}`
+                      : `/${image.category}/${slug}`
+                }
                 className="mt-1 block text-xs text-pink-500 hover:text-pink-700"
                 target="_blank"
               >

@@ -41,7 +41,7 @@ async function getGalleryImages(categorySlug: string) {
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio, created_at")
       .eq("category", categorySlug)
       .eq("is_public", true)
-      .neq("style", "coloring")
+      .eq("content_type", "clipart")
       .order("created_at", { ascending: false })
       .limit(60);
 

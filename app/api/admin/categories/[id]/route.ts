@@ -33,7 +33,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const fields = [
     "name", "h1", "meta_title", "meta_description", "intro",
     "seo_content", "suggested_prompts", "related_slugs",
-    "is_active", "sort_order",
+    "is_active", "sort_order", "type",
   ];
 
   for (const field of fields) {
@@ -55,7 +55,11 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  if (data?.slug) revalidatePath(`/${data.slug}`);
+  if (data?.slug) {
+    if (data.type === "coloring") revalidatePath(`/coloring-pages/${data.slug}`);
+    else if (data.type === "illustration") revalidatePath(`/illustrations/${data.slug}`);
+    else revalidatePath(`/${data.slug}`);
+  }
 
   return NextResponse.json({ category: data });
 }
@@ -69,13 +73,17 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
   const { data: existing } = await admin
     .from("categories")
-    .select("slug")
+    .select("slug, type")
     .eq("id", params.id)
     .single();
 
   await admin.from("categories").delete().eq("id", params.id);
 
-  if (existing?.slug) revalidatePath(`/${existing.slug}`);
+  if (existing?.slug) {
+    if (existing.type === "coloring") revalidatePath(`/coloring-pages/${existing.slug}`);
+    else if (existing.type === "illustration") revalidatePath(`/illustrations/${existing.slug}`);
+    else revalidatePath(`/${existing.slug}`);
+  }
 
   return NextResponse.json({ success: true });
 }

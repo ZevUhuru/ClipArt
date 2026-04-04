@@ -61,11 +61,15 @@ export function ImageDetailDrawer() {
 
   if (!image) return null;
 
-  const isColoring = image.style === "coloring";
+  const contentType = (image as { content_type?: string }).content_type;
+  const isColoring = contentType === "coloring" || image.style === "coloring";
+  const isIllustration = contentType === "illustration";
   const categorySlug = getCategorySlug(image.category);
   const detailHref = isColoring
     ? `/coloring-pages/${image.category}/${image.slug}`
-    : `/${categorySlug}/${image.slug}`;
+    : isIllustration
+      ? `/illustrations/${image.category}/${image.slug}`
+      : `/${categorySlug}/${image.slug}`;
 
   const canPrev = hasPrev();
   const canNext = hasNext();

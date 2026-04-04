@@ -1,32 +1,14 @@
 "use client";
 
-import { type StyleKey } from "@/lib/styles";
+import { type StyleKey, STYLE_LABELS, VALID_STYLES } from "@/lib/styles";
 
-const CLIP_ART_STYLES: StyleKey[] = [
-  "flat", "outline", "cartoon", "sticker", "vintage", "watercolor",
-  "chibi", "pixel", "kawaii", "3d", "doodle",
-];
+const CLIP_ART_STYLES: StyleKey[] = VALID_STYLES.clipart;
 
 interface StylePickerProps {
   selected: StyleKey;
   onSelect: (style: StyleKey) => void;
   styles?: StyleKey[];
 }
-
-const styleLabels: Record<StyleKey, string> = {
-  flat: "Flat",
-  outline: "Outline",
-  cartoon: "Cartoon",
-  sticker: "Sticker",
-  vintage: "Vintage",
-  watercolor: "Watercolor",
-  chibi: "Chibi",
-  pixel: "Pixel Art",
-  kawaii: "Kawaii",
-  "3d": "3D Render",
-  doodle: "Doodle",
-  coloring: "Coloring Page",
-};
 
 export function StylePicker({ selected, onSelect, styles = CLIP_ART_STYLES }: StylePickerProps) {
   return (
@@ -46,7 +28,7 @@ export function StylePicker({ selected, onSelect, styles = CLIP_ART_STYLES }: St
               : "border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98]"
           }`}
         >
-          {styleLabels[key]}
+          {STYLE_LABELS[key] || key}
         </button>
       ))}
     </div>

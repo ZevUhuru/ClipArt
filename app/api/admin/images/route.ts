@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   let query = admin
     .from("generations")
-    .select("id, prompt, title, slug, description, image_url, style, category, is_public, is_featured, featured_order, user_id, created_at", { count: "exact" })
+    .select("id, prompt, title, slug, description, image_url, style, content_type, category, is_public, is_featured, featured_order, user_id, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

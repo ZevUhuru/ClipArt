@@ -1,24 +1,24 @@
 import type { MetadataRoute } from "next";
 import { sampleImages } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
-import { getAllCategories, getColoringThemes } from "@/lib/categories";
+import { getAllCategories, getColoringThemes, getIllustrationCategories } from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 3600;
 
-async function getPublicImageSlugs(style?: string) {
+async function getPublicImageSlugs(contentType?: string) {
   try {
     const admin = createSupabaseAdmin();
     let query = admin
       .from("generations")
-      .select("slug, id, category, style, created_at")
+      .select("slug, id, category, style, content_type, created_at")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(5000);
 
-    if (style) query = query.eq("style", style);
-    else query = query.neq("style", "coloring");
+    if (contentType) query = query.eq("content_type", contentType);
+    else query = query.eq("content_type", "clipart");
 
     const { data } = await query;
     return data || [];
@@ -90,9 +90,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const coloringImages = await getPublicImageSlugs("coloring");
+  const illustrationImages = await getPublicImageSlugs("illustration");
   const coloringDetailPages: MetadataRoute.Sitemap = coloringImages.map(
     (row: { slug: string | null; id: string; category: string; created_at: string }) => ({
       url: `${baseUrl}/coloring-pages/${row.category}/${row.slug || row.id}`,
+      lastModified: new Date(row.created_at),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }),
+  );
+
+  /* --- Illustrations --- */
+
+  const illustrationsLanding: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/illustrations`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+  ];
+
+  const illustrationCats = await getIllustrationCategories();
+  const illustrationCategoryPages: MetadataRoute.Sitemap = illustrationCats.map((cat) => ({
+    url: `${baseUrl}/illustrations/${cat.slug}`,
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+  }));
+
+  const illustrationDetailPages: MetadataRoute.Sitemap = illustrationImages.map(
+    (row: { slug: string | null; id: string; category: string; created_at: string }) => ({
+      url: `${baseUrl}/illustrations/${row.category}/${row.slug || row.id}`,
       lastModified: new Date(row.created_at),
       changeFrequency: "weekly" as const,
       priority: 0.7,
@@ -137,6 +166,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...coloringLanding,
     ...coloringThemePages,
     ...coloringDetailPages,
+    ...illustrationsLanding,
+    ...illustrationCategoryPages,
+    ...illustrationDetailPages,
     ...stickersLanding,
     ...learnHub,
     ...learnArticlePages,

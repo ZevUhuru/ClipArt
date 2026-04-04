@@ -6,19 +6,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
+import { StylePicker } from "@/components/StylePicker";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { GenerationProgress } from "@/components/GenerationProgress";
-import { COLORING_ASPECT_OPTIONS, type AspectRatio } from "@/lib/styles";
+import { ILLUSTRATION_ASPECT_OPTIONS, VALID_STYLES, type AspectRatio, type StyleKey } from "@/lib/styles";
+
+const ILLUSTRATION_STYLES = VALID_STYLES.illustration;
 
 const suggestedPrompts = [
-  "dinosaur in a jungle scene",
-  "princess castle with towers and a dragon",
-  "underwater scene with fish and coral",
-  "cute puppies playing in a garden",
-  "space rocket with planets and stars",
-  "farm animals in a barn",
+  "cozy cottage in a snowy forest at dusk",
+  "dragon flying over a medieval castle at sunset",
+  "underwater coral reef with tropical fish",
+  "bustling Japanese street market at night",
+  "child reading a book under a giant tree",
+  "robot tending a garden of glowing flowers",
 ];
 
 function GenerationGrid({ items, loading }: { items: Generation[]; loading: boolean }) {
@@ -26,9 +29,9 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
   if (loading) {
     return (
-      <ImageGrid variant="coloring">
+      <ImageGrid>
         {Array.from({ length: 8 }).map((_, i) => (
-          <ImageCardSkeleton key={i} variant="coloring" />
+          <ImageCardSkeleton key={i} />
         ))}
       </ImageGrid>
     );
@@ -47,20 +50,20 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
     slug: gen.slug || gen.id,
     title: gen.prompt,
     url: gen.image_url,
-    category: gen.category || "free",
+    category: gen.category || "illustration-free",
     style: gen.style,
     aspect_ratio: gen.aspect_ratio,
   }));
 
   return (
-    <ImageGrid variant="coloring">
+    <ImageGrid>
       {safeItems.map((gen) => {
         const img = {
           id: gen.id,
           slug: gen.slug || gen.id,
           title: gen.prompt,
           url: gen.image_url,
-          category: gen.category || "free",
+          category: gen.category || "illustration-free",
           style: gen.style,
           aspect_ratio: gen.aspect_ratio,
         };
@@ -68,7 +71,6 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
           <ImageCard
             key={gen.id}
             image={img}
-            variant="coloring"
             onClick={() => openDrawer(img, drawerList)}
           />
         );
@@ -79,7 +81,9 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
 
 function RecentsGrid() {
   const { user, generations, generationsLoaded, setGenerations } = useAppStore();
-  const coloringGenerations = generations.filter((g) => g.style === "coloring");
+  const illustrationGenerations = generations.filter(
+    (g) => (g as Generation & { content_type?: string }).content_type === "illustration",
+  );
 
   useEffect(() => {
     if (!user || generationsLoaded) return;
@@ -89,7 +93,7 @@ function RecentsGrid() {
       if (!supabase) return;
       const { data } = await supabase
         .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -102,7 +106,7 @@ function RecentsGrid() {
 
   return (
     <GenerationGrid
-      items={coloringGenerations}
+      items={illustrationGenerations}
       loading={!generationsLoaded && !!user}
     />
   );
@@ -118,9 +122,9 @@ function CommunityGrid() {
       if (!supabase) return;
       const { data } = await supabase
         .from("generations")
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
         .eq("is_public", true)
-        .eq("content_type", "coloring")
+        .eq("content_type", "illustration")
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -136,10 +140,11 @@ function CommunityGrid() {
 
 type Tab = "recents" | "community";
 
-export default function ColoringPagesCreatePage() {
+export default function IllustrationsCreatePage() {
   const [prompt, setPrompt] = useState("");
+  const [style, setStyle] = useState<StyleKey>("storybook");
   const [isPublic, setIsPublic] = useState(true);
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("3:4");
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("4:3");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("recents");
@@ -154,8 +159,6 @@ export default function ColoringPagesCreatePage() {
     generations,
     generationsLoaded,
   } = useAppStore();
-
-  const style = "coloring" as const;
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim() || isGenerating) return;
@@ -172,7 +175,13 @@ export default function ColoringPagesCreatePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style, isPublic, aspectRatio }),
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          style,
+          contentType: "illustration",
+          isPublic,
+          aspectRatio,
+        }),
       });
 
       const data = await res.json();
@@ -198,11 +207,13 @@ export default function ColoringPagesCreatePage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [prompt, isPublic, aspectRatio, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
+  }, [prompt, style, isPublic, aspectRatio, isGenerating, user, openAuthModal, openBuyCreditsModal, setCredits, prependGeneration]);
 
-  const coloringGenerations = generations.filter((g) => g.style === "coloring");
-  const hasRecents = generationsLoaded && coloringGenerations.length > 0;
-  const showEmptyState = !user || (generationsLoaded && coloringGenerations.length === 0);
+  const illustrationGenerations = generations.filter(
+    (g) => (g as Generation & { content_type?: string }).content_type === "illustration",
+  );
+  const hasRecents = generationsLoaded && illustrationGenerations.length > 0;
+  const showEmptyState = !user || (generationsLoaded && illustrationGenerations.length === 0);
 
   return (
     <div className="min-h-screen">
@@ -217,7 +228,7 @@ export default function ColoringPagesCreatePage() {
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe your coloring page... (e.g. dinosaur in a jungle scene)"
+                placeholder="Describe your illustration... (e.g. cozy cottage in a snowy forest at dusk)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                 maxLength={1000}
                 disabled={isGenerating}
@@ -238,11 +249,16 @@ export default function ColoringPagesCreatePage() {
             </button>
           </div>
 
-          {/* Mode label + share toggle */}
+          {/* Style picker + aspect ratio + share toggle */}
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <StylePicker selected={style} onSelect={setStyle} styles={ILLUSTRATION_STYLES} />
+            </div>
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 p-0.5">
-                {COLORING_ASPECT_OPTIONS.map((opt) => (
+                {ILLUSTRATION_ASPECT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
@@ -264,10 +280,10 @@ export default function ColoringPagesCreatePage() {
                 ))}
               </div>
               <Link
-                href="/coloring-pages"
+                href="/illustrations"
                 className="text-xs font-medium text-pink-500 hover:text-pink-700"
               >
-                Browse Coloring Pages
+                Browse Illustrations
               </Link>
             </div>
             <button
@@ -292,7 +308,7 @@ export default function ColoringPagesCreatePage() {
         {/* Generation progress */}
         {isGenerating && (
           <div className="mb-6 flex justify-center">
-            <GenerationProgress isGenerating={isGenerating} variant="coloring" />
+            <GenerationProgress isGenerating={isGenerating} />
           </div>
         )}
 
@@ -315,14 +331,14 @@ export default function ColoringPagesCreatePage() {
           <div className="py-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
               <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z" />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Create your first coloring page
+              Create your first illustration
             </h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
-              Describe a scene and we&apos;ll generate a printable coloring page with bold outlines. Try one of these:
+              Describe a scene and pick a style — we&apos;ll generate a full illustration with background and environment. Try one of these:
             </p>
             <div className="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
               {suggestedPrompts.map((suggestion) => (

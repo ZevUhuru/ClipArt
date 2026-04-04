@@ -7,19 +7,57 @@ import { generateImage } from "@/lib/imageGen";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
 import { checkPromptSafety } from "@/lib/promptSafety";
-import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
+import { type StyleKey, type ContentType, STYLE_DESCRIPTORS, CONTENT_TYPE_ASPECT, isValidStyleForContentType } from "@/lib/styles";
+
+const VALID_CONTENT_TYPES: ContentType[] = ["clipart", "illustration", "coloring"];
+
+function resolveR2Key(contentType: ContentType, cat: string, uniqueSlug: string): string {
+  switch (contentType) {
+    case "coloring":
+      return `coloring-pages/${cat}/${uniqueSlug}.webp`;
+    case "illustration":
+      return `illustrations/${cat}/${uniqueSlug}.webp`;
+    default:
+      return `${cat}/${uniqueSlug}.webp`;
+  }
+}
+
+function revalidateForContentType(contentType: ContentType, cat: string) {
+  switch (contentType) {
+    case "coloring":
+      revalidatePath(`/coloring-pages/${cat}`);
+      revalidatePath("/coloring-pages");
+      break;
+    case "illustration":
+      revalidatePath(`/illustrations/${cat}`);
+      revalidatePath("/illustrations");
+      break;
+    default:
+      revalidatePath(`/${cat}`);
+      break;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { prompt, style, isPublic, aspectRatio: aspectRatioOverride, freeGen } = body;
+    const contentType: ContentType = VALID_CONTENT_TYPES.includes(body.contentType)
+      ? body.contentType
+      : style === "coloring" ? "coloring" : "clipart";
 
     if (!prompt || typeof prompt !== "string" || prompt.length > 1000) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
     }
 
-    if (!style || !(style in STYLES)) {
+    if (!style || !(style in STYLE_DESCRIPTORS)) {
       return NextResponse.json({ error: "Invalid style" }, { status: 400 });
+    }
+
+    const styleKey = style as StyleKey;
+
+    if (!isValidStyleForContentType(styleKey, contentType)) {
+      return NextResponse.json({ error: "Style not available for this content type" }, { status: 400 });
     }
 
     const safety = checkPromptSafety(prompt);
@@ -37,6 +75,9 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createSupabaseAdmin();
+    const validAspectRatios = ["1:1", "3:4", "4:3"];
+    const safeOverride = validAspectRatios.includes(aspectRatioOverride) ? aspectRatioOverride : undefined;
+    const aspectRatio = safeOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
 
     if (!isFreeGen) {
       const { data: profile } = await admin
@@ -49,24 +90,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ requiresCredits: true }, { status: 402 });
       }
 
-      const styleKey = style as StyleKey;
-      const validAspectRatios = ["1:1", "3:4", "4:3"];
-      const safeOverride = validAspectRatios.includes(aspectRatioOverride) ? aspectRatioOverride : undefined;
-      const rawBuffer = await generateImage(prompt, styleKey, safeOverride);
-      const aspectRatio = safeOverride || STYLE_ASPECT_MAP[styleKey] || "1:1";
+      const rawBuffer = await generateImage(prompt, styleKey, contentType, safeOverride);
 
       const webpBuffer = await sharp(rawBuffer)
         .webp({ quality: 85, effort: 4 })
         .toBuffer();
 
-      const classification = await classifyPrompt(prompt, style);
+      const classification = await classifyPrompt(prompt, style, contentType);
       const cat = classification.category;
       const suffix = Math.random().toString(36).slice(2, 8);
       const uniqueSlug = `${classification.slug}-${suffix}`;
-      const isColoring = styleKey === "coloring";
-      const key = isColoring
-        ? `coloring-pages/${cat}/${uniqueSlug}.webp`
-        : `${cat}/${uniqueSlug}.webp`;
+      const key = resolveR2Key(contentType, cat, uniqueSlug);
       const imageUrl = await uploadToR2(webpBuffer, key, {
         category: cat,
         contentType: "image/webp",
@@ -83,6 +117,7 @@ export async function POST(request: NextRequest) {
           user_id: user!.id,
           prompt,
           style,
+          content_type: contentType,
           image_url: imageUrl,
           category: cat,
           is_public: isPublic !== false,
@@ -91,12 +126,11 @@ export async function POST(request: NextRequest) {
           description: classification.description,
           aspect_ratio: aspectRatio,
         })
-        .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
         .single();
 
       if (isPublic !== false) {
-        revalidatePath(isColoring ? `/coloring-pages/${cat}` : `/${cat}`);
-        if (isColoring) revalidatePath("/coloring-pages");
+        revalidateForContentType(contentType, cat);
       }
 
       return NextResponse.json({
@@ -107,22 +141,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Anonymous free generation — generate + upload, skip credits and DB record
-    const styleKey = style as StyleKey;
-    const rawBuffer = await generateImage(prompt, styleKey);
-    const aspectRatio = STYLE_ASPECT_MAP[styleKey] || "1:1";
+    const rawBuffer = await generateImage(prompt, styleKey, contentType);
 
     const webpBuffer = await sharp(rawBuffer)
       .webp({ quality: 85, effort: 4 })
       .toBuffer();
 
-    const classification = await classifyPrompt(prompt, style);
+    const classification = await classifyPrompt(prompt, style, contentType);
     const cat = classification.category;
     const suffix = Math.random().toString(36).slice(2, 8);
     const uniqueSlug = `${classification.slug}-${suffix}`;
-    const isColoring = styleKey === "coloring";
-    const key = isColoring
-      ? `coloring-pages/${cat}/${uniqueSlug}.webp`
-      : `${cat}/${uniqueSlug}.webp`;
+    const key = resolveR2Key(contentType, cat, uniqueSlug);
     const imageUrl = await uploadToR2(webpBuffer, key, {
       category: cat,
       contentType: "image/webp",

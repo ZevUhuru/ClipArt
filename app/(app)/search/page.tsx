@@ -8,7 +8,7 @@ import { categories } from "@/data/categories";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import type { StyleKey } from "@/lib/styles";
+import { type StyleKey, VALID_STYLES, STYLE_LABELS } from "@/lib/styles";
 
 interface SearchResult {
   id: string;
@@ -22,25 +22,17 @@ interface SearchResult {
   previewUrl?: string;
 }
 
-type ContentType = "clipart" | "coloring" | "animations";
+type ContentType = "clipart" | "illustration" | "coloring" | "animations";
 
 const PAGE_SIZE = 60;
 
 const clipartCategories = categories.map((c) => ({ slug: c.slug, name: c.name }));
 
-const STYLE_OPTIONS: { key: StyleKey; label: string }[] = [
-  { key: "flat", label: "Flat" },
-  { key: "outline", label: "Outline" },
-  { key: "cartoon", label: "Cartoon" },
-  { key: "sticker", label: "Sticker" },
-  { key: "vintage", label: "Vintage" },
-  { key: "watercolor", label: "Watercolor" },
-  { key: "chibi", label: "Chibi" },
-  { key: "pixel", label: "Pixel Art" },
-  { key: "kawaii", label: "Kawaii" },
-  { key: "3d", label: "3D Render" },
-  { key: "doodle", label: "Doodle" },
-];
+const CLIPART_STYLE_OPTIONS: { key: StyleKey; label: string }[] =
+  VALID_STYLES.clipart.map((key) => ({ key, label: STYLE_LABELS[key] || key }));
+
+const ILLUSTRATION_STYLE_OPTIONS: { key: StyleKey; label: string }[] =
+  VALID_STYLES.illustration.map((key) => ({ key, label: STYLE_LABELS[key] || key }));
 
 function SearchImageGrid({
   items,
@@ -103,7 +95,7 @@ function SearchPageInner() {
   const searchParams = useSearchParams();
 
   const rawType = searchParams.get("type");
-  const initialCt: ContentType = rawType === "coloring" ? "coloring" : rawType === "animations" ? "animations" : "clipart";
+  const initialCt: ContentType = rawType === "coloring" ? "coloring" : rawType === "illustration" ? "illustration" : rawType === "animations" ? "animations" : "clipart";
   const initialCategory = searchParams.get("category") || null;
   const initialStyle = searchParams.get("style") || null;
   const initialQuery = searchParams.get("q") || null;
@@ -121,6 +113,9 @@ function SearchPageInner() {
   const [coloringCategories, setColoringCategories] = useState<
     { slug: string; name: string }[]
   >([]);
+  const [illustrationCategories, setIllustrationCategories] = useState<
+    { slug: string; name: string }[]
+  >([]);
 
   const currentQueryRef = useRef<string | undefined>();
   const currentCategoryRef = useRef<string | undefined>();
@@ -133,6 +128,10 @@ function SearchPageInner() {
     fetch("/api/categories/coloring")
       .then((r) => r.json())
       .then((d) => setColoringCategories(d.categories || []))
+      .catch(() => {});
+    fetch("/api/categories/illustration")
+      .then((r) => r.json())
+      .then((d) => setIllustrationCategories(d.categories || []))
       .catch(() => {});
   }, []);
 
@@ -320,7 +319,11 @@ function SearchPageInner() {
       : null;
 
   const currentCategories =
-    contentType === "coloring" ? coloringCategories : clipartCategories;
+    contentType === "coloring"
+      ? coloringCategories
+      : contentType === "illustration"
+        ? illustrationCategories
+        : clipartCategories;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-8 pt-8">
@@ -330,7 +333,9 @@ function SearchPageInner() {
           placeholder={
             contentType === "coloring"
               ? "Search coloring pages..."
-              : "Search for clip art..."
+              : contentType === "illustration"
+                ? "Search illustrations..."
+                : "Search for clip art..."
           }
           defaultValue={searchQuery || ""}
         />
@@ -342,6 +347,7 @@ function SearchPageInner() {
           {(
             [
               { key: "clipart" as ContentType, label: "Clip Art" },
+              { key: "illustration" as ContentType, label: "Illustrations" },
               { key: "coloring" as ContentType, label: "Coloring Pages" },
               { key: "animations" as ContentType, label: "Animations" },
             ]
@@ -380,8 +386,8 @@ function SearchPageInner() {
         </div>
       )}
 
-      {/* Tier 3: Style pills (clip art only) */}
-      {contentType === "clipart" && (
+      {/* Tier 3: Style pills (clip art and illustrations) */}
+      {(contentType === "clipart" || contentType === "illustration") && (
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             onClick={handleAllStylesClick}
@@ -393,7 +399,7 @@ function SearchPageInner() {
           >
             All Styles
           </button>
-          {STYLE_OPTIONS.map((s) => (
+          {(contentType === "illustration" ? ILLUSTRATION_STYLE_OPTIONS : CLIPART_STYLE_OPTIONS).map((s) => (
             <button
               key={s.key}
               onClick={() => handleStyleClick(s.key)}

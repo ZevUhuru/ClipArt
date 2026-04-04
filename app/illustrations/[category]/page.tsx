@@ -1,27 +1,27 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getColoringThemeBySlug, getColoringThemes, type DbCategory } from "@/lib/categories";
-import { ColoringThemePage } from "@/components/ColoringThemePage";
+import { getIllustrationCategoryBySlug, getIllustrationCategories, type DbCategory } from "@/lib/categories";
+import { IllustrationCategoryPage } from "@/components/IllustrationCategoryPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const revalidate = 60;
 
 interface PageProps {
-  params: { theme: string };
+  params: { category: string };
 }
 
 export async function generateStaticParams() {
-  const themes = await getColoringThemes();
-  return themes.map((t) => ({ theme: t.slug }));
+  const categories = await getIllustrationCategories();
+  return categories.map((c) => ({ category: c.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const theme = await getColoringThemeBySlug(params.theme);
-  if (!theme) return {};
+  const category = await getIllustrationCategoryBySlug(params.category);
+  if (!category) return {};
 
-  const title = theme.meta_title || `${theme.name} Coloring Pages`;
-  const description = theme.meta_description || `Free ${theme.name.toLowerCase()} coloring pages. Create and download printable ${theme.name.toLowerCase()} coloring sheets with AI.`;
+  const title = category.meta_title || `${category.name} Illustrations — Free AI Illustrations`;
+  const description = category.meta_description || `Free ${category.name.toLowerCase()} illustrations. Create and download AI-generated ${category.name.toLowerCase()} illustrations with detailed backgrounds.`;
 
   return {
     title,
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      url: `https://clip.art/coloring-pages/${theme.slug}`,
+      url: `https://clip.art/illustrations/${category.slug}`,
       siteName: "clip.art",
       type: "website",
     },
@@ -39,19 +39,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
     },
     alternates: {
-      canonical: `https://clip.art/coloring-pages/${theme.slug}`,
+      canonical: `https://clip.art/illustrations/${category.slug}`,
     },
   };
 }
 
-async function getGalleryImages(themeSlug: string) {
+async function getGalleryImages(categorySlug: string) {
   try {
     const admin = createSupabaseAdmin();
     const { data } = await admin
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio, created_at")
-      .eq("category", themeSlug)
-      .eq("content_type", "coloring")
+      .eq("category", categorySlug)
+      .eq("content_type", "illustration")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(60);
@@ -62,15 +62,15 @@ async function getGalleryImages(themeSlug: string) {
       url: row.image_url,
       description: row.prompt,
       category: row.category,
-      tags: ["coloring", row.category].filter(Boolean),
-      aspect_ratio: row.aspect_ratio || "3:4",
+      tags: [row.style, row.category].filter(Boolean),
+      aspect_ratio: row.aspect_ratio || "4:3",
     }));
   } catch {
     return [];
   }
 }
 
-async function getRelatedThemes(relatedSlugs: string[]): Promise<DbCategory[]> {
+async function getRelatedCategories(relatedSlugs: string[]): Promise<DbCategory[]> {
   if (!relatedSlugs.length) return [];
   try {
     const admin = createSupabaseAdmin();
@@ -78,7 +78,7 @@ async function getRelatedThemes(relatedSlugs: string[]): Promise<DbCategory[]> {
       .from("categories")
       .select("*")
       .in("slug", relatedSlugs)
-      .eq("type", "coloring")
+      .eq("type", "illustration")
       .eq("is_active", true);
     return (data || []) as DbCategory[];
   } catch {
@@ -87,20 +87,20 @@ async function getRelatedThemes(relatedSlugs: string[]): Promise<DbCategory[]> {
 }
 
 export default async function Page({ params }: PageProps) {
-  const theme = await getColoringThemeBySlug(params.theme);
-  if (!theme) notFound();
+  const category = await getIllustrationCategoryBySlug(params.category);
+  if (!category) notFound();
 
-  const [dbImages, relatedThemes] = await Promise.all([
-    getGalleryImages(params.theme),
-    getRelatedThemes(theme.related_slugs || []),
+  const [dbImages, relatedCategories] = await Promise.all([
+    getGalleryImages(params.category),
+    getRelatedCategories(category.related_slugs || []),
   ]);
 
   return (
     <>
-      <ColoringThemePage
-        theme={theme}
+      <IllustrationCategoryPage
+        category={category}
         galleryImages={dbImages}
-        relatedThemes={relatedThemes}
+        relatedCategories={relatedCategories}
       />
       <MarketingFooter />
     </>

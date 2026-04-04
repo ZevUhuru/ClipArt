@@ -42,9 +42,11 @@ export async function GET(req: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (filter === "coloring") {
-      query = query.eq("style", "coloring");
+      query = query.eq("content_type", "coloring");
     } else if (filter === "clipart") {
-      query = query.neq("style", "coloring");
+      query = query.eq("content_type", "clipart");
+    } else if (filter === "illustrations") {
+      query = query.eq("content_type", "illustration");
     }
 
     const { data } = await query;

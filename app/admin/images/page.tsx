@@ -11,6 +11,7 @@ interface Generation {
   description: string | null;
   image_url: string;
   style: string;
+  content_type: string | null;
   category: string | null;
   is_public: boolean;
   is_featured: boolean;
@@ -128,6 +129,7 @@ export default function AdminImagesPage() {
               <th className="px-4 py-3 font-medium text-gray-500">Image</th>
               <th className="px-4 py-3 font-medium text-gray-500">Title</th>
               <th className="px-4 py-3 font-medium text-gray-500">Category</th>
+              <th className="px-4 py-3 font-medium text-gray-500">Type</th>
               <th className="px-4 py-3 font-medium text-gray-500">Style</th>
               <th className="px-4 py-3 font-medium text-gray-500">Public</th>
               <th className="px-4 py-3 font-medium text-gray-500">Featured</th>
@@ -138,13 +140,13 @@ export default function AdminImagesPage() {
           <tbody className="divide-y divide-gray-100">
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                   Loading...
                 </td>
               </tr>
             ) : images.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                   No images found
                 </td>
               </tr>
@@ -165,6 +167,17 @@ export default function AdminImagesPage() {
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                       {img.category || "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      img.content_type === "illustration"
+                        ? "bg-purple-100 text-purple-700"
+                        : img.content_type === "coloring"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {img.content_type || "clipart"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{img.style}</td>

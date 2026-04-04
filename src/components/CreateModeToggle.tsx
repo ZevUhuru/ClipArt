@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const modes = [
   { href: "/create", label: "Clip Art" },
+  { href: "/create/illustrations", label: "Illustrations" },
   { href: "/create/coloring-pages", label: "Coloring Pages" },
 ];
 

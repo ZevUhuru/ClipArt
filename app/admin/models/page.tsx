@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { STYLE_LABELS, VALID_STYLES, type StyleKey } from "@/lib/styles";
 
-const STYLES = ["flat", "outline", "cartoon", "sticker", "vintage", "watercolor"] as const;
+const ALL_STYLES: StyleKey[] = [
+  ...VALID_STYLES.clipart,
+  ...VALID_STYLES.illustration.filter((s) => !VALID_STYLES.clipart.includes(s)),
+  "coloring",
+];
+
+const STYLE_CONTENT_TYPE: Record<string, string> = {};
+for (const s of VALID_STYLES.clipart) STYLE_CONTENT_TYPE[s] = "clipart";
+for (const s of VALID_STYLES.illustration) {
+  STYLE_CONTENT_TYPE[s] = STYLE_CONTENT_TYPE[s] ? "shared" : "illustration";
+}
+STYLE_CONTENT_TYPE["coloring"] = "coloring";
 const MODELS = [
   { value: "gemini", label: "Gemini (Google)" },
   { value: "dalle", label: "GPT Image 1 (OpenAI)" },
@@ -98,12 +110,25 @@ export default function AdminModelsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {STYLES.map((style) => (
+            {ALL_STYLES.map((style) => (
               <tr key={style} className="transition-colors hover:bg-gray-50">
                 <td className="px-6 py-4">
-                  <span className="text-sm font-medium capitalize text-gray-900">
-                    {style}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">
+                      {STYLE_LABELS[style] || style}
+                    </span>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      STYLE_CONTENT_TYPE[style] === "shared"
+                        ? "bg-gray-100 text-gray-500"
+                        : STYLE_CONTENT_TYPE[style] === "illustration"
+                          ? "bg-purple-50 text-purple-600"
+                          : STYLE_CONTENT_TYPE[style] === "coloring"
+                            ? "bg-blue-50 text-blue-600"
+                            : "bg-gray-50 text-gray-500"
+                    }`}>
+                      {STYLE_CONTENT_TYPE[style] || "clipart"}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <select

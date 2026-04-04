@@ -16,6 +16,21 @@ interface Category {
   image_count: number;
   is_active: boolean;
   sort_order: number;
+  type: string;
+}
+
+type CategoryType = "clipart" | "coloring" | "illustration";
+
+const CATEGORY_TYPES: { value: CategoryType; label: string }[] = [
+  { value: "clipart", label: "Clip Art" },
+  { value: "illustration", label: "Illustration" },
+  { value: "coloring", label: "Coloring" },
+];
+
+function getCategoryHref(cat: Category): string {
+  if (cat.type === "coloring") return `/coloring-pages/${cat.slug}`;
+  if (cat.type === "illustration") return `/illustrations/${cat.slug}`;
+  return `/${cat.slug}`;
 }
 
 export default function AdminCategoriesPage() {
@@ -31,7 +46,9 @@ export default function AdminCategoriesPage() {
   const [formMetaTitle, setFormMetaTitle] = useState("");
   const [formMetaDesc, setFormMetaDesc] = useState("");
   const [formIntro, setFormIntro] = useState("");
+  const [formType, setFormType] = useState<CategoryType>("clipart");
   const [autoSeo, setAutoSeo] = useState(true);
+  const [typeFilter, setTypeFilter] = useState<string>("");
 
   const fetchCategories = useCallback(async () => {
     const res = await fetch("/api/admin/categories");
@@ -49,6 +66,7 @@ export default function AdminCategoriesPage() {
     setFormMetaTitle("");
     setFormMetaDesc("");
     setFormIntro("");
+    setFormType("clipart");
     setAutoSeo(true);
     setEditId(null);
     setShowForm(false);
@@ -62,6 +80,7 @@ export default function AdminCategoriesPage() {
     setFormMetaTitle(cat.meta_title || "");
     setFormMetaDesc(cat.meta_description || "");
     setFormIntro(cat.intro || "");
+    setFormType((cat.type as CategoryType) || "clipart");
     setAutoSeo(false);
     setShowForm(true);
   }
@@ -75,6 +94,8 @@ export default function AdminCategoriesPage() {
       name: formName,
       auto_seo: autoSeo,
     };
+
+    body.type = formType;
 
     if (!autoSeo) {
       body.h1 = formH1 || `${formName} Clip Art`;
@@ -135,6 +156,26 @@ export default function AdminCategoriesPage() {
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             {editId ? "Edit Category" : "New Category"}
           </h2>
+
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
+            <div className="inline-flex rounded-lg bg-gray-100 p-1">
+              {CATEGORY_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setFormType(t.value)}
+                  className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
+                    formType === t.value
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -240,14 +281,38 @@ export default function AdminCategoriesPage() {
         </form>
       )}
 
+      {/* Type filter */}
+      <div className="mt-6 inline-flex rounded-lg bg-gray-100 p-1">
+        <button
+          onClick={() => setTypeFilter("")}
+          className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+            typeFilter === "" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          All
+        </button>
+        {CATEGORY_TYPES.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => setTypeFilter(t.value)}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+              typeFilter === t.value ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* Table */}
-      <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
               <th className="px-4 py-3 font-medium text-gray-500">Order</th>
               <th className="px-4 py-3 font-medium text-gray-500">Name</th>
               <th className="px-4 py-3 font-medium text-gray-500">Slug</th>
+              <th className="px-4 py-3 font-medium text-gray-500">Type</th>
               <th className="px-4 py-3 font-medium text-gray-500">Images</th>
               <th className="px-4 py-3 font-medium text-gray-500">Status</th>
               <th className="px-4 py-3 font-medium text-gray-500">Actions</th>
@@ -256,14 +321,25 @@ export default function AdminCategoriesPage() {
           <tbody className="divide-y divide-gray-100">
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">Loading...</td>
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">Loading...</td>
               </tr>
             ) : (
-              categories.map((cat) => (
+              categories.filter((cat) => !typeFilter || cat.type === typeFilter).map((cat) => (
                 <tr key={cat.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-500">{cat.sort_order}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
                   <td className="px-4 py-3 font-mono text-gray-500">{cat.slug}</td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      cat.type === "illustration"
+                        ? "bg-purple-100 text-purple-700"
+                        : cat.type === "coloring"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {cat.type || "clipart"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{cat.image_count}</td>
                   <td className="px-4 py-3">
                     <button
@@ -286,7 +362,7 @@ export default function AdminCategoriesPage() {
                         Edit
                       </button>
                       <a
-                        href={`/${cat.slug}`}
+                        href={getCategoryHref(cat)}
                         target="_blank"
                         className="text-sm font-medium text-gray-400 hover:text-gray-600"
                       >

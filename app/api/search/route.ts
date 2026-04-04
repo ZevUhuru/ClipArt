@@ -35,9 +35,11 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (contentType === "coloring") {
-      query = query.eq("style", "coloring");
+      query = query.eq("content_type", "coloring");
+    } else if (contentType === "illustration") {
+      query = query.eq("content_type", "illustration");
     } else {
-      query = query.neq("style", "coloring");
+      query = query.eq("content_type", "clipart");
     }
 
     if (category) {

@@ -6,9 +6,9 @@ import { StylePicker } from "./StylePicker";
 import { GenerationResult } from "./GenerationResult";
 import { GenerationProgress } from "./GenerationProgress";
 import { useAppStore } from "@/stores/useAppStore";
-import { type StyleKey, STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
+import { type StyleKey, VALID_STYLES as ALL_VALID_STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
 
-const VALID_STYLES = Object.keys(STYLES) as StyleKey[];
+const CLIPART_STYLES = ALL_VALID_STYLES.clipart;
 const FREE_GEN_KEY = "clip_art_free_gen";
 const ANON_RESULT_KEY = "clip_art_anon_result";
 
@@ -23,7 +23,7 @@ export function Generator() {
   useEffect(() => {
     if (hydrated) return;
     const sp = searchParams.get("style");
-    if (sp && VALID_STYLES.includes(sp as StyleKey)) {
+    if (sp && CLIPART_STYLES.includes(sp as StyleKey)) {
       setStyle(sp as StyleKey);
     }
     const pp = searchParams.get("prompt");

@@ -35,7 +35,7 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
       .eq("is_public", true)
       .eq("is_featured", true)
-      .neq("style", "coloring")
+      .eq("content_type", "clipart")
       .order("featured_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(8);
@@ -49,7 +49,7 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
       .eq("is_public", true)
-      .neq("style", "coloring")
+      .eq("content_type", "clipart")
       .eq("is_featured", false)
       .order("created_at", { ascending: false })
       .limit(remaining);
@@ -69,7 +69,7 @@ async function getColoringGallery(): Promise<CommunityImage[]> {
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
       .eq("is_public", true)
       .eq("is_featured", true)
-      .eq("style", "coloring")
+      .eq("content_type", "coloring")
       .order("featured_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(8);
@@ -83,7 +83,7 @@ async function getColoringGallery(): Promise<CommunityImage[]> {
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
       .eq("is_public", true)
-      .eq("style", "coloring")
+      .eq("content_type", "coloring")
       .eq("is_featured", false)
       .order("created_at", { ascending: false })
       .limit(remaining);

@@ -1,6 +1,6 @@
 import { generateClipArt } from "./gemini";
 import { generateWithDallE } from "./dalle";
-import { type StyleKey, type ModelKey, STYLE_MODEL_MAP, STYLE_ASPECT_MAP, buildPrompt } from "./styles";
+import { type StyleKey, type ModelKey, type ContentType, STYLE_MODEL_MAP, CONTENT_TYPE_ASPECT, buildPrompt } from "./styles";
 import { createSupabaseAdmin } from "./supabase/server";
 
 let _cachedConfig: Record<string, string> | null = null;
@@ -43,11 +43,12 @@ async function resolveModel(style: StyleKey): Promise<ModelKey> {
 export async function generateImage(
   userPrompt: string,
   style: StyleKey,
+  contentType: ContentType = "clipart",
   aspectRatioOverride?: string,
 ): Promise<Buffer> {
   const model = await resolveModel(style);
-  const prompt = buildPrompt(userPrompt, style);
-  const aspectRatio = aspectRatioOverride || STYLE_ASPECT_MAP[style] || "1:1";
+  const prompt = buildPrompt(userPrompt, style, contentType);
+  const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
 
   switch (model) {
     case "dalle":

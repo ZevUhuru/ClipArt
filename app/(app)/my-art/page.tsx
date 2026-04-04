@@ -22,7 +22,7 @@ interface AnimationItem {
   created_at: string;
 }
 
-type ContentFilter = "all" | "clipart" | "coloring" | "animations";
+type ContentFilter = "all" | "clipart" | "illustrations" | "coloring" | "animations";
 
 const PAGE_SIZE = 60;
 
@@ -208,6 +208,7 @@ function CreationsGrid() {
           [
             { key: "all", label: "All" },
             { key: "clipart", label: "Clip Art" },
+            { key: "illustrations", label: "Illustrations" },
             { key: "coloring", label: "Coloring Pages" },
             { key: "animations", label: "Animations" },
           ] as const
@@ -362,7 +363,9 @@ function CreationsGrid() {
               ? "No creations yet"
               : filter === "coloring"
                 ? "No coloring pages yet"
-                : "No clip art yet"}
+                : filter === "illustrations"
+                  ? "No illustrations yet"
+                  : "No clip art yet"}
           </p>
           <p className="mt-1 text-sm text-gray-300">
             Your creations will appear here after you generate them.

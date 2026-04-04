@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
     .insert({
       slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
       name,
+      type: body.type || "clipart",
       ...seoFields,
       related_slugs: body.related_slugs || [],
       is_active: body.is_active ?? true,
@@ -89,7 +90,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  revalidatePath(`/${data.slug}`);
+  const catType = data.type || "clipart";
+  if (catType === "coloring") revalidatePath(`/coloring-pages/${data.slug}`);
+  else if (catType === "illustration") revalidatePath(`/illustrations/${data.slug}`);
+  else revalidatePath(`/${data.slug}`);
 
   return NextResponse.json({ category: data }, { status: 201 });
 }

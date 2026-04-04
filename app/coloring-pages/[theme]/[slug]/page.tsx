@@ -31,7 +31,7 @@ async function getDbImage(slug: string) {
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at")
       .eq("slug", slug)
-      .eq("style", "coloring")
+      .eq("content_type", "coloring")
       .eq("is_public", true)
       .single();
 
@@ -41,7 +41,7 @@ async function getDbImage(slug: string) {
       .from("generations")
       .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at")
       .eq("id", slug)
-      .eq("style", "coloring")
+      .eq("content_type", "coloring")
       .eq("is_public", true)
       .single();
 
@@ -90,7 +90,7 @@ async function getRelatedImages(category: string, excludeSlug: string) {
     const { data } = await admin
       .from("generations")
       .select("title, slug, category, image_url, aspect_ratio")
-      .eq("style", "coloring")
+      .eq("content_type", "coloring")
       .eq("category", category)
       .eq("is_public", true)
       .neq("slug", excludeSlug)

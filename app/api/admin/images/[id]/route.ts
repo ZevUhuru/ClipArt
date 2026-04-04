@@ -65,12 +65,26 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   const { data: existing } = await admin
     .from("generations")
-    .select("image_url, category")
+    .select("image_url, category, content_type")
     .eq("id", params.id)
     .single();
 
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const contentType = existing.content_type || "clipart";
+
+  function revalidateForType(cat: string) {
+    if (contentType === "coloring") revalidatePath(`/coloring-pages/${cat}`);
+    else if (contentType === "illustration") revalidatePath(`/illustrations/${cat}`);
+    else revalidatePath(`/${cat}`);
+  }
+
+  function r2Prefix(cat: string): string {
+    if (contentType === "coloring") return `coloring-pages/${cat}`;
+    if (contentType === "illustration") return `illustrations/${cat}`;
+    return cat;
   }
 
   const updates: Record<string, unknown> = {};
@@ -87,7 +101,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     try {
       const oldKey = existing.image_url.replace(`${PUBLIC_URL}/`, "");
       const filename = oldKey.split("/").pop();
-      const newKey = `${body.category}/${filename}`;
+      const newKey = `${r2Prefix(body.category)}/${filename}`;
 
       const r2 = getR2();
       await r2.send(new CopyObjectCommand({
@@ -102,8 +116,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       console.error("R2 move failed:", err);
     }
 
-    revalidatePath(`/${existing.category}`);
-    revalidatePath(`/${body.category}`);
+    revalidateForType(existing.category);
+    revalidateForType(body.category);
   }
 
   const { data, error } = await admin
@@ -117,7 +131,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  if (data?.category) revalidatePath(`/${data.category}`);
+  if (data?.category) revalidateForType(data.category);
 
   return NextResponse.json({ image: data });
 }
@@ -128,18 +142,18 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   }
 
   const admin = createSupabaseAdmin();
-  const { data: existing } = await admin
+  const { data: delExisting } = await admin
     .from("generations")
-    .select("image_url, category")
+    .select("image_url, category, content_type")
     .eq("id", params.id)
     .single();
 
-  if (!existing) {
+  if (!delExisting) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   try {
-    const key = existing.image_url.replace(`${PUBLIC_URL}/`, "");
+    const key = delExisting.image_url.replace(`${PUBLIC_URL}/`, "");
     const r2 = getR2();
     await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
   } catch (err) {
@@ -148,7 +162,12 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
   await admin.from("generations").delete().eq("id", params.id);
 
-  if (existing.category) revalidatePath(`/${existing.category}`);
+  if (delExisting.category) {
+    const ct = delExisting.content_type || "clipart";
+    if (ct === "coloring") revalidatePath(`/coloring-pages/${delExisting.category}`);
+    else if (ct === "illustration") revalidatePath(`/illustrations/${delExisting.category}`);
+    else revalidatePath(`/${delExisting.category}`);
+  }
 
   return NextResponse.json({ success: true });
 }
