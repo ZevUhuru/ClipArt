@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useImageDrawer } from "@/stores/useImageDrawer";
@@ -200,6 +200,13 @@ function CreationsGrid() {
     aspect_ratio: gen.aspect_ratio,
   }));
 
+  const useMasonry = filter === "all" || filter === "illustrations";
+  const gridVariant = useMasonry
+    ? "illustration" as const
+    : filter === "coloring"
+      ? "coloring" as const
+      : "clipart" as const;
+
   return (
     <>
       {/* Content type filter */}
@@ -228,14 +235,14 @@ function CreationsGrid() {
       </div>
 
       {isLoading ? (
-        <ImageGrid>
+        <ImageGrid variant={gridVariant}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <ImageCardSkeleton key={i} />
+            <ImageCardSkeleton key={i} variant={gridVariant === "illustration" ? "illustration" : "clipart"} />
           ))}
         </ImageGrid>
       ) : filter === "animations" ? (
         animations.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="columns-2 gap-2.5 sm:columns-3 md:columns-4 [&>*]:mb-2.5 [&>*]:break-inside-avoid">
             {animations.map((anim) => {
               const drawerItem: import("@/stores/useImageDrawer").DrawerImage = {
                 id: anim.id,
@@ -263,9 +270,9 @@ function CreationsGrid() {
                   tabIndex={0}
                   onClick={() => openDrawer(drawerItem, animDrawerList)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(drawerItem, animDrawerList); }}
-                  className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+                  className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
                 >
-                  <div className="relative aspect-square bg-gray-50/80">
+                  <div className="relative aspect-square">
                     <VideoPlayer
                       src={anim.video_url}
                       poster={anim.source_image_url || anim.thumbnail_url || undefined}
@@ -273,27 +280,17 @@ function CreationsGrid() {
                       className="absolute inset-0"
                     />
                   </div>
-                  <div className="px-3.5 pb-3 pt-2.5">
-                    <p className="line-clamp-1 text-[13px] font-semibold leading-snug text-gray-800">
-                      {anim.source_title || anim.prompt}
-                    </p>
-                    <div className="mt-1.5 flex items-center justify-between">
-                      <span className="inline-block rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-purple-500">
-                        {anim.model.replace("kling-", "Kling ")}
-                      </span>
-                      <a
-                        href={anim.video_url}
-                        download={`animation-${anim.id}.mp4`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-gray-300 opacity-0 transition-all hover:bg-pink-50 hover:text-pink-600 group-hover:opacity-100"
-                        title="Download MP4"
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                      </a>
-                    </div>
-                  </div>
+                  <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                    <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5.14v14l11-7-11-7z" />
+                    </svg>
+                    Video
+                  </span>
+                  <span className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  </span>
                 </div>
               );
             })}
@@ -311,9 +308,16 @@ function CreationsGrid() {
         )
       ) : safeItems.length > 0 ? (
         <>
-          <ImageGrid>
+          <ImageGrid variant={gridVariant}>
             {safeItems.map((gen) => {
-              const isColoring = gen.style === "coloring";
+              const ct = gen.content_type || (gen.style === "coloring" ? "coloring" : "clipart");
+              const variant = ct === "illustration"
+                ? "illustration" as const
+                : ct === "coloring"
+                  ? "coloring" as const
+                  : "clipart" as const;
+              const cardVariant = useMasonry ? "illustration" as const : variant;
+
               return (
                 <ImageCard
                   key={gen.id}
@@ -326,7 +330,7 @@ function CreationsGrid() {
                     style: gen.style,
                     aspect_ratio: gen.aspect_ratio,
                   }}
-                  variant={isColoring ? "coloring" : "clipart"}
+                  variant={cardVariant}
                   onClick={() => {
                     const img = {
                       id: gen.id,
@@ -348,9 +352,9 @@ function CreationsGrid() {
 
           {isLoadingMore && (
             <div className="mt-6">
-              <ImageGrid>
+              <ImageGrid variant={gridVariant}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <ImageCardSkeleton key={`more-${i}`} />
+                  <ImageCardSkeleton key={`more-${i}`} variant={gridVariant === "illustration" ? "illustration" : "clipart"} />
                 ))}
               </ImageGrid>
             </div>
