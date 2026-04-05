@@ -47,7 +47,7 @@ async function getAnimations(): Promise<AnimationItem[]> {
     const { data } = await admin
       .from("animations")
       .select(
-        "id, prompt, video_url, preview_url, thumbnail_url, created_at, " +
+        "id, slug, prompt, video_url, preview_url, thumbnail_url, created_at, " +
           "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug)",
       )
       .eq("status", "completed")
@@ -67,7 +67,7 @@ async function getAnimations(): Promise<AnimationItem[]> {
         posterUrl: src?.image_url || a.thumbnail_url || "",
         style: src?.style || "flat",
         category: src?.category || "free",
-        slug: src?.slug || a.id,
+        slug: a.slug || a.id,
         createdAt: a.created_at,
       };
     });
