@@ -57,7 +57,7 @@ export function Providers({ children }: { children: ReactNode }) {
             table: "profiles",
             filter: `id=eq.${userId}`,
           },
-          (payload) => {
+          (payload: { new?: { credits?: number } }) => {
             const newCredits = payload.new?.credits;
             if (typeof newCredits === "number") {
               setCredits(newCredits);
