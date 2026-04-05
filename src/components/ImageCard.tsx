@@ -128,7 +128,7 @@ export function ImageCard({
     "group relative overflow-hidden",
     isIllustration ? "rounded-xl" : "rounded-2xl",
     bgClass,
-    "transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200",
+    "transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2",
     isLandscape ? "md:col-span-2" : "",
     onClick || href ? "cursor-pointer" : "",
