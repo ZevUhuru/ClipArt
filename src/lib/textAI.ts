@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import * as Sentry from "@sentry/nextjs";
 import { createSupabaseAdmin } from "./supabase/server";
 
 // ---------------------------------------------------------------------------
@@ -29,7 +30,7 @@ export const TEXT_MODELS: TextModel[] = [
   { id: "gpt-4.1-mini",                  provider: "openai",    label: "GPT-4.1 Mini",         costInput: "$0.40",  costOutput: "$1.60",  vision: true },
   { id: "claude-3-5-haiku-latest",       provider: "anthropic", label: "Claude 3.5 Haiku",     costInput: "$1.00",  costOutput: "$5.00",  vision: true },
   { id: "gpt-4.1",                       provider: "openai",    label: "GPT-4.1",              costInput: "$2.00",  costOutput: "$8.00",  vision: true },
-  { id: "claude-sonnet-4-6-20250514",    provider: "anthropic", label: "Claude Sonnet 4.6",    costInput: "$3.00",  costOutput: "$15.00", vision: true },
+  { id: "claude-sonnet-4-6",              provider: "anthropic", label: "Claude Sonnet 4.6",    costInput: "$3.00",  costOutput: "$15.00", vision: true },
 ];
 
 export const TEXT_MODEL_IDS = new Set(TEXT_MODELS.map((m) => m.id));
@@ -138,13 +139,20 @@ export async function generateText(
   const temp = options.temperature ?? 0.1;
   const maxTokens = options.maxTokens ?? 2048;
 
-  switch (model.provider) {
-    case "gemini":
-      return callGemini(model.id, systemPrompt, userContent, temp);
-    case "openai":
-      return callOpenAI(model.id, systemPrompt, userContent, temp, maxTokens);
-    case "anthropic":
-      return callAnthropic(model.id, systemPrompt, userContent, temp, maxTokens);
+  try {
+    switch (model.provider) {
+      case "gemini":
+        return await callGemini(model.id, systemPrompt, userContent, temp);
+      case "openai":
+        return await callOpenAI(model.id, systemPrompt, userContent, temp, maxTokens);
+      case "anthropic":
+        return await callAnthropic(model.id, systemPrompt, userContent, temp, maxTokens);
+    }
+  } catch (err) {
+    Sentry.captureException(err, {
+      tags: { type: "text_ai_error", task, provider: model.provider, model: model.id },
+    });
+    throw err;
   }
 }
 
@@ -160,13 +168,20 @@ export async function generateTextWithVision(
   const temp = options.temperature ?? 0.9;
   const maxTokens = options.maxTokens ?? 4096;
 
-  switch (model.provider) {
-    case "gemini":
-      return callGeminiVision(model.id, systemPrompt, userContent, imageData, temp);
-    case "openai":
-      return callOpenAIVision(model.id, systemPrompt, userContent, imageData, temp, maxTokens);
-    case "anthropic":
-      return callAnthropicVision(model.id, systemPrompt, userContent, imageData, temp, maxTokens);
+  try {
+    switch (model.provider) {
+      case "gemini":
+        return await callGeminiVision(model.id, systemPrompt, userContent, imageData, temp);
+      case "openai":
+        return await callOpenAIVision(model.id, systemPrompt, userContent, imageData, temp, maxTokens);
+      case "anthropic":
+        return await callAnthropicVision(model.id, systemPrompt, userContent, imageData, temp, maxTokens);
+    }
+  } catch (err) {
+    Sentry.captureException(err, {
+      tags: { type: "text_ai_vision_error", task, provider: model.provider, model: model.id },
+    });
+    throw err;
   }
 }
 

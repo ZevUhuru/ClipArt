@@ -1,5 +1,6 @@
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { generateText } from "@/lib/textAI";
+import * as Sentry from "@sentry/nextjs";
 import type { ContentType } from "./styles";
 
 export interface Classification {
@@ -141,6 +142,9 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
     };
   } catch (err) {
     console.error("Classification failed, using fallback:", err);
+    Sentry.captureException(err, {
+      tags: { type: "classification_fallback", content_type: ct, style },
+    });
     return fallback;
   }
 }
@@ -193,6 +197,9 @@ Return ONLY valid JSON.`;
     };
   } catch (err) {
     console.error("Category SEO generation failed:", err);
+    Sentry.captureException(err, {
+      tags: { type: "seo_generation_fallback", category: categoryName },
+    });
     return fallback;
   }
 }

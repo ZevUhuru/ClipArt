@@ -44,7 +44,7 @@ const TEXT_MODELS: TextModel[] = [
   { id: "gpt-4.1-mini",               provider: "openai",    label: "GPT-4.1 Mini",       costInput: "$0.40",  costOutput: "$1.60"  },
   { id: "claude-3-5-haiku-latest",    provider: "anthropic", label: "Claude 3.5 Haiku",   costInput: "$1.00",  costOutput: "$5.00"  },
   { id: "gpt-4.1",                    provider: "openai",    label: "GPT-4.1",            costInput: "$2.00",  costOutput: "$8.00"  },
-  { id: "claude-sonnet-4-6-20250514", provider: "anthropic", label: "Claude Sonnet 4.6",  costInput: "$3.00",  costOutput: "$15.00" },
+  { id: "claude-sonnet-4-6",          provider: "anthropic", label: "Claude Sonnet 4.6",  costInput: "$3.00",  costOutput: "$15.00" },
 ];
 
 type TextTask = "classification" | "seo_generation" | "animation_suggestions";

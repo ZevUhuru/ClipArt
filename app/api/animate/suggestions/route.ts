@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { getAnimationSystemPrompt } from "@/lib/promptKnowledge";
 import { generateTextWithVision } from "@/lib/textAI";
@@ -135,6 +136,9 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[suggestions] Error:", message);
+    Sentry.captureException(err, {
+      tags: { type: "animation_suggestions_fallback" },
+    });
     return NextResponse.json({
       suggestions: getFallbackSuggestions(),
       source: "fallback",
