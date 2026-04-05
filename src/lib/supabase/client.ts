@@ -1,6 +1,10 @@
 import { createBrowserClient as createClient } from "@supabase/ssr";
 
+let _client: ReturnType<typeof createClient> | null = null;
+
 export function createBrowserClient() {
+  if (_client) return _client;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -8,5 +12,6 @@ export function createBrowserClient() {
     return null;
   }
 
-  return createClient(url, key);
+  _client = createClient(url, key);
+  return _client;
 }

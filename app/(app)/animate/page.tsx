@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/stores/useAppStore";
 import { useAnimationQueue, type QueuedAnimation } from "@/stores/useAnimationQueue";
@@ -124,6 +124,7 @@ function SuggestionsProgress({ startedAt }: { startedAt: number }) {
 
 function AnimatePageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const sourceId = searchParams.get("id");
   const initialPrompt = searchParams.get("prompt") || "";
 
@@ -131,58 +132,24 @@ function AnimatePageInner() {
   const addJob = useAnimationQueue((s) => s.addJob);
   const queueJobs = useAnimationQueue((s) => s.jobs);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const draft = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const saved = sessionStorage.getItem("animate:draft");
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      return parsed.sourceId === sourceId ? parsed : null;
+    } catch { return null; }
+  }, [sourceId]);
+
   const [source, setSource] = useState<ImportableImage | null>(null);
   const [sourceLoading, setSourceLoading] = useState(!!sourceId);
   const [importOpen, setImportOpen] = useState(false);
-  const [prompt, setPrompt] = useState(() => {
-    if (initialPrompt) return initialPrompt;
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("animate:draft");
-        if (saved) {
-          const draft = JSON.parse(saved);
-          if (draft.sourceId === sourceId) return draft.prompt || "";
-        }
-      } catch { /* ignore */ }
-    }
-    return "";
-  });
-  const [model, setModel] = useState<AnimModel>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("animate:draft");
-        if (saved) {
-          const draft = JSON.parse(saved);
-          if (draft.sourceId === sourceId && draft.model) return draft.model;
-        }
-      } catch { /* ignore */ }
-    }
-    return "kling-3.0-standard";
-  });
-  const [duration, setDuration] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("animate:draft");
-        if (saved) {
-          const draft = JSON.parse(saved);
-          if (draft.sourceId === sourceId && typeof draft.duration === "number") return draft.duration;
-        }
-      } catch { /* ignore */ }
-    }
-    return 5;
-  });
-  const [audio, setAudio] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = sessionStorage.getItem("animate:draft");
-        if (saved) {
-          const draft = JSON.parse(saved);
-          if (draft.sourceId === sourceId) return draft.audio === true;
-        }
-      } catch { /* ignore */ }
-    }
-    return false;
-  });
+  const [prompt, setPrompt] = useState(() => initialPrompt || draft?.prompt || "");
+  const [model, setModel] = useState<AnimModel>(() => draft?.model || "kling-3.0-standard");
+  const [duration, setDuration] = useState(() => typeof draft?.duration === "number" ? draft.duration : 5);
+  const [audio, setAudio] = useState(() => draft?.audio === true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewingVideo, setViewingVideo] = useState<string | null>(null);
@@ -212,6 +179,26 @@ function AnimatePageInner() {
   useEffect(() => {
     if (!audioSupported && audio) setAudio(false);
   }, [model, audioSupported, audio]);
+
+  // Continuously persist form state to sessionStorage (debounced)
+  useEffect(() => {
+    const currentSourceId = source?.id || sourceId;
+    if (!currentSourceId) return;
+
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem("animate:draft", JSON.stringify({
+          sourceId: currentSourceId,
+          prompt,
+          model,
+          duration,
+          audio: audio && audioSupported,
+        }));
+      } catch { /* quota exceeded — non-critical */ }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [source, sourceId, prompt, model, duration, audio, audioSupported]);
 
   const filteredTemplates =
     templateCategory === "all"
@@ -338,11 +325,6 @@ function AnimatePageInner() {
         return;
       }
       if (res.status === 402 && data.requiresCredits) {
-        try {
-          sessionStorage.setItem("animate:draft", JSON.stringify({
-            sourceId, prompt: prompt.trim(), model, duration, audio: audio && audioSupported,
-          }));
-        } catch { /* quota exceeded — non-critical */ }
         openBuyCreditsModal();
         setSubmitting(false);
         return;
@@ -448,12 +430,53 @@ function AnimatePageInner() {
 
     const cached = suggestionsCache.current.get(`${img.id}:${duration}`);
     setSuggestions(cached || []);
+
+    router.replace(`/animate?id=${img.id}`, { scroll: false });
+  };
+
+  const handleStartOver = () => {
+    setSource(null);
+    setViewingVideo(null);
+    setViewingAnimationId(null);
+    setPrompt("");
+    setModel("kling-3.0-standard");
+    setDuration(5);
+    setAudio(false);
+    setError(null);
+    setShowSource(false);
+    setSuggestions([]);
+    setSuggestionsError(false);
+    setSelectedPromptId(null);
+    setTemplateCategory("all");
+    setTemplatesOpen(false);
+    suggestionsCache.current.clear();
+    try { sessionStorage.removeItem("animate:draft"); } catch { /* ignore */ }
+    router.replace("/animate", { scroll: false });
   };
 
   if (sourceLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-sm text-gray-400">Loading image...</p>
+      <div className="min-h-screen">
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          <div className="mb-6">
+            <div className="h-5 w-40 animate-pulse rounded-lg bg-gray-200" />
+            <div className="mt-2 h-3 w-56 animate-pulse rounded bg-gray-100" />
+          </div>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="aspect-square animate-pulse rounded-2xl bg-gray-200" />
+            <div className="space-y-5">
+              <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
+              <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="h-20 animate-pulse rounded-xl bg-gray-100" />
+                <div className="h-20 animate-pulse rounded-xl bg-gray-200" />
+                <div className="h-20 animate-pulse rounded-xl bg-gray-100" />
+              </div>
+              <div className="h-8 animate-pulse rounded-full bg-gray-100" />
+              <div className="h-12 animate-pulse rounded-xl bg-gray-200" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -473,15 +496,23 @@ function AnimatePageInner() {
             </p>
           </div>
           {source && (
-            <button
-              onClick={() => setImportOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              Change Image
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setImportOpen(true)}
+                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Change Image
+              </button>
+              <button
+                onClick={handleStartOver}
+                className="text-sm font-medium text-gray-400 transition-colors hover:text-gray-600"
+              >
+                Start over
+              </button>
+            </div>
           )}
         </div>
 
@@ -1003,8 +1034,21 @@ export default function AnimatePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-sm text-gray-400">Loading...</p>
+        <div className="min-h-screen">
+          <div className="mx-auto max-w-6xl px-4 py-6">
+            <div className="mb-6">
+              <div className="h-5 w-40 animate-pulse rounded-lg bg-gray-200" />
+              <div className="mt-2 h-3 w-56 animate-pulse rounded bg-gray-100" />
+            </div>
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="aspect-square animate-pulse rounded-2xl bg-gray-200" />
+              <div className="space-y-5">
+                <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
+                <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
+                <div className="h-12 animate-pulse rounded-xl bg-gray-200" />
+              </div>
+            </div>
+          </div>
         </div>
       }
     >
