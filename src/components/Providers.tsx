@@ -102,6 +102,10 @@ export function Providers({ children }: { children: ReactNode }) {
       } else {
         resetUserState();
         stopPolling();
+        try {
+          localStorage.removeItem("animate:draft");
+          localStorage.removeItem("animate:presets");
+        } catch { /* ignore */ }
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;

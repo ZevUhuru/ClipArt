@@ -21,6 +21,54 @@ import {
 
 type AnimModel = "kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro";
 
+interface AnimatePreset {
+  id: string;
+  sourceId: string;
+  sourceTitle: string;
+  sourceThumb: string;
+  prompt: string;
+  model: string;
+  duration: number;
+  audio: boolean;
+  savedAt: number;
+}
+
+const PRESETS_KEY = "animate:presets";
+const DRAFT_KEY = "animate:draft";
+const MAX_PRESETS = 10;
+
+function loadPresets(): AnimatePreset[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    return raw ? (JSON.parse(raw) as AnimatePreset[]) : [];
+  } catch { return []; }
+}
+
+function savePreset(preset: Omit<AnimatePreset, "id" | "savedAt">) {
+  try {
+    const existing = loadPresets();
+    const dupe = existing.findIndex(
+      (p) => p.sourceId === preset.sourceId && p.prompt === preset.prompt,
+    );
+    if (dupe !== -1) existing.splice(dupe, 1);
+    const entry: AnimatePreset = {
+      ...preset,
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      savedAt: Date.now(),
+    };
+    const updated = [entry, ...existing].slice(0, MAX_PRESETS);
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(updated));
+  } catch { /* quota exceeded */ }
+}
+
+function removePreset(id: string) {
+  try {
+    const updated = loadPresets().filter((p) => p.id !== id);
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(updated));
+  } catch { /* ignore */ }
+}
+
 const MODELS: { id: AnimModel; label: string; description: string }[] = [
   { id: "kling-2.5-turbo", label: "Fast", description: "Quick preview" },
   { id: "kling-3.0-standard", label: "Standard", description: "Best value" },
@@ -136,7 +184,7 @@ function AnimatePageInner() {
   const draft = useMemo(() => {
     if (typeof window === "undefined") return null;
     try {
-      const saved = sessionStorage.getItem("animate:draft");
+      const saved = localStorage.getItem(DRAFT_KEY);
       if (!saved) return null;
       const parsed = JSON.parse(saved);
       return parsed.sourceId === sourceId ? parsed : null;
@@ -166,6 +214,8 @@ function AnimatePageInner() {
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
   const [templateCategory, setTemplateCategory] = useState<TemplateCategory | "all">("all");
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const [presets, setPresets] = useState<AnimatePreset[]>(() => loadPresets());
   const suggestionsCache = useRef<Map<string, PromptSuggestion[]>>(new Map());
 
   const maxDuration = MODEL_MAX_DURATION[model];
@@ -180,14 +230,14 @@ function AnimatePageInner() {
     if (!audioSupported && audio) setAudio(false);
   }, [model, audioSupported, audio]);
 
-  // Continuously persist form state to sessionStorage (debounced)
+  // Continuously persist form state to localStorage (debounced)
   useEffect(() => {
     const currentSourceId = source?.id || sourceId;
     if (!currentSourceId) return;
 
     const timer = setTimeout(() => {
       try {
-        sessionStorage.setItem("animate:draft", JSON.stringify({
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
           sourceId: currentSourceId,
           prompt,
           model,
@@ -345,9 +395,20 @@ function AnimatePageInner() {
         startedAt: Date.now(),
       });
 
+      savePreset({
+        sourceId: source.id,
+        sourceTitle: source.title,
+        sourceThumb: source.url,
+        prompt: prompt.trim(),
+        model,
+        duration,
+        audio: audio && audioSupported,
+      });
+      setPresets(loadPresets());
+
       setPrompt("");
       setSelectedPromptId(null);
-      try { sessionStorage.removeItem("animate:draft"); } catch { /* ignore */ }
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
@@ -435,6 +496,19 @@ function AnimatePageInner() {
   };
 
   const handleStartOver = () => {
+    if (source && prompt.trim()) {
+      savePreset({
+        sourceId: source.id,
+        sourceTitle: source.title,
+        sourceThumb: source.url,
+        prompt: prompt.trim(),
+        model,
+        duration,
+        audio: audio && audioSupported,
+      });
+      setPresets(loadPresets());
+    }
+
     setSource(null);
     setViewingVideo(null);
     setViewingAnimationId(null);
@@ -450,7 +524,7 @@ function AnimatePageInner() {
     setTemplateCategory("all");
     setTemplatesOpen(false);
     suggestionsCache.current.clear();
-    try { sessionStorage.removeItem("animate:draft"); } catch { /* ignore */ }
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     router.replace("/animate", { scroll: false });
   };
 
@@ -605,14 +679,216 @@ function AnimatePageInner() {
           {/* Right: Controls */}
           <div className="space-y-5">
             {!source ? (
-              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 p-8 text-center">
-                <p className="text-sm text-gray-400">Import an image to see animation controls</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {ANIMATION_TEMPLATES.slice(0, 3).map((t) => (
-                    <span key={t.id} className="rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-300">
-                      {t.label}
-                    </span>
-                  ))}
+              <div className="space-y-5">
+                {/* Recent Setups — prominent on empty state */}
+                {presets.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => setPresetsOpen(!presetsOpen)}
+                      className="mb-2 flex w-full items-center justify-between"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                        Recent Setups
+                      </p>
+                      <svg
+                        className={`h-3.5 w-3.5 text-gray-400 transition-transform ${presetsOpen ? "rotate-180" : ""}`}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <AnimatePresence>
+                      {presetsOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="space-y-2">
+                            {presets.map((p) => (
+                              <button
+                                key={p.id}
+                                onClick={() => {
+                                  router.replace(`/animate?id=${p.sourceId}`, { scroll: false });
+                                  setPrompt(p.prompt);
+                                  setModel(p.model as AnimModel);
+                                  setDuration(p.duration);
+                                  setAudio(p.audio);
+                                  try {
+                                    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                                      sourceId: p.sourceId,
+                                      prompt: p.prompt,
+                                      model: p.model,
+                                      duration: p.duration,
+                                      audio: p.audio,
+                                    }));
+                                  } catch { /* ignore */ }
+                                }}
+                                className="group flex w-full items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 text-left transition-all hover:border-pink-200 hover:bg-pink-50/30"
+                              >
+                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={p.sourceThumb} alt="" className="h-full w-full object-cover" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-xs font-semibold text-gray-700 group-hover:text-pink-700">
+                                    {p.prompt}
+                                  </p>
+                                  <div className="mt-0.5 flex items-center gap-2 text-[10px] text-gray-400">
+                                    <span>{MODELS.find((m) => m.id === p.model)?.label || "Standard"}</span>
+                                    <span>·</span>
+                                    <span>{p.duration}s</span>
+                                    {p.audio && <><span>·</span><span>Audio</span></>}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removePreset(p.id);
+                                    setPresets(loadPresets());
+                                  }}
+                                  className="shrink-0 rounded-md p-1 text-gray-300 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-500 group-hover:opacity-100"
+                                >
+                                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    {!presetsOpen && (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {presets.slice(0, 4).map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              router.replace(`/animate?id=${p.sourceId}`, { scroll: false });
+                              setPrompt(p.prompt);
+                              setModel(p.model as AnimModel);
+                              setDuration(p.duration);
+                              setAudio(p.audio);
+                              try {
+                                localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                                  sourceId: p.sourceId,
+                                  prompt: p.prompt,
+                                  model: p.model,
+                                  duration: p.duration,
+                                  audio: p.audio,
+                                }));
+                              } catch { /* ignore */ }
+                            }}
+                            className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-100 bg-white px-3 py-2 transition-all hover:border-pink-200 hover:bg-pink-50/30"
+                          >
+                            <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={p.sourceThumb} alt="" className="h-full w-full object-cover" />
+                            </div>
+                            <span className="max-w-[120px] truncate text-[11px] font-medium text-gray-600">
+                              {p.prompt}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Disabled controls preview */}
+                <div className="pointer-events-none space-y-5 opacity-50">
+                  {/* Motion prompt preview */}
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Describe the motion
+                    </label>
+                    <textarea
+                      disabled
+                      placeholder="Describe how the image should move... or use AI suggestions below"
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Templates preview */}
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      Templates
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ANIMATION_TEMPLATES.slice(0, 6).map((t) => (
+                        <span key={t.id} className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600">
+                          {t.label}
+                        </span>
+                      ))}
+                      <span className="rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-400">
+                        +{ANIMATION_TEMPLATES.length - 6} more
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quality preview */}
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      Quality
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {MODELS.map((m) => {
+                        const isDefault = m.id === "kling-3.0-standard";
+                        return (
+                          <div
+                            key={m.id}
+                            className={`rounded-xl border px-3 py-3 text-center ${
+                              isDefault ? "border-pink-300 bg-pink-50 ring-2 ring-pink-100" : "border-gray-200 bg-white"
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${isDefault ? "text-pink-700" : "text-gray-700"}`}>
+                              {m.label}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-gray-400">{m.description}</p>
+                            <p className={`mt-1 text-xs font-bold ${isDefault ? "text-pink-600" : "text-gray-500"}`}>
+                              {calcCredits(m.id, 5, false)} credits
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Duration preview */}
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Duration</p>
+                      <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold tabular-nums text-gray-700">5s</span>
+                    </div>
+                    <div className="relative h-2 rounded-full bg-gray-100">
+                      <div className="absolute inset-y-0 left-0 w-0 rounded-full bg-gradient-to-r from-pink-400 to-purple-400" />
+                    </div>
+                  </div>
+
+                  {/* Audio preview */}
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">Native Audio</p>
+                        <p className="text-[10px] text-gray-400">AI generates sound effects and voice</p>
+                      </div>
+                    </div>
+                    <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200">
+                      <span className="inline-block h-4 w-4 translate-x-1 rounded-full bg-white shadow-sm" />
+                    </div>
+                  </div>
+
+                  {/* Animate button preview */}
+                  <div className="rounded-xl bg-brand-gradient px-6 py-3.5 text-center text-sm font-bold text-white shadow-md">
+                    Select an image to animate
+                  </div>
                 </div>
               </div>
             ) : (
@@ -801,6 +1077,91 @@ function AnimatePageInner() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Recent Setups (collapsed inline when source is loaded) */}
+                {presets.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => setPresetsOpen(!presetsOpen)}
+                      className="mb-2 flex w-full items-center justify-between"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                        Recent Setups
+                      </p>
+                      <svg
+                        className={`h-3.5 w-3.5 text-gray-400 transition-transform ${presetsOpen ? "rotate-180" : ""}`}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <AnimatePresence>
+                      {presetsOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="space-y-2">
+                            {presets.map((p) => (
+                              <button
+                                key={p.id}
+                                onClick={() => {
+                                  router.replace(`/animate?id=${p.sourceId}`, { scroll: false });
+                                  setPrompt(p.prompt);
+                                  setModel(p.model as AnimModel);
+                                  setDuration(p.duration);
+                                  setAudio(p.audio);
+                                  setPresetsOpen(false);
+                                  try {
+                                    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                                      sourceId: p.sourceId,
+                                      prompt: p.prompt,
+                                      model: p.model,
+                                      duration: p.duration,
+                                      audio: p.audio,
+                                    }));
+                                  } catch { /* ignore */ }
+                                }}
+                                className="group flex w-full items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 text-left transition-all hover:border-pink-200 hover:bg-pink-50/30"
+                              >
+                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={p.sourceThumb} alt="" className="h-full w-full object-cover" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-xs font-semibold text-gray-700 group-hover:text-pink-700">
+                                    {p.prompt}
+                                  </p>
+                                  <div className="mt-0.5 flex items-center gap-2 text-[10px] text-gray-400">
+                                    <span>{MODELS.find((m) => m.id === p.model)?.label || "Standard"}</span>
+                                    <span>·</span>
+                                    <span>{p.duration}s</span>
+                                    {p.audio && <><span>·</span><span>Audio</span></>}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removePreset(p.id);
+                                    setPresets(loadPresets());
+                                  }}
+                                  className="shrink-0 rounded-md p-1 text-gray-300 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-500 group-hover:opacity-100"
+                                >
+                                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
 
                 {/* Model selector */}
                 <div>
