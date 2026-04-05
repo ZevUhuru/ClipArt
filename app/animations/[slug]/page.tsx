@@ -231,9 +231,12 @@ export default async function AnimationDetailPage({ params }: PageProps) {
       <section className="mx-auto max-w-6xl px-4 pb-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left: Gradient-framed video */}
-          <div className="rounded-3xl bg-brand-gradient p-[2px]">
+          <div className="relative aspect-square">
+            {/* Gradient border ring */}
+            <div className="absolute inset-0 rounded-3xl bg-brand-gradient" />
+            {/* Video container clipped inside the ring */}
             <div
-              className="relative rounded-[22px] bg-gray-950"
+              className="absolute inset-[2px] rounded-[22px] bg-gray-950"
               style={{ clipPath: "inset(0 round 22px)" }}
             >
               <span className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-full bg-purple-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
@@ -247,18 +250,16 @@ export default async function AnimationDetailPage({ params }: PageProps) {
                 Animated
               </span>
 
-              <div className="relative aspect-square">
-                <video
-                  src={videoUrl}
-                  poster={posterUrl}
-                  controls
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="absolute inset-0 h-full w-full object-contain"
-                />
-              </div>
+              <video
+                src={videoUrl}
+                poster={posterUrl}
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-contain"
+              />
             </div>
           </div>
 
