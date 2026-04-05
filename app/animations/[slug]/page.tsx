@@ -8,6 +8,7 @@ import { buildVideoJsonLd } from "@/lib/seo-jsonld";
 import { CategoryNav } from "@/components/CategoryNav";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { AnimationDetailClient } from "./AnimationDetailClient";
+import { RelatedAnimationsGrid } from "./RelatedAnimationsGrid";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -44,7 +45,7 @@ interface RelatedAnimation {
   slug: string;
   videoUrl: string;
   posterUrl: string;
-  prompt: string;
+  title: string;
 }
 
 async function getAnimation(slug: string): Promise<AnimationRow | null> {
@@ -83,23 +84,20 @@ async function getAnimation(slug: string): Promise<AnimationRow | null> {
 
 async function getRelatedAnimations(
   currentId: string,
-  category: string,
   limit = 8,
 ): Promise<RelatedAnimation[]> {
   try {
     const admin = createSupabaseAdmin();
-    const catPattern = `%${category.replace(/-/g, " ")}%`;
 
     const { data } = await admin
       .from("animations")
       .select(
         "id, slug, prompt, video_url, preview_url, thumbnail_url, " +
-          "source:generations!animations_source_generation_id_fkey(image_url, prompt, category, slug)",
+          "source:generations!animations_source_generation_id_fkey(image_url, prompt, title, category, slug)",
       )
       .eq("status", "completed")
       .eq("is_public", true)
       .neq("id", currentId)
-      .or(`prompt.ilike.${catPattern}`)
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -113,7 +111,7 @@ async function getRelatedAnimations(
         slug: (a.slug || src?.slug || a.id) as string,
         videoUrl: (a.preview_url || a.video_url) as string,
         posterUrl: (src?.image_url || a.thumbnail_url || "") as string,
-        prompt: (src?.prompt || a.prompt) as string,
+        title: (src?.title || a.prompt) as string,
       };
     });
   } catch {
@@ -187,7 +185,7 @@ export default async function AnimationDetailPage({ params }: PageProps) {
   const category = anim.source?.category || "free";
   const videoUrl = anim.preview_url || anim.video_url;
   const posterUrl = anim.source?.image_url || anim.thumbnail_url || "";
-  const related = await getRelatedAnimations(anim.id, category);
+  const related = await getRelatedAnimations(anim.id);
   const detailPath = `/animations/${anim.slug || anim.id}`;
 
   const tags = [
@@ -246,16 +244,18 @@ export default async function AnimationDetailPage({ params }: PageProps) {
                 Animated
               </span>
 
-              <video
-                src={videoUrl}
-                poster={posterUrl}
-                controls
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="aspect-square w-full object-contain"
-              />
+              <div className="relative aspect-square">
+                <video
+                  src={videoUrl}
+                  poster={posterUrl}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 h-full w-full object-contain"
+                />
+              </div>
             </div>
           </div>
 
@@ -357,45 +357,14 @@ export default async function AnimationDetailPage({ params }: PageProps) {
         <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       </div>
 
-      {/* Related Animations */}
+      {/* Related Animations — always show for SEO */}
       {related.length > 0 && (
         <section className="bg-gray-50/40">
           <div className="mx-auto max-w-6xl px-4 py-14">
             <h2 className="mb-8 text-xl font-bold text-gray-900 sm:text-2xl">
               More animated clip art
             </h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {related.map((r) => (
-                <Link
-                  key={r.id}
-                  href={`/animations/${r.slug}`}
-                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                >
-                  <div className="relative aspect-square bg-gray-950">
-                    <video
-                      src={r.videoUrl}
-                      poster={r.posterUrl}
-                      muted
-                      loop
-                      playsInline
-                      preload="none"
-                      className="absolute inset-0 h-full w-full object-contain"
-                      onMouseOver={(e) =>
-                        (e.target as HTMLVideoElement).play().catch(() => {})
-                      }
-                      onMouseOut={(e) =>
-                        (e.target as HTMLVideoElement).pause()
-                      }
-                    />
-                  </div>
-                  <div className="px-3 py-2.5">
-                    <p className="truncate text-xs font-medium text-gray-600">
-                      {r.prompt}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <RelatedAnimationsGrid animations={related} />
           </div>
         </section>
       )}

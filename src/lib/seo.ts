@@ -17,8 +17,8 @@ const CONTENT_TYPE_LABELS_PLURAL: Record<ContentType, string> = {
   illustration: "Illustrations",
 };
 
-const TITLE_SUFFIX = " | clip.art";
 const MAX_TITLE_LENGTH = 60;
+const TEMPLATE_SUFFIX_LENGTH = " | clip.art".length;
 
 export function buildTitle(
   subject: string,
@@ -37,7 +37,7 @@ export function buildTitle(
     middle = ` — Free ${label}`;
   }
 
-  const overhead = middle.length + TITLE_SUFFIX.length;
+  const overhead = middle.length + TEMPLATE_SUFFIX_LENGTH;
   const maxSubjectLen = MAX_TITLE_LENGTH - overhead;
 
   let truncated = subject;
@@ -45,7 +45,7 @@ export function buildTitle(
     truncated = truncated.slice(0, maxSubjectLen - 1).trimEnd() + "…";
   }
 
-  return `${truncated}${middle}${TITLE_SUFFIX}`;
+  return `${truncated}${middle}`;
 }
 
 export function buildDescription(

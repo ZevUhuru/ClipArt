@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { sampleImages, imageBySlug } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
@@ -50,10 +50,21 @@ async function getDbImage(slug: string) {
   }
 }
 
+function getCanonicalSlug(dbRow: { slug: string | null; id: string }) {
+  return dbRow.slug || dbRow.id;
+}
+
+function getCanonicalCategory(dbRow: { category: string | null }, fallback: string) {
+  return dbRow.category || fallback;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const staticImage = imageBySlug.get(params.slug);
 
   if (staticImage) {
+    const expectedCategory = getCategorySlugForImage(staticImage);
+    if (params.category !== expectedCategory) return {};
+
     const category = await getCategoryBySlug(params.category);
     const categoryName = category?.name || params.category;
     return buildPageMetadata({
@@ -69,8 +80,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const dbImage = await getDbImage(params.slug);
   if (!dbImage) return {};
 
-  const category = await getCategoryBySlug(params.category);
-  const categoryName = category?.name || params.category;
+  const canonicalSlug = getCanonicalSlug(dbImage);
+  const canonicalCategory = getCanonicalCategory(dbImage, params.category);
+  const category = await getCategoryBySlug(canonicalCategory);
+  const categoryName = category?.name || canonicalCategory;
   const imageTitle = dbImage.title || dbImage.prompt;
   const imageDesc = dbImage.description || dbImage.prompt;
 
@@ -79,7 +92,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: imageDesc,
     contentType: "clipart",
     categoryName,
-    path: `${params.category}/${dbImage.slug || dbImage.id}`,
+    path: `${canonicalCategory}/${canonicalSlug}`,
     image: { url: dbImage.image_url, alt: imageTitle },
   });
 }
@@ -117,7 +130,9 @@ export default async function Page({ params }: PageProps) {
 
   if (staticImage) {
     const expectedCategory = getCategorySlugForImage(staticImage);
-    if (params.category !== expectedCategory) notFound();
+    if (params.category !== expectedCategory) {
+      permanentRedirect(`/${expectedCategory}/${params.slug}`);
+    }
     return (
       <>
         <ImageDetailPage image={staticImage} categorySlug={params.category} />
@@ -129,10 +144,17 @@ export default async function Page({ params }: PageProps) {
   const dbRow = await getDbImage(params.slug);
   if (!dbRow) notFound();
 
+  const canonicalSlug = getCanonicalSlug(dbRow);
+  const canonicalCategory = getCanonicalCategory(dbRow, params.category);
+
+  if (params.category !== canonicalCategory || params.slug !== canonicalSlug) {
+    permanentRedirect(`/${canonicalCategory}/${canonicalSlug}`);
+  }
+
   const image = {
     title: dbRow.title || dbRow.prompt,
-    slug: dbRow.slug || dbRow.id,
-    category: dbRow.category || params.category,
+    slug: canonicalSlug,
+    category: canonicalCategory,
     url: dbRow.image_url,
     description: dbRow.description || dbRow.prompt,
     tags: [dbRow.style, dbRow.category].filter(Boolean) as string[],
@@ -140,15 +162,15 @@ export default async function Page({ params }: PageProps) {
   };
 
   const relatedImages = await getRelatedImages(
-    dbRow.category || params.category,
-    dbRow.slug || dbRow.id,
+    canonicalCategory,
+    canonicalSlug,
   );
 
   return (
     <>
       <ImageDetailPage
         image={image}
-        categorySlug={params.category}
+        categorySlug={canonicalCategory}
         relatedImages={relatedImages}
         imageId={dbRow.id}
       />

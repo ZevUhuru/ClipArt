@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getIllustrationCategoryBySlug } from "@/lib/categories";
 import { ImageDetailPage } from "@/components/ImageDetailPage";
@@ -49,8 +49,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const dbImage = await getDbImage(params.slug);
   if (!dbImage) return {};
 
-  const category = await getIllustrationCategoryBySlug(params.category);
-  const categoryName = category?.name || params.category;
+  const canonicalSlug = dbImage.slug || dbImage.id;
+  const canonicalCategory = dbImage.category || params.category;
+  const category = await getIllustrationCategoryBySlug(canonicalCategory);
+  const categoryName = category?.name || canonicalCategory;
   const imageTitle = dbImage.title || dbImage.prompt;
   const imageDesc = dbImage.description || dbImage.prompt;
 
@@ -59,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: imageDesc,
     contentType: "illustration",
     categoryName,
-    path: `illustrations/${params.category}/${dbImage.slug || dbImage.id}`,
+    path: `illustrations/${canonicalCategory}/${canonicalSlug}`,
     image: { url: dbImage.image_url, alt: imageTitle },
   });
 }
@@ -96,29 +98,33 @@ export default async function Page({ params }: PageProps) {
   const dbRow = await getDbImage(params.slug);
   if (!dbRow) notFound();
 
+  const canonicalSlug = dbRow.slug || dbRow.id;
+  const canonicalCategory = dbRow.category || params.category;
+
+  if (params.category !== canonicalCategory || params.slug !== canonicalSlug) {
+    permanentRedirect(`/illustrations/${canonicalCategory}/${canonicalSlug}`);
+  }
+
   const image = {
     title: dbRow.title || dbRow.prompt,
-    slug: dbRow.slug || dbRow.id,
-    category: dbRow.category || params.category,
+    slug: canonicalSlug,
+    category: canonicalCategory,
     url: dbRow.image_url,
     description: dbRow.description || dbRow.prompt,
     tags: [dbRow.style, dbRow.category].filter(Boolean) as string[],
     aspect_ratio: dbRow.aspect_ratio || "4:3",
   };
 
-  const relatedImages = await getRelatedImages(
-    dbRow.category || params.category,
-    dbRow.slug || dbRow.id,
-  );
+  const relatedImages = await getRelatedImages(canonicalCategory, canonicalSlug);
 
-  const category = await getIllustrationCategoryBySlug(params.category);
-  const categoryName = category?.name || params.category;
+  const category = await getIllustrationCategoryBySlug(canonicalCategory);
+  const categoryName = category?.name || canonicalCategory;
 
   return (
     <>
       <ImageDetailPage
         image={image}
-        categorySlug={params.category}
+        categorySlug={canonicalCategory}
         contentType="illustration"
         relatedImages={relatedImages}
         categoryName={categoryName}

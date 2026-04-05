@@ -10,11 +10,11 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Free Coloring Pages — AI Coloring Page Generator | clip.art",
+  title: "Free Coloring Pages — AI Coloring Page Generator",
   description:
     "Create and download free printable coloring pages with AI. Generate custom coloring sheets for kids, adults, classrooms, and relaxation — dinosaurs, unicorns, mandalas, and more.",
   openGraph: {
-    title: "Free Coloring Pages — AI Coloring Page Generator | clip.art",
+    title: "Free Coloring Pages — AI Coloring Page Generator",
     description:
       "Create and download free printable coloring pages with AI. Generate custom coloring sheets for any theme instantly.",
     url: "https://clip.art/coloring-pages",

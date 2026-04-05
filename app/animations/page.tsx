@@ -8,14 +8,14 @@ import { AnimationGrid } from "./AnimationGrid";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Free Animated Clip Art — Bring Your Images to Life | clip.art",
+  title: "Free Animated Clip Art — Bring Your Images to Life",
   description:
     "Browse free animated clip art created by our community. Download animated clip art for classrooms, presentations, social media, and more. Powered by AI.",
   alternates: {
     canonical: "https://clip.art/animations",
   },
   openGraph: {
-    title: "Free Animated Clip Art | clip.art",
+    title: "Free Animated Clip Art — Bring Your Images to Life",
     description:
       "Browse and download free animated clip art. Perfect for teachers, presentations, and creative projects.",
     url: "https://clip.art/animations",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free Animated Clip Art | clip.art",
+    title: "Free Animated Clip Art — Bring Your Images to Life",
     description:
       "Browse and download free animated clip art. Perfect for teachers, presentations, and creative projects.",
   },

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getColoringThemeBySlug } from "@/lib/categories";
 import { ImageDetailPage } from "@/components/ImageDetailPage";
@@ -56,8 +56,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const dbImage = await getDbImage(params.slug);
   if (!dbImage) return {};
 
-  const theme = await getColoringThemeBySlug(params.theme);
-  const themeName = theme?.name || params.theme;
+  const canonicalSlug = dbImage.slug || dbImage.id;
+  const canonicalTheme = dbImage.category || params.theme;
+  const theme = await getColoringThemeBySlug(canonicalTheme);
+  const themeName = theme?.name || canonicalTheme;
   const imageTitle = dbImage.title || dbImage.prompt;
   const imageDesc = dbImage.description || dbImage.prompt;
 
@@ -66,7 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: imageDesc,
     contentType: "coloring",
     categoryName: themeName,
-    path: `coloring-pages/${params.theme}/${dbImage.slug || dbImage.id}`,
+    path: `coloring-pages/${canonicalTheme}/${canonicalSlug}`,
     image: { url: dbImage.image_url, alt: imageTitle },
   });
 }
@@ -103,29 +105,33 @@ export default async function Page({ params }: PageProps) {
   const dbRow = await getDbImage(params.slug);
   if (!dbRow) notFound();
 
+  const canonicalSlug = dbRow.slug || dbRow.id;
+  const canonicalTheme = dbRow.category || params.theme;
+
+  if (params.theme !== canonicalTheme || params.slug !== canonicalSlug) {
+    permanentRedirect(`/coloring-pages/${canonicalTheme}/${canonicalSlug}`);
+  }
+
   const image = {
     title: dbRow.title || dbRow.prompt,
-    slug: dbRow.slug || dbRow.id,
-    category: dbRow.category || params.theme,
+    slug: canonicalSlug,
+    category: canonicalTheme,
     url: dbRow.image_url,
     description: dbRow.description || dbRow.prompt,
     tags: ["coloring page", dbRow.category].filter(Boolean) as string[],
     aspect_ratio: dbRow.aspect_ratio || "3:4",
   };
 
-  const relatedImages = await getRelatedImages(
-    dbRow.category || params.theme,
-    dbRow.slug || dbRow.id,
-  );
+  const relatedImages = await getRelatedImages(canonicalTheme, canonicalSlug);
 
-  const theme = await getColoringThemeBySlug(params.theme);
-  const themeName = theme?.name || humanizeSlug(params.theme);
+  const theme = await getColoringThemeBySlug(canonicalTheme);
+  const themeName = theme?.name || humanizeSlug(canonicalTheme);
 
   return (
     <>
       <ImageDetailPage
         image={image}
-        categorySlug={params.theme}
+        categorySlug={canonicalTheme}
         isColoringPage
         relatedImages={relatedImages}
         categoryName={themeName}

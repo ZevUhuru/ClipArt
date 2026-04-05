@@ -27,7 +27,7 @@ export async function generateMetadata({
   const url = `https://clip.art/learn/${meta.slug}`;
 
   return {
-    title: `${meta.title} | clip.art Learn`,
+    title: `${meta.title} — clip.art Learn`,
     description: meta.description,
     openGraph: {
       title: meta.title,

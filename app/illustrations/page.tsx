@@ -10,11 +10,11 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Free AI Illustrations — AI Illustration Generator | clip.art",
+  title: "Free AI Illustrations — AI Illustration Generator",
   description:
     "Create and download free AI-generated illustrations with detailed backgrounds and scenes. Generate custom storybook, fantasy, watercolor, and digital illustrations in seconds.",
   openGraph: {
-    title: "Free AI Illustrations — AI Illustration Generator | clip.art",
+    title: "Free AI Illustrations — AI Illustration Generator",
     description:
       "Create stunning AI-generated illustrations with detailed backgrounds. Storybook, fantasy, watercolor, and more — generated in seconds.",
     url: "https://clip.art/illustrations",

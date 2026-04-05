@@ -6,7 +6,7 @@ import { VideoCard } from "@/components/learn/VideoCard";
 import { SignUpCTA } from "@/components/learn/SignUpCTA";
 
 export const metadata: Metadata = {
-  title: "Learn — AI Clip Art Tutorials, Prompts & Guides | clip.art",
+  title: "Learn — AI Clip Art Tutorials, Prompts & Guides",
   description:
     "Watch tutorials, discover AI art prompts, and learn how to create stunning clip art and coloring pages with clip.art. Free guides for teachers, designers, and creators.",
   openGraph: {

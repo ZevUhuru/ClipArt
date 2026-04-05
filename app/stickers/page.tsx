@@ -9,11 +9,11 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Free AI Sticker Generator — Create Custom Stickers | clip.art",
+  title: "Free AI Sticker Generator — Create Custom Stickers",
   description:
     "Generate custom stickers with AI. Create die-cut style sticker clip art for laptops, planners, packaging, and print on demand. Free to download, no attribution required.",
   openGraph: {
-    title: "Free AI Sticker Generator — Create Custom Stickers | clip.art",
+    title: "Free AI Sticker Generator — Create Custom Stickers",
     description:
       "Generate custom sticker-style clip art with AI. Free to download for personal and commercial use.",
     url: "https://clip.art/stickers",
