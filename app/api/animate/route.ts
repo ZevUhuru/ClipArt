@@ -76,6 +76,14 @@ export async function POST(request: NextRequest) {
       .update({ credits: profile.credits - creditsNeeded })
       .eq("id", user.id);
 
+    const slugBase = (sourceGen?.title || prompt)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60);
+    const slugSuffix = crypto.randomUUID().slice(0, 8);
+    const slug = `${slugBase}-${slugSuffix}`;
+
     const { data: animation } = await admin
       .from("animations")
       .insert({
@@ -89,6 +97,7 @@ export async function POST(request: NextRequest) {
         fal_request_id: requestId,
         credits_charged: creditsNeeded,
         is_public: true,
+        slug,
       })
       .select("id, status, created_at")
       .single();
