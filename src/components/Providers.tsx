@@ -93,7 +93,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event: string, session: { user?: { id: string; email?: string } } | null) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email ?? "" });
         await fetchCredits();
