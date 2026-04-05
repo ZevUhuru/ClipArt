@@ -231,20 +231,20 @@ export default async function AnimationDetailPage({ params }: PageProps) {
       <section className="mx-auto max-w-6xl px-4 pb-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left: Gradient-framed video */}
-          <div className="rounded-3xl bg-brand-gradient p-[2px]">
-            <div className="relative overflow-hidden rounded-[22px] bg-gray-950">
-              <span className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-full bg-purple-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-                <svg
-                  className="h-2.5 w-2.5"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M8 5.14v14l11-7-11-7z" />
-                </svg>
-                Animated
-              </span>
+          <div className="overflow-hidden rounded-3xl bg-brand-gradient p-[2px]">
+            <div className="overflow-hidden rounded-[22px] bg-gray-950">
+              <div className="relative aspect-square overflow-hidden">
+                <span className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-full bg-purple-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                  <svg
+                    className="h-2.5 w-2.5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5.14v14l11-7-11-7z" />
+                  </svg>
+                  Animated
+                </span>
 
-              <div className="relative aspect-square">
                 <video
                   src={videoUrl}
                   poster={posterUrl}
