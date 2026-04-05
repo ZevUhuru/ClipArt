@@ -37,6 +37,7 @@ interface AnimationRow {
     style: string;
     category: string;
     slug: string | null;
+    content_type: string | null;
   } | null;
 }
 
@@ -56,7 +57,7 @@ async function getAnimation(slug: string): Promise<AnimationRow | null> {
       .from("animations")
       .select(
         "id, slug, prompt, model, duration, video_url, preview_url, thumbnail_url, is_public, created_at, user_id, " +
-          "source:generations!animations_source_generation_id_fkey(id, title, prompt, image_url, style, category, slug)",
+          "source:generations!animations_source_generation_id_fkey(id, title, prompt, image_url, style, category, slug, content_type)",
       )
       .eq("slug", slug)
       .eq("status", "completed")
@@ -69,7 +70,7 @@ async function getAnimation(slug: string): Promise<AnimationRow | null> {
       .from("animations")
       .select(
         "id, slug, prompt, model, duration, video_url, preview_url, thumbnail_url, is_public, created_at, user_id, " +
-          "source:generations!animations_source_generation_id_fkey(id, title, prompt, image_url, style, category, slug)",
+          "source:generations!animations_source_generation_id_fkey(id, title, prompt, image_url, style, category, slug, content_type)",
       )
       .eq("id", slug)
       .eq("status", "completed")
@@ -307,7 +308,13 @@ export default async function AnimationDetailPage({ params }: PageProps) {
             {/* Source image */}
             {anim.source && (
               <Link
-                href={`/${category}/${anim.source.slug || anim.source.id}`}
+                href={
+                  anim.source.content_type === "coloring"
+                    ? `/coloring-pages/${anim.source.category}/${anim.source.slug || anim.source.id}`
+                    : anim.source.content_type === "illustration"
+                      ? `/illustrations/${anim.source.category}/${anim.source.slug || anim.source.id}`
+                      : `/${category}/${anim.source.slug || anim.source.id}`
+                }
                 className="mt-5 flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 transition-colors hover:border-gray-200"
               >
                 <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
