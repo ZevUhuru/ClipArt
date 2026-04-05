@@ -18,6 +18,7 @@ interface SearchResult {
   description: string;
   category: string;
   style: string;
+  content_type?: string;
   videoUrl?: string;
   previewUrl?: string;
 }
@@ -169,7 +170,9 @@ function SearchPageInner() {
       try {
         const res = await fetch(`/api/search?${params.toString()}`);
         const data = await res.json();
-        const newResults: SearchResult[] = data.results || [];
+        const newResults: SearchResult[] = (data.results || []).map(
+          (r: SearchResult) => ({ ...r, content_type: r.content_type || ct }),
+        );
 
         if (isFirstPage) {
           setResults(newResults);

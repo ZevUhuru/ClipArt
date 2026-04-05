@@ -68,6 +68,7 @@ function toDrawerImage(gen: CommunityItem) {
     url: gen.image_url,
     category: gen.category || "free",
     style: gen.style,
+    content_type: gen.content_type,
     aspect_ratio: gen.aspect_ratio,
     videoUrl: gen.animationPreviewUrl,
   };

@@ -7,6 +7,7 @@ export interface DrawerImage {
   url: string;
   category: string;
   style: string;
+  content_type?: string;
   aspect_ratio?: string;
   videoUrl?: string;
 }

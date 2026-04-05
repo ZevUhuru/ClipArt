@@ -53,6 +53,7 @@ function GenerationGrid({ items, loading }: { items: Generation[]; loading: bool
     url: gen.image_url,
     category: gen.category || "illustration-free",
     style: gen.style,
+    content_type: gen.content_type || "illustration",
     aspect_ratio: gen.aspect_ratio,
   }));
 

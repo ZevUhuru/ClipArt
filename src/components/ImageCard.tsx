@@ -17,6 +17,7 @@ export interface ImageCardImage {
   url: string;
   category?: string;
   style?: string;
+  content_type?: string;
   aspect_ratio?: string;
 }
 

@@ -79,6 +79,7 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
               url: gen.image_url,
               category: gen.category || "free",
               style: gen.style,
+              content_type: gen.content_type,
               aspect_ratio: gen.aspect_ratio,
             }}
             variant={isColoring ? "coloring" : "clipart"}
@@ -90,6 +91,7 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
                 url: gen.image_url,
                 category: gen.category || "free",
                 style: gen.style,
+                content_type: gen.content_type,
                 aspect_ratio: gen.aspect_ratio,
               })
             }

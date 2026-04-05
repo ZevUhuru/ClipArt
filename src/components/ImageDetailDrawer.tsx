@@ -64,7 +64,7 @@ export function ImageDetailDrawer() {
 
   if (!image) return null;
 
-  const contentType = (image as { content_type?: string }).content_type;
+  const contentType = image.content_type;
   const isColoring = contentType === "coloring" || image.style === "coloring";
   const isIllustration = contentType === "illustration";
   const isAnimation = !!image.videoUrl;
@@ -204,7 +204,7 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string; aspect_ratio?: string; videoUrl?: string };
+  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string };
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
