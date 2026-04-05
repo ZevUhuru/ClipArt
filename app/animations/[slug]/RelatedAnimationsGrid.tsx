@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -18,7 +18,7 @@ export function RelatedAnimationsGrid({
   animations: RelatedAnimation[];
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+    <div className="columns-2 gap-3 sm:columns-3 md:columns-4 [&>*]:mb-3 [&>*]:break-inside-avoid">
       {animations.map((anim) => (
         <AnimationCard key={anim.id} animation={anim} />
       ))}
@@ -28,38 +28,49 @@ export function RelatedAnimationsGrid({
 
 function AnimationCard({ animation }: { animation: RelatedAnimation }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLAnchorElement>(null);
 
-  const handleMouseEnter = useCallback(() => {
-    videoRef.current?.play().catch(() => {});
-  }, []);
+  useEffect(() => {
+    const video = videoRef.current;
+    const card = cardRef.current;
+    if (!video || !card) return;
 
-  const handleMouseLeave = useCallback(() => {
-    const v = videoRef.current;
-    if (v) {
-      v.pause();
-      v.currentTime = 0;
-    }
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.3 },
+    );
+
+    observer.observe(card);
+    return () => observer.disconnect();
   }, []);
 
   return (
     <Link
+      ref={cardRef}
       href={`/animations/${animation.slug}`}
-      className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className="group relative block overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
     >
-      <div className="relative aspect-square overflow-hidden bg-gray-900">
-        {animation.posterUrl && (
+      <div className="relative aspect-square overflow-hidden bg-gray-100">
+        {animation.posterUrl ? (
           <Image
             src={animation.posterUrl}
             alt={animation.title}
             fill
-            className="object-contain transition-opacity group-hover:opacity-0"
+            className="object-cover"
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
             loading="lazy"
             unoptimized
           />
-        )}
+        ) : null}
         <video
           ref={videoRef}
           src={animation.videoUrl}
@@ -67,20 +78,17 @@ function AnimationCard({ animation }: { animation: RelatedAnimation }) {
           loop
           playsInline
           preload="none"
-          className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity group-hover:opacity-100"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-          <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5.14v14l11-7-11-7z" />
-          </svg>
-          Video
-        </div>
       </div>
-      <div className="px-3 py-2.5">
-        <p className="truncate text-xs font-medium text-gray-600">
-          {animation.title}
-        </p>
-      </div>
+
+      {/* Hover-only badge */}
+      <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+        <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5.14v14l11-7-11-7z" />
+        </svg>
+        Animated
+      </span>
     </Link>
   );
 }
