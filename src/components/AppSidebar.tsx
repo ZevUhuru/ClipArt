@@ -124,7 +124,7 @@ export function AppSidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-white/[0.06] bg-[#1c1c27] transition-[width] duration-200 ease-in-out md:flex ${
+      className={`fixed left-0 top-0 z-30 hidden h-screen flex-col shadow-[4px_0_24px_rgba(0,0,0,0.3)] bg-[#1c1c27] transition-[width] duration-200 ease-in-out md:flex ${
         collapsed ? "w-[68px]" : "w-60"
       }`}
     >

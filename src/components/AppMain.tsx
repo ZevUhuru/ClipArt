@@ -7,7 +7,7 @@ export function AppMain({ children }: { children: React.ReactNode }) {
 
   return (
     <main
-      className={`mobile-main min-h-dvh transition-[margin-left] duration-200 ease-in-out md:pb-0 ${
+      className={`mobile-main min-h-dvh bg-gray-100 rounded-l-2xl overflow-hidden shadow-[inset_3px_0_12px_rgba(0,0,0,0.06)] transition-[margin-left] duration-200 ease-in-out md:pb-0 ${
         collapsed ? "md:ml-[68px]" : "md:ml-60"
       }`}
     >

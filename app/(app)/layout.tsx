@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-gray-100">
+    <div className="min-h-dvh bg-[#1c1c27]">
       <AppSidebar />
       <AppMain>{children}</AppMain>
       <AppBottomNav />
