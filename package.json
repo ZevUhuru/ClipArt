@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
     "@aws-sdk/client-s3": "latest",
     "@fal-ai/client": "^1.9.5",
     "@fal-ai/server-proxy": "^1.2.1",

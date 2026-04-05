@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { getAnimationSystemPrompt } from "@/lib/promptKnowledge";
+import { generateTextWithVision } from "@/lib/textAI";
 
 export const dynamic = "force-dynamic";
-
-let _ai: InstanceType<typeof GoogleGenAI> | null = null;
-function getAI() {
-  if (!_ai) {
-    _ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-  }
-  return _ai;
-}
-
-const MODEL = "gemini-2.5-flash";
 
 interface Suggestion {
   id?: string;
@@ -75,8 +65,8 @@ async function persistPrompts(
   return data || suggestions;
 }
 
-async function generateWithGemini(imageUrl: string, duration: number = 5): Promise<Suggestion[]> {
-  const { base64, mimeType } = await downloadImageAsBase64(imageUrl);
+async function generateSuggestions(imageUrl: string, duration: number = 5): Promise<Suggestion[]> {
+  const imageData = await downloadImageAsBase64(imageUrl);
 
   const durationLabel = `${duration}-second`;
   const complexityHint = duration <= 5
@@ -85,34 +75,21 @@ async function generateWithGemini(imageUrl: string, duration: number = 5): Promi
       ? "Each prompt can choreograph 2-3 motion beats with camera transitions."
       : "Each prompt should describe a full mini-scene with setup, action, and settle.";
 
-  const response = await getAI().models.generateContent({
-    model: MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { inlineData: { mimeType, data: base64 } },
-          { text: `Study this image carefully. Identify the subject, their pose, any objects, and the energy of the scene. Then write 5 comprehensive animation prompts that would bring this specific image to life as a ${durationLabel} video clip. ${complexityHint} Each prompt should take a completely different creative approach — action, emotional, cinematic, playful, and dramatic. Write rich scene direction with physical motion, camera behavior, and atmospheric detail.` },
-        ],
-      },
-    ],
-    config: {
-      systemInstruction: getAnimationSystemPrompt(duration),
-      temperature: 0.9,
-      thinkingConfig: { thinkingBudget: 0 },
-    },
-  });
+  const userContent = `Study this image carefully. Identify the subject, their pose, any objects, and the energy of the scene. Then write 5 comprehensive animation prompts that would bring this specific image to life as a ${durationLabel} video clip. ${complexityHint} Each prompt should take a completely different creative approach — action, emotional, cinematic, playful, and dramatic. Write rich scene direction with physical motion, camera behavior, and atmospheric detail.`;
 
-  const rawText = response.candidates?.[0]?.content?.parts?.[0];
-  if (!rawText || !("text" in rawText) || !rawText.text) {
-    throw new Error("No text in Gemini response");
-  }
+  const rawText = await generateTextWithVision(
+    "animation_suggestions",
+    getAnimationSystemPrompt(duration),
+    userContent,
+    imageData,
+    { temperature: 0.9 },
+  );
 
-  const cleaned = rawText.text.replace(/```json\n?|```\n?/g, "").trim();
+  const cleaned = rawText.replace(/```json\n?|```\n?/g, "").trim();
   const parsed = JSON.parse(cleaned) as Suggestion[];
 
   if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new Error("Gemini returned invalid format");
+    throw new Error("Model returned invalid format");
   }
 
   return parsed.slice(0, 5).map((s) => ({
@@ -147,7 +124,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const suggestions = await generateWithGemini(imageUrl, duration);
+    const suggestions = await generateSuggestions(imageUrl, duration);
 
     if (generationId) {
       const persisted = await persistPrompts(generationId, user.id, suggestions, duration);

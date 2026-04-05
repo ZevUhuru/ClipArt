@@ -1,17 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { generateText } from "@/lib/textAI";
 import type { ContentType } from "./styles";
-
-let _ai: InstanceType<typeof GoogleGenAI> | null = null;
-
-function getAI() {
-  if (!_ai) {
-    _ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-  }
-  return _ai;
-}
-
-const TEXT_MODEL = "gemini-2.5-flash";
 
 export interface Classification {
   title: string;
@@ -132,20 +121,14 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
 Return ONLY valid JSON, no markdown fences, no explanation.`;
     }
 
-    const response = await getAI().models.generateContent({
-      model: TEXT_MODEL,
-      contents: `Prompt: "${prompt}"\nStyle: ${style}`,
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.1,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    });
+    const rawText = await generateText(
+      "classification",
+      systemPrompt,
+      `Prompt: "${prompt}"\nStyle: ${style}`,
+      { temperature: 0.1 },
+    );
 
-    const text = response.candidates?.[0]?.content?.parts?.[0];
-    if (!text || !("text" in text) || !text.text) return fallback;
-
-    const cleaned = text.text.replace(/```json\n?|```\n?/g, "").trim();
+    const cleaned = rawText.replace(/```json\n?|```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned) as Record<string, unknown>;
 
     return {
@@ -190,20 +173,14 @@ export async function generateCategorySEO(categoryName: string): Promise<{
 
 Return ONLY valid JSON.`;
 
-    const response = await getAI().models.generateContent({
-      model: TEXT_MODEL,
-      contents: `Category: "${categoryName}"`,
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.3,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    });
+    const rawText = await generateText(
+      "seo_generation",
+      systemPrompt,
+      `Category: "${categoryName}"`,
+      { temperature: 0.3 },
+    );
 
-    const text = response.candidates?.[0]?.content?.parts?.[0];
-    if (!text || !("text" in text) || !text.text) return fallback;
-
-    const cleaned = text.text.replace(/```json\n?|```\n?/g, "").trim();
+    const cleaned = rawText.replace(/```json\n?|```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
     return {
