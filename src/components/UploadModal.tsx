@@ -81,6 +81,7 @@ export function UploadModal({
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [privacy, setPrivacy] = useState("unlisted");
+  const [postAsShort, setPostAsShort] = useState(true);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -220,12 +221,16 @@ export function UploadModal({
     setErrorMsg(null);
 
     try {
+      const finalTitle = postAsShort && !title.includes("#Shorts")
+        ? `${title} #Shorts`.slice(0, constraints?.maxTitleLength || 100)
+        : title;
+
       const res = await fetch(`/api/social/${selectedProvider}/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           animationId: animation.id,
-          title,
+          title: finalTitle,
           description,
           tags,
           privacy,
@@ -489,6 +494,31 @@ export function UploadModal({
                         </select>
                       </div>
                     )}
+
+                    {/* Post as Short */}
+                    <div className="mb-5 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Post as Short</p>
+                        <p className="text-xs text-gray-400">
+                          Appends #Shorts to the title for YouTube Shorts shelf
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={postAsShort}
+                        onClick={() => setPostAsShort(!postAsShort)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${
+                          postAsShort ? "bg-pink-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ${
+                            postAsShort ? "translate-x-[22px]" : "translate-x-0.5"
+                          }`}
+                        />
+                      </button>
+                    </div>
 
                     {/* Error */}
                     {uploadState === "error" && errorMsg && (
