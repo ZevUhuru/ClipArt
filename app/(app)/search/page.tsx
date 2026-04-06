@@ -12,7 +12,7 @@ import { type StyleKey, VALID_STYLES, STYLE_LABELS } from "@/lib/styles";
 import { StyleIndicator } from "@/data/styleIndicators";
 import {
   ContentTypeTabs,
-  FilterChipRow,
+  FilterPopover,
   ActiveFilters,
   SortSelect,
   ResultCount,
@@ -173,78 +173,78 @@ function SearchPageInner() {
   const safeResults = results.filter((item) => item.id && (item.url || item.videoUrl));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-8 pt-8">
-      {/* Search */}
-      <div className="mx-auto max-w-2xl">
-        <SearchBar
-          onSearch={handleSearch}
-          placeholder={
-            filters.contentType === "coloring" ? "Search coloring pages..."
-            : filters.contentType === "illustration" ? "Search illustrations..."
-            : filters.contentType === "animations" ? "Search animations..."
-            : "Search for clip art..."
-          }
-          defaultValue={filters.query || ""}
-        />
-      </div>
+    <div className="mx-auto max-w-6xl px-4 pb-8 pt-6">
+      {/* Search bar — full width */}
+      <SearchBar
+        onSearch={handleSearch}
+        placeholders={
+          filters.contentType === "coloring"
+            ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
+            : filters.contentType === "illustration"
+              ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
+              : filters.contentType === "animations"
+                ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
+                : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
+        }
+        defaultValue={filters.query || ""}
+      />
 
-      {/* Content type tabs */}
-      <div className="mt-5 flex items-center justify-between gap-3">
-        <ContentTypeTabs
-          tabs={CONTENT_TABS}
-          activeKey={filters.contentType}
-          onSelect={(key) => setContentType(key as ContentType)}
-        />
-
-        {/* Mobile filter trigger */}
-        {(showCategoryRow || showStyleRow) && (
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-            </svg>
-            Filters
-            {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* Desktop filter rows */}
-      <div className="hidden md:block">
-        {showCategoryRow && currentCategoryChips.length > 0 && (
-          <div className="mt-4">
-            <FilterChipRow
+      {/* Toolbar: Tabs + filter popovers + sort */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <ContentTypeTabs
+            tabs={CONTENT_TABS}
+            activeKey={filters.contentType}
+            onSelect={(key) => setContentType(key as ContentType)}
+          />
+          {showCategoryRow && currentCategoryChips.length > 0 && (
+            <FilterPopover
+              label="Category"
               items={currentCategoryChips}
               activeKey={filters.category}
               onSelect={setCategory}
-              maxVisible={8}
+              allLabel="All Categories"
             />
-          </div>
-        )}
-
-        {showStyleRow && (
-          <div className="mt-3">
-            <FilterChipRow
+          )}
+          {showStyleRow && (
+            <FilterPopover
+              label="Style"
               items={currentStyleChips}
               activeKey={filters.style}
               onSelect={setStyle}
-              maxVisible={7}
               allLabel="All Styles"
-              size="sm"
             />
-          </div>
-        )}
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <SortSelect
+            options={SORT_OPTIONS}
+            value={filters.sort}
+            onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
+          />
+          {(showCategoryRow || showStyleRow) && (
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+              </svg>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Active filters + result count + sort */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* Active filters + result count */}
+      {(activeFilters.length > 0 || totalCount !== null) && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <AnimatePresence>
             {activeFilters.length > 0 && (
               <ActiveFilters
@@ -260,16 +260,11 @@ function SearchPageInner() {
             contentType={filters.contentType}
           />
         </div>
-        <SortSelect
-          options={SORT_OPTIONS}
-          value={filters.sort}
-          onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
-        />
-      </div>
+      )}
 
       {/* Cross-link to SEO category page */}
       {activeCategoryData && activeCategoryData.slug !== "free" && (
-        <div className="mt-3">
+        <div className="mt-2">
           <Link
             href={`/${activeCategoryData.slug}`}
             className="inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700"
@@ -283,7 +278,7 @@ function SearchPageInner() {
       )}
 
       {/* Results grid */}
-      <div className="mt-6">
+      <div className="mt-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={filters.contentType}

@@ -1,17 +1,12 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { CreateModeToggle } from "@/components/CreateModeToggle";
-import { FilterChipRow, type ChipItem } from "@/components/filters/FilterChipRow";
+import { useState, useEffect, useCallback } from "react";
+import { CreatePageLayout } from "@/components/CreatePageLayout";
+import { RecentCreationsStrip } from "@/components/RecentCreationsStrip";
+import { FilterPopover, type ChipItem } from "@/components/filters";
 import { StyleIndicator } from "@/data/styleIndicators";
-import { useAppStore, type Generation } from "@/stores/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
-import { useImageDrawer } from "@/stores/useImageDrawer";
-import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
-import { ImageGrid } from "@/components/ImageGrid";
-import { GenerationQueue } from "@/components/GenerationQueue";
 import { VALID_STYLES, STYLE_LABELS, type StyleKey } from "@/lib/styles";
 
 const ANON_RESULT_KEY = "clip_art_anon_result";
@@ -22,135 +17,19 @@ const CLIPART_STYLE_CHIPS: ChipItem[] = VALID_STYLES.clipart.map((key) => ({
   indicator: <StyleIndicator styleKey={key} />,
 }));
 
+const suggestedPrompts = [
+  "a happy sun wearing sunglasses",
+  "wedding couple throwing confetti",
+  "cute cat playing piano",
+  "birthday cake with candles",
+  "teacher reading to students",
+  "rocket ship blasting off",
+];
+
 interface AnonResult {
   imageUrl: string;
   prompt: string;
   style: string;
-}
-
-interface CommunityItem extends Generation {
-  animationPreviewUrl?: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mergeAnimations(gens: CommunityItem[], rawAnims: any[]): CommunityItem[] {
-  const animCards: CommunityItem[] = rawAnims.map((a) => {
-    const src = a.source as Record<string, string> | null;
-    return {
-      id: `anim-${a.id}`,
-      image_url: src?.image_url || a.thumbnail_url || "",
-      prompt: src?.prompt || a.prompt,
-      style: src?.style || "flat",
-      category: src?.category || "free",
-      slug: src?.slug || a.id,
-      aspect_ratio: src?.aspect_ratio,
-      created_at: a.created_at,
-      animationPreviewUrl: a.preview_url || a.video_url,
-    } as CommunityItem;
-  });
-
-  const merged = [...gens];
-  const usedAnimIds = new Set<string>();
-  let animIdx = 0;
-  for (let pos = 5; pos < merged.length + animCards.length && animIdx < animCards.length; pos += 7) {
-    const anim = animCards[animIdx];
-    if (!usedAnimIds.has(anim.id)) {
-      merged.splice(pos, 0, anim);
-      usedAnimIds.add(anim.id);
-      animIdx++;
-    }
-  }
-  while (animIdx < animCards.length) {
-    if (!usedAnimIds.has(animCards[animIdx].id)) merged.push(animCards[animIdx]);
-    animIdx++;
-  }
-  return merged;
-}
-
-function toDrawerImage(gen: CommunityItem) {
-  return {
-    id: gen.id,
-    slug: gen.slug || gen.id,
-    title: gen.prompt,
-    url: gen.image_url,
-    category: gen.category || "free",
-    style: gen.style,
-    content_type: gen.content_type,
-    aspect_ratio: gen.aspect_ratio,
-    videoUrl: gen.animationPreviewUrl,
-  };
-}
-
-function CommunityGrid() {
-  const openDrawer = useImageDrawer((s) => s.open);
-  const storeGenerations = useAppStore((s) => s.generations);
-  const [communityItems, setCommunityItems] = useState<CommunityItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchCommunity() {
-      try {
-        const res = await fetch("/api/community");
-        if (!res.ok) throw new Error("fetch failed");
-        const { generations, animations } = await res.json();
-        const gens: CommunityItem[] = (generations || []).map((g: CommunityItem) => g);
-        setCommunityItems(mergeAnimations(gens, animations || []));
-      } catch {
-        setCommunityItems([]);
-      }
-      setLoading(false);
-    }
-
-    fetchCommunity();
-  }, []);
-
-  const { safeItems, drawerList } = useMemo(() => {
-    if (loading) return { safeItems: [] as CommunityItem[], drawerList: [] as ReturnType<typeof toDrawerImage>[] };
-
-    const communityIds = new Set(communityItems.map((c) => c.id));
-    const newFromStore = storeGenerations.filter(
-      (g) => g.id && g.image_url && !communityIds.has(g.id),
-    ) as CommunityItem[];
-
-    const merged = newFromStore.length > 0
-      ? [...newFromStore, ...communityItems]
-      : communityItems;
-
-    const safe = merged.filter((g) => g.id && g.image_url);
-    return {
-      safeItems: safe,
-      drawerList: safe.map(toDrawerImage),
-    };
-  }, [storeGenerations, communityItems, loading]);
-
-  if (loading) {
-    return (
-      <ImageGrid>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <ImageCardSkeleton key={i} />
-        ))}
-      </ImageGrid>
-    );
-  }
-
-  if (safeItems.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-gray-400">Nothing here yet.</p>
-    );
-  }
-
-  return (
-    <ImageGrid>
-      {safeItems.map((gen, idx) => (
-        <ImageCard
-          key={gen.id}
-          image={drawerList[idx]}
-          onClick={() => openDrawer(drawerList[idx], drawerList)}
-          animationPreviewUrl={gen.animationPreviewUrl}
-        />
-      ))}
-    </ImageGrid>
-  );
 }
 
 function AnonResultBanner({ result, onSignup }: { result: AnonResult; onSignup: () => void }) {
@@ -199,9 +78,8 @@ export default function CreatePage() {
   const [isPublic, setIsPublic] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [anonResult, setAnonResult] = useState<AnonResult | null>(null);
-  const resultRef = useRef<HTMLDivElement>(null);
 
-  const { openAuthModal, user } = useAppStore();
+  const { openAuthModal, user, generationsLoaded, generations } = useAppStore();
   const addJob = useGenerationQueue((s) => s.addJob);
   const queueJobs = useGenerationQueue((s) => s.jobs);
 
@@ -228,123 +106,80 @@ export default function CreatePage() {
     setPrompt("");
   }, [prompt, style, isPublic, user, openAuthModal, addJob]);
 
+  const clipartFilter = (g: { style: string; content_type?: string }) =>
+    !g.content_type || g.content_type === "clipart";
+
+  const hasRecents = generationsLoaded && generations.some((g) => g.id && g.image_url && clipartFilter(g));
+  const showEmptyState = !user || (!hasRecents && queueJobs.length === 0);
+
   return (
-    <div className="min-h-screen">
-      {/* Compact generator bar */}
-      <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-5xl px-4 py-4">
-          <CreateModeToggle />
-          {/* Input row */}
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe your clip art... (e.g. a happy sun wearing sunglasses)"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
-                maxLength={1000}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleGenerate();
-                  }
-                }}
-              />
-            </div>
-            <button
-              onClick={handleGenerate}
-              disabled={!prompt.trim()}
-              className="shrink-0 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Create
-            </button>
-          </div>
-
-          {/* Style pills + share toggle */}
-          <div className="mt-3 flex items-center justify-between">
-            <FilterChipRow
-              items={CLIPART_STYLE_CHIPS}
-              activeKey={style}
-              onSelect={(key) => setStyle((key || "flat") as StyleKey)}
-              maxVisible={7}
-              size="sm"
-            />
-            <button
-              type="button"
-              onClick={() => setIsPublic((v) => !v)}
-              className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-gray-100"
-              title={isPublic ? "Your creation will be shared with the community" : "Your creation will be private"}
-            >
-              <span className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isPublic ? "bg-green-400" : "bg-gray-200"}`}>
-                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${isPublic ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
-              </span>
-              <span className="text-gray-500">
-                {isPublic ? "Public" : "Private"}
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Content area */}
-      <div className="mx-auto max-w-5xl px-4 py-6">
-        {/* Generation Queue */}
-        {queueJobs.length > 0 && (
-          <div className="mb-6">
-            <GenerationQueue />
-          </div>
-        )}
-
-        {/* Error */}
-        <AnimatePresence>
-          {error && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600"
-            >
-              {error}
-            </motion.p>
-          )}
-        </AnimatePresence>
-
-        {/* Anonymous free generation result */}
-        {anonResult && !user && (
-          <AnonResultBanner
-            result={anonResult}
-            onSignup={() => openAuthModal("signup")}
+    <CreatePageLayout
+      prompt={prompt}
+      onPromptChange={setPrompt}
+      onSubmit={handleGenerate}
+      promptPlaceholder="Describe your clip art... (e.g. a happy sun wearing sunglasses)"
+      submitDisabled={!prompt.trim()}
+      error={error}
+      options={
+        <>
+          <FilterPopover
+            label="Style"
+            items={CLIPART_STYLE_CHIPS}
+            activeKey={style}
+            onSelect={(key) => setStyle((key || "flat") as StyleKey)}
+            hideAll
           />
-        )}
-
-        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Community creations
-        </p>
-
-        <div ref={resultRef}>
-          <CommunityGrid />
-        </div>
-
-        {/* Browse more clip art */}
-        <div className="mt-12 rounded-2xl bg-white px-6 py-10 text-center">
-          <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
-            Browse thousands of free clip art
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
-            Discover clip art for classrooms, worksheets, presentations, and more — all created by our community.
-          </p>
-          <Link
-            href="/search"
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
+          <button
+            type="button"
+            onClick={() => setIsPublic((v) => !v)}
+            className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-gray-100"
+            title={isPublic ? "Your creation will be shared with the community" : "Your creation will be private"}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            <span className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isPublic ? "bg-green-400" : "bg-gray-200"}`}>
+              <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${isPublic ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
+            </span>
+            <span className="text-gray-500">
+              {isPublic ? "Public" : "Private"}
+            </span>
+          </button>
+        </>
+      }
+    >
+      {anonResult && !user && (
+        <AnonResultBanner
+          result={anonResult}
+          onSignup={() => openAuthModal("signup")}
+        />
+      )}
+
+      {showEmptyState ? (
+        <div className="py-12 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+            <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z" />
             </svg>
-            Browse clip art
-          </Link>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Create your first clip art
+          </h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
+            Describe what you want and we&apos;ll generate it in seconds. Try one of these:
+          </p>
+          <div className="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
+            {suggestedPrompts.map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => setPrompt(suggestion)}
+                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
+      ) : (
+        <RecentCreationsStrip filterFn={clipartFilter} />
+      )}
+    </CreatePageLayout>
   );
 }

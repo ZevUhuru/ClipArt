@@ -86,25 +86,25 @@ export default function AdminImagesPage() {
       </div>
 
       {/* Filters */}
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <input
           type="text"
           placeholder="Search by title or prompt..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-1 focus:ring-pink-400"
+          className="rounded-xl bg-gray-100/80 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 hover:bg-gray-200/60 focus:bg-white focus:shadow-lg focus:shadow-gray-200/50 focus:ring-1 focus:ring-gray-200"
         />
         <input
           type="text"
           placeholder="Filter category..."
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-          className="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-1 focus:ring-pink-400"
+          className="w-40 rounded-xl bg-gray-100/80 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 hover:bg-gray-200/60 focus:bg-white focus:shadow-lg focus:shadow-gray-200/50 focus:ring-1 focus:ring-gray-200"
         />
         <select
           value={publicFilter}
           onChange={(e) => { setPublicFilter(e.target.value); setPage(1); }}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-1 focus:ring-pink-400"
+          className="rounded-xl bg-gray-100/80 px-3 py-2.5 text-sm text-gray-600 outline-none transition-all duration-200 hover:bg-gray-200/60 focus:bg-white focus:shadow-lg focus:shadow-gray-200/50 focus:ring-1 focus:ring-gray-200"
         >
           <option value="">All visibility</option>
           <option value="true">Public</option>
@@ -113,7 +113,7 @@ export default function AdminImagesPage() {
         <select
           value={featuredFilter}
           onChange={(e) => { setFeaturedFilter(e.target.value); setPage(1); }}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-1 focus:ring-pink-400"
+          className="rounded-xl bg-gray-100/80 px-3 py-2.5 text-sm text-gray-600 outline-none transition-all duration-200 hover:bg-gray-200/60 focus:bg-white focus:shadow-lg focus:shadow-gray-200/50 focus:ring-1 focus:ring-gray-200"
         >
           <option value="">All featured</option>
           <option value="true">Featured</option>

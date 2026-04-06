@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { SearchBar } from "@/components/SearchBar";
 
 interface SourceImage {
   id: string;
@@ -30,18 +31,23 @@ export default function TemplatesPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortMode>("popular");
+  const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const LIMIT = 30;
 
-  const fetchPrompts = useCallback(async (sortMode: SortMode, page: number) => {
+  const fetchPrompts = useCallback(async (sortMode: SortMode, page: number, q: string) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/prompts?sort=${sortMode}&offset=${page}&limit=${LIMIT}`,
-      );
+      const params = new URLSearchParams({
+        sort: sortMode,
+        offset: String(page),
+        limit: String(LIMIT),
+      });
+      if (q) params.set("q", q);
+      const res = await fetch(`/api/prompts?${params}`);
       if (res.ok) {
         const data = await res.json();
         setPrompts(data.prompts || []);
@@ -52,11 +58,17 @@ export default function TemplatesPage() {
   }, []);
 
   useEffect(() => {
-    fetchPrompts(sort, offset);
-  }, [sort, offset, fetchPrompts]);
+    fetchPrompts(sort, offset, search);
+  }, [sort, offset, search, fetchPrompts]);
 
   const handleSort = (mode: SortMode) => {
     setSort(mode);
+    setOffset(0);
+    setExpandedId(null);
+  };
+
+  const handleSearch = (q: string) => {
+    setSearch(q);
     setOffset(0);
     setExpandedId(null);
   };
@@ -72,20 +84,66 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Browse animation prompts and templates tied to real images.
-            Copy any template and use it in the{" "}
-            <Link href="/animate" className="text-pink-500 hover:text-pink-600">
-              Animation Studio
-            </Link>.
-          </p>
-        </div>
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-gray-100">
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-white to-orange-50/60" />
+        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
 
-        {/* Controls */}
+        <div className="relative mx-auto max-w-4xl px-4 pb-8 pt-10 sm:pb-10 sm:pt-14">
+          <div className="flex flex-col items-center text-center">
+            {total > 0 && (
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1 text-xs font-semibold text-pink-600 shadow-sm backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
+                {total} templates
+              </span>
+            )}
+
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+              Prompt{" "}
+              <span className="gradient-text">Templates</span>
+            </h1>
+
+            <p className="mt-3 max-w-lg text-balance text-sm text-gray-500 sm:text-base">
+              Ready-to-use prompts crafted for stunning results.
+              Copy, customize, and create.
+            </p>
+
+            <div className="mt-6 w-full max-w-xl">
+              <SearchBar
+                onSearch={handleSearch}
+                placeholder="Search templates..."
+                placeholders={[
+                  "Search prompt templates...",
+                  "Try \u201Cwalk cycle\u201D...",
+                  "Try \u201Cbounce\u201D...",
+                  "Try \u201Cexplosion\u201D...",
+                ]}
+                isLoading={loading}
+              />
+            </div>
+
+            <div className="mt-4 flex items-center gap-3">
+              <Link
+                href="/create"
+                className="rounded-full bg-gray-900 px-5 py-2 text-xs font-semibold text-white transition-all hover:bg-gray-800"
+              >
+                Start Creating
+              </Link>
+              <Link
+                href="/animate"
+                className="rounded-full border border-gray-200 bg-white px-5 py-2 text-xs font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
+              >
+                Animation Studio
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Content */}
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex gap-2">
             {(["popular", "recent"] as const).map((mode) => (

@@ -13,7 +13,7 @@ import { STYLE_LABELS, VALID_STYLES, type StyleKey } from "@/lib/styles";
 import { StyleIndicator } from "@/data/styleIndicators";
 import {
   ContentTypeTabs,
-  FilterChipRow,
+  FilterPopover,
   ActiveFilters,
   SortSelect,
   ResultCount,
@@ -393,59 +393,61 @@ function CreationsGrid() {
 
   return (
     <>
-      {/* Search */}
-      <div className="mx-auto mb-5 max-w-2xl">
-        <SearchBar
-          onSearch={handleSearch}
-          placeholder="Search your creations..."
-          defaultValue={searchQuery}
-        />
-      </div>
+      {/* Search bar — full width */}
+      <SearchBar
+        onSearch={handleSearch}
+        placeholders={["Search your creations...", "Find that sunset illustration...", "Where was that cute cat..."]}
+        defaultValue={searchQuery}
+      />
 
-      {/* Tabs + mobile filter button */}
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <ContentTypeTabs
-          tabs={CONTENT_TABS}
-          activeKey={filter}
-          onSelect={(key) => handleFilterChange(key as ContentFilter)}
-          layoutId="my-art-tab"
-        />
-
-        {showStyleFilter && (
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-            </svg>
-            Filters
-            {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* Desktop style filter */}
-      {showStyleFilter && (
-        <div className="mb-4 hidden md:block">
-          <FilterChipRow
-            items={currentStyleChips}
-            activeKey={activeStyle}
-            onSelect={handleStyleSelect}
-            maxVisible={7}
-            allLabel="All Styles"
-            size="sm"
+      {/* Toolbar: Tabs + filter popover + sort */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <ContentTypeTabs
+            tabs={CONTENT_TABS}
+            activeKey={filter}
+            onSelect={(key) => handleFilterChange(key as ContentFilter)}
+            layoutId="my-art-tab"
           />
+          {showStyleFilter && (
+            <FilterPopover
+              label="Style"
+              items={currentStyleChips}
+              activeKey={activeStyle}
+              onSelect={handleStyleSelect}
+              allLabel="All Styles"
+            />
+          )}
         </div>
-      )}
 
-      {/* Active filters + count + sort */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <SortSelect
+            options={SORT_OPTIONS}
+            value={sort}
+            onChange={handleSortChange}
+          />
+          {showStyleFilter && (
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+              </svg>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Active filters + result count */}
+      {(activeFilters.length > 0 || totalCount !== null) && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <AnimatePresence>
             {activeFilters.length > 0 && (
               <ActiveFilters
@@ -464,12 +466,7 @@ function CreationsGrid() {
             contentType={filter === "all" ? undefined : filter === "illustrations" ? "illustration" : filter}
           />
         </div>
-        <SortSelect
-          options={SORT_OPTIONS}
-          value={sort}
-          onChange={handleSortChange}
-        />
-      </div>
+      )}
 
       {/* Results */}
       <AnimatePresence mode="wait">

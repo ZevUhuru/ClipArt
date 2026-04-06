@@ -51,6 +51,7 @@ module.exports = {
         "fade-in": "fadeIn 0.5s ease-out",
         "slide-up": "slideUp 0.3s ease-out",
         "pulse-soft": "pulseSoft 2s ease-in-out infinite",
+        "gradient-shift": "gradientShift 3s ease infinite",
       },
       keyframes: {
         fadeIn: {
@@ -64,6 +65,10 @@ module.exports = {
         pulseSoft: {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
+        },
+        gradientShift: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
         },
       },
     },

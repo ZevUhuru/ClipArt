@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
     const sort = searchParams.get("sort") || "popular";
+    const q = searchParams.get("q")?.trim() || "";
     const offset = parseInt(searchParams.get("offset") || "0", 10);
     const limit = Math.min(parseInt(searchParams.get("limit") || "30", 10), 50);
 
@@ -19,6 +20,10 @@ export async function GET(req: NextRequest) {
         "source:generations!animation_prompts_generation_id_fkey(id, image_url, title, slug, category)",
       )
       .eq("is_public", true);
+
+    if (q) {
+      query = query.or(`title.ilike.%${q}%,prompt.ilike.%${q}%`);
+    }
 
     if (sort === "popular") {
       query = query.order("use_count", { ascending: false }).order("created_at", { ascending: false });
@@ -35,10 +40,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ prompts: [], total: 0 }, { status: 500 });
     }
 
-    const { count } = await admin
+    let countQuery = admin
       .from("animation_prompts")
       .select("*", { count: "exact", head: true })
       .eq("is_public", true);
+
+    if (q) {
+      countQuery = countQuery.or(`title.ilike.%${q}%,prompt.ilike.%${q}%`);
+    }
+
+    const { count } = await countQuery;
 
     return NextResponse.json({
       prompts: data || [],
