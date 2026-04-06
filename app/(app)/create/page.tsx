@@ -3,17 +3,24 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { StylePicker } from "@/components/StylePicker";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
+import { FilterChipRow, type ChipItem } from "@/components/filters/FilterChipRow";
+import { StyleIndicator } from "@/data/styleIndicators";
 import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { GenerationQueue } from "@/components/GenerationQueue";
-import type { StyleKey } from "@/lib/styles";
+import { VALID_STYLES, STYLE_LABELS, type StyleKey } from "@/lib/styles";
 
 const ANON_RESULT_KEY = "clip_art_anon_result";
+
+const CLIPART_STYLE_CHIPS: ChipItem[] = VALID_STYLES.clipart.map((key) => ({
+  key,
+  label: STYLE_LABELS[key] || key,
+  indicator: <StyleIndicator styleKey={key} />,
+}));
 
 interface AnonResult {
   imageUrl: string;
@@ -256,7 +263,13 @@ export default function CreatePage() {
 
           {/* Style pills + share toggle */}
           <div className="mt-3 flex items-center justify-between">
-            <StylePicker selected={style} onSelect={setStyle} />
+            <FilterChipRow
+              items={CLIPART_STYLE_CHIPS}
+              activeKey={style}
+              onSelect={(key) => setStyle((key || "flat") as StyleKey)}
+              maxVisible={7}
+              size="sm"
+            />
             <button
               type="button"
               onClick={() => setIsPublic((v) => !v)}

@@ -1,14 +1,52 @@
 "use client";
 
-import { Suspense, useState, useCallback, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
 import { categories } from "@/data/categories";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { type StyleKey, VALID_STYLES, STYLE_LABELS } from "@/lib/styles";
+import { StyleIndicator } from "@/data/styleIndicators";
+import {
+  ContentTypeTabs,
+  FilterChipRow,
+  ActiveFilters,
+  SortSelect,
+  ResultCount,
+  FilterDrawer,
+  type TabItem,
+  type ChipItem,
+} from "@/components/filters";
+import { useFilterState, type ContentType } from "@/hooks/useFilterState";
+
+const CONTENT_TABS: TabItem[] = [
+  { key: "clipart", label: "Clip Art" },
+  { key: "illustration", label: "Illustrations" },
+  { key: "coloring", label: "Coloring Pages" },
+  { key: "animations", label: "Animations" },
+];
+
+const SORT_OPTIONS = [
+  { key: "newest", label: "Newest" },
+  { key: "featured", label: "Featured" },
+  { key: "oldest", label: "Oldest" },
+];
+
+const clipartCategoryChips: ChipItem[] = categories.map((c) => ({
+  key: c.slug,
+  label: c.name,
+}));
+
+function buildStyleChips(ct: "clipart" | "illustration"): ChipItem[] {
+  return VALID_STYLES[ct].map((key) => ({
+    key,
+    label: STYLE_LABELS[key] || key,
+    indicator: <StyleIndicator styleKey={key} />,
+  }));
+}
 
 interface SearchResult {
   id: string;
@@ -23,66 +61,6 @@ interface SearchResult {
   previewUrl?: string;
 }
 
-type ContentType = "clipart" | "illustration" | "coloring" | "animations";
-
-const PAGE_SIZE = 60;
-
-const clipartCategories = categories.map((c) => ({ slug: c.slug, name: c.name }));
-
-const CLIPART_STYLE_OPTIONS: { key: StyleKey; label: string }[] =
-  VALID_STYLES.clipart.map((key) => ({ key, label: STYLE_LABELS[key] || key }));
-
-const ILLUSTRATION_STYLE_OPTIONS: { key: StyleKey; label: string }[] =
-  VALID_STYLES.illustration.map((key) => ({ key, label: STYLE_LABELS[key] || key }));
-
-function SearchImageGrid({
-  items,
-  contentType,
-}: {
-  items: SearchResult[];
-  contentType: ContentType;
-}) {
-  const openDrawer = useImageDrawer((s) => s.open);
-  const safeItems = items.filter((item) => item.id && (item.url || item.videoUrl));
-  const isColoring = contentType === "coloring";
-
-  return (
-    <ImageGrid variant={isColoring ? "coloring" : "clipart"}>
-      {safeItems.map((item) => (
-        <ImageCard
-          key={item.id}
-          variant={isColoring ? "coloring" : "clipart"}
-          image={{
-            id: item.id,
-            slug: item.slug,
-            title: item.title,
-            url: item.url,
-            category: item.category,
-            style: item.style,
-          }}
-          onClick={() => openDrawer(item, safeItems)}
-          animationPreviewUrl={item.previewUrl || undefined}
-        />
-      ))}
-    </ImageGrid>
-  );
-}
-
-function updateURL(
-  router: ReturnType<typeof useRouter>,
-  params: { ct?: string; category?: string; style?: string; q?: string },
-) {
-  const sp = new URLSearchParams();
-  if (params.ct && params.ct !== "clipart") sp.set("type", params.ct);
-  if (params.ct !== "animations") {
-    if (params.category) sp.set("category", params.category);
-    if (params.style) sp.set("style", params.style);
-  }
-  if (params.q) sp.set("q", params.q);
-  const qs = sp.toString();
-  router.replace(qs ? `/search?${qs}` : "/search", { scroll: false });
-}
-
 export default function SearchPage() {
   return (
     <Suspense>
@@ -92,335 +70,206 @@ export default function SearchPage() {
 }
 
 function SearchPageInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const {
+    filters,
+    results,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    hasSearched,
+    totalCount,
+    activeFilterCount,
+    setContentType,
+    setCategory,
+    setStyle,
+    setQuery,
+    setSort,
+    clearFilter,
+    clearAll,
+    loadMore,
+  } = useFilterState({ mode: "public", defaultSort: "newest" });
 
-  const rawType = searchParams.get("type");
-  const initialCt: ContentType = rawType === "coloring" ? "coloring" : rawType === "illustration" ? "illustration" : rawType === "animations" ? "animations" : "clipart";
-  const initialCategory = searchParams.get("category") || null;
-  const initialStyle = searchParams.get("style") || null;
-  const initialQuery = searchParams.get("q") || null;
-
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-
-  const [contentType, setContentType] = useState<ContentType>(initialCt);
-  const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
-  const [activeStyle, setActiveStyle] = useState<string | null>(initialStyle);
-  const [searchQuery, setSearchQuery] = useState<string | null>(initialQuery);
-  const [coloringCategories, setColoringCategories] = useState<
-    { slug: string; name: string }[]
-  >([]);
-  const [illustrationCategories, setIllustrationCategories] = useState<
-    { slug: string; name: string }[]
-  >([]);
-
-  const currentQueryRef = useRef<string | undefined>();
-  const currentCategoryRef = useRef<string | undefined>();
-  const currentStyleRef = useRef<string | undefined>();
-  const currentContentTypeRef = useRef<ContentType>(initialCt);
+  const openDrawer = useImageDrawer((s) => s.open);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const mountedRef = useRef(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [coloringCategories, setColoringCategories] = useState<ChipItem[]>([]);
+  const [illustrationCategories, setIllustrationCategories] = useState<ChipItem[]>([]);
 
   useEffect(() => {
     fetch("/api/categories/coloring")
       .then((r) => r.json())
-      .then((d) => setColoringCategories(d.categories || []))
+      .then((d) =>
+        setColoringCategories(
+          (d.categories || []).map((c: { slug: string; name: string }) => ({
+            key: c.slug,
+            label: c.name,
+          })),
+        ),
+      )
       .catch(() => {});
     fetch("/api/categories/illustration")
       .then((r) => r.json())
-      .then((d) => setIllustrationCategories(d.categories || []))
+      .then((d) =>
+        setIllustrationCategories(
+          (d.categories || []).map((c: { slug: string; name: string }) => ({
+            key: c.slug,
+            label: c.name,
+          })),
+        ),
+      )
       .catch(() => {});
   }, []);
-
-  const fetchResults = useCallback(
-    async (
-      query?: string,
-      category?: string,
-      style?: string,
-      ct: ContentType = "clipart",
-      offset = 0,
-    ) => {
-      const params = new URLSearchParams();
-      params.set("content_type", ct);
-      params.set("browse", "1");
-      if (query) params.set("q", query);
-      if (category) params.set("category", category);
-      if (style && ct !== "coloring") params.set("style", style);
-      params.set("limit", String(PAGE_SIZE));
-      params.set("offset", String(offset));
-
-      const isFirstPage = offset === 0;
-      if (isFirstPage) {
-        setIsLoading(true);
-        setResults([]);
-      } else {
-        setIsLoadingMore(true);
-      }
-      setHasSearched(true);
-
-      currentQueryRef.current = query;
-      currentCategoryRef.current = category;
-      currentStyleRef.current = style;
-      currentContentTypeRef.current = ct;
-
-      try {
-        const res = await fetch(`/api/search?${params.toString()}`);
-        const data = await res.json();
-        const newResults: SearchResult[] = (data.results || []).map(
-          (r: SearchResult) => ({ ...r, content_type: r.content_type || ct }),
-        );
-
-        if (isFirstPage) {
-          setResults(newResults);
-        } else {
-          setResults((prev) => [...prev, ...newResults]);
-        }
-        setHasMore(newResults.length >= PAGE_SIZE);
-      } catch {
-        if (isFirstPage) setResults([]);
-        setHasMore(false);
-      } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-      }
-    },
-    [],
-  );
-
-  const loadMore = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
-    fetchResults(
-      currentQueryRef.current,
-      currentCategoryRef.current,
-      currentStyleRef.current,
-      currentContentTypeRef.current,
-      results.length,
-    );
-  }, [isLoadingMore, hasMore, results.length, fetchResults]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
-
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
+      (entries) => { if (entries[0].isIntersecting) loadMore(); },
       { rootMargin: "400px" },
     );
-
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const handleSearch = useCallback(
-    (query: string) => {
-      setActiveCategory(null);
-      setActiveStyle(null);
-      if (!query.trim()) {
-        setSearchQuery(null);
-        setResults([]);
-        setHasSearched(false);
-        setHasMore(false);
-        fetchResults(undefined, undefined, undefined, contentType);
-        updateURL(router, { ct: contentType });
-        return;
-      }
-      setSearchQuery(query);
-      fetchResults(query, undefined, undefined, contentType);
-      updateURL(router, { ct: contentType, q: query });
-    },
-    [fetchResults, contentType, router],
-  );
+  const currentCategoryChips = useMemo(() => {
+    if (filters.contentType === "coloring") return coloringCategories;
+    if (filters.contentType === "illustration") return illustrationCategories;
+    return clipartCategoryChips;
+  }, [filters.contentType, coloringCategories, illustrationCategories]);
 
-  const handleContentTypeSwitch = useCallback(
-    (ct: ContentType) => {
-      setContentType(ct);
-      setActiveCategory(null);
-      setActiveStyle(null);
-      setSearchQuery(null);
-      setResults([]);
-      setHasSearched(false);
-      setHasMore(false);
-      fetchResults(undefined, undefined, undefined, ct);
-      updateURL(router, { ct });
-    },
-    [fetchResults, router],
-  );
+  const currentStyleChips = useMemo(() => {
+    if (filters.contentType === "clipart") return buildStyleChips("clipart");
+    if (filters.contentType === "illustration") return buildStyleChips("illustration");
+    return [];
+  }, [filters.contentType]);
 
-  const handleCategoryClick = useCallback(
-    (slug: string) => {
-      const next = activeCategory === slug ? null : slug;
-      setActiveCategory(next);
-      setSearchQuery(null);
-      if (next) {
-        fetchResults(undefined, next, activeStyle || undefined, contentType);
-      } else if (activeStyle) {
-        fetchResults(undefined, undefined, activeStyle, contentType);
-      } else {
-        fetchResults(undefined, undefined, undefined, contentType);
-      }
-      updateURL(router, {
-        ct: contentType,
-        category: next || undefined,
-        style: activeStyle || undefined,
-      });
-    },
-    [activeCategory, activeStyle, contentType, fetchResults, router],
-  );
+  const showCategoryRow = filters.contentType !== "animations";
+  const showStyleRow = filters.contentType === "clipart" || filters.contentType === "illustration";
 
-  const handleStyleClick = useCallback(
-    (styleKey: string) => {
-      const next = activeStyle === styleKey ? null : styleKey;
-      setActiveStyle(next);
-      setSearchQuery(null);
-      fetchResults(
-        undefined,
-        activeCategory || undefined,
-        next || undefined,
-        contentType,
-      );
-      updateURL(router, {
-        ct: contentType,
-        category: activeCategory || undefined,
-        style: next || undefined,
-      });
-    },
-    [activeStyle, activeCategory, contentType, fetchResults, router],
-  );
-
-  const handleAllStylesClick = useCallback(() => {
-    setActiveStyle(null);
-    setSearchQuery(null);
-    fetchResults(undefined, activeCategory || undefined, undefined, contentType);
-    updateURL(router, {
-      ct: contentType,
-      category: activeCategory || undefined,
-    });
-  }, [activeCategory, contentType, fetchResults, router]);
-
-  // Load initial results on mount from URL params or default browse
-  useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-
-    fetchResults(
-      initialQuery || undefined,
-      initialCategory || undefined,
-      initialStyle || undefined,
-      initialCt,
-    );
-  }, [fetchResults, initialQuery, initialCategory, initialStyle, initialCt]);
+  const activeFilters = useMemo(() => {
+    const list: { key: string; label: string; type: "category" | "style" | "query" }[] = [];
+    if (filters.query) list.push({ key: "q", label: `"${filters.query}"`, type: "query" });
+    if (filters.category) {
+      const cat = currentCategoryChips.find((c) => c.key === filters.category);
+      list.push({ key: "cat", label: cat?.label || filters.category, type: "category" });
+    }
+    if (filters.style) {
+      list.push({ key: "style", label: STYLE_LABELS[filters.style as StyleKey] || filters.style, type: "style" });
+    }
+    return list;
+  }, [filters, currentCategoryChips]);
 
   const activeCategoryData =
-    contentType === "clipart" && activeCategory
-      ? categories.find((c) => c.slug === activeCategory)
+    filters.contentType === "clipart" && filters.category
+      ? categories.find((c) => c.slug === filters.category)
       : null;
 
-  const currentCategories =
-    contentType === "coloring"
-      ? coloringCategories
-      : contentType === "illustration"
-        ? illustrationCategories
-        : clipartCategories;
+  const isColoring = filters.contentType === "coloring";
+  const gridVariant = isColoring ? "coloring" as const : "clipart" as const;
+
+  const handleSearch = useCallback((q: string) => setQuery(q), [setQuery]);
+
+  const safeResults = results.filter((item) => item.id && (item.url || item.videoUrl));
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-8 pt-8">
+      {/* Search */}
       <div className="mx-auto max-w-2xl">
         <SearchBar
           onSearch={handleSearch}
           placeholder={
-            contentType === "coloring"
-              ? "Search coloring pages..."
-              : contentType === "illustration"
-                ? "Search illustrations..."
-                : "Search for clip art..."
+            filters.contentType === "coloring" ? "Search coloring pages..."
+            : filters.contentType === "illustration" ? "Search illustrations..."
+            : filters.contentType === "animations" ? "Search animations..."
+            : "Search for clip art..."
           }
-          defaultValue={searchQuery || ""}
+          defaultValue={filters.query || ""}
         />
       </div>
 
-      {/* Tier 1: Content type toggle */}
-      <div className="mt-5 flex items-center gap-4">
-        <div className="inline-flex rounded-lg bg-gray-100 p-1">
-          {(
-            [
-              { key: "clipart" as ContentType, label: "Clip Art" },
-              { key: "illustration" as ContentType, label: "Illustrations" },
-              { key: "coloring" as ContentType, label: "Coloring Pages" },
-              { key: "animations" as ContentType, label: "Animations" },
-            ]
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => handleContentTypeSwitch(tab.key)}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-all ${
-                contentType === tab.key
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      {/* Content type tabs */}
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <ContentTypeTabs
+          tabs={CONTENT_TABS}
+          activeKey={filters.contentType}
+          onSelect={(key) => setContentType(key as ContentType)}
+        />
+
+        {/* Mobile filter trigger */}
+        {(showCategoryRow || showStyleRow) && (
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Tier 2: Category pills (not for animations) */}
-      {contentType !== "animations" && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {currentCategories.map((tag) => (
-            <button
-              key={tag.slug}
-              onClick={() => handleCategoryClick(tag.slug)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                activeCategory === tag.slug
-                  ? "bg-gray-900 text-white"
-                  : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {tag.name}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Desktop filter rows */}
+      <div className="hidden md:block">
+        {showCategoryRow && currentCategoryChips.length > 0 && (
+          <div className="mt-4">
+            <FilterChipRow
+              items={currentCategoryChips}
+              activeKey={filters.category}
+              onSelect={setCategory}
+              maxVisible={8}
+            />
+          </div>
+        )}
 
-      {/* Tier 3: Style pills (clip art and illustrations) */}
-      {(contentType === "clipart" || contentType === "illustration") && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            onClick={handleAllStylesClick}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              !activeStyle
-                ? "bg-pink-600 text-white"
-                : "border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            All Styles
-          </button>
-          {(contentType === "illustration" ? ILLUSTRATION_STYLE_OPTIONS : CLIPART_STYLE_OPTIONS).map((s) => (
-            <button
-              key={s.key}
-              onClick={() => handleStyleClick(s.key)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                activeStyle === s.key
-                  ? "bg-pink-600 text-white"
-                  : "border border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
+        {showStyleRow && (
+          <div className="mt-3">
+            <FilterChipRow
+              items={currentStyleChips}
+              activeKey={filters.style}
+              onSelect={setStyle}
+              maxVisible={7}
+              allLabel="All Styles"
+              size="sm"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Active filters + result count + sort */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <AnimatePresence>
+            {activeFilters.length > 0 && (
+              <ActiveFilters
+                filters={activeFilters}
+                onRemove={clearFilter}
+                onClearAll={clearAll}
+              />
+            )}
+          </AnimatePresence>
+          <ResultCount
+            total={totalCount}
+            isLoading={isLoading}
+            contentType={filters.contentType}
+          />
         </div>
-      )}
+        <SortSelect
+          options={SORT_OPTIONS}
+          value={filters.sort}
+          onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
+        />
+      </div>
 
       {/* Cross-link to SEO category page */}
-      {contentType !== "animations" && activeCategoryData && activeCategoryData.slug !== "free" && (
-        <div className="mt-4">
+      {activeCategoryData && activeCategoryData.slug !== "free" && (
+        <div className="mt-3">
           <Link
             href={`/${activeCategoryData.slug}`}
             className="inline-flex items-center gap-1 text-sm text-pink-600 hover:text-pink-700"
@@ -435,43 +284,94 @@ function SearchPageInner() {
 
       {/* Results grid */}
       <div className="mt-6">
-        {isLoading ? (
-          <ImageGrid variant={contentType === "coloring" ? "coloring" : "clipart"}>
-            {Array.from({ length: 10 }).map((_, i) => (
-              <ImageCardSkeleton
-                key={i}
-                variant={contentType === "coloring" ? "coloring" : "clipart"}
-              />
-            ))}
-          </ImageGrid>
-        ) : results.length > 0 ? (
-          <>
-            <SearchImageGrid items={results} contentType={contentType} />
-
-            <div ref={sentinelRef} className="h-px" />
-
-            {isLoadingMore && (
-              <div className="mt-6">
-                <ImageGrid variant={contentType === "coloring" ? "coloring" : "clipart"}>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <ImageCardSkeleton
-                      key={`more-${i}`}
-                      variant={contentType === "coloring" ? "coloring" : "clipart"}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={filters.contentType}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isLoading ? (
+              <ImageGrid variant={gridVariant}>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <ImageCardSkeleton key={i} variant={gridVariant} />
+                ))}
+              </ImageGrid>
+            ) : safeResults.length > 0 ? (
+              <>
+                <ImageGrid variant={gridVariant}>
+                  {safeResults.map((item: SearchResult) => (
+                    <ImageCard
+                      key={item.id}
+                      variant={gridVariant}
+                      image={{
+                        id: item.id,
+                        slug: item.slug,
+                        title: item.title,
+                        url: item.url,
+                        category: item.category,
+                        style: item.style,
+                      }}
+                      onClick={() => openDrawer(item, safeResults as SearchResult[])}
+                      animationPreviewUrl={item.previewUrl || undefined}
                     />
                   ))}
                 </ImageGrid>
+
+                <div ref={sentinelRef} className="h-px" />
+
+                {isLoadingMore && (
+                  <div className="mt-6">
+                    <ImageGrid variant={gridVariant}>
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <ImageCardSkeleton key={`more-${i}`} variant={gridVariant} />
+                      ))}
+                    </ImageGrid>
+                  </div>
+                )}
+              </>
+            ) : hasSearched ? (
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-12 text-center">
+                <svg className="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <p className="mt-4 text-base font-medium text-gray-500">
+                  No {filters.contentType === "coloring" ? "coloring pages" : filters.contentType === "illustration" ? "illustrations" : filters.contentType === "animations" ? "animations" : "clip art"} found
+                </p>
+                <p className="mt-1 text-sm text-gray-400">
+                  Try a different search term or adjust your filters.
+                </p>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearAll}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Clear all filters
+                  </button>
+                )}
               </div>
-            )}
-          </>
-        ) : hasSearched ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
-            <p className="text-lg font-medium text-gray-400">No results found</p>
-            <p className="mt-1 text-sm text-gray-300">
-              Try a different search term or browse by category.
-            </p>
-          </div>
-        ) : null}
+            ) : null}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* Mobile filter drawer */}
+      <FilterDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        categoryItems={currentCategoryChips}
+        styleItems={currentStyleChips}
+        activeCategory={filters.category}
+        activeStyle={filters.style}
+        onCategorySelect={setCategory}
+        onStyleSelect={setStyle}
+        onReset={() => { clearAll(); setDrawerOpen(false); }}
+        showStyles={showStyleRow}
+      />
     </div>
   );
 }

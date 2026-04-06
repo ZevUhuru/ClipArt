@@ -7,14 +7,19 @@ import { useAppStore, type Generation } from "@/stores/useAppStore";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { CreateModeToggle } from "@/components/CreateModeToggle";
-import { StylePicker } from "@/components/StylePicker";
+import { FilterChipRow, type ChipItem } from "@/components/filters/FilterChipRow";
+import { StyleIndicator } from "@/data/styleIndicators";
 import { GenerationQueue } from "@/components/GenerationQueue";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import { ILLUSTRATION_ASPECT_OPTIONS, VALID_STYLES, type AspectRatio, type StyleKey } from "@/lib/styles";
+import { ILLUSTRATION_ASPECT_OPTIONS, VALID_STYLES, STYLE_LABELS, type AspectRatio, type StyleKey } from "@/lib/styles";
 
-const ILLUSTRATION_STYLES = VALID_STYLES.illustration;
+const ILLUSTRATION_STYLE_CHIPS: ChipItem[] = VALID_STYLES.illustration.map((key) => ({
+  key,
+  label: STYLE_LABELS[key] || key,
+  indicator: <StyleIndicator styleKey={key} />,
+}));
 
 const suggestedPrompts = [
   "cozy cottage in a snowy forest at dusk",
@@ -219,7 +224,13 @@ export default function IllustrationsCreatePage() {
           {/* Style picker + aspect ratio + share toggle */}
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <StylePicker selected={style} onSelect={setStyle} styles={ILLUSTRATION_STYLES} />
+              <FilterChipRow
+                items={ILLUSTRATION_STYLE_CHIPS}
+                activeKey={style}
+                onSelect={(key) => setStyle((key || "storybook") as StyleKey)}
+                maxVisible={7}
+                size="sm"
+              />
             </div>
           </div>
           <div className="mt-2 flex items-center justify-between">

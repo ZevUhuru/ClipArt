@@ -3,11 +3,14 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 const MAX_RESULTS = 60;
 
+type SortOption = "newest" | "featured" | "oldest";
+
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim();
   const category = request.nextUrl.searchParams.get("category")?.trim();
   const style = request.nextUrl.searchParams.get("style")?.trim();
   const contentType = request.nextUrl.searchParams.get("content_type")?.trim() || "clipart";
+  const sort = (request.nextUrl.searchParams.get("sort")?.trim() || "newest") as SortOption;
   const limit = Math.min(
     parseInt(request.nextUrl.searchParams.get("limit") || String(MAX_RESULTS), 10),
     MAX_RESULTS,
@@ -24,15 +27,13 @@ export async function GET(request: NextRequest) {
     const admin = createSupabaseAdmin();
 
     if (contentType === "animations") {
-      return handleAnimationsSearch(admin, { q, limit, offset });
+      return handleAnimationsSearch(admin, { q, sort, limit, offset });
     }
 
     let query = admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, created_at")
-      .eq("is_public", true)
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .select("id, prompt, title, image_url, style, category, created_at, is_featured, featured_order", { count: "exact" })
+      .eq("is_public", true);
 
     if (contentType === "coloring") {
       query = query.eq("content_type", "coloring");
@@ -63,11 +64,21 @@ export async function GET(request: NextRequest) {
       query = query.textSearch("search_vector", tsQuery);
     }
 
-    const { data, error } = await query;
+    if (sort === "featured") {
+      query = query.order("is_featured", { ascending: false }).order("featured_order", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false });
+    } else if (sort === "oldest") {
+      query = query.order("created_at", { ascending: true });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Search query error:", error);
-      return NextResponse.json({ results: [] });
+      return NextResponse.json({ results: [], total: 0 });
     }
 
     const results = (data || []).map((row: Record<string, string>) => ({
@@ -80,7 +91,7 @@ export async function GET(request: NextRequest) {
       style: row.style,
     }));
 
-    return NextResponse.json({ results, total: results.length });
+    return NextResponse.json({ results, total: count ?? results.length });
   } catch (err) {
     console.error("Search error:", err);
     return NextResponse.json({ results: [], total: 0 }, { status: 500 });
@@ -89,7 +100,7 @@ export async function GET(request: NextRequest) {
 
 async function handleAnimationsSearch(
   admin: ReturnType<typeof createSupabaseAdmin>,
-  opts: { q?: string; limit: number; offset: number },
+  opts: { q?: string; sort: SortOption; limit: number; offset: number },
 ) {
   try {
     let query = admin
@@ -97,21 +108,28 @@ async function handleAnimationsSearch(
       .select(
         "id, prompt, video_url, preview_url, thumbnail_url, model, source_generation_id, created_at, " +
         "source:generations!animations_source_generation_id_fkey(image_url, title, category, slug)",
+        { count: "exact" },
       )
       .eq("status", "completed")
-      .eq("is_public", true)
-      .order("created_at", { ascending: false })
-      .range(opts.offset, opts.offset + opts.limit - 1);
+      .eq("is_public", true);
 
     if (opts.q) {
       query = query.ilike("prompt", `%${opts.q}%`);
     }
 
-    const { data, error } = await query;
+    if (opts.sort === "oldest") {
+      query = query.order("created_at", { ascending: true });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    query = query.range(opts.offset, opts.offset + opts.limit - 1);
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Animations search error:", error);
-      return NextResponse.json({ results: [] });
+      return NextResponse.json({ results: [], total: 0 });
     }
 
     const results = (data || []).map((row: Record<string, unknown>) => {
@@ -131,7 +149,7 @@ async function handleAnimationsSearch(
       };
     });
 
-    return NextResponse.json({ results, total: results.length });
+    return NextResponse.json({ results, total: count ?? results.length });
   } catch (err) {
     console.error("Animations search error:", err);
     return NextResponse.json({ results: [], total: 0 }, { status: 500 });
