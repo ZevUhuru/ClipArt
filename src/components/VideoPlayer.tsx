@@ -7,6 +7,7 @@ interface VideoPlayerProps {
   poster?: string;
   mode?: "preview" | "detail";
   className?: string;
+  autoPlay?: boolean;
 }
 
 export function VideoPlayer({
@@ -14,6 +15,7 @@ export function VideoPlayer({
   poster,
   mode = "detail",
   className = "",
+  autoPlay: autoPlayProp = false,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,7 +78,7 @@ export function VideoPlayer({
         src={src}
         poster={poster}
         muted={isPreview}
-        autoPlay={isPreview}
+        autoPlay={isPreview || autoPlayProp}
         loop
         playsInline
         controls={!isPreview}

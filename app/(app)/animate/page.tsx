@@ -201,6 +201,7 @@ function AnimatePageInner() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewingVideo, setViewingVideo] = useState<string | null>(null);
+  const [viewingPoster, setViewingPoster] = useState<string | null>(null);
   const [viewingAnimationId, setViewingAnimationId] = useState<string | null>(null);
   const [showSource, setShowSource] = useState(false);
   const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
@@ -418,6 +419,7 @@ function AnimatePageInner() {
   const handleViewResult = (job: QueuedAnimation) => {
     if (job.videoUrl) {
       setViewingVideo(job.videoUrl);
+      setViewingPoster(job.sourceUrl);
       setViewingAnimationId(job.id);
       setShowSource(false);
       setTimeout(() => {
@@ -483,6 +485,7 @@ function AnimatePageInner() {
   const handleImport = (img: ImportableImage) => {
     setSource(img);
     setViewingVideo(null);
+    setViewingPoster(null);
     setPrompt("");
     setError(null);
     setShowSource(false);
@@ -511,6 +514,7 @@ function AnimatePageInner() {
 
     setSource(null);
     setViewingVideo(null);
+    setViewingPoster(null);
     setViewingAnimationId(null);
     setPrompt("");
     setModel("kling-3.0-standard");
@@ -600,7 +604,10 @@ function AnimatePageInner() {
               {!source && viewingVideo ? (
                 <div className="relative aspect-square w-full">
                   <VideoPlayer
+                    key={viewingVideo}
                     src={viewingVideo}
+                    poster={viewingPoster || undefined}
+                    autoPlay
                     mode="detail"
                     className="absolute inset-0"
                   />
@@ -634,8 +641,10 @@ function AnimatePageInner() {
               ) : activeVideoUrl && !showSource ? (
                 <div className={`relative w-full ${aspectClass}`}>
                   <VideoPlayer
+                    key={activeVideoUrl}
                     src={activeVideoUrl}
-                    poster={source.url}
+                    poster={viewingVideo ? (viewingPoster || source.url) : source.url}
+                    autoPlay={!!viewingVideo}
                     mode="detail"
                     className="absolute inset-0"
                   />
