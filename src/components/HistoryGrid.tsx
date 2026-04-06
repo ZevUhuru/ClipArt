@@ -87,12 +87,13 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
               openDrawer({
                 id: gen.id,
                 slug: gen.slug || gen.id,
-                title: gen.prompt,
+                title: gen.title || gen.prompt,
                 url: gen.image_url,
                 category: gen.category || "free",
                 style: gen.style,
                 content_type: gen.content_type,
                 aspect_ratio: gen.aspect_ratio,
+                prompt: gen.prompt,
               })
             }
           />

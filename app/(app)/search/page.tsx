@@ -91,8 +91,24 @@ function SearchPageInner() {
     loadMore,
   } = useFilterState({ mode: "public", defaultSort: "newest" });
 
-  const openDrawer = useImageDrawer((s) => s.open);
+  const openDrawerRaw = useImageDrawer((s) => s.open);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const openDrawer = useCallback((item: SearchResult, list: SearchResult[]) => {
+    const toDrawer = (r: SearchResult) => ({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      url: r.url,
+      category: r.category,
+      style: r.style,
+      content_type: r.content_type,
+      aspect_ratio: r.aspect_ratio,
+      videoUrl: r.videoUrl,
+      prompt: r.description,
+    });
+    openDrawerRaw(toDrawer(item), list.map(toDrawer));
+  }, [openDrawerRaw]);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [coloringCategories, setColoringCategories] = useState<ChipItem[]>([]);
@@ -178,56 +194,58 @@ function SearchPageInner() {
   const safeResults = results.filter((item) => item.id && (item.url || item.videoUrl));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-8 pt-6">
-      {/* Search bar — full width */}
-      <SearchBar
-        onSearch={handleSearch}
-        placeholders={
-          filters.contentType === "coloring"
-            ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
-            : filters.contentType === "illustration"
-              ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
-              : filters.contentType === "animations"
-                ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
-                : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
-        }
-        defaultValue={filters.query || ""}
-      />
-
-      {/* Toolbar: Tabs + filter popovers + sort */}
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <ContentTypeTabs
-            tabs={CONTENT_TABS}
-            activeKey={filters.contentType}
-            onSelect={(key) => setContentType(key as ContentType)}
+    <div className="pb-8">
+      {/* Sticky search + toolbar */}
+      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto max-w-6xl px-4 pt-4 pb-3">
+          <SearchBar
+            onSearch={handleSearch}
+            placeholders={
+              filters.contentType === "coloring"
+                ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
+                : filters.contentType === "illustration"
+                  ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
+                  : filters.contentType === "animations"
+                    ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
+                    : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
+            }
+            defaultValue={filters.query || ""}
           />
-          {showCategoryRow && currentCategoryChips.length > 0 && (
-            <FilterPopover
-              label="Category"
-              items={currentCategoryChips}
-              activeKey={filters.category}
-              onSelect={setCategory}
-              allLabel="All Categories"
-            />
-          )}
-          {showStyleRow && (
-            <FilterPopover
-              label="Style"
-              items={currentStyleChips}
-              activeKey={filters.style}
-              onSelect={setStyle}
-              allLabel="All Styles"
-            />
-          )}
-        </div>
 
-        <div className="flex items-center gap-2">
-          <SortSelect
-            options={SORT_OPTIONS}
-            value={filters.sort}
-            onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
-          />
+          {/* Toolbar: Tabs + filter popovers + sort */}
+          <div className="mt-3 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
+            <div className="flex shrink-0 items-center gap-2">
+              <ContentTypeTabs
+                tabs={CONTENT_TABS}
+                activeKey={filters.contentType}
+                onSelect={(key) => setContentType(key as ContentType)}
+              />
+              {showCategoryRow && currentCategoryChips.length > 0 && (
+                <FilterPopover
+                  label="Category"
+                  items={currentCategoryChips}
+                  activeKey={filters.category}
+                  onSelect={setCategory}
+                  allLabel="All Categories"
+                />
+              )}
+              {showStyleRow && (
+                <FilterPopover
+                  label="Style"
+                  items={currentStyleChips}
+                  activeKey={filters.style}
+                  onSelect={setStyle}
+                  allLabel="All Styles"
+                />
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <SortSelect
+                options={SORT_OPTIONS}
+                value={filters.sort}
+                onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
+              />
           {(showCategoryRow || showStyleRow) && (
             <button
               onClick={() => setDrawerOpen(true)}
@@ -247,26 +265,30 @@ function SearchPageInner() {
         </div>
       </div>
 
-      {/* Active filters + result count */}
-      {(activeFilters.length > 0 || totalCount !== null) && (
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <AnimatePresence>
-            {activeFilters.length > 0 && (
-              <ActiveFilters
-                filters={activeFilters}
-                onRemove={clearFilter}
-                onClearAll={clearAll}
+          {/* Active filters + result count */}
+          {(activeFilters.length > 0 || totalCount !== null) && (
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <AnimatePresence>
+                {activeFilters.length > 0 && (
+                  <ActiveFilters
+                    filters={activeFilters}
+                    onRemove={clearFilter}
+                    onClearAll={clearAll}
+                  />
+                )}
+              </AnimatePresence>
+              <ResultCount
+                total={totalCount}
+                isLoading={isLoading}
+                contentType={filters.contentType}
               />
-            )}
-          </AnimatePresence>
-          <ResultCount
-            total={totalCount}
-            isLoading={isLoading}
-            contentType={filters.contentType}
-          />
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
+      {/* Content */}
+      <div className="mx-auto max-w-6xl px-4">
       {/* Cross-link to SEO category page */}
       {activeCategoryData && activeCategoryData.slug !== "free" && (
         <div className="mt-2">
@@ -309,8 +331,8 @@ function SearchPageInner() {
                           key={item.id}
                           role="button"
                           tabIndex={0}
-                          onClick={() => openDrawer(item, safeResults as SearchResult[])}
-                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(item, safeResults as SearchResult[]); }}
+                          onClick={() => openDrawer(item, safeResults)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(item, safeResults); }}
                           className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
                         >
                           <div className="relative" style={{ aspectRatio: ar }}>
@@ -349,7 +371,7 @@ function SearchPageInner() {
                           style: item.style,
                           aspect_ratio: item.aspect_ratio,
                         }}
-                        onClick={() => openDrawer(item, safeResults as SearchResult[])}
+                        onClick={() => openDrawer(item, safeResults)}
                         animationPreviewUrl={item.previewUrl || undefined}
                       />
                     ))}
@@ -394,6 +416,8 @@ function SearchPageInner() {
             ) : null}
           </motion.div>
         </AnimatePresence>
+      </div>
+
       </div>
 
       {/* Mobile filter drawer */}

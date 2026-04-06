@@ -186,7 +186,7 @@ export function ImageDetailDrawer() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
               <DrawerContent
                 image={image}
                 categorySlug={categorySlug}
@@ -204,7 +204,7 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string };
+  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string };
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
@@ -218,7 +218,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
   const isAnimation = !!image.videoUrl;
+
+  const promptText = image.prompt || image.title;
+  const displayTitle = image.prompt ? image.title : null;
 
   const categoryHref = isColoring
     ? `/coloring-pages/${image.category}`
@@ -266,9 +270,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
         </button>
 
         {/* Title */}
-        <h3 className="text-lg font-bold leading-snug text-gray-900">
-          {image.title}
-        </h3>
+        {displayTitle && (
+          <h3 className="text-lg font-bold leading-snug text-gray-900">
+            {displayTitle}
+          </h3>
+        )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2">
@@ -290,6 +296,35 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               Animation
             </span>
           )}
+        </div>
+
+        {/* AI Prompt */}
+        <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+              </svg>
+              AI Image Prompt
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(promptText);
+                setCopiedPrompt(true);
+                setTimeout(() => setCopiedPrompt(false), 2000);
+              }}
+              className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all ${
+                copiedPrompt
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              }`}
+            >
+              {copiedPrompt ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <p className="text-sm leading-relaxed text-gray-600">
+            &ldquo;{promptText}&rdquo;
+          </p>
         </div>
 
         {/* Primary action: Download */}

@@ -383,12 +383,13 @@ function CreationsGrid() {
   const drawerList = safeItems.map((gen) => ({
     id: gen.id,
     slug: gen.slug || gen.id,
-    title: gen.prompt,
+    title: gen.title || gen.prompt,
     url: gen.image_url,
     category: gen.category || "free",
     style: gen.style,
     content_type: gen.content_type,
     aspect_ratio: gen.aspect_ratio,
+    prompt: gen.prompt,
   }));
 
   return (
@@ -556,6 +557,7 @@ function CreationsGrid() {
                     style: "animation",
                     aspect_ratio: anim.source_aspect_ratio || undefined,
                     videoUrl: anim.video_url,
+                    prompt: anim.prompt,
                   };
                   const animDrawerList = animations.map((a) => ({
                     id: a.id,
@@ -566,6 +568,7 @@ function CreationsGrid() {
                     style: "animation",
                     aspect_ratio: a.source_aspect_ratio || undefined,
                     videoUrl: a.video_url,
+                    prompt: a.prompt,
                   }));
 
                   return (
@@ -636,12 +639,13 @@ function CreationsGrid() {
                         const img = {
                           id: gen.id,
                           slug: gen.slug || gen.id,
-                          title: gen.prompt,
+                          title: gen.title || gen.prompt,
                           url: gen.image_url,
                           category: gen.category || "free",
                           style: gen.style,
                           content_type: gen.content_type,
                           aspect_ratio: gen.aspect_ratio,
+                          prompt: gen.prompt,
                         };
                         openDrawer(img, drawerList, true);
                       }}

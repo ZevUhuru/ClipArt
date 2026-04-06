@@ -68,7 +68,7 @@ export function FilterDrawer({
               <div className="h-1 w-10 rounded-full bg-gray-300" />
             </div>
 
-            <div className="space-y-6 px-5 pb-8">
+            <div className="space-y-6 px-5 pb-8" style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-gray-900">Filters</h3>
                 <button

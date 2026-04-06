@@ -103,7 +103,7 @@ export default function TemplatesPage() {
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
         <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
 
-        <div className="relative mx-auto max-w-4xl px-4 pb-8 pt-10 sm:pb-10 sm:pt-14">
+        <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-8 sm:pb-10 sm:pt-14">
           <div className="flex flex-col items-center text-center">
             {total > 0 && (
               <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1 text-xs font-semibold text-pink-600 shadow-sm backdrop-blur-sm">
