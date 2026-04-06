@@ -33,7 +33,7 @@ export function RecentCreationsStrip({
   const drawerList = items.map((g) => ({
     id: g.id,
     slug: g.slug || g.id,
-    title: g.title || g.prompt,
+    title: g.prompt,
     url: g.image_url,
     category: g.category || "free",
     style: g.style,

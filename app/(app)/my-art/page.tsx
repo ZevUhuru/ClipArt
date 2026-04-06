@@ -383,7 +383,7 @@ function CreationsGrid() {
   const drawerList = safeItems.map((gen) => ({
     id: gen.id,
     slug: gen.slug || gen.id,
-    title: gen.title || gen.prompt,
+    title: gen.prompt,
     url: gen.image_url,
     category: gen.category || "free",
     style: gen.style,
@@ -639,7 +639,7 @@ function CreationsGrid() {
                         const img = {
                           id: gen.id,
                           slug: gen.slug || gen.id,
-                          title: gen.title || gen.prompt,
+                          title: gen.prompt,
                           url: gen.image_url,
                           category: gen.category || "free",
                           style: gen.style,

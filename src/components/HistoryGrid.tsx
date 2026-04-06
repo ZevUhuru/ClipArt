@@ -87,7 +87,7 @@ function HistoryItems({ generations }: { generations: ReturnType<typeof useAppSt
               openDrawer({
                 id: gen.id,
                 slug: gen.slug || gen.id,
-                title: gen.title || gen.prompt,
+                title: gen.prompt,
                 url: gen.image_url,
                 category: gen.category || "free",
                 style: gen.style,
