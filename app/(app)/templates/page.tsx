@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,6 +35,8 @@ export default function TemplatesPage() {
   const [offset, setOffset] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pinToolbar, setPinToolbar] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
 
   const LIMIT = 30;
 
@@ -61,6 +63,17 @@ export default function TemplatesPage() {
     fetchPrompts(sort, offset, search);
   }, [sort, offset, search, fetchPrompts]);
 
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setPinToolbar(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const handleSort = (mode: SortMode) => {
     setSort(mode);
     setOffset(0);
@@ -85,7 +98,7 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-gray-100">
+      <section ref={heroRef} className="relative overflow-hidden border-b border-gray-100">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-white to-orange-50/60" />
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
         <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
@@ -140,6 +153,20 @@ export default function TemplatesPage() {
           </div>
         </div>
       </section>
+
+      {/* Sticky search bar (appears when hero scrolls away) */}
+      {pinToolbar && (
+        <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 shadow-sm backdrop-blur-xl">
+          <div className="mx-auto max-w-5xl px-4 py-3">
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder="Search templates..."
+              isLoading={loading}
+              defaultValue={search}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="mx-auto max-w-5xl px-4 py-8">

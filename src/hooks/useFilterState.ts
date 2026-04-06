@@ -23,6 +23,7 @@ export interface SearchResult {
   category: string;
   style: string;
   content_type?: string;
+  aspect_ratio?: string;
   videoUrl?: string;
   previewUrl?: string;
 }

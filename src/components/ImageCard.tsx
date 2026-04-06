@@ -23,7 +23,7 @@ export interface ImageCardImage {
 
 interface ImageCardProps {
   image: ImageCardImage;
-  variant?: "clipart" | "coloring" | "illustration";
+  variant?: "clipart" | "coloring" | "illustration" | "animations";
   href?: string;
   onClick?: () => void;
   sizes?: string;
@@ -68,7 +68,7 @@ export function ImageCard({
   }, [animationPreviewUrl]);
 
   const isColoring = variant === "coloring";
-  const isIllustration = variant === "illustration";
+  const isIllustration = variant === "illustration" || variant === "animations";
   const isLandscape = isColoring && image.aspect_ratio === "4:3";
   const aspectClass = isIllustration
     ? getAspectClass(image.aspect_ratio || "4:3")
@@ -159,13 +159,13 @@ export function ImageCard({
 /* ── Skeleton loader ── */
 
 interface ImageCardSkeletonProps {
-  variant?: "clipart" | "coloring" | "illustration";
+  variant?: "clipart" | "coloring" | "illustration" | "animations";
 }
 
 const SKELETON_ASPECTS = ["aspect-[4/3]", "aspect-square", "aspect-[3/4]"];
 
 export function ImageCardSkeleton({ variant = "clipart" }: ImageCardSkeletonProps) {
-  if (variant === "illustration") {
+  if (variant === "illustration" || variant === "animations") {
     const aspect = SKELETON_ASPECTS[Math.floor(Math.random() * SKELETON_ASPECTS.length)];
     return (
       <div className="animate-pulse overflow-hidden rounded-xl bg-gray-100">

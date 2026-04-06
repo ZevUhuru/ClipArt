@@ -8,6 +8,7 @@ import { categories } from "@/data/categories";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { type StyleKey, VALID_STYLES, STYLE_LABELS } from "@/lib/styles";
 import { StyleIndicator } from "@/data/styleIndicators";
 import {
@@ -57,6 +58,7 @@ interface SearchResult {
   category: string;
   style: string;
   content_type?: string;
+  aspect_ratio?: string;
   videoUrl?: string;
   previewUrl?: string;
 }
@@ -165,8 +167,11 @@ function SearchPageInner() {
       ? categories.find((c) => c.slug === filters.category)
       : null;
 
-  const isColoring = filters.contentType === "coloring";
-  const gridVariant = isColoring ? "coloring" as const : "clipart" as const;
+  const gridVariant =
+    filters.contentType === "coloring" ? "coloring" as const
+    : filters.contentType === "illustration" ? "illustration" as const
+    : filters.contentType === "animations" ? "animations" as const
+    : "clipart" as const;
 
   const handleSearch = useCallback((q: string) => setQuery(q), [setQuery]);
 
@@ -295,24 +300,61 @@ function SearchPageInner() {
               </ImageGrid>
             ) : safeResults.length > 0 ? (
               <>
-                <ImageGrid variant={gridVariant}>
-                  {safeResults.map((item: SearchResult) => (
-                    <ImageCard
-                      key={item.id}
-                      variant={gridVariant}
-                      image={{
-                        id: item.id,
-                        slug: item.slug,
-                        title: item.title,
-                        url: item.url,
-                        category: item.category,
-                        style: item.style,
-                      }}
-                      onClick={() => openDrawer(item, safeResults as SearchResult[])}
-                      animationPreviewUrl={item.previewUrl || undefined}
-                    />
-                  ))}
-                </ImageGrid>
+                {filters.contentType === "animations" ? (
+                  <ImageGrid variant="animations">
+                    {safeResults.map((item: SearchResult) => {
+                      const ar = item.aspect_ratio?.replace(":", "/") || "1/1";
+                      return (
+                        <div
+                          key={item.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openDrawer(item, safeResults as SearchResult[])}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(item, safeResults as SearchResult[]); }}
+                          className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
+                        >
+                          <div className="relative" style={{ aspectRatio: ar }}>
+                            <VideoPlayer
+                              src={item.videoUrl || ""}
+                              poster={item.url}
+                              mode="preview"
+                              className="absolute inset-0"
+                            />
+                          </div>
+                          <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                            <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
+                            Animated
+                          </span>
+                          <span className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                            </svg>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </ImageGrid>
+                ) : (
+                  <ImageGrid variant={gridVariant}>
+                    {safeResults.map((item: SearchResult) => (
+                      <ImageCard
+                        key={item.id}
+                        variant={gridVariant}
+                        image={{
+                          id: item.id,
+                          slug: item.slug,
+                          title: item.title,
+                          url: item.url,
+                          category: item.category,
+                          style: item.style,
+                          aspect_ratio: item.aspect_ratio,
+                        }}
+                        onClick={() => openDrawer(item, safeResults as SearchResult[])}
+                        animationPreviewUrl={item.previewUrl || undefined}
+                      />
+                    ))}
+                  </ImageGrid>
+                )}
 
                 <div ref={sentinelRef} className="h-px" />
 

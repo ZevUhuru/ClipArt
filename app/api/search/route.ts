@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     let query = admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, created_at, is_featured, featured_order", { count: "exact" })
+      .select("id, prompt, title, image_url, style, category, aspect_ratio, created_at, is_featured, featured_order", { count: "exact" })
       .eq("is_public", true);
 
     if (contentType === "coloring") {
@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
       description: row.prompt,
       category: row.category,
       style: row.style,
+      aspect_ratio: row.aspect_ratio || undefined,
     }));
 
     return NextResponse.json({ results, total: count ?? results.length });
@@ -107,7 +108,7 @@ async function handleAnimationsSearch(
       .from("animations")
       .select(
         "id, prompt, video_url, preview_url, thumbnail_url, model, source_generation_id, created_at, " +
-        "source:generations!animations_source_generation_id_fkey(image_url, title, category, slug)",
+        "source:generations!animations_source_generation_id_fkey(image_url, title, category, slug, aspect_ratio)",
         { count: "exact" },
       )
       .eq("status", "completed")
@@ -142,6 +143,7 @@ async function handleAnimationsSearch(
         description: row.prompt as string,
         category: source?.category || "free",
         style: "animation",
+        aspect_ratio: source?.aspect_ratio || undefined,
         videoUrl: row.video_url as string,
         previewUrl: row.preview_url as string,
         thumbnailUrl: row.thumbnail_url as string,
