@@ -51,6 +51,14 @@ CRUD for the category system:
 - **Active/Inactive toggle** — inactive categories don't appear in navigation or sitemap
 - **Delete** — removes category row (images in the category are NOT deleted)
 
+### Users (`/admin/users`)
+
+User management table with search and credit controls:
+
+- **Search** — filter by email in real time (client-side)
+- **Credits display** — current balance shown per user
+- **Adjust Credits** — inline editor to add or deduct credits from any user. Enter a positive number to top up, negative to deduct. Prevents reducing below zero.
+
 ## API Routes
 
 All admin API routes verify `is_admin` via Supabase auth before processing.
@@ -65,6 +73,7 @@ All admin API routes verify `is_admin` via Supabase auth before processing.
 | `POST` | `/api/admin/categories` | Create new category (with optional AI SEO) |
 | `PATCH` | `/api/admin/categories/[id]` | Update category fields |
 | `DELETE` | `/api/admin/categories/[id]` | Delete category |
+| `POST` | `/api/admin/users/credits` | Adjust a user's credit balance (top up or deduct) |
 
 ## R2 Object Movement
 
