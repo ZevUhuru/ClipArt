@@ -1371,7 +1371,7 @@ function AnimatePageInner() {
 
       {/* Animation Queue — full-bleed dark footer, pinned to bottom */}
       {queueJobs.length > 0 && (
-        <div className="relative z-30 shrink-0 bg-[#1c1c27] pt-4 pb-3 shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
+        <div className="relative z-30 shrink-0 rounded-l-2xl border-l border-white/[0.06] bg-[#1c1c27] pt-4 pb-3 shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
           <div className="mx-auto max-w-6xl px-4">
             <AnimationQueue onViewResult={handleViewResult} onRetry={handleRetry} />
           </div>
