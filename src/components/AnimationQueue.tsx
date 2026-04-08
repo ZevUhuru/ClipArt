@@ -74,6 +74,10 @@ function formatElapsed(startedAt: number): string {
   return `${mins}m ${secs}s`;
 }
 
+const CARD_SIZE = 80;
+const RING_R = 10;
+const RING_CIRC = 2 * Math.PI * RING_R;
+
 function QueueCard({
   job,
   onView,
@@ -101,155 +105,139 @@ function QueueCard({
   }, [isActive, job.startedAt]);
 
   const displayProgress = isComplete ? 100 : isFailed ? 0 : Math.round(progress);
-  const stageLabel = isComplete
-    ? "Complete"
-    : isFailed
-      ? job.error || "Failed"
-      : getStageLabel(progress, stale);
+  const strokeDash = (displayProgress / 100) * RING_CIRC;
 
-  const borderColor = isComplete
-    ? "border-emerald-200"
-    : isFailed
-      ? "border-red-200"
-      : stale
-        ? "border-amber-200"
-        : "border-gray-200";
-
-  const barGradient = stale
-    ? "from-amber-400 to-orange-400"
-    : "from-pink-400 to-orange-400";
-
-  const statusColor = isComplete
-    ? "text-emerald-600"
-    : isFailed
-      ? "text-red-500"
-      : stale
-        ? "text-amber-600"
-        : "text-gray-400";
+  const ringGradientId = `animRing-${job.id.slice(0, 8)}`;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      transition={{ duration: 0.25 }}
-      className={`overflow-hidden rounded-xl border bg-white ${borderColor}`}
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.2 }}
+      onClick={() => isComplete && onView(job)}
+      className={`group relative shrink-0 overflow-hidden rounded-xl border transition-all ${
+        isComplete
+          ? "cursor-pointer border-emerald-200 hover:scale-[1.04] hover:ring-2 hover:ring-purple-400/40"
+          : isFailed
+            ? "border-red-200"
+            : stale
+              ? "border-amber-200"
+              : "border-gray-200"
+      }`}
+      style={{ width: CARD_SIZE, height: CARD_SIZE }}
     >
-      <div className="flex items-start gap-3 px-3 py-2.5">
-        {job.sourceUrl && (
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-50">
-            <Image
-              src={job.sourceUrl}
-              alt={job.sourceTitle}
-              fill
-              className="object-cover"
-              sizes="40px"
-              unoptimized
+      {/* Source image background (always shown if available) */}
+      {job.sourceUrl && (
+        <Image
+          src={job.sourceUrl}
+          alt={job.sourceTitle}
+          fill
+          className={`object-cover ${isActive ? "brightness-[0.6]" : isFailed ? "brightness-50 saturate-50" : ""}`}
+          sizes={`${CARD_SIZE}px`}
+          unoptimized
+        />
+      )}
+
+      {/* Active: progress ring overlay */}
+      {isActive && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <svg width="28" height="28" viewBox="0 0 28 28" className="-rotate-90">
+            <circle cx="14" cy="14" r={RING_R} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
+            <circle
+              cx="14" cy="14" r={RING_R} fill="none"
+              stroke={`url(#${ringGradientId})`} strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={`${strokeDash} ${RING_CIRC}`}
+              className="transition-[stroke-dasharray] duration-500 ease-out"
             />
-          </div>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <p className="truncate text-xs font-semibold text-gray-700">
-              {job.sourceTitle}
-            </p>
-            <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-gray-500">
-              {job.duration || 5}s
-            </span>
-            {job.audio && (
-              <span className="shrink-0 rounded bg-purple-50 px-1.5 py-0.5 text-[9px] font-bold text-purple-500">
-                Audio
-              </span>
-            )}
-          </div>
-          <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-gray-400">
-            {job.prompt}
-          </p>
+            <defs>
+              <linearGradient id={ringGradientId} x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stopColor={stale ? "#fbbf24" : "#f472b6"} />
+                <stop offset="1" stopColor="#fb923c" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="mt-0.5 text-[8px] font-bold tabular-nums text-white/90">{elapsed}</span>
         </div>
+      )}
 
-        <div className="flex shrink-0 items-center gap-1.5">
-          {isActive && (
-            <span className="text-[10px] tabular-nums text-gray-400">
-              {elapsed}
-            </span>
-          )}
-          {isComplete && (
-            <button
-              onClick={() => onView(job)}
-              className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600 transition-colors hover:bg-emerald-100"
-            >
-              View
-            </button>
-          )}
-          {isFailed && (
-            <button
-              onClick={() => onRetry(job)}
-              className="rounded-md bg-pink-50 px-2 py-1 text-[10px] font-semibold text-pink-600 transition-colors hover:bg-pink-100"
-            >
-              Retry
-            </button>
-          )}
-          {isActive && stale && (
-            <button
-              onClick={() => onRetry(job)}
-              className="rounded-md bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 transition-colors hover:bg-amber-100"
-            >
-              Retry
-            </button>
-          )}
-          {isActive && (
-            <button
-              onClick={() => onCancel(job.id)}
-              className="rounded-md p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500"
-              aria-label="Cancel"
-              title="Cancel animation"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-          {(isComplete || isFailed) && (
-            <button
-              onClick={() => onDismiss(job.id)}
-              className="rounded-md p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500"
-              aria-label="Dismiss"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
+      {/* Completed: play icon overlay on hover */}
+      {isComplete && (
+        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+          <svg className="h-6 w-6 text-white opacity-0 drop-shadow-md transition-opacity group-hover:opacity-100" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5.14v14l11-7-11-7z" />
+          </svg>
+        </span>
+      )}
+
+      {/* Failed: error overlay */}
+      {isFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/30">
+          <svg className="h-5 w-5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <span className="mt-0.5 text-[8px] font-bold text-white/80">Failed</span>
         </div>
-      </div>
+      )}
 
-      {/* Progress bar */}
-      <div className="relative h-1 bg-gray-100">
-        {isActive && (
-          <motion.div
-            className={`absolute inset-y-0 left-0 bg-gradient-to-r ${barGradient}`}
-            initial={{ width: "0%" }}
-            animate={{ width: `${displayProgress}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
-        )}
-        {isComplete && <div className="absolute inset-0 bg-emerald-400" />}
-        {isFailed && <div className="absolute inset-0 bg-red-300" />}
-      </div>
+      {/* Stale badge */}
+      {stale && (
+        <span className="absolute left-1 top-1 rounded-full bg-amber-500 px-1 py-px text-[7px] font-bold text-white">
+          Slow
+        </span>
+      )}
 
-      {/* Combined status + percentage */}
-      <div className="flex items-center justify-between px-3 py-1.5">
-        <p className={`text-[10px] font-medium ${statusColor}`}>
-          {isActive ? `${stageLabel} · ${displayProgress}%` : stageLabel}
-        </p>
-        {stale && (
-          <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-600">
-            Slow
+      {/* Duration + audio pills (bottom-left, always visible for active) */}
+      {isActive && (
+        <div className="absolute bottom-1 left-1 flex items-center gap-0.5">
+          <span className="rounded-full bg-black/40 px-1 py-px text-[7px] font-bold tabular-nums text-white backdrop-blur-sm">
+            {job.duration || 5}s
           </span>
-        )}
-      </div>
+          {job.audio && (
+            <span className="rounded-full bg-purple-500/70 px-1 py-px text-[7px] font-bold text-white backdrop-blur-sm">
+              ♪
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Dismiss X (complete + failed, hover only) */}
+      {(isComplete || isFailed) && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDismiss(job.id); }}
+          className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100"
+          aria-label="Dismiss"
+        >
+          <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+
+      {/* Cancel X (active, hover only) */}
+      {isActive && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onCancel(job.id); }}
+          className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100"
+          aria-label="Cancel"
+        >
+          <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+
+      {/* Retry button (failed + stale, hover only) */}
+      {(isFailed || stale) && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRetry(job); }}
+          className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-2 py-0.5 text-[8px] font-bold text-gray-700 opacity-0 shadow-sm transition-opacity hover:bg-white group-hover:opacity-100"
+        >
+          Retry
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -287,7 +275,8 @@ export function AnimationQueue({ onViewResult, onRetry }: AnimationQueueProps) {
           {jobs.filter((j) => j.status === "processing").length} active
         </span>
       </div>
-      <div className="space-y-2">
+
+      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <AnimatePresence mode="popLayout">
           {jobs.map((job) => (
             <QueueCard
