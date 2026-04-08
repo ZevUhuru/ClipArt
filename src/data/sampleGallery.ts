@@ -6,6 +6,7 @@ export interface SampleImage {
   description: string;
   tags: string[];
   aspect_ratio?: string;
+  prompt?: string;
 }
 
 export const sampleImages: SampleImage[] = [

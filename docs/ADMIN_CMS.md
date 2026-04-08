@@ -74,6 +74,7 @@ All admin API routes verify `is_admin` via Supabase auth before processing.
 | `PATCH` | `/api/admin/categories/[id]` | Update category fields |
 | `DELETE` | `/api/admin/categories/[id]` | Delete category |
 | `POST` | `/api/admin/users/credits` | Adjust a user's credit balance (top up or deduct) |
+| `POST` | `/api/admin/reclassify` | Bulk re-classify generations with bad titles (dry run or apply) |
 
 ## R2 Object Movement
 

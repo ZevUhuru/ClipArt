@@ -38,7 +38,25 @@ interface AnimationItem {
   created_at: string;
 }
 
-type ContentFilter = "all" | "clipart" | "illustrations" | "coloring" | "animations" | "shared";
+type ContentFilter = "all" | "clipart" | "illustrations" | "coloring" | "animations" | "shared" | "packs";
+
+interface PackItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  cover_image_url: string | null;
+  item_count: number;
+  visibility: "private" | "public";
+  is_published: boolean;
+  is_free: boolean;
+  price_cents: number | null;
+  zip_status: "pending" | "building" | "ready" | "failed";
+  downloads: number;
+  created_at: string;
+  updated_at: string;
+  categories: { slug: string; name: string } | null;
+}
 
 interface SocialUpload {
   id: string;
@@ -70,6 +88,7 @@ const CONTENT_TABS: TabItem[] = [
   { key: "illustrations", label: "Illustrations" },
   { key: "coloring", label: "Coloring" },
   { key: "animations", label: "Animations" },
+  { key: "packs", label: "Packs" },
   { key: "shared", label: "Shared" },
 ];
 
@@ -152,6 +171,8 @@ function CreationsGrid() {
   const [animations, setAnimations] = useState<AnimationItem[]>([]);
   const [sharedUploads, setSharedUploads] = useState<SocialUpload[]>([]);
   const [sharedLoading, setSharedLoading] = useState(false);
+  const [packs, setPacks] = useState<PackItem[]>([]);
+  const [packsLoading, setPacksLoading] = useState(false);
 
   const buildParams = useCallback(
     (contentFilter: ContentFilter, offset: number, q?: string, style?: string | null, sortOpt?: string) => {
@@ -235,6 +256,23 @@ function CreationsGrid() {
       if (contentFilter === "animations") {
         await fetchAnimations(q, sortOpt);
         setIsLoading(false);
+        return;
+      }
+
+      if (contentFilter === "packs") {
+        setPacksLoading(true);
+        try {
+          const res = await fetch("/api/packs");
+          const data = await res.json();
+          setPacks(data.packs || []);
+          setTotalCount((data.packs || []).length);
+        } catch {
+          setPacks([]);
+          setTotalCount(0);
+        } finally {
+          setPacksLoading(false);
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -383,7 +421,7 @@ function CreationsGrid() {
   const drawerList = safeItems.map((gen) => ({
     id: gen.id,
     slug: gen.slug || gen.id,
-    title: gen.prompt,
+    title: gen.title || gen.prompt,
     url: gen.image_url,
     category: gen.category || "free",
     style: gen.style,
@@ -542,6 +580,85 @@ function CreationsGrid() {
                 icon="share"
                 title="No shared animations yet"
                 description="Share your animations to YouTube and other platforms to see them here."
+              />
+            )
+          ) : filter === "packs" ? (
+            packsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+              </div>
+            ) : packs.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {packs.map((pack) => {
+                  const status = pack.zip_status === "ready" && pack.is_published
+                    ? "Published"
+                    : pack.zip_status === "building"
+                      ? "Building..."
+                      : "Draft";
+                  const statusColor = status === "Published"
+                    ? "text-emerald-600 bg-emerald-50"
+                    : status === "Building..."
+                      ? "text-amber-600 bg-amber-50"
+                      : "text-gray-500 bg-gray-100";
+
+                  return (
+                    <Link
+                      key={pack.id}
+                      href={`/create/packs?id=${pack.id}`}
+                      className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="relative aspect-[16/9] bg-gray-100">
+                        {pack.cover_image_url ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={pack.cover_image_url}
+                            alt={pack.title}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <svg className="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                            </svg>
+                          </div>
+                        )}
+                        <div className="absolute right-2 top-2 flex gap-1.5">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}>
+                            {status}
+                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            pack.visibility === "public" ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-500"
+                          }`}>
+                            {pack.visibility === "public" ? "Public" : "Private"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="truncate text-sm font-semibold text-gray-900 group-hover:text-gray-700">
+                          {pack.title}
+                        </h3>
+                        <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400">
+                          <span>{pack.item_count} item{pack.item_count !== 1 ? "s" : ""}</span>
+                          {pack.categories && (
+                            <>
+                              <span>&middot;</span>
+                              <span>{pack.categories.name}</span>
+                            </>
+                          )}
+                          <span>&middot;</span>
+                          <span>{new Date(pack.updated_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState
+                icon="image"
+                title="No packs yet"
+                description="Create themed bundles of your clip art, coloring pages, and illustrations."
+                action={{ label: "Create a Pack", href: "/create/packs" }}
               />
             )
           ) : filter === "animations" ? (

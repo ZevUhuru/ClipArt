@@ -65,7 +65,28 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
-    .slice(0, 80);
+    .slice(0, 50);
+}
+
+function cleanTitleFromPrompt(prompt: string): string {
+  const words = prompt
+    .replace(/[-_]+/g, " ")
+    .replace(/[,;:."']+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .slice(0, 8);
+  return words
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function looksLikePrompt(title: string, prompt: string): boolean {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (norm(title) === norm(prompt)) return true;
+  if (norm(title) === norm(prompt.slice(0, 80))) return true;
+  if (title.includes(",") && title.length > 50) return true;
+  return false;
 }
 
 function resolveContentType(style: string, contentType?: ContentType): ContentType {
@@ -83,10 +104,10 @@ export async function classifyPrompt(
   const fallbackCategory = ct === "coloring" ? "coloring-free" : ct === "illustration" ? "illustration-free" : "free";
 
   const fallback: Classification = {
-    title: prompt.slice(0, 80),
+    title: cleanTitleFromPrompt(prompt),
     category: fallbackCategory,
     description: prompt,
-    slug: slugify(prompt),
+    slug: slugify(cleanTitleFromPrompt(prompt)),
   };
 
   try {
@@ -96,28 +117,28 @@ export async function classifyPrompt(
     if (ct === "coloring") {
       categorySlugs = await getColoringThemeSlugs();
       systemPrompt = `You are a coloring page classifier. Given a user's coloring page generation prompt, return a JSON object with:
-- "title": A clean, properly capitalized title for the coloring page (max 60 chars). Fix typos. Do NOT include "coloring page" in the title.
+- "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "coloring page".
 - "category": The best matching theme slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "coloring-free".
-- "description": A short SEO-friendly description of the coloring page (100-160 chars). Mention the subject and that it's a printable coloring page.
-- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 60 chars).
+- "description": A human-readable SEO sentence (100-160 chars). Describe the image and suggest use cases (e.g. "for classroom activities, party decorations, or quiet time"). Do NOT just repeat the prompt.
+- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
 
 Return ONLY valid JSON, no markdown fences, no explanation.`;
     } else if (ct === "illustration") {
       categorySlugs = await getIllustrationCategorySlugs();
       systemPrompt = `You are an illustration classifier. Given a user's illustration generation prompt, return a JSON object with:
-- "title": A clean, properly capitalized title for the illustration (max 60 chars). Fix typos. Do NOT include "illustration" in the title.
+- "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "illustration".
 - "category": The best matching category slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "illustration-free".
-- "description": A short SEO-friendly description of the illustration (100-160 chars). Mention the subject and scene.
-- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 60 chars).
+- "description": A human-readable SEO sentence (100-160 chars). Describe the scene and suggest use cases (e.g. "for presentations, book covers, or wall art"). Do NOT just repeat the prompt.
+- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
 
 Return ONLY valid JSON, no markdown fences, no explanation.`;
     } else {
       categorySlugs = await getCategorySlugs();
       systemPrompt = `You are a clip art classifier. Given a user's image generation prompt, return a JSON object with:
-- "title": A clean, properly capitalized title for the clip art (max 60 chars). Fix typos. Do NOT include "clip art" in the title.
+- "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "clip art".
 - "category": The best matching category slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "free".
-- "description": A short SEO-friendly description of the image (100-160 chars). Mention the subject and potential uses.
-- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 60 chars).
+- "description": A human-readable SEO sentence (100-160 chars). Describe the image and suggest use cases (e.g. "for school projects, presentations, or crafts"). Do NOT just repeat the prompt.
+- "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
 
 Return ONLY valid JSON, no markdown fences, no explanation.`;
     }
@@ -132,12 +153,18 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
     const cleaned = rawText.replace(/```json\n?|```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned) as Record<string, unknown>;
 
+    const rawTitle = typeof parsed.title === "string" ? parsed.title.slice(0, 80) : fallback.title;
+    const title = looksLikePrompt(rawTitle, prompt) ? cleanTitleFromPrompt(prompt) : rawTitle;
+
+    const rawDesc = typeof parsed.description === "string" ? parsed.description.slice(0, 200) : fallback.description;
+    const description = looksLikePrompt(rawDesc, prompt) ? fallback.description : rawDesc;
+
     return {
-      title: typeof parsed.title === "string" ? parsed.title.slice(0, 80) : fallback.title,
+      title,
       category: typeof parsed.category === "string" && categorySlugs.includes(parsed.category)
         ? parsed.category
         : fallback.category,
-      description: typeof parsed.description === "string" ? parsed.description.slice(0, 200) : fallback.description,
+      description,
       slug: typeof parsed.slug === "string" ? slugify(parsed.slug) : fallback.slug,
     };
   } catch (err) {

@@ -147,7 +147,7 @@ export function ImageDetailPage({
                 <div className={`relative w-full ${image.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
                   <Image
                     src={image.url}
-                    alt={image.description}
+                    alt={`${image.title} - Free ${categoryLabel}`}
                     fill
                     className="object-contain p-8"
                     sizes="(max-width: 1024px) 100vw, 50vw"
@@ -180,10 +180,27 @@ export function ImageDetailPage({
               </Link>
             </div>
 
-            {/* Description */}
-            <p className="mt-5 text-base leading-relaxed text-gray-600">
-              {image.description}
-            </p>
+            {/* AI Image Prompt */}
+            {image.prompt && image.prompt !== image.title && (
+              <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                  </svg>
+                  AI Image Prompt
+                </div>
+                <p className="text-sm leading-relaxed text-gray-600 italic">
+                  &ldquo;{image.prompt}&rdquo;
+                </p>
+              </div>
+            )}
+
+            {/* Description — only when it differs from the prompt */}
+            {image.description && image.description !== image.prompt && (
+              <p className="mt-5 text-base leading-relaxed text-gray-600">
+                {image.description}
+              </p>
+            )}
 
             {/* Tags */}
             <div className="mt-5 flex flex-wrap gap-2">
@@ -253,7 +270,11 @@ export function ImageDetailPage({
               href={createHref}
               className="btn-secondary mt-3 w-full justify-center py-3.5 text-base"
             >
-              {isColoringPage ? "Create Similar Coloring Page" : "Generate Similar with AI"}
+              {isColoringPage
+                ? "Create Similar Coloring Page"
+                : isIllustration
+                  ? "Create Similar Illustration"
+                  : "Generate Similar with AI"}
             </Link>
 
             {/* Trust strip */}
@@ -350,12 +371,16 @@ export function ImageDetailPage({
             <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
               {isColoringPage
                 ? `Create your own ${categoryName.toLowerCase()} coloring pages`
-                : `Create your own ${categoryName.toLowerCase()} clip art`}
+                : isIllustration
+                  ? `Create your own ${categoryName.toLowerCase()} illustrations`
+                  : `Create your own ${categoryName.toLowerCase()} clip art`}
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm text-gray-500 sm:text-base">
               {isColoringPage
                 ? "Describe any scene and our AI generates a printable coloring page with bold outlines. 10 free credits when you sign up."
-                : "Describe what you want and our AI generates it in seconds. 10 free credits when you sign up."}
+                : isIllustration
+                  ? "Describe any scene and our AI creates a beautiful illustration in seconds. 10 free credits when you sign up."
+                  : "Describe what you want and our AI generates it in seconds. 10 free credits when you sign up."}
             </p>
             <div className="mt-8">
               <Link href={createHref} className="btn-primary px-8 text-base">

@@ -120,6 +120,7 @@ export default async function Page({ params }: PageProps) {
     description: dbRow.description || dbRow.prompt,
     tags: ["coloring page", dbRow.category].filter(Boolean) as string[],
     aspect_ratio: dbRow.aspect_ratio || "3:4",
+    prompt: dbRow.prompt,
   };
 
   const relatedImages = await getRelatedImages(canonicalTheme, canonicalSlug);

@@ -6,6 +6,7 @@ export interface Generation {
   id: string;
   image_url: string;
   prompt: string;
+  title?: string | null;
   style: string;
   content_type?: string;
   category: string | null;
