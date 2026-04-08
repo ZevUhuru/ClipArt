@@ -596,10 +596,10 @@ function AnimatePageInner() {
 
         <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
           {/* Left: Canvas / Preview */}
-          <div className="lg:self-start">
+          <div className="overflow-hidden rounded-2xl bg-[#1c1c27] lg:self-start">
             <div
               ref={resultRef}
-              className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+              className="overflow-hidden"
             >
               {!source && viewingVideo ? (
                 <div className="relative aspect-square w-full">
@@ -614,13 +614,13 @@ function AnimatePageInner() {
                 </div>
               ) : !source ? (
                 <div className="flex aspect-square flex-col items-center justify-center gap-4 p-8 text-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50">
-                    <svg className="h-10 w-10 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10">
+                    <svg className="h-10 w-10 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-2.625 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-2.625 0v1.5c0 .621.504 1.125 1.125 1.125" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-gray-900">Import an image to animate</h2>
+                    <h2 className="text-base font-bold text-white">Import an image to animate</h2>
                     <p className="mt-1 max-w-xs text-sm text-gray-400">
                       Choose from your creations or the community gallery to get started.
                     </p>
@@ -634,7 +634,7 @@ function AnimatePageInner() {
                     </svg>
                     Import Image
                   </button>
-                  <p className="text-xs text-gray-300">
+                  <p className="text-xs text-gray-500">
                     Or use Edit/Animate on any image across the site
                   </p>
                 </div>
@@ -664,11 +664,11 @@ function AnimatePageInner() {
             </div>
 
             {activeVideoUrl && source && (
-              <div className="mt-3 flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 py-2.5">
                 <button
                   onClick={() => setShowSource(false)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    !showSource ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"
+                    !showSource ? "bg-white/15 text-white" : "text-gray-500 hover:text-gray-300"
                   }`}
                 >
                   Animation
@@ -676,7 +676,7 @@ function AnimatePageInner() {
                 <button
                   onClick={() => setShowSource(true)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    showSource ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"
+                    showSource ? "bg-white/15 text-white" : "text-gray-500 hover:text-gray-300"
                   }`}
                 >
                   Original
