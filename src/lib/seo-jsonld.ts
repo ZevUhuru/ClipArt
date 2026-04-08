@@ -74,6 +74,87 @@ export function buildDetailBreadcrumb(opts: {
   return buildBreadcrumbJsonLd(items);
 }
 
+interface PackJsonLdOpts {
+  title: string;
+  description: string;
+  coverUrl?: string;
+  itemCount: number;
+  isFree: boolean;
+  priceCents?: number | null;
+  categorySlug: string;
+  slug: string;
+  tags: string[];
+  downloads: number;
+}
+
+export function buildPackJsonLd(opts: PackJsonLdOpts) {
+  const url = `${SITE_URL}/packs/${opts.categorySlug}/${opts.slug}`;
+
+  if (opts.isFree) {
+    return {
+      "@context": "https://schema.org",
+      "@type": "CreativeWork",
+      name: opts.title,
+      description: opts.description,
+      url,
+      ...(opts.coverUrl ? { image: opts.coverUrl } : {}),
+      isAccessibleForFree: true,
+      author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+      keywords: opts.tags.join(", "),
+      interactionStatistic: {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/DownloadAction",
+        userInteractionCount: opts.downloads,
+      },
+    };
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: opts.title,
+    description: opts.description,
+    url,
+    ...(opts.coverUrl ? { image: opts.coverUrl } : {}),
+    brand: { "@type": "Organization", name: SITE_NAME },
+    offers: {
+      "@type": "Offer",
+      price: ((opts.priceCents || 0) / 100).toFixed(2),
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      url,
+    },
+    keywords: opts.tags.join(", "),
+  };
+}
+
+export function buildPackBreadcrumb(opts: {
+  categorySlug: string;
+  categoryName: string;
+  packTitle: string;
+  packSlug: string;
+}) {
+  return buildBreadcrumbJsonLd([
+    { name: "Home", path: SITE_URL },
+    { name: "Packs", path: "packs" },
+    { name: `${opts.categoryName} Packs`, path: `packs/${opts.categorySlug}` },
+    { name: opts.packTitle, path: `packs/${opts.categorySlug}/${opts.packSlug}` },
+  ]);
+}
+
+export function buildPackListJsonLd(packs: { title: string; categorySlug: string; slug: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: packs.map((pack, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: pack.title,
+      url: `${SITE_URL}/packs/${pack.categorySlug}/${pack.slug}`,
+    })),
+  };
+}
+
 interface VideoJsonLdOpts {
   title: string;
   description: string;

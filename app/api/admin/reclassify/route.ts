@@ -54,12 +54,14 @@ export async function POST(request: NextRequest) {
     query = query.eq("content_type", contentType);
   }
 
-  const { data: rows, error } = await query;
+  const { data, error } = await query;
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const badRows = (rows || []).filter((r) => titleLooksBad(r.title, r.prompt));
+  interface Row { id: string; prompt: string; title: string | null; description: string | null; style: string | null; content_type: string | null; slug: string | null }
+  const rows = (data || []) as Row[];
+  const badRows = rows.filter((r) => titleLooksBad(r.title, r.prompt));
   const toProcess = badRows.slice(0, limit);
 
   if (dryRun) {

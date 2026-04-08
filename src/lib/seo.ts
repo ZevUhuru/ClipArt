@@ -3,18 +3,20 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://clip.art";
 export const SITE_NAME = "clip.art";
 
-export type ContentType = "clipart" | "coloring" | "illustration";
+export type ContentType = "clipart" | "coloring" | "illustration" | "pack";
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   clipart: "Clip Art",
   coloring: "Coloring Page",
   illustration: "Illustration",
+  pack: "Design Pack",
 };
 
 const CONTENT_TYPE_LABELS_PLURAL: Record<ContentType, string> = {
   clipart: "Clip Art",
   coloring: "Coloring Pages",
   illustration: "Illustrations",
+  pack: "Design Packs",
 };
 
 const MAX_TITLE_LENGTH = 60;
@@ -87,6 +89,8 @@ export function contentTypePath(
       return `coloring-pages/${category}/${slug}`;
     case "illustration":
       return `illustrations/${category}/${slug}`;
+    case "pack":
+      return `packs/${category}/${slug}`;
     default:
       return `${category}/${slug}`;
   }
@@ -101,6 +105,8 @@ export function categoryPath(
       return `coloring-pages/${categorySlug}`;
     case "illustration":
       return `illustrations/${categorySlug}`;
+    case "pack":
+      return `packs/${categorySlug}`;
     default:
       return categorySlug;
   }

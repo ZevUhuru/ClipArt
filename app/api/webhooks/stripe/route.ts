@@ -25,36 +25,51 @@ export async function POST(request: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const userId = session.metadata?.userId;
-    const credits = parseInt(session.metadata?.credits || "0", 10);
-
-    if (!userId || !credits) {
-      console.error("Missing metadata in checkout session");
-      return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
-    }
+    const purchaseType = session.metadata?.type;
 
     const admin = createSupabaseAdmin();
 
-    // Add credits to user profile
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("credits")
-      .eq("id", userId)
-      .single();
+    if (purchaseType === "pack_purchase") {
+      const packId = session.metadata?.packId;
+      if (!userId || !packId) {
+        console.error("Missing metadata in pack purchase session");
+        return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
+      }
 
-    if (profile) {
-      await admin
+      await admin.from("purchases").insert({
+        user_id: userId,
+        stripe_session_id: `pack_${packId}`,
+        credits_added: 0,
+        amount_cents: session.amount_total || 0,
+      });
+    } else {
+      const credits = parseInt(session.metadata?.credits || "0", 10);
+
+      if (!userId || !credits) {
+        console.error("Missing metadata in checkout session");
+        return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
+      }
+
+      const { data: profile } = await admin
         .from("profiles")
-        .update({ credits: profile.credits + credits })
-        .eq("id", userId);
-    }
+        .select("credits")
+        .eq("id", userId)
+        .single();
 
-    // Record the purchase
-    await admin.from("purchases").insert({
-      user_id: userId,
-      stripe_session_id: session.id,
-      credits_added: credits,
-      amount_cents: session.amount_total || 0,
-    });
+      if (profile) {
+        await admin
+          .from("profiles")
+          .update({ credits: profile.credits + credits })
+          .eq("id", userId);
+      }
+
+      await admin.from("purchases").insert({
+        user_id: userId,
+        stripe_session_id: session.id,
+        credits_added: credits,
+        amount_cents: session.amount_total || 0,
+      });
+    }
   }
 
   return NextResponse.json({ received: true });

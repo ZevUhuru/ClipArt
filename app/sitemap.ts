@@ -128,6 +128,54 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  /* --- Packs --- */
+
+  const packsLanding: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/packs`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+  ];
+
+  let packCategoryPages: MetadataRoute.Sitemap = [];
+  let packDetailPages: MetadataRoute.Sitemap = [];
+  try {
+    const admin = createSupabaseAdmin();
+    const { data: packCats } = await admin
+      .from("categories")
+      .select("slug")
+      .eq("type", "pack")
+      .eq("is_active", true);
+
+    packCategoryPages = (packCats || []).map((cat: { slug: string }) => ({
+      url: `${baseUrl}/packs/${cat.slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    }));
+
+    const { data: packs } = await admin
+      .from("packs")
+      .select("slug, created_at, updated_at, categories!category_id(slug)")
+      .eq("is_published", true)
+      .eq("visibility", "public")
+      .order("created_at", { ascending: false })
+      .limit(2000);
+
+    packDetailPages = (packs || []).map(
+      (p: { slug: string; updated_at: string; categories?: { slug: string } | null }) => ({
+        url: `${baseUrl}/packs/${p.categories?.slug || "all"}/${p.slug}`,
+        lastModified: new Date(p.updated_at),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      }),
+    );
+  } catch {
+    // packs table may not exist yet
+  }
+
   /* --- Animations --- */
 
   const animationsLanding: MetadataRoute.Sitemap = [
@@ -160,10 +208,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/search`,
+      url: `${baseUrl}/animate`,
       lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/edit`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
   ];
 
@@ -197,6 +251,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...illustrationsLanding,
     ...illustrationCategoryPages,
     ...illustrationDetailPages,
+    ...packsLanding,
+    ...packCategoryPages,
+    ...packDetailPages,
     ...animationsLanding,
     ...stickersLanding,
     ...hubPages,

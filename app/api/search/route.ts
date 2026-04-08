@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("content_type", "coloring");
     } else if (contentType === "illustration") {
       query = query.eq("content_type", "illustration");
-    } else {
+    } else if (contentType !== "all") {
       query = query.eq("content_type", "clipart");
     }
 
