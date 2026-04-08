@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "@/components/SearchBar";
+import { ExploreTabs } from "@/components/ExploreTabs";
 
 interface SourceImage {
   id: string;
@@ -103,7 +104,10 @@ export default function TemplatesPage() {
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
         <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
 
-        <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-8 sm:pb-10 sm:pt-14">
+        <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-6 sm:pb-10 sm:pt-10">
+          <div className="mb-6 flex justify-center">
+            <ExploreTabs />
+          </div>
           <div className="flex flex-col items-center text-center">
             {total > 0 && (
               <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1 text-xs font-semibold text-pink-600 shadow-sm backdrop-blur-sm">

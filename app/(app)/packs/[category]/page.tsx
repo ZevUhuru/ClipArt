@@ -5,6 +5,7 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, SITE_NAME } from "@/lib/seo";
 import { buildBreadcrumbJsonLd, buildPackListJsonLd } from "@/lib/seo-jsonld";
+import { ExploreTabs } from "@/components/ExploreTabs";
 
 export const revalidate = 60;
 
@@ -93,10 +94,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title =
     category.meta_title ||
-    `Free ${category.name} Clip Art Bundles & Design Packs | clip.art`;
+    `Free ${category.name} Clip Art Bundles & Design Bundles | clip.art`;
   const description =
     category.meta_description ||
-    `Download free ${category.name.toLowerCase()} clip art bundles and design packs. AI-generated themed collections in SVG and PNG.`;
+    `Download free ${category.name.toLowerCase()} clip art bundles and design bundles. AI-generated themed collections in SVG and PNG.`;
   const canonical = buildCanonical(`packs/${category.slug}`);
 
   return {
@@ -127,8 +128,8 @@ export default async function PackCategoryPage({ params }: Props) {
 
   const breadcrumb = buildBreadcrumbJsonLd([
     { name: "Home", path: "https://clip.art" },
-    { name: "Packs", path: "packs" },
-    { name: `${category.name} Packs`, path: `packs/${category.slug}` },
+    { name: "Bundles", path: "packs" },
+    { name: `${category.name} Bundles`, path: `packs/${category.slug}` },
   ]);
 
   const listJsonLd = buildPackListJsonLd(
@@ -155,18 +156,21 @@ export default async function PackCategoryPage({ params }: Props) {
           <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
           <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
 
-          <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-8 sm:pb-10 sm:pt-14">
+          <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-6 sm:pb-10 sm:pt-10">
+            <div className="mb-6 flex justify-center">
+              <ExploreTabs />
+            </div>
             <div className="flex flex-col items-center text-center">
               {packs.length > 0 && (
                 <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1 text-xs font-semibold text-pink-600 shadow-sm backdrop-blur-sm">
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
-                  {packs.length} pack{packs.length !== 1 ? "s" : ""}
+                  {packs.length} bundle{packs.length !== 1 ? "s" : ""}
                 </span>
               )}
 
               <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
                 {category.name}{" "}
-                <span className="gradient-text">Packs</span>
+                <span className="gradient-text">Bundles</span>
               </h1>
 
               {category.intro && (
@@ -181,7 +185,7 @@ export default async function PackCategoryPage({ params }: Props) {
                   href="/packs"
                   className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
                 >
-                  All Packs
+                  All Bundles
                 </Link>
                 {allCategories.map((cat: { id: string; slug: string; name: string }) => (
                   <Link
@@ -211,7 +215,7 @@ export default async function PackCategoryPage({ params }: Props) {
               </span>
             </div>
             <p className="text-xs text-gray-400">
-              {packs.length} pack{packs.length !== 1 ? "s" : ""}
+              {packs.length} bundle{packs.length !== 1 ? "s" : ""}
             </p>
           </div>
 
@@ -222,7 +226,7 @@ export default async function PackCategoryPage({ params }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                 </svg>
               </div>
-              <h2 className="text-base font-bold text-gray-900">No {category.name.toLowerCase()} packs yet</h2>
+              <h2 className="text-base font-bold text-gray-900">No {category.name.toLowerCase()} bundles yet</h2>
               <p className="mt-1 max-w-xs text-sm text-gray-400">
                 Be the first to create a {category.name.toLowerCase()} themed bundle.
               </p>
@@ -230,7 +234,7 @@ export default async function PackCategoryPage({ params }: Props) {
                 href="/create/packs"
                 className="mt-4 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
               >
-                Create a Pack
+                Create a Bundle
               </Link>
             </div>
           ) : (

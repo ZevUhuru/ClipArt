@@ -145,7 +145,7 @@ function CreatePacksPage() {
         }
       })
       .catch(() => {
-        setError("Could not load that pack. It may not exist or you don\u2019t have access.");
+        setError("Could not load that bundle. It may not exist or you don\u2019t have access.");
       })
       .finally(() => setLoadingExisting(false));
   }, [searchParams, user, pack]);
@@ -172,10 +172,10 @@ function CreatePacksPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setPack(data.pack);
-      setSuccessMsg("Pack created!");
+      setSuccessMsg("Bundle created!");
       setTimeout(() => setSuccessMsg(null), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create pack");
+      setError(err instanceof Error ? err.message : "Failed to create bundle");
     } finally {
       setSaving(false);
     }
@@ -340,7 +340,7 @@ function CreatePacksPage() {
             }
           : null,
       );
-      setSuccessMsg("Pack published! ZIP is ready.");
+      setSuccessMsg("Bundle published! ZIP is ready.");
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Publish failed");
@@ -382,9 +382,9 @@ function CreatePacksPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Create a Pack</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Create a Bundle</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Sign up to create themed bundles of clip art, coloring pages, and illustrations.
+            Sign up to create themed bundles of clip art, coloring pages, and illustrations
           </p>
           <button
             onClick={() => openAuthModal("signup")}
@@ -409,7 +409,7 @@ function CreatePacksPage() {
         </div>
         <div className="flex items-center justify-center py-24">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
-          <span className="ml-3 text-sm text-gray-500">Loading pack...</span>
+          <span className="ml-3 text-sm text-gray-500">Loading bundle...</span>
         </div>
       </div>
     );
@@ -427,7 +427,7 @@ function CreatePacksPage() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Name your pack... (e.g. Spring Garden Clip Art Bundle)"
+                placeholder="Name your bundle... (e.g. Spring Garden Clip Art Bundle)"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-base font-medium text-gray-900 placeholder:text-gray-400 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && title.trim()) createPack();
@@ -439,7 +439,7 @@ function CreatePacksPage() {
                   disabled={!title.trim() || saving}
                   className="rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
                 >
-                  {saving ? "Creating..." : "Create Pack"}
+                  {saving ? "Creating..." : "Create Bundle"}
                 </button>
               </div>
             </div>
@@ -492,7 +492,7 @@ function CreatePacksPage() {
                 onClick={() => setShowMetadata((v) => !v)}
                 className="flex w-full items-center justify-between px-5 py-4 text-left"
               >
-                <span className="text-sm font-semibold text-gray-700">Pack Details</span>
+                <span className="text-sm font-semibold text-gray-700">Bundle Details</span>
                 <svg
                   className={`h-4 w-4 text-gray-400 transition-transform ${showMetadata ? "rotate-180" : ""}`}
                   fill="none"
@@ -536,7 +536,7 @@ function CreatePacksPage() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={3}
-                      placeholder="Describe what's in this pack..."
+                      placeholder="Describe what's in this bundle..."
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-100"
                     />
                   </div>
@@ -593,7 +593,7 @@ function CreatePacksPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                Pack Items ({items.length})
+                Bundle Items ({items.length})
               </button>
               <button
                 onClick={() => setView("browse")}
@@ -627,7 +627,7 @@ function CreatePacksPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-700">Add assets to your pack</h3>
+                    <h3 className="text-sm font-semibold text-gray-700">Add assets to your bundle</h3>
                     <p className="mx-auto mt-1 max-w-sm text-xs text-gray-400">
                       Search and add existing clip art, coloring pages, or illustrations.
                     </p>
@@ -743,7 +743,7 @@ function CreatePacksPage() {
                 {searchResults.length === 0 && !searching && (
                   <div className="py-12 text-center">
                     <p className="text-sm text-gray-400">
-                      Search for assets to add to your pack
+                      Search for assets to add to your bundle
                     </p>
                   </div>
                 )}
@@ -891,7 +891,7 @@ function CreatePacksPage() {
                   }
                   className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  View Pack
+                  View Bundle
                 </button>
               )}
               <button
@@ -904,7 +904,7 @@ function CreatePacksPage() {
                   : pack.is_published
                     ? "Republish"
                     : visibility === "public"
-                      ? "Publish to Packs"
+                      ? "Publish Bundle"
                       : "Save Private"}
               </button>
             </div>

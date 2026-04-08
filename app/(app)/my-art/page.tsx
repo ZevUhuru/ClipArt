@@ -88,7 +88,7 @@ const CONTENT_TABS: TabItem[] = [
   { key: "illustrations", label: "Illustrations" },
   { key: "coloring", label: "Coloring" },
   { key: "animations", label: "Animations" },
-  { key: "packs", label: "Packs" },
+  { key: "packs", label: "Bundles" },
   { key: "shared", label: "Shared" },
 ];
 
@@ -656,9 +656,9 @@ function CreationsGrid() {
             ) : (
               <EmptyState
                 icon="image"
-                title="No packs yet"
+                title="No bundles yet"
                 description="Create themed bundles of your clip art, coloring pages, and illustrations."
-                action={{ label: "Create a Pack", href: "/create/packs" }}
+                action={{ label: "Create a Bundle", href: "/create/packs" }}
               />
             )
           ) : filter === "animations" ? (

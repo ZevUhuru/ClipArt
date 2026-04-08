@@ -252,7 +252,7 @@ export default async function PackDetailPage({ params }: Props) {
             <nav className="mb-6 flex items-center gap-1.5 text-xs text-gray-400">
               <Link href="/" className="transition-colors hover:text-gray-600">Home</Link>
               <span className="text-gray-300">/</span>
-              <Link href="/packs" className="transition-colors hover:text-gray-600">Packs</Link>
+              <Link href="/packs" className="transition-colors hover:text-gray-600">Bundles</Link>
               {pack.categories && (
                 <>
                   <span className="text-gray-300">/</span>
@@ -369,7 +369,7 @@ export default async function PackDetailPage({ params }: Props) {
         <div className="mx-auto max-w-5xl px-4 py-8">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-sm font-bold text-gray-800">
-              Items in this pack
+              Items in this bundle
             </h2>
             <p className="text-xs text-gray-400">
               {items.length} item{items.length !== 1 ? "s" : ""}

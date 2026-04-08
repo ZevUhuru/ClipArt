@@ -4,26 +4,27 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, SITE_NAME } from "@/lib/seo";
 import { buildPackListJsonLd } from "@/lib/seo-jsonld";
+import { ExploreTabs } from "@/components/ExploreTabs";
 
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Free Clip Art Bundles & Design Packs | clip.art",
+  title: "Free Clip Art Bundles & Design Bundles | clip.art",
   description:
-    "Download free clip art bundles, coloring page packs, and illustration collections. AI-generated themed design packs in SVG and PNG — perfect for crafting, teaching, and creative projects.",
+    "Download free clip art bundles, coloring page bundles, and illustration collections. AI-generated themed design bundles in SVG and PNG — perfect for crafting, teaching, and creative projects.",
   openGraph: {
-    title: "Free Clip Art Bundles & Design Packs | clip.art",
+    title: "Free Clip Art Bundles & Design Bundles | clip.art",
     description:
-      "Download free clip art bundles and design packs. AI-generated themed collections for crafting, teaching, and design.",
+      "Download free clip art bundles and design bundles. AI-generated themed collections for crafting, teaching, and design.",
     url: buildCanonical("packs"),
     siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Free Clip Art Bundles & Design Packs | clip.art",
+    title: "Free Clip Art Bundles & Design Bundles | clip.art",
     description:
-      "Download free AI-generated clip art bundles and design packs.",
+      "Download free AI-generated clip art bundles and design bundles.",
   },
   alternates: { canonical: buildCanonical("packs") },
   robots: { index: true, follow: true },
@@ -113,18 +114,21 @@ export default async function PacksPage() {
           <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
           <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
 
-          <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-8 sm:pb-10 sm:pt-14">
+          <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-6 sm:pb-10 sm:pt-10">
+            <div className="mb-6 flex justify-center">
+              <ExploreTabs />
+            </div>
             <div className="flex flex-col items-center text-center">
               {packs.length > 0 && (
                 <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1 text-xs font-semibold text-pink-600 shadow-sm backdrop-blur-sm">
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
-                  {packs.length} pack{packs.length !== 1 ? "s" : ""}
+                  {packs.length} bundle{packs.length !== 1 ? "s" : ""}
                 </span>
               )}
 
               <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
                 Design{" "}
-                <span className="gradient-text">Packs</span>
+                <span className="gradient-text">Bundles</span>
               </h1>
 
               <p className="mt-3 max-w-lg text-balance text-sm text-gray-500 sm:text-base">
@@ -139,7 +143,7 @@ export default async function PacksPage() {
                     href="/packs"
                     className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-all hover:bg-gray-800"
                   >
-                    All Packs
+                    All Bundles
                   </Link>
                   {categories.map((cat) => (
                     <Link
@@ -165,23 +169,23 @@ export default async function PacksPage() {
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-gray-800">Featured</h2>
                 <p className="text-xs text-gray-400">
-                  {featured.length} pack{featured.length !== 1 ? "s" : ""}
+                  {featured.length} bundle{featured.length !== 1 ? "s" : ""}
                 </p>
               </div>
               <PackGrid packs={featured} />
             </section>
           )}
 
-          {/* All packs */}
+          {/* All bundles */}
           <section>
             <div className="mb-4 flex items-center justify-between">
               <div className="flex gap-2">
                 <span className="rounded-full bg-gray-900 px-4 py-2 text-xs font-semibold text-white">
-                  All Packs
+                  All Bundles
                 </span>
               </div>
               <p className="text-xs text-gray-400">
-                {packs.length} pack{packs.length !== 1 ? "s" : ""}
+                {packs.length} bundle{packs.length !== 1 ? "s" : ""}
               </p>
             </div>
 
@@ -192,7 +196,7 @@ export default async function PacksPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-bold text-gray-900">No packs yet</h2>
+                <h2 className="text-base font-bold text-gray-900">No bundles yet</h2>
                 <p className="mt-1 max-w-xs text-sm text-gray-400">
                   Be the first to create a themed bundle of clip art, coloring pages, and illustrations.
                 </p>
@@ -200,7 +204,7 @@ export default async function PacksPage() {
                   href="/create/packs"
                   className="mt-4 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
                 >
-                  Create a Pack
+                  Create a Bundle
                 </Link>
               </div>
             ) : (

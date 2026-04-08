@@ -22,6 +22,7 @@ import {
   type ChipItem,
 } from "@/components/filters";
 import { useFilterState, type ContentType } from "@/hooks/useFilterState";
+import { ExploreTabs } from "@/components/ExploreTabs";
 
 const CONTENT_TABS: TabItem[] = [
   { key: "clipart", label: "Clip Art" },
@@ -198,6 +199,9 @@ function SearchPageInner() {
       {/* Sticky search + toolbar */}
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-4 pt-4 pb-3">
+          <div className="mb-3">
+            <ExploreTabs />
+          </div>
           <SearchBar
             onSearch={handleSearch}
             placeholders={
