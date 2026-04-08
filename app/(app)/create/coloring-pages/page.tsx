@@ -3,19 +3,10 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { CreatePageLayout } from "@/components/CreatePageLayout";
-import { RecentCreationsStrip } from "@/components/RecentCreationsStrip";
 import { useAppStore } from "@/stores/useAppStore";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { COLORING_ASPECT_OPTIONS, type AspectRatio } from "@/lib/styles";
-
-const suggestedPrompts = [
-  "dinosaur in a jungle scene",
-  "princess castle with towers and a dragon",
-  "underwater scene with fish and coral",
-  "cute puppies playing in a garden",
-  "space rocket with planets and stars",
-  "farm animals in a barn",
-];
+import { PromptBuilder, COLORING_BUILDER } from "@/components/prompt-builder";
 
 export default function ColoringPagesCreatePage() {
   const [prompt, setPrompt] = useState("");
@@ -23,9 +14,8 @@ export default function ColoringPagesCreatePage() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("3:4");
   const [error, setError] = useState<string | null>(null);
 
-  const { openAuthModal, user, generationsLoaded, generations } = useAppStore();
+  const { openAuthModal, user } = useAppStore();
   const addJob = useGenerationQueue((s) => s.addJob);
-  const queueJobs = useGenerationQueue((s) => s.jobs);
 
   const style = "coloring" as const;
 
@@ -45,13 +35,9 @@ export default function ColoringPagesCreatePage() {
     setPrompt("");
   }, [prompt, style, isPublic, aspectRatio, user, openAuthModal, addJob]);
 
-  const coloringFilter = (g: { style: string; content_type?: string }) =>
-    g.style === "coloring" || g.content_type === "coloring";
-
-  const hasRecents = generationsLoaded && generations.some(
-    (g) => g.id && g.image_url && coloringFilter(g),
-  );
-  const showEmptyState = !user || (!hasRecents && queueJobs.length === 0);
+  const handleDraftChange = useCallback((draft: string) => {
+    if (draft) setPrompt(draft);
+  }, []);
 
   return (
     <CreatePageLayout
@@ -109,34 +95,12 @@ export default function ColoringPagesCreatePage() {
         </>
       }
     >
-      {showEmptyState ? (
-        <div className="py-12 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-            <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Create your first coloring page
-          </h3>
-          <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
-            Describe a scene and we&apos;ll generate a printable coloring page with bold outlines. Try one of these:
-          </p>
-          <div className="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
-            {suggestedPrompts.map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => setPrompt(suggestion)}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <RecentCreationsStrip filterFn={coloringFilter} />
-      )}
+      <PromptBuilder
+        config={COLORING_BUILDER}
+        style={style}
+        onDraftChange={handleDraftChange}
+        onSelectSuggestion={setPrompt}
+      />
     </CreatePageLayout>
   );
 }

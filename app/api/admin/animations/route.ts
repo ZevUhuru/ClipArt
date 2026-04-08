@@ -33,10 +33,11 @@ export async function GET(req: NextRequest) {
     .from("animations")
     .select(
       "id, prompt, model, status, video_url, preview_url, thumbnail_url, " +
-      "is_featured, is_mosaic, is_public, created_at, " +
+      "is_featured, is_mosaic, is_gallery, is_public, created_at, " +
       "source:generations!animations_source_generation_id_fkey(id, image_url, title, slug)",
     )
     .eq("status", "completed")
+    .order("is_gallery", { ascending: false })
     .order("is_featured", { ascending: false })
     .order("is_mosaic", { ascending: false })
     .order("created_at", { ascending: false })
@@ -74,6 +75,7 @@ export async function PATCH(req: NextRequest) {
   const updates: Record<string, boolean> = {};
   if (typeof body.is_featured === "boolean") updates.is_featured = body.is_featured;
   if (typeof body.is_mosaic === "boolean") updates.is_mosaic = body.is_mosaic;
+  if (typeof body.is_gallery === "boolean") updates.is_gallery = body.is_gallery;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

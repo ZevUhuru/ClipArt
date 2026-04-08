@@ -8,7 +8,7 @@ import { createSupabaseAdmin } from "./supabase/server";
 // Task types
 // ---------------------------------------------------------------------------
 
-export type TextTask = "classification" | "seo_generation" | "animation_suggestions";
+export type TextTask = "classification" | "seo_generation" | "animation_suggestions" | "prompt_polish";
 
 // ---------------------------------------------------------------------------
 // Model registry
@@ -39,6 +39,7 @@ const DEFAULT_MODELS: Record<TextTask, string> = {
   classification: "gemini-2.5-flash",
   seo_generation: "gemini-2.5-flash",
   animation_suggestions: "gemini-2.5-flash",
+  prompt_polish: "gemini-2.5-flash",
 };
 
 export const TASK_META: Record<TextTask, { label: string; description: string; hint: string }> = {
@@ -56,6 +57,11 @@ export const TASK_META: Record<TextTask, { label: string; description: string; h
     label: "Animation Suggestions",
     description: "Analyzes source image to generate animation prompt ideas",
     hint: "User-facing, results are cached — vision model required",
+  },
+  prompt_polish: {
+    label: "Prompt Polish",
+    description: "Refines rough user drafts into polished creation prompts",
+    hint: "User-facing, runs on demand — optimize for creativity",
   },
 };
 

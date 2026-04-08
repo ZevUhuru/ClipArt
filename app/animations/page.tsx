@@ -38,39 +38,44 @@ export interface AnimationItem {
   style: string;
   category: string;
   slug: string;
+  aspectRatio: string;
   createdAt: string;
+}
+
+const SELECT_FIELDS =
+  "id, slug, prompt, video_url, preview_url, thumbnail_url, created_at, " +
+  "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug, aspect_ratio)";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapRow(a: any): AnimationItem {
+  const src = a.source as Record<string, string> | null;
+  return {
+    id: a.id,
+    prompt: src?.prompt || a.prompt,
+    videoUrl: a.preview_url || a.video_url,
+    posterUrl: src?.image_url || a.thumbnail_url || "",
+    style: src?.style || "flat",
+    category: src?.category || "free",
+    slug: a.slug || a.id,
+    aspectRatio: src?.aspect_ratio || "1:1",
+    createdAt: a.created_at,
+  };
 }
 
 async function getAnimations(): Promise<AnimationItem[]> {
   try {
     const admin = createSupabaseAdmin();
+
     const { data } = await admin
       .from("animations")
-      .select(
-        "id, slug, prompt, video_url, preview_url, thumbnail_url, created_at, " +
-          "source:generations!animations_source_generation_id_fkey(id, image_url, prompt, style, category, slug)",
-      )
+      .select(SELECT_FIELDS)
       .eq("status", "completed")
       .eq("is_public", true)
+      .order("is_gallery", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (!data) return [];
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return data.map((a: any) => {
-      const src = a.source as Record<string, string> | null;
-      return {
-        id: a.id,
-        prompt: src?.prompt || a.prompt,
-        videoUrl: a.preview_url || a.video_url,
-        posterUrl: src?.image_url || a.thumbnail_url || "",
-        style: src?.style || "flat",
-        category: src?.category || "free",
-        slug: a.slug || a.id,
-        createdAt: a.created_at,
-      };
-    });
+    return (data || []).map(mapRow);
   } catch {
     return [];
   }

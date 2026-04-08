@@ -20,6 +20,7 @@ interface AnimationRow {
   thumbnail_url: string | null;
   is_featured: boolean;
   is_mosaic: boolean;
+  is_gallery: boolean;
   is_public: boolean;
   created_at: string;
   source: SourceGen | null;
@@ -64,7 +65,7 @@ export default function AdminAnimationsPage() {
   useEffect(() => { fetchAnimations(); }, [fetchAnimations]);
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
-  const toggleFlag = async (id: string, field: "is_featured" | "is_mosaic", value: boolean) => {
+  const toggleFlag = async (id: string, field: "is_featured" | "is_mosaic" | "is_gallery", value: boolean) => {
     setAnimations((prev) =>
       prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)),
     );
@@ -111,6 +112,7 @@ export default function AdminAnimationsPage() {
 
   const featuredCount = animations.filter((a) => a.is_featured).length;
   const mosaicCount = animations.filter((a) => a.is_mosaic).length;
+  const galleryCount = animations.filter((a) => a.is_gallery).length;
   const hasNext = offset + LIMIT < total;
   const hasPrev = offset > 0;
 
@@ -118,7 +120,7 @@ export default function AdminAnimationsPage() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Animations</h1>
       <p className="mt-1 text-sm text-gray-500">
-        Curate which animations appear on the homepage. Featured = grid section, Mosaic = hero background.
+        Curate which animations appear across the site. Gallery = /animations page, Featured = homepage grid, Mosaic = homepage hero.
       </p>
 
       {/* Mosaic config */}
@@ -160,6 +162,10 @@ export default function AdminAnimationsPage() {
       <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
         <span>{total} completed animation{total !== 1 ? "s" : ""}</span>
         <span className="flex items-center gap-1">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-400" />
+          {galleryCount} gallery
+        </span>
+        <span className="flex items-center gap-1">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-pink-400" />
           {featuredCount} featured
         </span>
@@ -178,6 +184,7 @@ export default function AdminAnimationsPage() {
               <th className="px-4 py-3 text-xs font-semibold text-gray-500">Prompt</th>
               <th className="px-4 py-3 text-xs font-semibold text-gray-500">Model</th>
               <th className="px-4 py-3 text-xs font-semibold text-gray-500">Date</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Gallery</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Featured</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Mosaic</th>
             </tr>
@@ -185,13 +192,13 @@ export default function AdminAnimationsPage() {
           <tbody>
             {loading && animations.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   Loading...
                 </td>
               </tr>
             ) : animations.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   No completed animations yet
                 </td>
               </tr>
@@ -203,7 +210,7 @@ export default function AdminAnimationsPage() {
                   <tr
                     key={a.id}
                     className={`border-b border-gray-50 transition-colors ${
-                      a.is_featured || a.is_mosaic ? "bg-amber-50/30" : "hover:bg-gray-50"
+                      a.is_gallery || a.is_featured || a.is_mosaic ? "bg-amber-50/30" : "hover:bg-gray-50"
                     }`}
                   >
                     <td className="px-4 py-3">
@@ -235,6 +242,20 @@ export default function AdminAnimationsPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-400">
                       {new Date(a.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => toggleFlag(a.id, "is_gallery", !a.is_gallery)}
+                        className={`inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          a.is_gallery ? "bg-emerald-500" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                            a.is_gallery ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button

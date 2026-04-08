@@ -47,7 +47,7 @@ const TEXT_MODELS: TextModel[] = [
   { id: "claude-sonnet-4-6",          provider: "anthropic", label: "Claude Sonnet 4.6",  costInput: "$3.00",  costOutput: "$15.00" },
 ];
 
-type TextTask = "classification" | "seo_generation" | "animation_suggestions";
+type TextTask = "classification" | "seo_generation" | "animation_suggestions" | "prompt_polish";
 
 const TASK_META: Record<TextTask, { label: string; description: string; hint: string; tooltip: string }> = {
   classification: {
@@ -68,9 +68,15 @@ const TASK_META: Record<TextTask, { label: string; description: string; hint: st
     hint: "User-facing, results are cached — vision model required",
     tooltip: "This model receives the user's source image and generates 5 creative animation prompt suggestions. It uses vision (image input) to understand the subject, pose, and scene. Results are cached per image, so each image only triggers one AI call. All models in this list support vision input.",
   },
+  prompt_polish: {
+    label: "Prompt Polish",
+    description: "Refines rough user drafts into polished creation prompts",
+    hint: "User-facing, runs on demand — optimize for creativity",
+    tooltip: "This model takes a rough prompt draft built from the prompt builder chips and polishes it into 4 creative variations. It runs when a user clicks 'Polish with AI' on the create page. No vision required — text only. Choose a model that balances creativity with speed.",
+  },
 };
 
-const TEXT_TASKS: TextTask[] = ["classification", "seo_generation", "animation_suggestions"];
+const TEXT_TASKS: TextTask[] = ["classification", "seo_generation", "animation_suggestions", "prompt_polish"];
 
 type TextModelConfig = Record<TextTask, string>;
 type ImageModelConfig = Record<string, string>;

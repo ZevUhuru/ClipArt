@@ -68,6 +68,9 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Signed Up
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Last Sign In
+              </th>
               <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                 Actions
               </th>
@@ -129,6 +132,17 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                     minute: "2-digit",
                   })}
                 </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {user.last_sign_in_at
+                    ? new Date(user.last_sign_in_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
                   {editingId !== user.id && (
                     <button
@@ -146,7 +160,7 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-400">
+                <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400">
                   No users found.
                 </td>
               </tr>

@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { TEXT_MODEL_IDS, type TextTask } from "@/lib/textAI";
 
-const VALID_TASKS: TextTask[] = ["classification", "seo_generation", "animation_suggestions"];
+const VALID_TASKS: TextTask[] = ["classification", "seo_generation", "animation_suggestions", "prompt_polish"];
 
 const DEFAULTS: Record<TextTask, string> = {
   classification: "gemini-2.5-flash",
   seo_generation: "gemini-2.5-flash",
   animation_suggestions: "gemini-2.5-flash",
+  prompt_polish: "gemini-2.5-flash",
 };
 
 async function verifyAdmin() {

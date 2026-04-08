@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CreatePageLayout } from "@/components/CreatePageLayout";
-import { RecentCreationsStrip } from "@/components/RecentCreationsStrip";
 import { FilterPopover, type ChipItem } from "@/components/filters";
 import { StyleIndicator } from "@/data/styleIndicators";
 import { useAppStore } from "@/stores/useAppStore";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { VALID_STYLES, STYLE_LABELS, type StyleKey } from "@/lib/styles";
+import { PromptBuilder, CLIPART_BUILDER } from "@/components/prompt-builder";
 
 const ANON_RESULT_KEY = "clip_art_anon_result";
 
@@ -16,15 +16,6 @@ const CLIPART_STYLE_CHIPS: ChipItem[] = VALID_STYLES.clipart.map((key) => ({
   label: STYLE_LABELS[key] || key,
   indicator: <StyleIndicator styleKey={key} />,
 }));
-
-const suggestedPrompts = [
-  "a happy sun wearing sunglasses",
-  "wedding couple throwing confetti",
-  "cute cat playing piano",
-  "birthday cake with candles",
-  "teacher reading to students",
-  "rocket ship blasting off",
-];
 
 interface AnonResult {
   imageUrl: string;
@@ -79,9 +70,8 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const [anonResult, setAnonResult] = useState<AnonResult | null>(null);
 
-  const { openAuthModal, user, generationsLoaded, generations } = useAppStore();
+  const { openAuthModal, user } = useAppStore();
   const addJob = useGenerationQueue((s) => s.addJob);
-  const queueJobs = useGenerationQueue((s) => s.jobs);
 
   useEffect(() => {
     try {
@@ -106,11 +96,9 @@ export default function CreatePage() {
     setPrompt("");
   }, [prompt, style, isPublic, user, openAuthModal, addJob]);
 
-  const clipartFilter = (g: { style: string; content_type?: string }) =>
-    !g.content_type || g.content_type === "clipart";
-
-  const hasRecents = generationsLoaded && generations.some((g) => g.id && g.image_url && clipartFilter(g));
-  const showEmptyState = !user || (!hasRecents && queueJobs.length === 0);
+  const handleDraftChange = useCallback((draft: string) => {
+    if (draft) setPrompt(draft);
+  }, []);
 
   return (
     <CreatePageLayout
@@ -152,34 +140,12 @@ export default function CreatePage() {
         />
       )}
 
-      {showEmptyState ? (
-        <div className="py-12 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-            <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Create your first clip art
-          </h3>
-          <p className="mx-auto mt-2 max-w-md text-sm text-gray-400">
-            Describe what you want and we&apos;ll generate it in seconds. Try one of these:
-          </p>
-          <div className="mx-auto mt-6 flex max-w-lg flex-wrap justify-center gap-2">
-            {suggestedPrompts.map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => setPrompt(suggestion)}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <RecentCreationsStrip filterFn={clipartFilter} />
-      )}
+      <PromptBuilder
+        config={CLIPART_BUILDER}
+        style={style}
+        onDraftChange={handleDraftChange}
+        onSelectSuggestion={setPrompt}
+      />
     </CreatePageLayout>
   );
 }
