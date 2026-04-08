@@ -686,7 +686,7 @@ function AnimatePageInner() {
           </div>
 
           {/* Right: Controls */}
-          <div className="space-y-5 lg:overflow-y-auto lg:pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="space-y-5 lg:overflow-y-auto lg:rounded-2xl lg:border lg:border-gray-200/60 lg:bg-white lg:p-5 lg:shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300">
             {!source ? (
               <div className="space-y-5">
                 {/* Recent Setups — prominent on empty state */}
@@ -1371,7 +1371,7 @@ function AnimatePageInner() {
 
       {/* Animation Queue — full-bleed dark footer, pinned to bottom */}
       {queueJobs.length > 0 && (
-        <div className="relative z-30 shrink-0 rounded-l-2xl border-l border-white/[0.06] bg-[#1c1c27] pt-4 pb-3 shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
+        <div className="relative z-30 shrink-0 rounded-bl-2xl border-l border-white/[0.06] bg-[#1c1c27] pt-4 pb-3 shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
           <div className="mx-auto max-w-6xl px-4">
             <AnimationQueue onViewResult={handleViewResult} onRetry={handleRetry} />
           </div>
