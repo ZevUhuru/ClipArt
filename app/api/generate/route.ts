@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           description: classification.description,
           aspect_ratio: aspectRatio,
         })
-        .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, title, style, content_type, category, slug, aspect_ratio, created_at")
         .single();
 
       if (isPublic !== false) {

@@ -171,11 +171,11 @@ export function GenerationQueue() {
         .map((j) => ({
           id: j.generationId || j.id,
           slug: j.generationId || j.id,
-          title: j.prompt,
+          title: j.title || "",
+          prompt: j.prompt,
           url: j.imageUrl!,
           category: "free",
           style: j.style,
-          prompt: j.prompt,
         })),
     [jobs],
   );
@@ -184,7 +184,7 @@ export function GenerationQueue() {
     const img: DrawerImage = {
       id: job.generationId || job.id,
       slug: job.generationId || job.id,
-      title: job.prompt,
+      title: job.title || "",
       url: job.imageUrl!,
       category: "free",
       style: job.style,

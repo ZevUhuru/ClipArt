@@ -222,7 +222,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const isAnimation = !!image.videoUrl;
 
   const promptText = image.prompt || image.title;
-  const displayTitle = image.prompt ? image.title : null;
+  const rawTitle = image.prompt ? image.title : null;
+  const displayTitle =
+    rawTitle && rawTitle !== image.prompt && rawTitle.length <= 80
+      ? rawTitle
+      : null;
 
   const categoryHref = isColoring
     ? `/coloring-pages/${image.category}`

@@ -9,6 +9,7 @@ export interface QueuedGeneration {
   status: "generating" | "completed" | "failed";
   imageUrl?: string;
   generationId?: string;
+  title?: string;
   error?: string;
   startedAt: number;
 }
@@ -77,6 +78,7 @@ export const useGenerationQueue = create<GenerationQueueState>()(
           status: "completed",
           imageUrl: data.imageUrl || data.generation?.image_url,
           generationId: data.generation?.id,
+          title: data.generation?.title,
         });
       })
       .catch((err) => {

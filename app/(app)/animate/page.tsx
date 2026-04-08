@@ -534,15 +534,15 @@ function AnimatePageInner() {
 
   if (sourceLoading) {
     return (
-      <div className="min-h-screen">
-        <div className="mx-auto max-w-6xl px-4 py-6">
-          <div className="mb-6">
+      <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
+          <div className="mb-6 shrink-0">
             <div className="h-5 w-40 animate-pulse rounded-lg bg-gray-200" />
             <div className="mt-2 h-3 w-56 animate-pulse rounded bg-gray-100" />
           </div>
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div className="aspect-square animate-pulse rounded-2xl bg-gray-200" />
-            <div className="space-y-5">
+          <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+            <div className="aspect-square animate-pulse rounded-2xl bg-gray-200 lg:self-start" />
+            <div className="space-y-5 lg:overflow-y-auto">
               <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
               <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
               <div className="grid grid-cols-3 gap-2">
@@ -563,10 +563,10 @@ function AnimatePageInner() {
   const sliderPercent = ((duration - 5) / (maxDuration - 5)) * 100;
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex shrink-0 items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-gray-900">Animation Studio</h1>
             <p className="text-xs text-gray-400">
@@ -594,9 +594,9 @@ function AnimatePageInner() {
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
           {/* Left: Canvas / Preview */}
-          <div>
+          <div className="lg:self-start">
             <div
               ref={resultRef}
               className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
@@ -686,7 +686,7 @@ function AnimatePageInner() {
           </div>
 
           {/* Right: Controls */}
-          <div className="space-y-5">
+          <div className="space-y-5 lg:overflow-y-auto lg:pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {!source ? (
               <div className="space-y-5">
                 {/* Recent Setups — prominent on empty state */}
@@ -1367,9 +1367,9 @@ function AnimatePageInner() {
           </div>
         </div>
 
-        {/* Animation Queue — full width, below the fold */}
+        {/* Animation Queue — pinned to bottom, always visible */}
         {queueJobs.length > 0 && (
-          <div className="mt-8 border-t border-gray-100 pt-6">
+          <div className="mt-4 shrink-0 border-t border-gray-100 bg-white/95 pt-4 pb-2 backdrop-blur-sm">
             <AnimationQueue onViewResult={handleViewResult} onRetry={handleRetry} />
           </div>
         )}
@@ -1404,15 +1404,15 @@ export default function AnimatePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen">
-          <div className="mx-auto max-w-6xl px-4 py-6">
-            <div className="mb-6">
+        <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+          <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
+            <div className="mb-6 shrink-0">
               <div className="h-5 w-40 animate-pulse rounded-lg bg-gray-200" />
               <div className="mt-2 h-3 w-56 animate-pulse rounded bg-gray-100" />
             </div>
-            <div className="grid gap-8 lg:grid-cols-2">
-              <div className="aspect-square animate-pulse rounded-2xl bg-gray-200" />
-              <div className="space-y-5">
+            <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+              <div className="aspect-square animate-pulse rounded-2xl bg-gray-200 lg:self-start" />
+              <div className="space-y-5 lg:overflow-y-auto">
                 <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
                 <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
                 <div className="h-12 animate-pulse rounded-xl bg-gray-200" />

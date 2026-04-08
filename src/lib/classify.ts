@@ -69,7 +69,12 @@ function slugify(text: string): string {
 }
 
 function cleanTitleFromPrompt(prompt: string): string {
-  const words = prompt
+  const cleaned = prompt
+    .replace(/^\.\s*/, "")
+    .replace(/^[A-Z][a-z]+\s+style\.\s*/i, "")
+    .replace(/^(Portrait|Landscape|Square)\s+orientation\.\s*/i, "")
+    .replace(/\.\s*Style:.*$/i, "");
+  const words = cleaned
     .replace(/[-_]+/g, " ")
     .replace(/[,;:."']+/g, " ")
     .replace(/\s+/g, " ")
