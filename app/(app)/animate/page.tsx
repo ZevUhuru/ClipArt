@@ -1367,13 +1367,16 @@ function AnimatePageInner() {
           </div>
         </div>
 
-        {/* Animation Queue — pinned to bottom, always visible */}
-        {queueJobs.length > 0 && (
-          <div className="mt-4 shrink-0 border-t border-gray-100 bg-white/95 pt-4 pb-2 backdrop-blur-sm">
+      </div>
+
+      {/* Animation Queue — full-bleed dark footer, pinned to bottom */}
+      {queueJobs.length > 0 && (
+        <div className="shrink-0 rounded-t-2xl bg-gray-900 pt-4 pb-3 shadow-[0_-6px_20px_rgba(0,0,0,0.12)]">
+          <div className="mx-auto max-w-6xl px-4">
             <AnimationQueue onViewResult={handleViewResult} onRetry={handleRetry} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <ImageImportModal
         open={importOpen}
