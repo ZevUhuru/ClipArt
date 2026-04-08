@@ -110,10 +110,8 @@ export const useGenerationQueue = create<GenerationQueueState>()(
           if (!raw) return null;
           const parsed = JSON.parse(raw);
           if (parsed?.state?.jobs) {
-            parsed.state.jobs = parsed.state.jobs.map((j: QueuedGeneration) =>
-              j.status === "generating"
-                ? { ...j, status: "failed" as const, error: "Interrupted by refresh" }
-                : j,
+            parsed.state.jobs = parsed.state.jobs.filter(
+              (j: QueuedGeneration) => j.status !== "generating",
             );
           }
           return parsed;
