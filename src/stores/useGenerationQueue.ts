@@ -119,7 +119,7 @@ export const useGenerationQueue = create<GenerationQueueState>()(
         setItem: (name, value) => sessionStorage.setItem(name, JSON.stringify(value)),
         removeItem: (name) => sessionStorage.removeItem(name),
       },
-      partialize: (state) => ({ jobs: state.jobs }),
+      partialize: (state) => ({ jobs: state.jobs }) as GenerationQueueState,
     },
   ),
 );
