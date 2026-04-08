@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { useAppStore } from "./useAppStore";
 
 export interface QueuedGeneration {
@@ -25,7 +26,9 @@ interface GenerationQueueState {
   clearCompleted: () => void;
 }
 
-export const useGenerationQueue = create<GenerationQueueState>((set, get) => ({
+export const useGenerationQueue = create<GenerationQueueState>()(
+  persist(
+    (set, get) => ({
   jobs: [],
 
   addJob: (prompt, style, isPublic, options) => {
@@ -97,4 +100,28 @@ export const useGenerationQueue = create<GenerationQueueState>((set, get) => ({
   clearCompleted: () => {
     set((s) => ({ jobs: s.jobs.filter((j) => j.status === "generating") }));
   },
-}));
+    }),
+    {
+      name: "generation-queue",
+      storage: {
+        getItem: (name) => {
+          if (typeof window === "undefined") return null;
+          const raw = sessionStorage.getItem(name);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (parsed?.state?.jobs) {
+            parsed.state.jobs = parsed.state.jobs.map((j: QueuedGeneration) =>
+              j.status === "generating"
+                ? { ...j, status: "failed" as const, error: "Interrupted by refresh" }
+                : j,
+            );
+          }
+          return parsed;
+        },
+        setItem: (name, value) => sessionStorage.setItem(name, JSON.stringify(value)),
+        removeItem: (name) => sessionStorage.removeItem(name),
+      },
+      partialize: (state) => ({ jobs: state.jobs }),
+    },
+  ),
+);
