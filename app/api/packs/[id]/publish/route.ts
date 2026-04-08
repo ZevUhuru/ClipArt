@@ -113,7 +113,7 @@ Items: ${items.length}
 Formats: ${Array.from(formatsSet).join(", ").toUpperCase()}
 Content Types: ${Array.from(contentTypesSet).join(", ")}
 
-Downloaded from https://clip.art/packs/${pack.categories?.slug || "all"}/${pack.slug}
+Downloaded from https://clip.art/design-bundles/${pack.categories?.slug || "all"}/${pack.slug}
 `;
 
     zip.file("LICENSE.txt", licenseText);

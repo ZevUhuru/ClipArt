@@ -88,7 +88,7 @@ interface PackJsonLdOpts {
 }
 
 export function buildPackJsonLd(opts: PackJsonLdOpts) {
-  const url = `${SITE_URL}/packs/${opts.categorySlug}/${opts.slug}`;
+  const url = `${SITE_URL}/design-bundles/${opts.categorySlug}/${opts.slug}`;
 
   if (opts.isFree) {
     return {
@@ -136,9 +136,9 @@ export function buildPackBreadcrumb(opts: {
 }) {
   return buildBreadcrumbJsonLd([
     { name: "Home", path: SITE_URL },
-    { name: "Packs", path: "packs" },
-    { name: `${opts.categoryName} Packs`, path: `packs/${opts.categorySlug}` },
-    { name: opts.packTitle, path: `packs/${opts.categorySlug}/${opts.packSlug}` },
+    { name: "Design Bundles", path: "design-bundles" },
+    { name: `${opts.categoryName} Bundles`, path: `design-bundles/${opts.categorySlug}` },
+    { name: opts.packTitle, path: `design-bundles/${opts.categorySlug}/${opts.packSlug}` },
   ]);
 }
 
@@ -150,7 +150,7 @@ export function buildPackListJsonLd(packs: { title: string; categorySlug: string
       "@type": "ListItem",
       position: i + 1,
       name: pack.title,
-      url: `${SITE_URL}/packs/${pack.categorySlug}/${pack.slug}`,
+      url: `${SITE_URL}/design-bundles/${pack.categorySlug}/${pack.slug}`,
     })),
   };
 }

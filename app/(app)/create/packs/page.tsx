@@ -887,7 +887,7 @@ function CreatePacksPage() {
               {pack.is_published && pack.zip_status === "ready" && pack.categories?.slug && (
                 <button
                   onClick={() =>
-                    router.push(`/packs/${pack.categories!.slug}/${pack.slug}`)
+                    router.push(`/design-bundles/${pack.categories!.slug}/${pack.slug}`)
                   }
                   className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >

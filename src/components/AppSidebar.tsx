@@ -37,7 +37,7 @@ const toolItems = [
   },
 ];
 
-const EXPLORE_PREFIXES = ["/search", "/templates", "/packs"];
+const EXPLORE_PREFIXES = ["/search", "/templates", "/design-bundles"];
 
 const browseItems = [
   {

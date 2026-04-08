@@ -27,7 +27,7 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 
 export function PackCard({ pack }: PackCardProps) {
   const categorySlug = pack.categories?.slug || "all";
-  const href = `/packs/${categorySlug}/${pack.slug}`;
+  const href = `/design-bundles/${categorySlug}/${pack.slug}`;
 
   return (
     <Link

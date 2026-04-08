@@ -148,7 +148,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pack.description ||
     `Download ${pack.title} — ${pack.item_count} free AI-generated ${itemLabel} in ${pack.formats.map((f) => f.toUpperCase()).join(" & ")} format. Free for personal and commercial use.`;
 
-  const canonical = buildCanonical(`packs/${pack.categories?.slug || "all"}/${pack.slug}`);
+  const canonical = buildCanonical(`design-bundles/${pack.categories?.slug || "all"}/${pack.slug}`);
 
   return {
     title: `${title} | clip.art`,
@@ -252,12 +252,12 @@ export default async function PackDetailPage({ params }: Props) {
             <nav className="mb-6 flex items-center gap-1.5 text-xs text-gray-400">
               <Link href="/" className="transition-colors hover:text-gray-600">Home</Link>
               <span className="text-gray-300">/</span>
-              <Link href="/packs" className="transition-colors hover:text-gray-600">Bundles</Link>
+              <Link href="/design-bundles" className="transition-colors hover:text-gray-600">Bundles</Link>
               {pack.categories && (
                 <>
                   <span className="text-gray-300">/</span>
                   <Link
-                    href={`/packs/${pack.categories.slug}`}
+                    href={`/design-bundles/${pack.categories.slug}`}
                     className="transition-colors hover:text-gray-600"
                   >
                     {pack.categories.name}

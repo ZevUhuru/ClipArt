@@ -98,7 +98,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     category.meta_description ||
     `Download free ${category.name.toLowerCase()} clip art bundles and design bundles. AI-generated themed collections in SVG and PNG.`;
-  const canonical = buildCanonical(`packs/${category.slug}`);
+  const canonical = buildCanonical(`design-bundles/${category.slug}`);
 
   return {
     title,
@@ -128,8 +128,8 @@ export default async function PackCategoryPage({ params }: Props) {
 
   const breadcrumb = buildBreadcrumbJsonLd([
     { name: "Home", path: "https://clip.art" },
-    { name: "Bundles", path: "packs" },
-    { name: `${category.name} Bundles`, path: `packs/${category.slug}` },
+    { name: "Bundles", path: "design-bundles" },
+    { name: `${category.name} Bundles`, path: `design-bundles/${category.slug}` },
   ]);
 
   const listJsonLd = buildPackListJsonLd(
@@ -182,7 +182,7 @@ export default async function PackCategoryPage({ params }: Props) {
               {/* Category pills */}
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                 <Link
-                  href="/packs"
+                  href="/design-bundles"
                   className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
                 >
                   All Bundles
@@ -190,7 +190,7 @@ export default async function PackCategoryPage({ params }: Props) {
                 {allCategories.map((cat: { id: string; slug: string; name: string }) => (
                   <Link
                     key={cat.id}
-                    href={`/packs/${cat.slug}`}
+                    href={`/design-bundles/${cat.slug}`}
                     className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
                       cat.slug === category.slug
                         ? "bg-gray-900 text-white"

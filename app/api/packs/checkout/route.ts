@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://clip.art";
     const catSlug = pack.categories?.slug || "all";
-    const packUrl = `${appUrl}/packs/${catSlug}/${pack.slug}`;
+    const packUrl = `${appUrl}/design-bundles/${catSlug}/${pack.slug}`;
 
     const sessionConfig: Record<string, unknown> = {
       mode: "payment",

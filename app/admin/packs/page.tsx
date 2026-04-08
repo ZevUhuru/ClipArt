@@ -261,7 +261,7 @@ export default function AdminPacksPage() {
                     <div className="flex items-center gap-2">
                       {pack.is_published && pack.categories?.slug && (
                         <a
-                          href={`/packs/${pack.categories.slug}/${pack.slug}`}
+                          href={`/design-bundles/${pack.categories.slug}/${pack.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-blue-500 hover:underline"

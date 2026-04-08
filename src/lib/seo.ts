@@ -90,7 +90,7 @@ export function contentTypePath(
     case "illustration":
       return `illustrations/${category}/${slug}`;
     case "pack":
-      return `packs/${category}/${slug}`;
+      return `design-bundles/${category}/${slug}`;
     default:
       return `${category}/${slug}`;
   }
@@ -106,7 +106,7 @@ export function categoryPath(
     case "illustration":
       return `illustrations/${categorySlug}`;
     case "pack":
-      return `packs/${categorySlug}`;
+      return `design-bundles/${categorySlug}`;
     default:
       return categorySlug;
   }

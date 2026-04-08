@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: "Free Clip Art Bundles & Design Bundles | clip.art",
     description:
       "Download free clip art bundles and design bundles. AI-generated themed collections for crafting, teaching, and design.",
-    url: buildCanonical("packs"),
+    url: buildCanonical("design-bundles"),
     siteName: SITE_NAME,
     type: "website",
   },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     description:
       "Download free AI-generated clip art bundles and design bundles.",
   },
-  alternates: { canonical: buildCanonical("packs") },
+  alternates: { canonical: buildCanonical("design-bundles") },
   robots: { index: true, follow: true },
 };
 
@@ -140,7 +140,7 @@ export default async function PacksPage() {
               {categories.length > 0 && (
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                   <Link
-                    href="/packs"
+                    href="/design-bundles"
                     className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-all hover:bg-gray-800"
                   >
                     All Bundles
@@ -148,7 +148,7 @@ export default async function PacksPage() {
                   {categories.map((cat) => (
                     <Link
                       key={cat.id}
-                      href={`/packs/${cat.slug}`}
+                      href={`/design-bundles/${cat.slug}`}
                       className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
                     >
                       {cat.name}
