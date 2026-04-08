@@ -287,13 +287,13 @@ export function AnimationQueue({ onViewResult, onRetry }: AnimationQueueProps) {
             </span>
           )}
         </div>
-        <span className="rounded-full bg-gray-800 px-2 py-0.5 text-[10px] font-bold tabular-nums text-gray-300">
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-gray-400">
           {jobs.filter((j) => j.status === "processing").length} active
         </span>
       </div>
 
       {/* Film strip */}
-      <div className="overflow-hidden rounded-lg bg-gray-800/40">
+      <div className="overflow-hidden rounded-lg bg-white/5">
         <div
           className="flex flex-col overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ paddingTop: 4, paddingBottom: 4 }}
