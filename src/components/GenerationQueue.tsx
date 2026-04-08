@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGenerationQueue, type QueuedGeneration } from "@/stores/useGenerationQueue";
+import { useImageDrawer, type DrawerImage } from "@/stores/useImageDrawer";
 
 const GEN_STAGES = [
   { at: 0, msg: "Preparing..." },
-  { at: 15, msg: "Generating image..." },
+  { at: 15, msg: "Generating..." },
   { at: 50, msg: "Processing..." },
   { at: 80, msg: "Uploading..." },
   { at: 100, msg: "Complete" },
@@ -43,12 +44,18 @@ function useGenProgress(startedAt: number, active: boolean) {
   return { progress: Math.round(active ? progress : 100), stage };
 }
 
+const CARD_SIZE = 80;
+const RING_R = 10;
+const RING_CIRC = 2 * Math.PI * RING_R;
+
 function GenCard({
   job,
   onDismiss,
+  onPreview,
 }: {
   job: QueuedGeneration;
   onDismiss: (id: string) => void;
+  onPreview: (job: QueuedGeneration) => void;
 }) {
   const isActive = job.status === "generating";
   const isComplete = job.status === "completed";
@@ -56,93 +63,97 @@ function GenCard({
   const { progress, stage } = useGenProgress(job.startedAt, isActive);
 
   const styleName = job.style.charAt(0).toUpperCase() + job.style.slice(1);
+  const strokeDash = (progress / 100) * RING_CIRC;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      transition={{ duration: 0.25 }}
-      className={`overflow-hidden rounded-xl border bg-white ${
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.2 }}
+      onClick={() => isComplete && job.imageUrl && onPreview(job)}
+      className={`group relative shrink-0 overflow-hidden rounded-xl border transition-all ${
         isComplete
-          ? "border-emerald-200"
+          ? "cursor-pointer border-emerald-200 hover:scale-[1.04] hover:ring-2 hover:ring-pink-400/40"
           : isFailed
             ? "border-red-200"
             : "border-gray-200"
       }`}
+      style={{ width: CARD_SIZE, height: CARD_SIZE }}
     >
-      <div className="flex items-start gap-3 px-3 py-2.5">
-        {isComplete && job.imageUrl ? (
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-50">
-            <Image
-              src={job.imageUrl}
-              alt={job.prompt}
-              fill
-              className="object-cover"
-              sizes="40px"
-              unoptimized
-            />
-          </div>
-        ) : (
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-            isFailed ? "bg-red-50" : "bg-gray-50"
-          }`}>
-            <svg className={`h-5 w-5 ${isFailed ? "text-red-300" : "text-gray-300"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909" />
-            </svg>
-          </div>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-500">
-              {styleName}
-            </span>
-          </div>
-          <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-gray-400">
-            {job.prompt}
-          </p>
-        </div>
-
-        {(isComplete || isFailed) && (
-          <button
-            onClick={() => onDismiss(job.id)}
-            className="shrink-0 rounded-md p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500"
-            aria-label="Dismiss"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Progress bar */}
-      <div className="relative h-1 bg-gray-100">
-        {isActive && (
-          <motion.div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-pink-400 to-orange-400"
-            initial={{ width: "0%" }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+      {/* Completed: thumbnail */}
+      {isComplete && job.imageUrl && (
+        <>
+          <Image
+            src={job.imageUrl}
+            alt={job.prompt}
+            fill
+            className="object-cover"
+            sizes={`${CARD_SIZE}px`}
+            unoptimized
           />
-        )}
-        {isComplete && <div className="absolute inset-0 bg-emerald-400" />}
-        {isFailed && <div className="absolute inset-0 bg-red-300" />}
-      </div>
+          {/* Expand icon on hover */}
+          <span className="absolute bottom-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+          </span>
+        </>
+      )}
 
-      {/* Status line */}
-      <div className="flex items-center justify-between px-3 py-1.5">
-        <p className={`text-[10px] font-medium ${
-          isComplete ? "text-emerald-600" : isFailed ? "text-red-500" : "text-gray-400"
-        }`}>
-          {isComplete ? "Complete" : isFailed ? (job.error || "Failed") : stage}
-        </p>
-        {isActive && (
-          <span className="text-[10px] tabular-nums font-semibold text-gray-400">{progress}%</span>
-        )}
-      </div>
+      {/* Generating: pulse + progress ring */}
+      {isActive && (
+        <div className="flex h-full w-full flex-col items-center justify-center bg-gray-50">
+          <svg width="28" height="28" viewBox="0 0 28 28" className="-rotate-90">
+            <circle cx="14" cy="14" r={RING_R} fill="none" stroke="#e5e7eb" strokeWidth="2.5" />
+            <circle
+              cx="14" cy="14" r={RING_R} fill="none"
+              stroke="url(#progGrad)" strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={`${strokeDash} ${RING_CIRC}`}
+              className="transition-[stroke-dasharray] duration-500 ease-out"
+            />
+            <defs>
+              <linearGradient id="progGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#f472b6" />
+                <stop offset="1" stopColor="#fb923c" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="mt-1 text-[9px] font-semibold tabular-nums text-gray-400">{progress}%</span>
+        </div>
+      )}
+
+      {/* Failed: error icon */}
+      {isFailed && (
+        <div className="flex h-full w-full flex-col items-center justify-center bg-red-50/60">
+          <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <span className="mt-0.5 text-[8px] font-medium text-red-400">Failed</span>
+        </div>
+      )}
+
+      {/* Style pill (generating / failed) */}
+      {!isComplete && (
+        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/30 px-1.5 py-px text-[7px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+          {styleName}
+        </span>
+      )}
+
+      {/* Dismiss X (complete + failed, hover only) */}
+      {(isComplete || isFailed) && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDismiss(job.id); }}
+          className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100"
+          aria-label="Dismiss"
+        >
+          <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -151,9 +162,40 @@ export function GenerationQueue() {
   const jobs = useGenerationQueue((s) => s.jobs);
   const removeJob = useGenerationQueue((s) => s.removeJob);
   const clearCompleted = useGenerationQueue((s) => s.clearCompleted);
+  const openDrawer = useImageDrawer((s) => s.open);
+
+  const completedDrawerList = useMemo<DrawerImage[]>(
+    () =>
+      jobs
+        .filter((j) => j.status === "completed" && j.imageUrl)
+        .map((j) => ({
+          id: j.generationId || j.id,
+          slug: j.generationId || j.id,
+          title: j.prompt,
+          url: j.imageUrl!,
+          category: "free",
+          style: j.style,
+          prompt: j.prompt,
+        })),
+    [jobs],
+  );
+
+  const handlePreview = (job: QueuedGeneration) => {
+    const img: DrawerImage = {
+      id: job.generationId || job.id,
+      slug: job.generationId || job.id,
+      title: job.prompt,
+      url: job.imageUrl!,
+      category: "free",
+      style: job.style,
+      prompt: job.prompt,
+    };
+    openDrawer(img, completedDrawerList, true);
+  };
 
   if (jobs.length === 0) return null;
 
+  const activeCount = jobs.filter((j) => j.status === "generating").length;
   const completedCount = jobs.filter((j) => j.status !== "generating").length;
 
   return (
@@ -164,7 +206,7 @@ export function GenerationQueue() {
         </p>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-gray-500">
-            {jobs.filter((j) => j.status === "generating").length} active
+            {activeCount} active
           </span>
           {completedCount > 0 && (
             <button
@@ -176,10 +218,11 @@ export function GenerationQueue() {
           )}
         </div>
       </div>
-      <div className="space-y-2">
+
+      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <AnimatePresence mode="popLayout">
           {jobs.map((job) => (
-            <GenCard key={job.id} job={job} onDismiss={removeJob} />
+            <GenCard key={job.id} job={job} onDismiss={removeJob} onPreview={handlePreview} />
           ))}
         </AnimatePresence>
       </div>
