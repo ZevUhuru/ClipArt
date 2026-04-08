@@ -418,6 +418,7 @@ export default async function Home() {
                   style: a.style,
                   category: a.category,
                   slug: a.slug,
+                  aspectRatio: "1:1",
                   createdAt: "",
                 }))} />
 
