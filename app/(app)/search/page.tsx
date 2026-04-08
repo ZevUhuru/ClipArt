@@ -217,7 +217,7 @@ function SearchPageInner() {
           />
 
           {/* Toolbar: Tabs + filter popovers + sort */}
-          <div className="mt-3 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
+          <div className="mt-3 flex items-center justify-between gap-3">
             <div className="flex shrink-0 items-center gap-2">
               <ContentTypeTabs
                 tabs={CONTENT_TABS}
