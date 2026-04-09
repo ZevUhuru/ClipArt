@@ -189,7 +189,7 @@ export function ImageDetailPage({
                   </svg>
                   AI Image Prompt
                 </div>
-                <p className="text-sm leading-relaxed text-gray-600 italic">
+                <p className="break-all text-sm leading-relaxed text-gray-600 italic">
                   &ldquo;{image.prompt}&rdquo;
                 </p>
               </div>

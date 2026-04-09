@@ -288,7 +288,7 @@ export default async function AnimationDetailPage({ params }: PageProps) {
                 </svg>
                 AI Image Prompt
               </div>
-              <p className="text-sm leading-relaxed text-gray-600 italic">
+              <p className="break-all text-sm leading-relaxed text-gray-600 italic">
                 &ldquo;{anim.prompt}&rdquo;
               </p>
             </div>

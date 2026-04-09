@@ -326,7 +326,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               {copiedPrompt ? "Copied!" : "Copy"}
             </button>
           </div>
-          <p className="text-sm leading-relaxed text-gray-600">
+          <p className="break-all text-sm leading-relaxed text-gray-600">
             &ldquo;{promptText}&rdquo;
           </p>
         </div>
