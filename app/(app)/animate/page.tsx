@@ -559,7 +559,7 @@ function AnimatePageInner() {
     );
   }
 
-  const aspectClass = source?.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square";
+  const aspectClass = source?.aspect_ratio === "3:4" ? "aspect-[4/5]" : "aspect-square";
   const sliderPercent = ((duration - 5) / (maxDuration - 5)) * 100;
 
   return (
