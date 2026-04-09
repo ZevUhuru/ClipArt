@@ -599,10 +599,10 @@ function AnimatePageInner() {
           <div className="overflow-hidden rounded-2xl bg-[#1c1c27]">
             <div
               ref={resultRef}
-              className="overflow-hidden"
+              className="p-3"
             >
               {!source && viewingVideo ? (
-                <div className="relative aspect-square w-full">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl">
                   <VideoPlayer
                     key={viewingVideo}
                     src={viewingVideo}
@@ -639,7 +639,7 @@ function AnimatePageInner() {
                   </p>
                 </div>
               ) : activeVideoUrl && !showSource ? (
-                <div className={`relative w-full ${aspectClass}`}>
+                <div className={`relative w-full overflow-hidden rounded-xl ${aspectClass}`}>
                   <VideoPlayer
                     key={activeVideoUrl}
                     src={activeVideoUrl}
@@ -650,12 +650,12 @@ function AnimatePageInner() {
                   />
                 </div>
               ) : (
-                <div className={`relative w-full ${aspectClass}`}>
+                <div className={`relative w-full overflow-hidden rounded-xl ${aspectClass}`}>
                   <Image
                     src={source.url}
                     alt={source.title}
                     fill
-                    className="object-contain p-6"
+                    className="object-contain"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     unoptimized
                   />
