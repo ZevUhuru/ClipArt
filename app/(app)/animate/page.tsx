@@ -596,7 +596,7 @@ function AnimatePageInner() {
 
         <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
           {/* Left: Canvas / Preview */}
-          <div className="overflow-hidden rounded-2xl bg-[#1c1c27]">
+          <div className="overflow-hidden rounded-2xl bg-[#1c1c27] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div
               ref={resultRef}
               className="p-3"
