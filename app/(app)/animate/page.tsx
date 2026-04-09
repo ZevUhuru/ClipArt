@@ -686,7 +686,7 @@ function AnimatePageInner() {
           </div>
 
           {/* Right: Controls */}
-          <div className="space-y-5 lg:overflow-y-auto lg:rounded-2xl lg:border lg:border-gray-200/60 lg:bg-white lg:p-5 lg:shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300">
+          <div className="space-y-5 lg:overflow-y-auto lg:rounded-2xl lg:border lg:border-gray-300/50 lg:bg-white lg:p-5 lg:ring-1 lg:ring-gray-900/5 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.400)_theme(colors.gray.100)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:hover:bg-gray-500">
             {!source ? (
               <div className="space-y-5">
                 {/* Recent Setups — prominent on empty state */}
