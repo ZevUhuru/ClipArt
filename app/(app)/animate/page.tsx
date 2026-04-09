@@ -650,12 +650,13 @@ function AnimatePageInner() {
                   />
                 </div>
               ) : (
-                <div className={`relative w-full overflow-hidden rounded-xl ${aspectClass}`}>
+                <div className="overflow-hidden rounded-xl">
                   <Image
                     src={source.url}
                     alt={source.title}
-                    fill
-                    className="object-contain"
+                    width={800}
+                    height={source.aspect_ratio === "3:4" ? 1000 : 800}
+                    className="h-auto w-full"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     unoptimized
                   />

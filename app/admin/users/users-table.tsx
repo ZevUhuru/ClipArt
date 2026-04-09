@@ -130,6 +130,7 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                     day: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
+                    timeZoneName: "short",
                   })}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
@@ -140,6 +141,7 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZoneName: "short",
                       })
                     : "—"}
                 </td>
