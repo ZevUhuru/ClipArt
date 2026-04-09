@@ -541,7 +541,7 @@ function AnimatePageInner() {
             <div className="mt-2 h-3 w-56 animate-pulse rounded bg-gray-100" />
           </div>
           <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
-            <div className="aspect-square animate-pulse rounded-2xl bg-gray-200 lg:self-start" />
+            <div className="rounded-2xl bg-[#1c1c27]"><div className="aspect-square animate-pulse rounded-2xl bg-white/5" /></div>
             <div className="space-y-5 lg:overflow-y-auto">
               <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
               <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
@@ -596,7 +596,7 @@ function AnimatePageInner() {
 
         <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
           {/* Left: Canvas / Preview */}
-          <div className="overflow-hidden rounded-2xl bg-[#1c1c27] lg:self-start">
+          <div className="overflow-hidden rounded-2xl bg-[#1c1c27]">
             <div
               ref={resultRef}
               className="overflow-hidden"
@@ -1414,7 +1414,7 @@ export default function AnimatePage() {
               <div className="mt-2 h-3 w-56 animate-pulse rounded bg-gray-100" />
             </div>
             <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
-              <div className="aspect-square animate-pulse rounded-2xl bg-gray-200 lg:self-start" />
+              <div className="rounded-2xl bg-[#1c1c27]"><div className="aspect-square animate-pulse rounded-2xl bg-white/5" /></div>
               <div className="space-y-5 lg:overflow-y-auto">
                 <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
                 <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
