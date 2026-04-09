@@ -153,20 +153,40 @@ function EditPageInner() {
 
   if (sourceLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+      <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
+          <div className="mb-6 flex shrink-0 items-center justify-between">
+            <div>
+              <div className="h-5 w-28 animate-pulse rounded bg-gray-200" />
+              <div className="mt-1.5 h-3 w-44 animate-pulse rounded bg-gray-100" />
+            </div>
+          </div>
+          <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+            <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-[#1c1c27]">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-pink-500" />
+            </div>
+            <div className="space-y-4 lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white lg:p-5">
+              <div className="h-4 w-48 animate-pulse rounded bg-gray-100" />
+              <div className="h-24 animate-pulse rounded-xl bg-gray-50" />
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-8 w-28 animate-pulse rounded-full bg-gray-50" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   const displayUrl = result && !showBefore ? result.imageUrl : source?.url || "";
-  const aspectClass = source?.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square";
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex shrink-0 items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-gray-900">Edit Studio</h1>
             <p className="text-xs text-gray-400">
@@ -174,36 +194,46 @@ function EditPageInner() {
             </p>
           </div>
           {source && (
-            <button
-              onClick={() => setImportOpen(true)}
-              disabled={isEditing}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              Change Image
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setImportOpen(true)}
+                disabled={isEditing}
+                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Change Image
+              </button>
+              {result && (
+                <button
+                  onClick={() => { setResult(null); setShowBefore(false); }}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:text-gray-600"
+                >
+                  Start over
+                </button>
+              )}
+            </div>
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
           {/* Left: Canvas / Preview */}
-          <div>
+          <div className="overflow-hidden rounded-2xl bg-[#1c1c27] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div
               ref={resultRef}
-              className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+              className="p-3"
             >
               {!source ? (
                 /* ── Empty canvas state ── */
                 <div className="flex aspect-square flex-col items-center justify-center gap-4 p-8 text-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50">
-                    <svg className="h-10 w-10 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10">
+                    <svg className="h-10 w-10 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-gray-900">Import an image to edit</h2>
+                    <h2 className="text-base font-bold text-white">Import an image to edit</h2>
                     <p className="mt-1 max-w-xs text-sm text-gray-400">
                       Remove backgrounds, add outlines, change styles, and more with AI.
                     </p>
@@ -217,17 +247,18 @@ function EditPageInner() {
                     </svg>
                     Import Image
                   </button>
-                  <p className="text-xs text-gray-300">
+                  <p className="text-xs text-gray-500">
                     Or use Edit on any image across the site
                   </p>
                 </div>
               ) : (
-                <div className={`relative w-full ${aspectClass}`}>
+                <div className="overflow-hidden rounded-xl">
                   <Image
                     src={displayUrl}
                     alt={result ? "Edited image" : source.title}
-                    fill
-                    className="object-contain p-6"
+                    width={800}
+                    height={source.aspect_ratio === "3:4" ? 1000 : 800}
+                    className="h-auto w-full"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     unoptimized
                   />
@@ -237,11 +268,11 @@ function EditPageInner() {
 
             {/* Before/After toggle */}
             {result && (
-              <div className="mt-3 flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 py-2.5">
                 <button
                   onClick={() => setShowBefore(false)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    !showBefore ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"
+                    !showBefore ? "bg-white/15 text-white" : "text-gray-500 hover:text-gray-300"
                   }`}
                 >
                   After
@@ -249,7 +280,7 @@ function EditPageInner() {
                 <button
                   onClick={() => setShowBefore(true)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    showBefore ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-600"
+                    showBefore ? "bg-white/15 text-white" : "text-gray-500 hover:text-gray-300"
                   }`}
                 >
                   Before
@@ -259,7 +290,7 @@ function EditPageInner() {
           </div>
 
           {/* Right: Edit controls */}
-          <div className="space-y-5">
+          <div className="space-y-5 lg:overflow-y-scroll lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white lg:p-5 lg:pr-3 [&::-webkit-scrollbar]:block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:my-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
             {!source ? (
               /* ── Empty controls hint ── */
               <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 p-8 text-center">
@@ -412,8 +443,16 @@ export default function EditPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+        <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+          <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
+            <div className="mb-6 h-10 shrink-0" />
+            <div className="grid gap-8 lg:grid-cols-2 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+              <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-[#1c1c27]">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-pink-500" />
+              </div>
+              <div className="lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white lg:p-5" />
+            </div>
+          </div>
         </div>
       }
     >

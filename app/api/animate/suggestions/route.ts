@@ -83,7 +83,7 @@ async function generateSuggestions(imageUrl: string, duration: number = 5): Prom
     getAnimationSystemPrompt(duration),
     userContent,
     imageData,
-    { temperature: 0.9 },
+    { temperature: 0.7 },
   );
 
   const cleaned = rawText.replace(/```json\n?|```\n?/g, "").trim();
