@@ -407,13 +407,17 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
 
         {!isAnimation ? (
           <button
-            onClick={() => downloadClip(image.url, `${image.slug}.png`)}
+            onClick={() =>
+              isColoring
+                ? downloadClip(image.url, `${image.slug}.pdf`, { pdf: true, title: image.title })
+                : downloadClip(image.url, `${image.slug}.png`)
+            }
             className="btn-primary w-full py-3.5 text-sm"
           >
             <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            {isColoring ? "Download Free Coloring Page" : "Download Free PNG"}
+            {isColoring ? "Download Free PDF" : "Download Free PNG"}
           </button>
         ) : null}
 

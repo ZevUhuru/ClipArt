@@ -85,7 +85,11 @@ export function ImageDetailPage({
             .slice(0, 8));
 
   function handleDownload() {
-    downloadClip(image.url, `${image.slug}.png`);
+    if (isColoringPage) {
+      downloadClip(image.url, `${image.slug}.pdf`, { pdf: true, title: image.title });
+    } else {
+      downloadClip(image.url, `${image.slug}.png`);
+    }
   }
 
   return (
@@ -241,7 +245,7 @@ export function ImageDetailPage({
                   d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
               </svg>
-              {isColoringPage ? "Download Free Coloring Page" : "Download Free PNG"}
+              {isColoringPage ? "Download Free PDF" : "Download Free PNG"}
             </button>
 
             {/* Edit + Animate */}
