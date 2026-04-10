@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { getLogoPng, LOGO_PDF_W, LOGO_PDF_H } from "@/lib/pdfLogo";
 
 // Letter page in PDF points (72pt = 1 inch)
 const PW = 612;
@@ -82,25 +83,29 @@ export async function GET(
   // ── COVER PAGE ─────────────────────────────────────────────────────────────
   const cover = pdfDoc.addPage([PW, PH]);
 
-  // Pink header bar
-  cover.drawRectangle({ x: 0, y: PH - 44, width: PW, height: 44, color: BRAND_PINK });
-  const brandHeader = "clip.art";
-  cover.drawText(brandHeader, {
-    x: MARGIN,
-    y: PH - 28,
-    size: 13,
-    font: fontBold,
-    color: rgb(1, 1, 1),
+  // White header bar with gradient logo (cover)
+  const COVER_HEADER_H = 44;
+  cover.drawRectangle({ x: 0, y: PH - COVER_HEADER_H, width: PW, height: COVER_HEADER_H, color: rgb(1, 1, 1) });
+  cover.drawLine({
+    start: { x: 0, y: PH - COVER_HEADER_H },
+    end: { x: PW, y: PH - COVER_HEADER_H },
+    thickness: 0.5,
+    color: GRAY_RULE,
   });
-  const freeText = "Free Coloring Book";
-  const freeTextW = font.widthOfTextAtSize(freeText, 10);
-  cover.drawText(freeText, {
-    x: PW - MARGIN - freeTextW,
-    y: PH - 26,
-    size: 10,
-    font,
-    color: rgb(0.95, 0.95, 0.95),
-  });
+  const logoPng = await getLogoPng();
+  const COVER_LOGO_H = LOGO_PDF_H * 1.4;
+  const COVER_LOGO_W = LOGO_PDF_W * 1.4;
+  if (logoPng) {
+    const logoImg = await pdfDoc.embedPng(logoPng);
+    cover.drawImage(logoImg, {
+      x: MARGIN,
+      y: PH - COVER_HEADER_H + (COVER_HEADER_H - COVER_LOGO_H) / 2,
+      width: COVER_LOGO_W,
+      height: COVER_LOGO_H,
+    });
+  } else {
+    cover.drawText("clip.art", { x: MARGIN, y: PH - 26, size: 15, font: fontBold, color: BRAND_PINK });
+  }
 
   // Book title
   const bookTitle = `${themeName} Coloring Book`;
@@ -191,25 +196,29 @@ export async function GET(
     const pageTitle = truncate(row.title || row.prompt || `Coloring Page ${i + 1}`, 52);
     const pageLabel = `${i + 1} / ${total}`;
 
-    // ── Header bar ──
-    page.drawRectangle({ x: 0, y: PH - HEADER_H, width: PW, height: HEADER_H, color: rgb(0.98, 0.98, 0.98) });
+    // ── Header bar (white with gradient logo) ──
+    page.drawRectangle({ x: 0, y: PH - HEADER_H, width: PW, height: HEADER_H, color: rgb(1, 1, 1) });
     page.drawLine({
       start: { x: 0, y: PH - HEADER_H },
       end: { x: PW, y: PH - HEADER_H },
       thickness: 0.5,
       color: GRAY_RULE,
     });
-    page.drawText("clip.art", {
-      x: MARGIN,
-      y: PH - HEADER_H + 9,
-      size: 9,
-      font: fontBold,
-      color: BRAND_PINK,
-    });
+    if (logoPng) {
+      const logoImg = await pdfDoc.embedPng(logoPng);
+      page.drawImage(logoImg, {
+        x: MARGIN,
+        y: PH - HEADER_H + (HEADER_H - LOGO_PDF_H) / 2,
+        width: LOGO_PDF_W,
+        height: LOGO_PDF_H,
+      });
+    } else {
+      page.drawText("clip.art", { x: MARGIN, y: PH - HEADER_H + 9, size: 9, font: fontBold, color: BRAND_PINK });
+    }
     const pageLabelW = font.widthOfTextAtSize(pageLabel, 9);
     page.drawText(pageLabel, {
       x: PW - MARGIN - pageLabelW,
-      y: PH - HEADER_H + 9,
+      y: PH - HEADER_H + (HEADER_H - 9) / 2,
       size: 9,
       font,
       color: GRAY_MID,

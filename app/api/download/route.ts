@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { getLogoPng, LOGO_PDF_W, LOGO_PDF_H } from "@/lib/pdfLogo";
 
 const ALLOWED_HOSTS = new Set(["images.clip.art"]);
 
@@ -20,38 +21,35 @@ async function buildColoringPdf(pngBuffer: Buffer, title: string): Promise<Buffe
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([PW, PH]);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   const normalizedPng = await sharp(pngBuffer).png().toBuffer();
   const pngImage = await pdfDoc.embedPng(normalizedPng);
 
-  const HEADER_H = 30;
+  const HEADER_H = 32;
   const FOOTER_H = 50;
 
-  // ── Header bar ──
-  page.drawRectangle({ x: 0, y: PH - HEADER_H, width: PW, height: HEADER_H, color: rgb(0.98, 0.98, 0.98) });
+  // ── Header bar (white with gradient logo) ──
+  page.drawRectangle({ x: 0, y: PH - HEADER_H, width: PW, height: HEADER_H, color: rgb(1, 1, 1) });
   page.drawLine({
     start: { x: 0, y: PH - HEADER_H },
     end: { x: PW, y: PH - HEADER_H },
     thickness: 0.5,
     color: GRAY_RULE,
   });
-  page.drawText("clip.art", {
-    x: MARGIN,
-    y: PH - HEADER_H + 9,
-    size: 9,
-    font: fontBold,
-    color: BRAND_PINK,
-  });
-  const freeLabel = "Free Coloring Page";
-  const freeLabelW = font.widthOfTextAtSize(freeLabel, 9);
-  page.drawText(freeLabel, {
-    x: PW - MARGIN - freeLabelW,
-    y: PH - HEADER_H + 9,
-    size: 9,
-    font,
-    color: GRAY_MID,
-  });
+
+  const logoPng = await getLogoPng();
+  if (logoPng) {
+    const logoImg = await pdfDoc.embedPng(logoPng);
+    page.drawImage(logoImg, {
+      x: MARGIN,
+      y: PH - HEADER_H + (HEADER_H - LOGO_PDF_H) / 2,
+      width: LOGO_PDF_W,
+      height: LOGO_PDF_H,
+    });
+  } else {
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    page.drawText("clip.art", { x: MARGIN, y: PH - HEADER_H + 10, size: 11, font: fontBold, color: BRAND_PINK });
+  }
 
   // ── Footer ──
   page.drawLine({
