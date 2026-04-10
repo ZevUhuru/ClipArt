@@ -9,6 +9,7 @@ import { internalToSlug } from "@/data/categories";
 import { downloadClip } from "@/utils/downloadClip";
 import { SharePopover } from "@/components/SharePopover";
 import { UploadModal } from "@/components/UploadModal";
+import { AttributionSection } from "@/components/AttributionSection";
 
 function getCategorySlug(category: string): string {
   return internalToSlug[category] || "free";
@@ -204,12 +205,23 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string };
+  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string; model?: string; duration?: number };
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
   isOwner: boolean;
   onClose: () => void;
+}
+
+function formatModelLabel(model: string): string {
+  const known: Record<string, string> = {
+    "gemini": "Gemini 2.0 Flash",
+    "dalle": "DALL·E 3",
+    "kling-2.5-turbo": "Kling 2.5 Turbo",
+    "kling-3.0-standard": "Kling 3.0 Standard",
+    "kling-3.0-pro": "Kling 3.0 Pro",
+  };
+  return known[model] ?? model.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 import { MagnifyIcon, ImageLightbox } from "@/components/ImageLightbox";
@@ -298,6 +310,16 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
             <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-600">
               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
               Animation
+            </span>
+          )}
+          {image.model && (
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
+              {formatModelLabel(image.model)}
+            </span>
+          )}
+          {image.duration && (
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
+              {image.duration}s
             </span>
           )}
         </div>
@@ -442,10 +464,17 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
           </svg>
         </Link>
 
-        {/* License */}
-        <p className="text-center text-xs text-gray-300">
-          Free for personal and commercial use. No attribution required.
-        </p>
+        {/* License / Attribution */}
+        {isOwner ? (
+          <p className="text-center text-xs text-gray-300">
+            Free for personal and commercial use.
+          </p>
+        ) : (
+          <AttributionSection
+            url={`https://clip.art${detailHref}`}
+            title={image.title}
+          />
+        )}
       </div>
 
       <AnimatePresence>

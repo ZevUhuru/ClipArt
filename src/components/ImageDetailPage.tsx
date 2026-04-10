@@ -14,6 +14,7 @@ import {
 } from "@/data/categories";
 import { downloadClip } from "@/utils/downloadClip";
 import { buildImageJsonLd, buildDetailBreadcrumb } from "@/lib/seo-jsonld";
+import { AttributionSection } from "@/components/AttributionSection";
 import type { ContentType } from "@/lib/seo";
 
 interface RelatedImage {
@@ -277,8 +278,16 @@ export function ImageDetailPage({
                   : "Generate Similar with AI"}
             </Link>
 
+            {/* Attribution */}
+            <div className="mt-4">
+              <AttributionSection
+                url={`https://clip.art${variant === "coloring" ? `/coloring-pages/${safeCategorySlug}` : isIllustration ? `/illustrations/${categorySlug}` : `/${categorySlug}`}/${image.slug}`}
+                title={image.title}
+              />
+            </div>
+
             {/* Trust strip */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-400">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-400">
               <span className="inline-flex items-center gap-1">
                 <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -289,7 +298,7 @@ export function ImageDetailPage({
                 <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                No attribution required
+                Attribution appreciated
               </span>
               <span className="inline-flex items-center gap-1">
                 <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
