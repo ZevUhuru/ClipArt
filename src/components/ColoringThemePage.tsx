@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { CategoryNav } from "./CategoryNav";
 import type { DbCategory } from "@/lib/categories";
@@ -25,6 +26,28 @@ interface ColoringThemePageProps {
 export function ColoringThemePage({ theme, galleryImages = [], relatedThemes = [] }: ColoringThemePageProps) {
   const suggestedPrompts = theme.suggested_prompts || [];
   const seoContent = theme.seo_content || [];
+  const [bookLoading, setBookLoading] = useState(false);
+
+  async function handleDownloadBook() {
+    setBookLoading(true);
+    try {
+      const res = await fetch(`/api/coloring-book/${theme.slug}`);
+      if (!res.ok) throw new Error("generation failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${theme.slug}-coloring-book.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Coloring book download failed:", e);
+    } finally {
+      setBookLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -78,6 +101,51 @@ export function ColoringThemePage({ theme, galleryImages = [], relatedThemes = [
           </Link>
         </div>
       </section>
+
+      {/* Coloring Book Download Banner */}
+      {galleryImages.length >= 4 && (
+        <section className="mx-auto max-w-6xl px-4 pb-8">
+          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-pink-100 bg-pink-50/60 px-6 py-5 sm:flex-row">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                <svg className="h-6 w-6 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">
+                  Free {theme.name} Coloring Book
+                </p>
+                <p className="text-sm text-gray-500">
+                  {Math.min(galleryImages.length, 10)} pages · print-ready PDF · branded with name line
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleDownloadBook}
+              disabled={bookLoading}
+              className="flex flex-shrink-0 items-center gap-2 rounded-xl bg-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {bookLoading ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Building PDF…
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Free PDF
+                </>
+              )}
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Gallery Grid */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
