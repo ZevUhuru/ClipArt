@@ -85,6 +85,11 @@ export const useAnimationQueue = create<AnimationQueueState>((set, get) => ({
   cancelJob: (id) => {
     get().updateJob(id, { status: "failed", error: "Cancelled by user" });
     if (get().activeJobs().length === 0) get().stopPolling();
+    fetch("/api/animate/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }).catch(() => {});
   },
 
   retryJob: (id) => {
