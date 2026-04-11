@@ -23,6 +23,16 @@ const nextConfig = {
         destination: "/design-bundles/:path*",
         permanent: true,
       },
+      {
+        source: "/my-art",
+        destination: "/library",
+        permanent: true,
+      },
+      {
+        source: "/my-art/:path*",
+        destination: "/library/:path*",
+        permanent: true,
+      },
     ];
   },
 };

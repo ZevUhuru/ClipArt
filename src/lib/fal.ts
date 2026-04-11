@@ -144,6 +144,18 @@ export interface AnimationStatus {
   logs?: string[];
 }
 
+export async function extractVideoFrame(
+  videoUrl: string,
+  frameType: "first" | "middle" | "last" = "last",
+): Promise<string> {
+  const result = await fal.subscribe("fal-ai/ffmpeg-api/extract-frame", {
+    input: { video_url: videoUrl, frame_type: frameType },
+  });
+  const data = result.data as { images: { url: string }[] };
+  if (!data?.images?.[0]?.url) throw new Error("No frame returned from fal.ai");
+  return data.images[0].url;
+}
+
 export async function checkAnimationStatus(
   model: AnimationModel,
   requestId: string,

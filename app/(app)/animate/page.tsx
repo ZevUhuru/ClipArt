@@ -237,6 +237,8 @@ function AnimatePageInner() {
   const [showSource, setShowSource] = useState(false);
   const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [extractingFrame, setExtractingFrame] = useState(false);
+  const [lastFrameUrl, setLastFrameUrl] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const [suggestions, setSuggestions] = useState<PromptSuggestion[]>([]);
@@ -460,6 +462,7 @@ function AnimatePageInner() {
       setViewingPoster(job.sourceUrl);
       setViewingAnimationId(job.id);
       setShowSource(false);
+      setLastFrameUrl(null);
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
@@ -529,12 +532,49 @@ function AnimatePageInner() {
     setShowSource(false);
     setSuggestionsError(false);
     setSelectedPromptId(null);
+    setLastFrameUrl(null);
 
     const cached = suggestionsCache.current.get(`${img.id}:${duration}`);
     setSuggestions(cached || []);
 
     router.replace(`/animate?id=${img.id}`, { scroll: false });
   };
+
+  const handleExtractLastFrame = useCallback(async () => {
+    const animId = viewingAnimationId || latestCompleted?.id;
+    if (!animId || extractingFrame) return;
+    setExtractingFrame(true);
+    try {
+      const res = await fetch("/api/animate/extract-frame", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ animationId: animId, frameType: "last" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to extract frame");
+      setLastFrameUrl(data.frameUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not extract frame");
+    } finally {
+      setExtractingFrame(false);
+    }
+  }, [viewingAnimationId, latestCompleted?.id, extractingFrame]);
+
+  const handleUseLastFrameAsSource = useCallback(() => {
+    if (!lastFrameUrl) return;
+    const animId = viewingAnimationId || latestCompleted?.id || "frame";
+    const syntheticSource: ImportableImage = {
+      id: `last-frame-${animId}`,
+      url: lastFrameUrl,
+      title: `Last frame — ${source?.title || "animation"}`,
+      slug: `last-frame-${animId}`,
+      category: source?.category || "free",
+      style: source?.style || "clipart",
+      aspect_ratio: source?.aspect_ratio,
+    };
+    setLastFrameUrl(null);
+    handleImport(syntheticSource);
+  }, [lastFrameUrl, viewingAnimationId, latestCompleted?.id, source, handleImport]);
 
   const handleStartOver = () => {
     if (source && prompt.trim()) {
@@ -1488,6 +1528,51 @@ function AnimatePageInner() {
                       </svg>
                       Upload to YouTube
                     </button>
+
+                    {/* Last frame extraction + video chaining */}
+                    {!lastFrameUrl ? (
+                      <button
+                        onClick={handleExtractLastFrame}
+                        disabled={extractingFrame}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {extractingFrame ? (
+                          <>
+                            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Extracting last frame…
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                            </svg>
+                            Extract last frame
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="space-y-2 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                        <p className="text-xs font-semibold text-indigo-600">Last frame extracted</p>
+                        <img
+                          src={lastFrameUrl}
+                          alt="Last frame"
+                          className="w-full rounded-lg object-cover"
+                          style={{ maxHeight: 140 }}
+                        />
+                        <button
+                          onClick={handleUseLastFrameAsSource}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                          </svg>
+                          Animate from here
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </>
