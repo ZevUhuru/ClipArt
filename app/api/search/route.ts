@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     let query = admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, aspect_ratio, created_at, is_featured, featured_order", { count: "exact" })
+      .select("id, prompt, title, image_url, style, category, aspect_ratio, model, created_at, is_featured, featured_order", { count: "exact" })
       .eq("is_public", true);
 
     if (contentType === "coloring") {
@@ -90,6 +90,7 @@ export async function GET(request: NextRequest) {
       category: row.category,
       style: row.style,
       aspect_ratio: row.aspect_ratio || undefined,
+      model: row.model || undefined,
     }));
 
     return NextResponse.json({ results, total: count ?? results.length });

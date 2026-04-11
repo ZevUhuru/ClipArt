@@ -222,6 +222,13 @@ const slugToInternal: Record<string, string> = {
   christmas: "christmas",
   halloween: "halloween",
   flower: "flowers",
+  hibiscus: "flowers",
+  lotus: "flowers",
+  lily: "flowers",
+  daisy: "flowers",
+  rose: "flowers",
+  tulip: "flowers",
+  "flower-clipart-black-and-white": "flowers",
   cat: "cats",
   thanksgiving: "food",
 };

@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { checkPromptSafety } from "@/lib/promptSafety";
-import { submitAnimation, type AnimationModel, calculateCredits, MAX_DURATION, AUDIO_SUPPORTED } from "@/lib/fal";
+import { submitAnimation, type AnimationModel, calculateCredits, MIN_DURATION, MAX_DURATION, AUDIO_SUPPORTED } from "@/lib/fal";
 
-const VALID_MODELS: AnimationModel[] = ["kling-2.5-turbo", "kling-3.0-standard", "kling-3.0-pro"];
+const VALID_MODELS: AnimationModel[] = [
+  "kling-2.5-turbo",
+  "kling-3.0-standard",
+  "kling-3.0-pro",
+  "seedance-2.0-fast",
+  "seedance-2.0-standard",
+];
 const ALLOWED_IMAGE_HOST = "images.clip.art";
 
 export async function POST(request: NextRequest) {
@@ -37,10 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     const model: AnimationModel = VALID_MODELS.includes(rawModel) ? rawModel : "kling-3.0-standard";
+    const minDur = MIN_DURATION[model];
     const maxDur = MAX_DURATION[model];
-    const duration = typeof rawDuration === "number" && rawDuration >= 5 && rawDuration <= maxDur
+    const duration = typeof rawDuration === "number" && rawDuration >= minDur && rawDuration <= maxDur
       ? Math.round(rawDuration)
-      : 5;
+      : minDur;
     const audio = rawAudio === true && AUDIO_SUPPORTED[model];
     const creditsNeeded = calculateCredits(model, duration, audio);
 

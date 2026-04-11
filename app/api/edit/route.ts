@@ -110,8 +110,9 @@ export async function POST(request: NextRequest) {
         description: `AI edit: ${instruction.slice(0, 160)}`,
         aspect_ratio: aspectRatio,
         parent_id: sourceGen?.id || null,
+        model: "gemini",
       })
-      .select("id, image_url, prompt, style, category, slug, aspect_ratio, created_at")
+      .select("id, image_url, prompt, style, category, slug, aspect_ratio, model, created_at")
       .single();
 
     if (isPublic !== false) {

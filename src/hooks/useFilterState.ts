@@ -26,6 +26,8 @@ export interface SearchResult {
   aspect_ratio?: string;
   videoUrl?: string;
   previewUrl?: string;
+  model?: string;
+  duration?: number;
 }
 
 interface UseFilterStateOptions {
@@ -146,6 +148,8 @@ export function useFilterState(options: UseFilterStateOptions = {}) {
               style: "animation",
               videoUrl: a.video_url as string,
               previewUrl: a.preview_url as string,
+              model: a.model as string | undefined,
+              duration: a.duration as number | undefined,
             };
           });
         } else if (mode === "private") {
@@ -158,6 +162,7 @@ export function useFilterState(options: UseFilterStateOptions = {}) {
             category: g.category || "free",
             style: g.style,
             content_type: g.content_type,
+            model: g.model || undefined,
           }));
         } else {
           newResults = (data.results || []).map((r: SearchResult) => ({

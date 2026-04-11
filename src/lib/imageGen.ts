@@ -45,16 +45,20 @@ export async function generateImage(
   style: StyleKey,
   contentType: ContentType = "clipart",
   aspectRatioOverride?: string,
-): Promise<Buffer> {
+): Promise<{ buffer: Buffer; model: ModelKey }> {
   const model = await resolveModel(style);
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
 
+  let buffer: Buffer;
   switch (model) {
     case "dalle":
-      return generateWithDallE(prompt, aspectRatio);
+      buffer = await generateWithDallE(prompt, aspectRatio);
+      break;
     case "gemini":
     default:
-      return generateClipArt(prompt, aspectRatio);
+      buffer = await generateClipArt(prompt, aspectRatio);
   }
+
+  return { buffer, model };
 }

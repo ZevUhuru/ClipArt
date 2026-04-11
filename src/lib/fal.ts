@@ -4,30 +4,61 @@ fal.config({
   credentials: process.env.FAL_KEY!,
 });
 
-export type AnimationModel = "kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro";
+export type AnimationModel =
+  | "kling-2.5-turbo"
+  | "kling-3.0-standard"
+  | "kling-3.0-pro"
+  | "seedance-2.0-fast"
+  | "seedance-2.0-standard";
 
 const MODEL_ENDPOINTS: Record<AnimationModel, string> = {
   "kling-2.5-turbo": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
   "kling-3.0-standard": "fal-ai/kling-video/v3/standard/image-to-video",
   "kling-3.0-pro": "fal-ai/kling-video/v3/pro/image-to-video",
+  "seedance-2.0-fast": "bytedance/seedance-2.0/fast/image-to-video",
+  "seedance-2.0-standard": "bytedance/seedance-2.0/image-to-video",
 };
 
 const BASE_CREDITS_PER_SEC: Record<AnimationModel, number> = {
   "kling-2.5-turbo": 1,
   "kling-3.0-standard": 1.6,
   "kling-3.0-pro": 2.4,
+  "seedance-2.0-fast": 5,
+  "seedance-2.0-standard": 6,
+};
+
+export const MIN_DURATION: Record<AnimationModel, number> = {
+  "kling-2.5-turbo": 5,
+  "kling-3.0-standard": 5,
+  "kling-3.0-pro": 5,
+  "seedance-2.0-fast": 4,
+  "seedance-2.0-standard": 4,
 };
 
 export const MAX_DURATION: Record<AnimationModel, number> = {
   "kling-2.5-turbo": 10,
   "kling-3.0-standard": 15,
   "kling-3.0-pro": 15,
+  "seedance-2.0-fast": 15,
+  "seedance-2.0-standard": 15,
 };
 
 export const AUDIO_SUPPORTED: Record<AnimationModel, boolean> = {
   "kling-2.5-turbo": false,
   "kling-3.0-standard": true,
   "kling-3.0-pro": true,
+  // Seedance includes audio at no extra cost — always enabled
+  "seedance-2.0-fast": true,
+  "seedance-2.0-standard": true,
+};
+
+// Seedance charges the same whether or not audio is generated, so no 1.5× surcharge
+export const AUDIO_FREE: Record<AnimationModel, boolean> = {
+  "kling-2.5-turbo": false,
+  "kling-3.0-standard": false,
+  "kling-3.0-pro": false,
+  "seedance-2.0-fast": true,
+  "seedance-2.0-standard": true,
 };
 
 export function calculateCredits(
@@ -37,6 +68,8 @@ export function calculateCredits(
 ): number {
   const base = Math.round(BASE_CREDITS_PER_SEC[model] * duration);
   const safeAudio = audio && AUDIO_SUPPORTED[model];
+  // Seedance includes audio for free — no surcharge
+  if (AUDIO_FREE[model]) return base;
   return safeAudio ? Math.round(base * 1.5) : base;
 }
 
@@ -44,6 +77,8 @@ export const MODEL_LABELS: Record<AnimationModel, string> = {
   "kling-2.5-turbo": "Kling 2.5 Fast",
   "kling-3.0-standard": "Kling 3.0",
   "kling-3.0-pro": "Kling 3.0 Pro",
+  "seedance-2.0-fast": "Seedance 2.0 Fast",
+  "seedance-2.0-standard": "Seedance 2.0",
 };
 
 function getEndpoint(model: AnimationModel): string {
@@ -64,6 +99,17 @@ function buildInput(
       duration: String(Math.min(duration, 10)) as "5" | "10",
       negative_prompt: "blur, distort, and low quality",
       cfg_scale: 0.5,
+    };
+  }
+
+  if (model === "seedance-2.0-fast" || model === "seedance-2.0-standard") {
+    return {
+      prompt,
+      image_url: imageUrl,
+      duration: String(duration),
+      resolution: "720p" as const,
+      aspect_ratio: "auto" as const,
+      generate_audio: audio,
     };
   }
 

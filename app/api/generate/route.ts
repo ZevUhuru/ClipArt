@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ requiresCredits: true }, { status: 402 });
       }
 
-      const rawBuffer = await generateImage(prompt, styleKey, contentType, safeOverride);
+      const { buffer: rawBuffer, model: imageModel } = await generateImage(prompt, styleKey, contentType, safeOverride);
 
       const webpBuffer = await sharp(rawBuffer)
         .webp({ quality: 85, effort: 4 })
@@ -125,8 +125,9 @@ export async function POST(request: NextRequest) {
           slug: uniqueSlug,
           description: classification.description,
           aspect_ratio: aspectRatio,
+          model: imageModel,
         })
-        .select("id, image_url, prompt, title, style, content_type, category, slug, aspect_ratio, created_at")
+        .select("id, image_url, prompt, title, style, content_type, category, slug, aspect_ratio, model, created_at")
         .single();
 
       if (isPublic !== false) {
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Anonymous free generation — generate + upload, skip credits and DB record
-    const rawBuffer = await generateImage(prompt, styleKey, contentType);
+    const { buffer: rawBuffer } = await generateImage(prompt, styleKey, contentType);
 
     const webpBuffer = await sharp(rawBuffer)
       .webp({ quality: 85, effort: 4 })

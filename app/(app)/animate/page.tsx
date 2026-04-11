@@ -19,7 +19,7 @@ import {
   type TemplateCategory,
 } from "@/data/animationTemplates";
 
-type AnimModel = "kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro";
+type AnimModel = "kling-2.5-turbo" | "kling-3.0-standard" | "kling-3.0-pro" | "seedance-2.0-fast" | "seedance-2.0-standard";
 
 interface AnimatePreset {
   id: string;
@@ -75,26 +75,57 @@ const MODELS: { id: AnimModel; label: string; description: string }[] = [
   { id: "kling-3.0-pro", label: "Pro", description: "Highest quality" },
 ];
 
+const ADVANCED_MODELS: { id: AnimModel; label: string; description: string }[] = [
+  { id: "seedance-2.0-fast", label: "Fast", description: "Lower latency" },
+  { id: "seedance-2.0-standard", label: "Standard", description: "Best quality" },
+];
+
 const BASE_CREDITS_PER_SEC: Record<AnimModel, number> = {
   "kling-2.5-turbo": 1,
   "kling-3.0-standard": 1.6,
   "kling-3.0-pro": 2.4,
+  "seedance-2.0-fast": 5,
+  "seedance-2.0-standard": 6,
+};
+
+const MODEL_MIN_DURATION: Record<AnimModel, number> = {
+  "kling-2.5-turbo": 5,
+  "kling-3.0-standard": 5,
+  "kling-3.0-pro": 5,
+  "seedance-2.0-fast": 4,
+  "seedance-2.0-standard": 4,
 };
 
 const MODEL_MAX_DURATION: Record<AnimModel, number> = {
   "kling-2.5-turbo": 10,
   "kling-3.0-standard": 15,
   "kling-3.0-pro": 15,
+  "seedance-2.0-fast": 15,
+  "seedance-2.0-standard": 15,
 };
 
 const MODEL_AUDIO_SUPPORTED: Record<AnimModel, boolean> = {
   "kling-2.5-turbo": false,
   "kling-3.0-standard": true,
   "kling-3.0-pro": true,
+  "seedance-2.0-fast": true,
+  "seedance-2.0-standard": true,
 };
+
+// Models where audio is bundled at no extra cost
+const MODEL_AUDIO_FREE: Record<AnimModel, boolean> = {
+  "kling-2.5-turbo": false,
+  "kling-3.0-standard": false,
+  "kling-3.0-pro": false,
+  "seedance-2.0-fast": true,
+  "seedance-2.0-standard": true,
+};
+
+const SEEDANCE_MODELS = new Set<AnimModel>(["seedance-2.0-fast", "seedance-2.0-standard"]);
 
 function calcCredits(model: AnimModel, duration: number, audio: boolean): number {
   const base = Math.round(BASE_CREDITS_PER_SEC[model] * duration);
+  if (MODEL_AUDIO_FREE[model]) return base;
   const safeAudio = audio && MODEL_AUDIO_SUPPORTED[model];
   return safeAudio ? Math.round(base * 1.5) : base;
 }
@@ -219,13 +250,18 @@ function AnimatePageInner() {
   const [presets, setPresets] = useState<AnimatePreset[]>(() => loadPresets());
   const suggestionsCache = useRef<Map<string, PromptSuggestion[]>>(new Map());
 
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const minDuration = MODEL_MIN_DURATION[model];
   const maxDuration = MODEL_MAX_DURATION[model];
   const audioSupported = MODEL_AUDIO_SUPPORTED[model];
+  const audioFree = MODEL_AUDIO_FREE[model];
   const totalCredits = useMemo(() => calcCredits(model, duration, audio), [model, duration, audio]);
 
   useEffect(() => {
     if (duration > maxDuration) setDuration(maxDuration);
-  }, [model, duration, maxDuration]);
+    if (duration < minDuration) setDuration(minDuration);
+  }, [model, duration, maxDuration, minDuration]);
 
   useEffect(() => {
     if (!audioSupported && audio) setAudio(false);
@@ -560,7 +596,7 @@ function AnimatePageInner() {
   }
 
   const aspectClass = source?.aspect_ratio === "3:4" ? "aspect-[4/5]" : "aspect-square";
-  const sliderPercent = ((duration - 5) / (maxDuration - 5)) * 100;
+  const sliderPercent = maxDuration > minDuration ? ((duration - minDuration) / (maxDuration - minDuration)) * 100 : 0;
 
   return (
     <div className="min-h-screen lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
@@ -1206,6 +1242,76 @@ function AnimatePageInner() {
                   </div>
                 </div>
 
+                {/* Advanced Models — Seedance 2.0 */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setAdvancedOpen((v) => !v)}
+                    disabled={submitting}
+                    className="flex w-full items-center justify-between rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                        Advanced Models
+                      </span>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600">
+                        Labs
+                      </span>
+                    </div>
+                    <svg
+                      className={`h-4 w-4 text-gray-400 transition-transform ${advancedOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <AnimatePresence>
+                    {advancedOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-2 space-y-2 rounded-xl border border-amber-100 bg-amber-50/40 p-3">
+                          <p className="text-[10px] text-amber-700/70">
+                            Seedance 2.0 by ByteDance — cinematic quality with audio included. Higher credit cost.
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {ADVANCED_MODELS.map((m) => {
+                              const isActive = model === m.id;
+                              const modelCredits = calcCredits(m.id, Math.min(duration, MODEL_MAX_DURATION[m.id]), true);
+                              return (
+                                <button
+                                  key={m.id}
+                                  onClick={() => setModel(m.id)}
+                                  disabled={submitting}
+                                  className={`relative rounded-xl border px-3 py-3 text-center transition-all ${
+                                    isActive
+                                      ? "border-amber-400 bg-amber-50 ring-2 ring-amber-100"
+                                      : "border-amber-200/60 bg-white hover:border-amber-300"
+                                  }`}
+                                >
+                                  <p className={`text-sm font-semibold ${isActive ? "text-amber-700" : "text-gray-700"}`}>
+                                    {m.label}
+                                  </p>
+                                  <p className="mt-0.5 text-[10px] text-gray-400">{m.description}</p>
+                                  <p className={`mt-1 text-xs font-bold ${isActive ? "text-amber-600" : "text-gray-500"}`}>
+                                    {modelCredits} credits
+                                  </p>
+                                  <p className="mt-0.5 text-[9px] text-amber-500/80">audio incl.</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 {/* Duration slider */}
                 <div>
                   <div className="mb-2 flex items-center justify-between">
@@ -1225,7 +1331,7 @@ function AnimatePageInner() {
                     </div>
                     <input
                       type="range"
-                      min={5}
+                      min={minDuration}
                       max={maxDuration}
                       step={1}
                       value={duration}
@@ -1235,7 +1341,7 @@ function AnimatePageInner() {
                     />
                   </div>
                   <div className="mt-1.5 flex justify-between text-[10px] text-gray-300">
-                    <span>5s</span>
+                    <span>{minDuration}s</span>
                     {maxDuration >= 10 && <span>10s</span>}
                     <span>{maxDuration}s</span>
                   </div>
@@ -1244,39 +1350,58 @@ function AnimatePageInner() {
                 {/* Audio toggle */}
                 <div
                   className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-all ${
-                    audio && audioSupported
+                    audioFree
+                      ? "border-amber-200 bg-amber-50/40"
+                      : audio && audioSupported
                       ? "border-purple-200 bg-purple-50/50"
                       : "border-gray-200 bg-white"
                   } ${!audioSupported ? "opacity-50" : ""}`}
                 >
                   <div className="flex items-center gap-3">
-                    <svg className={`h-5 w-5 ${audio && audioSupported ? "text-purple-500" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className={`h-5 w-5 ${audioFree ? "text-amber-500" : audio && audioSupported ? "text-purple-500" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
                     </svg>
                     <div>
-                      <p className={`text-sm font-semibold ${audio && audioSupported ? "text-purple-700" : "text-gray-700"}`}>
-                        Native Audio
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-sm font-semibold ${audioFree ? "text-amber-700" : audio && audioSupported ? "text-purple-700" : "text-gray-700"}`}>
+                          Native Audio
+                        </p>
+                        {audioFree && (
+                          <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-600">
+                            Included
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-gray-400">
-                        {audioSupported ? "AI generates sound effects and voice" : "Not available with Fast model"}
+                        {audioFree
+                          ? "Sound effects & voice — always on, no extra cost"
+                          : audioSupported
+                          ? "AI generates sound effects and voice"
+                          : "Not available with Fast model"}
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => audioSupported && setAudio(!audio)}
-                    disabled={submitting || !audioSupported}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:cursor-not-allowed ${
-                      audio && audioSupported ? "bg-purple-500" : "bg-gray-200"
-                    }`}
-                    role="switch"
-                    aria-checked={audio && audioSupported}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                        audio && audioSupported ? "translate-x-6" : "translate-x-1"
+                  {audioFree ? (
+                    <div className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-amber-400">
+                      <span className="inline-block h-4 w-4 translate-x-6 rounded-full bg-white shadow-sm" />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => audioSupported && setAudio(!audio)}
+                      disabled={submitting || !audioSupported}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:cursor-not-allowed ${
+                        audio && audioSupported ? "bg-purple-500" : "bg-gray-200"
                       }`}
-                    />
-                  </button>
+                      role="switch"
+                      aria-checked={audio && audioSupported}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                          audio && audioSupported ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  )}
                 </div>
 
                 {/* Animate button */}
@@ -1289,7 +1414,7 @@ function AnimatePageInner() {
                 </button>
 
                 <p className="text-center text-xs text-gray-300">
-                  {duration}-second MP4{audio && audioSupported ? " with audio" : ""}. Duration: ~1–{Math.max(2, Math.ceil(duration / 3))} minutes. Queue multiple at once.
+                  {duration}-second MP4{audioFree || (audio && audioSupported) ? " with audio" : ""}. Duration: ~1–{Math.max(2, Math.ceil(duration / 3))} minutes. Queue multiple at once.
                 </p>
 
                 {/* Error */}

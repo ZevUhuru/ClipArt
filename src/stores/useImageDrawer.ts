@@ -11,6 +11,8 @@ export interface DrawerImage {
   aspect_ratio?: string;
   videoUrl?: string;
   prompt?: string;
+  model?: string;
+  duration?: number;
 }
 
 interface ImageDrawerState {

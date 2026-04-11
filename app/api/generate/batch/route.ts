@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     const variedPrompt = i === 0 ? prompt : variationFn(prompt);
 
     try {
-      const rawBuffer = await generateImage(variedPrompt, styleKey, contentType);
+      const { buffer: rawBuffer, model: imageModel } = await generateImage(variedPrompt, styleKey, contentType);
       const webpBuffer = await sharp(rawBuffer)
         .webp({ quality: 85, effort: 4 })
         .toBuffer();
@@ -137,6 +137,7 @@ export async function POST(request: NextRequest) {
           slug: uniqueSlug,
           description: classification.description,
           aspect_ratio: aspectRatio,
+          model: imageModel,
         })
         .select("id, image_url, title, slug, prompt")
         .single();

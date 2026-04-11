@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       let animQuery = admin
         .from("animations")
         .select(
-          "id, slug, prompt, model, video_url, preview_url, thumbnail_url, created_at, " +
+          "id, slug, prompt, model, duration, video_url, preview_url, thumbnail_url, created_at, " +
           "source:generations!animations_source_generation_id_fkey(image_url, title, slug, category, aspect_ratio)",
           { count: "exact" },
         )
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     let query = admin
       .from("generations")
-      .select("id, image_url, title, prompt, slug, category, style, content_type, aspect_ratio, created_at", { count: "exact" })
+      .select("id, image_url, title, prompt, slug, category, style, content_type, aspect_ratio, model, created_at", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending })
       .range(offset, offset + limit - 1);

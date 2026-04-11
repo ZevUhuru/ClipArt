@@ -62,6 +62,7 @@ interface SearchResult {
   aspect_ratio?: string;
   videoUrl?: string;
   previewUrl?: string;
+  model?: string;
 }
 
 export default function SearchPage() {
@@ -107,6 +108,7 @@ function SearchPageInner() {
       aspect_ratio: r.aspect_ratio,
       videoUrl: r.videoUrl,
       prompt: r.description,
+      model: r.model,
     });
     openDrawerRaw(toDrawer(item), list.map(toDrawer));
   }, [openDrawerRaw]);

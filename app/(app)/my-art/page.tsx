@@ -27,6 +27,7 @@ interface AnimationItem {
   slug: string | null;
   prompt: string;
   model: string;
+  duration: number;
   video_url: string;
   preview_url: string;
   thumbnail_url: string | null;
@@ -428,6 +429,7 @@ function CreationsGrid() {
     content_type: gen.content_type,
     aspect_ratio: gen.aspect_ratio,
     prompt: gen.prompt,
+    model: gen.model || undefined,
   }));
 
   return (
@@ -675,6 +677,8 @@ function CreationsGrid() {
                     aspect_ratio: anim.source_aspect_ratio || undefined,
                     videoUrl: anim.video_url,
                     prompt: anim.prompt,
+                    model: anim.model,
+                    duration: anim.duration,
                   };
                   const animDrawerList = animations.map((a) => ({
                     id: a.id,
@@ -686,6 +690,8 @@ function CreationsGrid() {
                     aspect_ratio: a.source_aspect_ratio || undefined,
                     videoUrl: a.video_url,
                     prompt: a.prompt,
+                    model: a.model,
+                    duration: a.duration,
                   }));
 
                   return (
@@ -763,6 +769,7 @@ function CreationsGrid() {
                           content_type: gen.content_type,
                           aspect_ratio: gen.aspect_ratio,
                           prompt: gen.prompt,
+                          model: gen.model || undefined,
                         };
                         openDrawer(img, drawerList, true);
                       }}

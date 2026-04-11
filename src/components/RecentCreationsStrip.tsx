@@ -40,6 +40,7 @@ export function RecentCreationsStrip({
     content_type: g.content_type,
     aspect_ratio: g.aspect_ratio,
     prompt: g.prompt,
+    model: g.model || undefined,
   }));
 
   return (

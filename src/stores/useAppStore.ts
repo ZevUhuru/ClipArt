@@ -12,6 +12,7 @@ export interface Generation {
   category: string | null;
   slug: string | null;
   aspect_ratio?: string;
+  model?: string | null;
   created_at: string;
 }
 
