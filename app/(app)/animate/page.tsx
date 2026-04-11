@@ -256,6 +256,8 @@ function AnimatePageInner() {
   const maxDuration = MODEL_MAX_DURATION[model];
   const audioSupported = MODEL_AUDIO_SUPPORTED[model];
   const audioFree = MODEL_AUDIO_FREE[model];
+  // For models where audio is bundled (Seedance), always send audio=true regardless of toggle state
+  const effectiveAudio = audioFree || (audio && audioSupported);
   const totalCredits = useMemo(() => calcCredits(model, duration, audio), [model, duration, audio]);
 
   useEffect(() => {
@@ -279,7 +281,7 @@ function AnimatePageInner() {
           prompt,
           model,
           duration,
-          audio: audio && audioSupported,
+          audio: effectiveAudio,
         }));
       } catch { /* quota exceeded — non-critical */ }
     }, 500);
@@ -399,7 +401,7 @@ function AnimatePageInner() {
           prompt: prompt.trim(),
           model,
           duration,
-          audio: audio && audioSupported,
+          audio: effectiveAudio,
           promptId: selectedPromptId || undefined,
         }),
       });
@@ -427,7 +429,7 @@ function AnimatePageInner() {
         prompt: prompt.trim(),
         model,
         duration,
-        audio: audio && audioSupported,
+        audio: effectiveAudio,
         status: "processing",
         startedAt: Date.now(),
       });
@@ -439,7 +441,7 @@ function AnimatePageInner() {
         prompt: prompt.trim(),
         model,
         duration,
-        audio: audio && audioSupported,
+        audio: effectiveAudio,
       });
       setPresets(loadPresets());
 
@@ -543,7 +545,7 @@ function AnimatePageInner() {
         prompt: prompt.trim(),
         model,
         duration,
-        audio: audio && audioSupported,
+        audio: effectiveAudio,
       });
       setPresets(loadPresets());
     }
@@ -1414,7 +1416,7 @@ function AnimatePageInner() {
                 </button>
 
                 <p className="text-center text-xs text-gray-300">
-                  {duration}-second MP4{audioFree || (audio && audioSupported) ? " with audio" : ""}. Duration: ~1–{Math.max(2, Math.ceil(duration / 3))} minutes. Queue multiple at once.
+                  {duration}-second MP4{effectiveAudio ? " with audio" : ""}. Duration: ~1–{Math.max(2, Math.ceil(duration / 3))} minutes. Queue multiple at once.
                 </p>
 
                 {/* Error */}
