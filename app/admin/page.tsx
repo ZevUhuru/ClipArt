@@ -1,7 +1,14 @@
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
+import AdminCredits from "./admin-credits";
 
 export const revalidate = 0;
+
+async function getAdminCredits(userId: string) {
+  const admin = createSupabaseAdmin();
+  const { data } = await admin.from("profiles").select("credits").eq("id", userId).single();
+  return data?.credits ?? 0;
+}
 
 async function getStats() {
   const admin = createSupabaseAdmin();
@@ -32,6 +39,10 @@ async function getStats() {
 }
 
 export default async function AdminDashboard() {
+  const supabase = await createSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  const adminCredits = user ? await getAdminCredits(user.id) : 0;
+
   const stats = await getStats();
 
   const cards = [
@@ -58,6 +69,12 @@ export default async function AdminDashboard() {
           </Link>
         ))}
       </div>
+
+      {user && (
+        <div className="mt-8 max-w-sm">
+          <AdminCredits userId={user.id} initialCredits={adminCredits} />
+        </div>
+      )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <Link
