@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/stores/useAppStore";
+import { ImageImportModal, type ImportableImage } from "@/components/ImageImportModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -54,85 +55,6 @@ interface Project {
 
 // ─── Image picker modal ────────────────────────────────────────────────────
 
-interface PickerImage {
-  id: string;
-  image_url: string;
-  title: string | null;
-  slug: string | null;
-  category: string | null;
-  aspect_ratio: string | null;
-  style: string | null;
-}
-
-function ImagePickerModal({
-  onSelect,
-  onClose,
-}: {
-  onSelect: (img: PickerImage) => void;
-  onClose: () => void;
-}) {
-  const [images, setImages] = useState<PickerImage[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/me/images?filter=all&limit=60&offset=0&sort=newest")
-      .then((r) => r.json())
-      .then((d) => setImages(d.images || []))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 24 }}
-        className="flex h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white sm:rounded-2xl"
-      >
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-base font-bold text-gray-900">Pick a source image</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          {loading ? (
-            <div className="grid grid-cols-4 gap-2">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="aspect-square animate-pulse rounded-lg bg-gray-100" />
-              ))}
-            </div>
-          ) : images.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">
-              No images in your Library yet.{" "}
-              <Link href="/create" className="ml-1 text-pink-500 hover:underline">Create some</Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-2">
-              {images.map((img) => (
-                <button
-                  key={img.id}
-                  onClick={() => onSelect(img)}
-                  className="group relative aspect-square overflow-hidden rounded-lg bg-gray-50 ring-2 ring-transparent transition-all hover:ring-pink-400"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.image_url} alt={img.title || ""} className="h-full w-full object-contain" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
-                    <svg className="h-5 w-5 text-white opacity-0 drop-shadow-lg transition-opacity group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 // ─── Sprocket holes component ──────────────────────────────────────────────
 // Mirrors the AnimationQueue design — vertical strip with perforations
@@ -521,7 +443,7 @@ export default function StoryboardPage() {
 
   // ── Add shot ────────────────────────────────────────────────────────────
 
-  async function handlePickImage(img: PickerImage) {
+  async function handlePickImage(img: ImportableImage) {
     setShowPicker(false);
     const res = await fetch(`/api/me/projects/${projectId}/items`, {
       method: "POST",
@@ -545,11 +467,11 @@ export default function StoryboardPage() {
           animation_id: null,
           generation: {
             id: img.id,
-            image_url: img.image_url,
+            image_url: img.url,
             title: img.title,
             slug: img.slug,
             category: img.category,
-            aspect_ratio: img.aspect_ratio,
+            aspect_ratio: img.aspect_ratio ?? null,
             style: img.style,
           },
           animation: null,
@@ -890,14 +812,11 @@ export default function StoryboardPage() {
       </div>
 
       {/* Image picker modal */}
-      <AnimatePresence>
-        {showPicker && (
-          <ImagePickerModal
-            onSelect={handlePickImage}
-            onClose={() => setShowPicker(false)}
-          />
-        )}
-      </AnimatePresence>
+      <ImageImportModal
+        open={showPicker}
+        onClose={() => setShowPicker(false)}
+        onSelect={handlePickImage}
+      />
 
       {/* Clip viewer overlay */}
       <AnimatePresence>
