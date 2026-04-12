@@ -62,6 +62,7 @@ export function ImageImportModal({ open, onClose, onSelect }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fetchIdRef = useRef(0);
+  const loadMoreRef = useRef<() => void>(() => {});
 
   const isSearching = debouncedQuery.length > 0;
 
@@ -164,21 +165,29 @@ export function ImageImportModal({ open, onClose, onSelect }: Props) {
   }, [open]);
 
   // --- Infinite scroll ---
+  // Keep a stable ref to the "load more" action so the observer never needs to be recreated.
   useEffect(() => {
-    if (!open || !sentinelRef.current) return;
+    loadMoreRef.current = () => {
+      if (!hasMore || loadingCommunity) return;
+      const nextOffset = communityOffset + PAGE_SIZE;
+      setCommunityOffset(nextOffset);
+      fetchCommunity(debouncedQuery, contentType, nextOffset, true);
+    };
+  }, [hasMore, loadingCommunity, communityOffset, debouncedQuery, contentType, fetchCommunity]);
+
+  useEffect(() => {
+    if (!open) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingCommunity) {
-          const nextOffset = communityOffset + PAGE_SIZE;
-          setCommunityOffset(nextOffset);
-          fetchCommunity(debouncedQuery, contentType, nextOffset, true);
-        }
+        if (entries[0].isIntersecting) loadMoreRef.current();
       },
-      { root: scrollRef.current, rootMargin: "200px" },
+      { root: null, rootMargin: "300px" },
     );
-    observer.observe(sentinelRef.current);
+    observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [open, hasMore, loadingCommunity, communityOffset, debouncedQuery, contentType, fetchCommunity]);
+  }, [open]);
 
   // --- Escape key ---
   useEffect(() => {
