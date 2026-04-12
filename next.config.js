@@ -33,6 +33,11 @@ const nextConfig = {
         destination: "/library/:path*",
         permanent: true,
       },
+      {
+        source: "/shorts",
+        destination: "/storyboard",
+        permanent: true,
+      },
     ];
   },
 };
