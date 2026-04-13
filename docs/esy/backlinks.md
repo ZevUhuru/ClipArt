@@ -4,6 +4,23 @@ This document tracks all dofollow links from clip.art pages pointing to **https:
 
 ---
 
+## Strategy
+
+*Added 2026-04-13*
+
+clip.art is a division of ESY LLC. The ESY attribution links serve two purposes:
+
+**1. SEO link equity**
+clip.art has significant organic search volume across hundreds of thousands of image detail pages. Each page carries a dofollow link to esy.com, passing authority at scale. The links are contextually relevant (clip.art is genuinely powered by ESY's automation infrastructure), which strengthens their SEO value over generic footer links.
+
+**2. Referral traffic measurement**
+UTM parameters differentiate traffic by content type (`clipart_detail`, `coloring_detail`, `illustration_detail`, `animation_detail`) so we can identify which content categories drive the most ESY interest. This informs where to invest future SEO content effort on clip.art — if coloring page visitors convert better on ESY, for example, we'd prioritize growing that catalog.
+
+**Placement philosophy**
+Links are placed at the lowest visual hierarchy tier (`text-[10px]`, 70% opacity) in the existing trust/metadata zone, immediately below the trust strip. This ensures they are crawlable and visible without competing with primary user CTAs (download, generate similar). The goal is zero UX impact while maintaining full link equity.
+
+---
+
 ## Active Links
 
 ### 1. Image Detail Pages — "Automated with ESY"
