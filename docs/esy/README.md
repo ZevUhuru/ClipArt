@@ -11,3 +11,4 @@ These docs live in the clip.art repo for convenience but describe the **API cont
 | Document | Purpose |
 |----------|---------|
 | [API Design](api-design.md) | Template runner API contract, decisions, and reference implementation |
+| [Backlinks](backlinks.md) | ESY attribution links placed on clip.art pages |
