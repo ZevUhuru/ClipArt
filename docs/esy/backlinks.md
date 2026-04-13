@@ -25,7 +25,23 @@ This document tracks all dofollow links from clip.art pages pointing to **https:
 
 ---
 
-### 2. Site Footer — "A division of ESY LLC"
+### 2. Animation Detail Pages — "Animated with ESY"
+
+| Property | Value |
+|----------|-------|
+| **Text** | `Animated with ESY` |
+| **Href** | `https://esy.com` |
+| **rel** | `noopener` (dofollow) |
+| **Target** | `_blank` |
+| **Component** | `app/animations/[slug]/page.tsx` |
+| **Placement** | Below the trust strip (Free for commercial use / No attribution required / MP4 video download) in the right column of the animation detail hero |
+| **Applies to** | All public animation detail pages |
+| **Visual weight** | `text-[10px] text-gray-400/70` — matches image detail pages |
+| **Status** | ✅ Live — shipped 2026-04-13, commit `9eec40a` |
+
+---
+
+### 3. Site Footer — "A division of ESY LLC"
 
 | Property | Value |
 |----------|-------|
