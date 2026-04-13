@@ -371,7 +371,7 @@ export default async function AnimationDetailPage({ params }: PageProps) {
             <p className="mt-3 text-center text-[10px] text-gray-400/70">
               Automated with{" "}
               <a
-                href="https://esy.com"
+                href="https://esy.com?utm_source=clipart&utm_medium=attribution_link&utm_campaign=animation_detail"
                 target="_blank"
                 rel="noopener"
                 className="transition-colors hover:text-gray-500"

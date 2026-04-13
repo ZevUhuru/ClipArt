@@ -11,7 +11,8 @@ This document tracks all dofollow links from clip.art pages pointing to **https:
 | Property | Value |
 |----------|-------|
 | **Text** | `Automated with ESY` |
-| **Href** | `https://esy.com` |
+| **Href** | `https://esy.com?utm_source=clipart&utm_medium=attribution_link&utm_campaign={variant}_detail` |
+| **UTM breakdown** | `utm_campaign` is dynamically `clipart_detail`, `coloring_detail`, or `illustration_detail` based on page type |
 | **rel** | `noopener` (dofollow — no `nofollow` or `noreferrer`) |
 | **Target** | `_blank` |
 | **Component** | `src/components/ImageDetailPage.tsx` |
@@ -30,7 +31,7 @@ This document tracks all dofollow links from clip.art pages pointing to **https:
 | Property | Value |
 |----------|-------|
 | **Text** | `Automated with ESY` |
-| **Href** | `https://esy.com` |
+| **Href** | `https://esy.com?utm_source=clipart&utm_medium=attribution_link&utm_campaign=animation_detail` |
 | **rel** | `noopener` (dofollow) |
 | **Target** | `_blank` |
 | **Component** | `app/animations/[slug]/page.tsx` |
