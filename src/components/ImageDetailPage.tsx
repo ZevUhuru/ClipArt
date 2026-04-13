@@ -311,6 +311,18 @@ export function ImageDetailPage({
                 High-resolution PNG
               </span>
             </div>
+
+            <p className="mt-3 text-center text-[10px] text-gray-400/70">
+              Automated with{" "}
+              <a
+                href="https://esy.com"
+                target="_blank"
+                rel="noopener"
+                className="transition-colors hover:text-gray-500"
+              >
+                ESY
+              </a>
+            </p>
           </div>
         </div>
       </section>
