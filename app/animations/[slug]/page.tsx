@@ -369,7 +369,7 @@ export default async function AnimationDetailPage({ params }: PageProps) {
             </div>
 
             <p className="mt-3 text-center text-[10px] text-gray-400/70">
-              Animated with{" "}
+              Automated with{" "}
               <a
                 href="https://esy.com"
                 target="_blank"

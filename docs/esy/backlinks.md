@@ -25,11 +25,11 @@ This document tracks all dofollow links from clip.art pages pointing to **https:
 
 ---
 
-### 2. Animation Detail Pages — "Animated with ESY"
+### 2. Animation Detail Pages — "Automated with ESY"
 
 | Property | Value |
 |----------|-------|
-| **Text** | `Animated with ESY` |
+| **Text** | `Automated with ESY` |
 | **Href** | `https://esy.com` |
 | **rel** | `noopener` (dofollow) |
 | **Target** | `_blank` |
