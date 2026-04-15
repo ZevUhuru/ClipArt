@@ -92,6 +92,8 @@ export async function MarketingFooter() {
               <Link
                 key={letter}
                 href={`/animals-that-start-with-${letter.toLowerCase()}`}
+                aria-label={`Animals that start with ${letter}`}
+                title={`Animals that start with ${letter}`}
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-sm font-semibold text-gray-400 transition-colors hover:bg-pink-500/20 hover:text-white"
               >
                 {letter}
