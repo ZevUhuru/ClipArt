@@ -2,11 +2,19 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCategoryBySlug, getAllCategories, type DbCategory } from "@/lib/categories";
 import { CategoryPage } from "@/components/CategoryPage";
+import { AnimalAlphabetPage } from "@/components/AnimalAlphabetPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildListingMetadata } from "@/lib/seo";
+import {
+  getAnimalEntriesByLetter,
+  getLetterColoringPages,
+  getLetterAnimations,
+} from "@/lib/animals";
 
 export const revalidate = 60;
+
+const ANIMAL_ALPHABET_RE = /^animals-that-start-with-([a-z])$/;
 
 interface PageProps {
   params: { category: string };
@@ -77,6 +85,38 @@ async function getRelatedCategories(relatedSlugs: string[]): Promise<DbCategory[
 export default async function Page({ params }: PageProps) {
   const category = await getCategoryBySlug(params.category);
   if (!category) notFound();
+
+  const match = ANIMAL_ALPHABET_RE.exec(params.category);
+
+  if (match) {
+    const letter = match[1].toUpperCase();
+    const [dbImages, relatedCategories, animals] = await Promise.all([
+      getGalleryImages(params.category),
+      getRelatedCategories(category.related_slugs || []),
+      getAnimalEntriesByLetter(letter),
+    ]);
+
+    const animalNames = animals.map((a) => a.name);
+    const [coloringImages, anims] = await Promise.all([
+      getLetterColoringPages(animalNames),
+      getLetterAnimations(animalNames),
+    ]);
+
+    return (
+      <>
+        <AnimalAlphabetPage
+          category={category}
+          letter={letter}
+          animals={animals}
+          galleryImages={dbImages}
+          coloringImages={coloringImages}
+          animations={anims}
+          relatedCategories={relatedCategories}
+        />
+        <MarketingFooter />
+      </>
+    );
+  }
 
   const [dbImages, relatedCategories] = await Promise.all([
     getGalleryImages(params.category),
