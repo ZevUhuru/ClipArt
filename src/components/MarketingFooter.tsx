@@ -82,6 +82,24 @@ export async function MarketingFooter() {
           </div>
         </div>
 
+        {/* Animals A–Z */}
+        <div className="mt-10 border-t border-white/10 pt-8">
+          <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">
+            <Link href="/animals" className="transition-colors hover:text-white">Animals That Start With</Link>
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => (
+              <Link
+                key={letter}
+                href={`/animals-that-start-with-${letter.toLowerCase()}`}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-sm font-semibold text-gray-400 transition-colors hover:bg-pink-500/20 hover:text-white"
+              >
+                {letter}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center gap-4 border-t border-white/10 pt-8 sm:flex-row sm:justify-between">
           <div className="flex flex-col items-center gap-1 sm:items-start">
