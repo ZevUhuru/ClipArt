@@ -17,7 +17,7 @@ export async function MarketingFooter() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/">
+            <Link href="/" aria-label="clip.art home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo-white.svg" className="h-7" alt="clip.art" />
             </Link>

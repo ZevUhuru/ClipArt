@@ -1,0 +1,57 @@
+---
+description: Enforce accessible link labeling on all components
+globs: src/components/**/*.tsx, app/**/*.tsx
+alwaysApply: true
+---
+# Accessible Link Rules
+
+Every `<Link>` and `<a>` element must have a clear, descriptive accessible name. Follow these rules:
+
+## When visible text is descriptive enough
+
+Links whose visible text already describes the destination need no extra attributes.
+
+```tsx
+// Good — visible text is self-descriptive
+<Link href="/create">AI Clip Art Generator</Link>
+<Link href="/coloring-pages/animals">Animal Coloring Pages</Link>
+```
+
+## When visible text is short, iconic, or ambiguous
+
+Links that only show a single letter, icon, or abbreviated label MUST include:
+
+1. **`aria-label`** — a full description for screen readers
+2. **`title`** — a hover tooltip that also provides semantic context for crawlers
+
+```tsx
+// Good — single-letter link with full context
+<Link
+  href="/animals-that-start-with-a"
+  aria-label="Animals that start with A"
+  title="Animals that start with A"
+>
+  A
+</Link>
+```
+
+## Image-only links
+
+Links wrapping only an `<img>` or SVG MUST include `aria-label` on the link itself. The inner `alt` text alone is not sufficient for all assistive technologies.
+
+```tsx
+// Good — image link with aria-label
+<Link href="/" aria-label="clip.art home">
+  <img src="/logo.svg" alt="clip.art" />
+</Link>
+```
+
+## External links
+
+Links opening in a new tab MUST include `rel="noopener noreferrer"` and SHOULD include `aria-label` if the visible text doesn't indicate it opens externally.
+
+## Do NOT
+
+- Leave links with only an icon or single character and no `aria-label`
+- Use `aria-label` when the visible link text is already descriptive (redundant)
+- Use vague labels like "click here" or "link"
