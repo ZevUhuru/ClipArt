@@ -198,6 +198,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  /* --- Animals hub --- */
+
+  const animalsHub: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/animals`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+  ];
+
   /* --- Hub pages --- */
 
   const hubPages: MetadataRoute.Sitemap = [
@@ -256,6 +267,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...packDetailPages,
     ...animationsLanding,
     ...stickersLanding,
+    ...animalsHub,
     ...hubPages,
     ...learnHub,
     ...learnArticlePages,
