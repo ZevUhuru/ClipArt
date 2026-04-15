@@ -30,10 +30,10 @@ export async function MarketingFooter() {
           <div>
             <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Create</h4>
             <ul className="space-y-2.5">
-              <li><Link href="/create" className="text-sm transition-colors hover:text-white">AI Clip Art Generator</Link></li>
-              <li><Link href="/create/coloring-pages" className="text-sm transition-colors hover:text-white">Coloring Page Generator</Link></li>
-              <li><Link href="/animations" className="text-sm transition-colors hover:text-white">Animated Clip Art</Link></li>
-              <li><Link href="/stickers" className="text-sm transition-colors hover:text-white">AI Sticker Generator</Link></li>
+              <li><Link href="/create" className="text-xs transition-colors hover:text-white">AI Clip Art Generator</Link></li>
+              <li><Link href="/create/coloring-pages" className="text-xs transition-colors hover:text-white">Coloring Page Generator</Link></li>
+              <li><Link href="/animations" className="text-xs transition-colors hover:text-white">Animated Clip Art</Link></li>
+              <li><Link href="/stickers" className="text-xs transition-colors hover:text-white">AI Sticker Generator</Link></li>
             </ul>
           </div>
 
@@ -41,10 +41,10 @@ export async function MarketingFooter() {
           <div>
             <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Learn</h4>
             <ul className="space-y-2.5">
-              <li><Link href="/learn" className="text-sm transition-colors hover:text-white">All Tutorials</Link></li>
+              <li><Link href="/learn" className="text-xs transition-colors hover:text-white">All Tutorials</Link></li>
               {learnPosts.slice(0, 5).map((post) => (
                 <li key={post.slug}>
-                  <Link href={`/learn/${post.slug}`} className="text-sm transition-colors hover:text-white">
+                  <Link href={`/learn/${post.slug}`} className="text-xs transition-colors hover:text-white">
                     {post.title}
                   </Link>
                 </li>
@@ -58,7 +58,7 @@ export async function MarketingFooter() {
             <ul className="space-y-2.5">
               {categories.slice(0, 8).map((cat: DbCategory) => (
                 <li key={cat.slug}>
-                  <Link href={`/${cat.slug}`} className="text-sm transition-colors hover:text-white">
+                  <Link href={`/${cat.slug}`} className="text-xs transition-colors hover:text-white">
                     {cat.name} Clip Art
                   </Link>
                 </li>
@@ -70,10 +70,10 @@ export async function MarketingFooter() {
           <div>
             <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Coloring Pages</h4>
             <ul className="space-y-2.5">
-              <li><Link href="/coloring-pages" className="text-sm transition-colors hover:text-white">All Coloring Pages</Link></li>
+              <li><Link href="/coloring-pages" className="text-xs transition-colors hover:text-white">All Coloring Pages</Link></li>
               {activeThemes.slice(0, 7).map((theme: DbCategory) => (
                 <li key={theme.slug}>
-                  <Link href={`/coloring-pages/${theme.slug}`} className="text-sm transition-colors hover:text-white">
+                  <Link href={`/coloring-pages/${theme.slug}`} className="text-xs transition-colors hover:text-white">
                     {theme.name} Coloring Pages
                   </Link>
                 </li>
