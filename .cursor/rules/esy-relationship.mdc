@@ -1,0 +1,28 @@
+---
+description: clip.art's relationship to ESY infrastructure — generation delegation and migration status
+globs: "**/*"
+alwaysApply: true
+---
+
+# clip.art / ESY Relationship
+
+clip.art delegates all content generation to ESY's API (api.esy.com). ESY handles provider routing, retries, quality scoring, HITL review, batch scheduling, cost tracking, image processing, storage, and metadata enrichment.
+
+## Migration Status
+
+The current codebase still has direct AI provider calls. These are transitional and will be replaced by ESY API calls:
+
+- `src/lib/imageGen.ts` — Gemini generation (ESY replaces)
+- `src/lib/dalle.ts` — OpenAI integration (ESY replaces)
+- `src/lib/r2.ts` — R2 uploads (ESY replaces)
+- `src/lib/classify.ts` — Auto-classification (ESY replaces)
+- `src/lib/promptSafety.ts` — Safety filtering (ESY replaces)
+- `scripts/seed-animal-clipart.ts` — Batch generation (ESY replaces)
+- `app/api/generate/route.ts` — Becomes thin proxy to ESY API
+
+When modifying generation pipeline code, note that it will be replaced by ESY. Avoid deep refactors of generation logic — focus changes on the consumer-facing side (UI, SEO, display).
+
+## Key Reference Docs
+
+- `docs/CONTENT_GENERATION_WORKFLOWS.md` — Full ESY integration spec with interface definitions
+- `docs/esy/` — API contract between clip.art and ESY

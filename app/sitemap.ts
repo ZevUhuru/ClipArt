@@ -56,17 +56,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/${categorySlug}/${img.slug}`,
       lastModified: now,
       changeFrequency: "weekly" as const,
-      priority: 0.7,
+      priority: 0.5,
     };
   });
 
   const dbImages = await getPublicImageSlugs();
+  // Detail pages get lower priority than category/hub pages to signal hierarchy
   const dbImagePages: MetadataRoute.Sitemap = dbImages.map(
     (row: { slug: string | null; id: string; category: string; created_at: string }) => ({
       url: `${baseUrl}/${row.category}/${row.slug || row.id}`,
       lastModified: new Date(row.created_at),
       changeFrequency: "weekly" as const,
-      priority: 0.7,
+      priority: 0.5,
     }),
   );
 
@@ -96,7 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/coloring-pages/${row.category}/${row.slug || row.id}`,
       lastModified: new Date(row.created_at),
       changeFrequency: "weekly" as const,
-      priority: 0.7,
+      priority: 0.5,
     }),
   );
 
@@ -124,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/illustrations/${row.category}/${row.slug || row.id}`,
       lastModified: new Date(row.created_at),
       changeFrequency: "weekly" as const,
-      priority: 0.7,
+      priority: 0.5,
     }),
   );
 

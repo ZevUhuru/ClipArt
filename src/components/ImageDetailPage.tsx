@@ -25,14 +25,23 @@ interface RelatedImage {
   aspect_ratio?: string;
 }
 
+interface StyleRelatedImage {
+  title: string;
+  slug: string;
+  category: string;
+  url: string;
+}
+
 type ContentVariant = "clipart" | "coloring" | "illustration";
 
 interface ImageDetailPageProps {
-  image: SampleImage;
+  image: SampleImage & { created_at?: string };
   categorySlug: string;
   isColoringPage?: boolean;
   contentType?: ContentVariant;
   relatedImages?: RelatedImage[];
+  styleRelatedImages?: StyleRelatedImage[];
+  categorySeoContent?: string[];
   categoryName?: string;
   imageId?: string;
 }
@@ -49,6 +58,8 @@ export function ImageDetailPage({
   isColoringPage = false,
   contentType: contentTypeProp,
   relatedImages: relatedFromServer,
+  styleRelatedImages,
+  categorySeoContent,
   categoryName: categoryNameProp,
   imageId,
 }: ImageDetailPageProps) {
@@ -132,7 +143,7 @@ export function ImageDetailPage({
       </nav>
 
       {/* Hero: two-column on desktop */}
-      <section className="mx-auto max-w-6xl px-4 pb-12">
+      <article className="mx-auto max-w-6xl px-4 pb-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left: Dark-framed image (matches edit/animate style) */}
           <div className="overflow-hidden rounded-2xl bg-[#1c1c27]">
@@ -157,6 +168,7 @@ export function ImageDetailPage({
                     className="object-contain"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     priority
+                    unoptimized
                   />
                 </div>
 
@@ -210,12 +222,13 @@ export function ImageDetailPage({
             {/* Tags */}
             <div className="mt-5 flex flex-wrap gap-2">
               {image.tags.map((tag) => (
-                <span
+                <Link
                   key={tag}
-                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500"
+                  href={`/search?q=${encodeURIComponent(tag)}&content_type=${variant}`}
+                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-pink-300 hover:bg-pink-50 hover:text-pink-700"
                 >
                   {humanizeTag(tag)}
-                </span>
+                </Link>
               ))}
             </div>
 
@@ -325,7 +338,7 @@ export function ImageDetailPage({
             </p>
           </div>
         </div>
-      </section>
+      </article>
 
       {/* Gradient divider */}
       <div className="mx-auto max-w-6xl px-4">
@@ -353,7 +366,7 @@ export function ImageDetailPage({
                   ? `/coloring-pages/${img.category}/${img.slug}`
                   : isIllustration
                     ? `/illustrations/${img.category}/${img.slug}`
-                    : `/${getCategorySlugForImage(img as SampleImage)}/${img.slug}`;
+                    : `/${img.category}/${img.slug}`;
                 const aspectClass = isIllustration
                   ? (img.aspect_ratio === "3:4" ? "aspect-[3/4]" : img.aspect_ratio === "4:3" ? "aspect-[4/3]" : "aspect-square")
                   : (img.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square");
@@ -368,7 +381,7 @@ export function ImageDetailPage({
                     <div className={`relative ${isIllustration ? "bg-gray-900/5" : "bg-gray-50"} ${aspectClass}`}>
                       <Image
                         src={img.url}
-                        alt={img.title}
+                        alt={`${img.title} — free ${categoryLabel.toLowerCase()}`}
                         fill
                         className={`transition-transform group-hover:scale-105 ${
                           isIllustration ? "object-cover" : "object-contain p-3"
@@ -385,6 +398,56 @@ export function ImageDetailPage({
                 );
               })}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Category context */}
+      {categorySeoContent && categorySeoContent.length > 0 && (
+        <section className="mx-auto max-w-4xl px-4 py-10">
+          <h2 className="mb-4 text-lg font-bold text-gray-900">
+            About {categoryName} {categoryLabel}
+          </h2>
+          <div className="space-y-3 text-sm leading-relaxed text-gray-600">
+            {categorySeoContent.map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+          </div>
+          <Link
+            href={variant === "coloring" ? `/coloring-pages/${categorySlug}` : isIllustration ? `/illustrations/${categorySlug}` : `/${categorySlug}`}
+            className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-pink-600 transition-colors hover:text-pink-700"
+          >
+            Browse all {categoryName?.toLowerCase()} {categoryLabel.toLowerCase()}
+            <span aria-hidden="true">&rarr;</span>
+          </Link>
+        </section>
+      )}
+
+      {/* More in this style */}
+      {styleRelatedImages && styleRelatedImages.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 py-10">
+          <h2 className="mb-6 text-lg font-bold text-gray-900">
+            More in this style
+          </h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {styleRelatedImages.map((img) => (
+              <Link
+                key={img.slug}
+                href={variant === "coloring" ? `/coloring-pages/${img.category}/${img.slug}` : isIllustration ? `/illustrations/${img.category}/${img.slug}` : `/${img.category}/${img.slug}`}
+                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                <div className="relative aspect-square bg-gray-50">
+                  <Image
+                    src={img.url}
+                    alt={`${img.title} — free ${categoryLabel.toLowerCase()}`}
+                    fill
+                    className="object-contain p-2 transition-transform group-hover:scale-105"
+                    sizes="(max-width: 640px) 50vw, 170px"
+                    unoptimized
+                  />
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
       )}
@@ -437,6 +500,9 @@ export function ImageDetailPage({
               description: image.description,
               imageUrl: image.url,
               tags: image.tags,
+              datePublished: image.created_at,
+              width: 1024,
+              height: 1024,
             }),
             buildDetailBreadcrumb({
               contentType: variant as ContentType,

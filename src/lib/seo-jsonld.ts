@@ -5,16 +5,22 @@ interface ImageJsonLdOpts {
   description: string;
   imageUrl: string;
   tags: string[];
+  datePublished?: string;
+  width?: number;
+  height?: number;
 }
 
 export function buildImageJsonLd(opts: ImageJsonLdOpts) {
-  return {
+  const ld: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "ImageObject",
     name: opts.title,
     description: opts.description,
     contentUrl: opts.imageUrl,
     thumbnailUrl: opts.imageUrl,
+    encodingFormat: "image/webp",
+    width: opts.width || 1024,
+    height: opts.height || 1024,
     author: {
       "@type": "Organization",
       name: SITE_NAME,
@@ -28,6 +34,13 @@ export function buildImageJsonLd(opts: ImageJsonLdOpts) {
     acquireLicensePage: `${SITE_URL}/free`,
     keywords: opts.tags.join(", "),
   };
+
+  if (opts.datePublished) {
+    ld.datePublished = opts.datePublished;
+    ld.dateModified = opts.datePublished;
+  }
+
+  return ld;
 }
 
 interface BreadcrumbItem {

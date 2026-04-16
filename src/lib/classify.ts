@@ -124,7 +124,7 @@ export async function classifyPrompt(
       systemPrompt = `You are a coloring page classifier. Given a user's coloring page generation prompt, return a JSON object with:
 - "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "coloring page".
 - "category": The best matching theme slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "coloring-free".
-- "description": A human-readable SEO sentence (100-160 chars). Describe the image and suggest use cases (e.g. "for classroom activities, party decorations, or quiet time"). Do NOT just repeat the prompt.
+- "description": A rich, unique description (2-3 sentences, 150-300 chars). Describe what the image depicts in detail, mention the art style, and suggest use cases (e.g. "for classroom activities, party decorations, or quiet time"). Do NOT just repeat the prompt.
 - "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
 
 Return ONLY valid JSON, no markdown fences, no explanation.`;
@@ -133,7 +133,7 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
       systemPrompt = `You are an illustration classifier. Given a user's illustration generation prompt, return a JSON object with:
 - "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "illustration".
 - "category": The best matching category slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "illustration-free".
-- "description": A human-readable SEO sentence (100-160 chars). Describe the scene and suggest use cases (e.g. "for presentations, book covers, or wall art"). Do NOT just repeat the prompt.
+- "description": A rich, unique description (2-3 sentences, 150-300 chars). Describe the scene in detail, mention the artistic style, and suggest use cases (e.g. "for presentations, book covers, or wall art"). Do NOT just repeat the prompt.
 - "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
 
 Return ONLY valid JSON, no markdown fences, no explanation.`;
@@ -142,7 +142,7 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
       systemPrompt = `You are a clip art classifier. Given a user's image generation prompt, return a JSON object with:
 - "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "clip art".
 - "category": The best matching category slug from this list: ${JSON.stringify(categorySlugs)}. If none fit well, use "free".
-- "description": A human-readable SEO sentence (100-160 chars). Describe the image and suggest use cases (e.g. "for school projects, presentations, or crafts"). Do NOT just repeat the prompt.
+- "description": A rich, unique description (2-3 sentences, 150-300 chars). Describe what the image depicts in detail, mention the art style or rendering, and suggest use cases (e.g. "for school projects, presentations, or crafts"). Do NOT just repeat the prompt.
 - "slug": A URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
 
 Return ONLY valid JSON, no markdown fences, no explanation.`;
@@ -161,7 +161,7 @@ Return ONLY valid JSON, no markdown fences, no explanation.`;
     const rawTitle = typeof parsed.title === "string" ? parsed.title.slice(0, 80) : fallback.title;
     const title = looksLikePrompt(rawTitle, prompt) ? cleanTitleFromPrompt(prompt) : rawTitle;
 
-    const rawDesc = typeof parsed.description === "string" ? parsed.description.slice(0, 200) : fallback.description;
+    const rawDesc = typeof parsed.description === "string" ? parsed.description.slice(0, 400) : fallback.description;
     const description = looksLikePrompt(rawDesc, prompt) ? fallback.description : rawDesc;
 
     return {

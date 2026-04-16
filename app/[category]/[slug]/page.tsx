@@ -125,6 +125,31 @@ async function getRelatedImages(category: string, excludeSlug: string) {
   }
 }
 
+async function getStyleRelatedImages(style: string | null, excludeSlug: string) {
+  if (!style) return [];
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("generations")
+      .select("title, slug, category, image_url")
+      .eq("is_public", true)
+      .eq("content_type", "clipart")
+      .eq("style", style)
+      .neq("slug", excludeSlug)
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    return (data || []).map((r: { title: string; slug: string; category: string; image_url: string }) => ({
+      title: r.title || "Clip art",
+      slug: r.slug,
+      category: r.category,
+      url: r.image_url,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function Page({ params }: PageProps) {
   const staticImage = imageBySlug.get(params.slug);
 
@@ -160,12 +185,20 @@ export default async function Page({ params }: PageProps) {
     tags: [dbRow.style, dbRow.category].filter(Boolean) as string[],
     aspect_ratio: dbRow.aspect_ratio || "1:1",
     prompt: dbRow.prompt,
+    created_at: dbRow.created_at,
   };
 
-  const relatedImages = await getRelatedImages(
-    canonicalCategory,
-    canonicalSlug,
-  );
+  const category = await getCategoryBySlug(canonicalCategory);
+  const categorySeoContent = category?.seo_content
+    ? (Array.isArray(category.seo_content)
+        ? category.seo_content as string[]
+        : [String(category.seo_content)])
+    : [];
+
+  const [relatedImages, styleRelatedImages] = await Promise.all([
+    getRelatedImages(canonicalCategory, canonicalSlug),
+    getStyleRelatedImages(dbRow.style, canonicalSlug),
+  ]);
 
   return (
     <>
@@ -173,6 +206,9 @@ export default async function Page({ params }: PageProps) {
         image={image}
         categorySlug={canonicalCategory}
         relatedImages={relatedImages}
+        styleRelatedImages={styleRelatedImages}
+        categorySeoContent={categorySeoContent}
+        categoryName={category?.name}
         imageId={dbRow.id}
       />
       <MarketingFooter />
