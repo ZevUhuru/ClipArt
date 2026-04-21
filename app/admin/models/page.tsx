@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
-import { STYLE_LABELS, VALID_STYLES, type StyleKey } from "@/lib/styles";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { STYLE_LABELS, VALID_STYLES, type StyleKey, type ModelKey } from "@/lib/styles";
+import {
+  IMAGE_MODELS,
+  MODEL_BY_KEY,
+  REVENUE_PER_CREDIT,
+  ASPECT_INFO,
+  priceFor,
+  normalizeModelKey,
+  normalizeQuality,
+  type AspectKey,
+  type Quality,
+} from "@/lib/imageModelCatalog";
 
 // ---------------------------------------------------------------------------
-// Image models + single source of truth for pricing
+// Style → content role / aspect mapping (local to admin UI)
 // ---------------------------------------------------------------------------
 
 const ALL_STYLES: StyleKey[] = [
@@ -22,82 +34,15 @@ for (const s of VALID_STYLES.illustration) {
 }
 STYLE_CONTENT_TYPE["coloring"] = "coloring";
 
-type AspectKey = "square" | "landscape" | "portrait";
-
-const CONTENT_ROLE_ASPECT: Record<ContentRole, AspectKey> = {
+const ROLE_ASPECT: Record<ContentRole, AspectKey> = {
   clipart: "square",
   illustration: "landscape",
   coloring: "portrait",
-  // "shared" styles are most commonly used for clipart; pricing shown reflects that.
   shared: "square",
 };
 
-const ASPECT_LABEL: Record<AspectKey, { short: string; long: string; ratio: string }> = {
-  square:    { short: "1:1",  long: "Square",    ratio: "1024×1024" },
-  landscape: { short: "4:3",  long: "Landscape", ratio: "1536×1024" },
-  portrait:  { short: "3:4",  long: "Portrait",  ratio: "1024×1536" },
-};
-
-type ModelKey = "gemini" | "gpt-image-1" | "gpt-image-2";
-
-interface ModelMeta {
-  value: ModelKey;
-  label: string;
-  provider: string;
-  tagline: string;
-  badge?: { label: string; tone: "indigo" | "purple" | "emerald" };
-  capabilities: string[];
-  pricing: Record<AspectKey, number>;
-}
-
-// Prices verified 2026-04-21 from developers.openai.com per-image calculator.
-// All OpenAI entries use medium quality to match src/lib/gptImage1.ts and
-// src/lib/gptImage2.ts (settled in CLAUDE.md).
-const MODELS: ModelMeta[] = [
-  {
-    value: "gemini",
-    label: "Gemini 2.5 Flash",
-    provider: "Google",
-    tagline: "Clean vector clip art • cheapest default",
-    capabilities: ["Batch API (50% off)", "Transparent BG", "Flat-price across ratios"],
-    pricing: { square: 0.039, landscape: 0.039, portrait: 0.039 },
-  },
-  {
-    value: "gpt-image-1",
-    label: "GPT Image 1",
-    provider: "OpenAI",
-    tagline: "Richer textures • older model",
-    capabilities: ["Transparent BG", "Image edits", "input_fidelity param"],
-    pricing: { square: 0.042, landscape: 0.063, portrait: 0.063 },
-  },
-  {
-    value: "gpt-image-2",
-    label: "GPT Image 2",
-    provider: "OpenAI",
-    tagline: "State of the art • ChatGPT Images 2.0",
-    badge: { label: "New · Apr 2026", tone: "indigo" },
-    capabilities: ["Up to 2K", "In-image text", "Multilingual", "No transparent BG"],
-    pricing: { square: 0.053, landscape: 0.041, portrait: 0.041 },
-  },
-];
-
-const MODEL_BY_KEY: Record<ModelKey, ModelMeta> =
-  Object.fromEntries(MODELS.map((m) => [m.value, m])) as Record<ModelKey, ModelMeta>;
-
-// Coerce any unknown value (e.g. legacy "dalle" from a pre-migration DB row)
-// back to a known ModelKey so the UI renders instead of crashing.
-function normalizeModel(value: unknown): ModelKey {
-  if (typeof value === "string" && value in MODEL_BY_KEY) return value as ModelKey;
-  if (value === "dalle") return "gpt-image-1";
-  return "gemini";
-}
-
-// Revenue per credit at the lowest tier ("Sweet Spot"/"Binge" packs = $0.05/credit).
-// Used to sanity-check margin in the comparison chart.
-const REVENUE_PER_CREDIT = 0.05;
-
 // ---------------------------------------------------------------------------
-// Text AI config — mirrors src/lib/textAI.ts registry
+// Text AI registry (unchanged)
 // ---------------------------------------------------------------------------
 
 interface TextModel {
@@ -151,35 +96,27 @@ const TEXT_TASKS: TextTask[] = ["classification", "seo_generation", "animation_s
 
 type TextModelConfig = Record<TextTask, string>;
 type ImageModelConfig = Record<string, ModelKey>;
+type QualityConfig = Record<string, Quality>;
 
 // ---------------------------------------------------------------------------
-// Helpers — rank a model's price against the column it competes in
+// Ranking helpers — color-code price cells by rank within their (aspect × quality)
+// competitive slot. Gemini (flat price) competes at all quality tiers.
 // ---------------------------------------------------------------------------
 
-function rankForAspect(aspect: AspectKey): Record<ModelKey, number> {
-  const entries = MODELS
-    .map((m) => ({ key: m.value, price: m.pricing[aspect] }))
+function rankAt(aspect: AspectKey, quality: Quality): Record<ModelKey, number> {
+  const entries = IMAGE_MODELS
+    .map((m) => ({ key: m.key, price: priceFor(m.key, quality, aspect) ?? Infinity }))
+    .filter((e) => Number.isFinite(e.price))
     .sort((a, b) => a.price - b.price);
-  const ranked = {} as Record<ModelKey, number>;
-  entries.forEach((e, i) => { ranked[e.key] = i; });
-  return ranked;
+  const out = {} as Record<ModelKey, number>;
+  entries.forEach((e, i) => { out[e.key] = i; });
+  return out;
 }
 
-const RANK_BY_ASPECT: Record<AspectKey, Record<ModelKey, number>> = {
-  square:    rankForAspect("square"),
-  landscape: rankForAspect("landscape"),
-  portrait:  rankForAspect("portrait"),
-};
-
-function rankTone(rank: number): { bg: string; text: string; ring: string } {
+function toneForRank(rank: number) {
   if (rank === 0) return { bg: "bg-emerald-50",  text: "text-emerald-700", ring: "ring-emerald-200" };
   if (rank === 1) return { bg: "bg-amber-50",    text: "text-amber-700",   ring: "ring-amber-200" };
   return                { bg: "bg-rose-50",      text: "text-rose-700",    ring: "ring-rose-200" };
-}
-
-function percentVsCheapest(model: ModelKey, aspect: AspectKey): number {
-  const cheapest = Math.min(...MODELS.map((m) => m.pricing[aspect]));
-  return Math.round(((MODEL_BY_KEY[model].pricing[aspect] - cheapest) / cheapest) * 100);
 }
 
 function fmtUsd(n: number): string {
@@ -245,8 +182,7 @@ function SectionHeader({
   );
 }
 
-function CapabilityChip({ label }: { label: string }) {
-  const negative = label.toLowerCase().startsWith("no ");
+function CapabilityChip({ label, negative = false }: { label: string; negative?: boolean }) {
   return (
     <span
       className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${
@@ -255,28 +191,62 @@ function CapabilityChip({ label }: { label: string }) {
           : "bg-white text-gray-600 ring-gray-200"
       }`}
     >
-      {label}
+      {negative ? `no ${label.replace(/^No /i, "")}` : label}
+    </span>
+  );
+}
+
+function ModelBadge({ model }: { model: ModelKey }) {
+  const meta = MODEL_BY_KEY[model];
+  if (!meta.badge) return null;
+  const toneMap = {
+    indigo:  "bg-indigo-50 text-indigo-700 ring-indigo-200",
+    purple:  "bg-purple-50 text-purple-700 ring-purple-200",
+    emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    gray:    "bg-gray-50 text-gray-500 ring-gray-200",
+  } as const;
+  return (
+    <span
+      className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${toneMap[meta.badge.tone]}`}
+    >
+      {meta.badge.label}
     </span>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Pricing comparison chart (the new focal component)
+// Pricing comparison — full matrix (every quality × every aspect)
 // ---------------------------------------------------------------------------
 
+const ASPECT_KEYS: AspectKey[] = ["square", "landscape", "portrait"];
+const QUALITY_ROWS: Quality[] = ["low", "medium", "high"];
+
 function PricingMatrix() {
-  const aspectKeys: AspectKey[] = ["square", "landscape", "portrait"];
+  const rankByCell = useMemo(() => {
+    const map: Record<Quality, Record<AspectKey, Record<ModelKey, number>>> = {
+      low:    { square: {}, landscape: {}, portrait: {} } as Record<AspectKey, Record<ModelKey, number>>,
+      medium: { square: {}, landscape: {}, portrait: {} } as Record<AspectKey, Record<ModelKey, number>>,
+      high:   { square: {}, landscape: {}, portrait: {} } as Record<AspectKey, Record<ModelKey, number>>,
+      flat:   { square: {}, landscape: {}, portrait: {} } as Record<AspectKey, Record<ModelKey, number>>,
+    };
+    for (const q of QUALITY_ROWS) {
+      for (const a of ASPECT_KEYS) {
+        map[q][a] = rankAt(a, q);
+      }
+    }
+    return map;
+  }, []);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      {/* Chart header */}
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 bg-gradient-to-br from-gray-50 to-white px-6 py-5">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">
-            Pricing comparison — per image, medium quality
+            Pricing comparison — all quality tiers × all aspect ratios
           </h3>
           <p className="mt-0.5 text-xs text-gray-500">
-            Cheapest option per aspect ratio highlighted in green. All OpenAI calls pinned to medium quality.
+            Per-image cost from OpenAI's official calculator. Cheapest per (quality × aspect)
+            slot in green. Click a model name to see full capabilities and parameters.
           </p>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
@@ -292,122 +262,142 @@ function PricingMatrix() {
         </div>
       </div>
 
-      {/* Matrix */}
-      <div className="grid grid-cols-[minmax(220px,1fr)_repeat(3,minmax(0,1fr))] text-sm">
-        {/* Column headers */}
-        <div className="border-b border-gray-100 bg-gray-50/60 px-5 py-3" />
-        {aspectKeys.map((aspect) => (
-          <div
-            key={aspect}
-            className="border-b border-l border-gray-100 bg-gray-50/60 px-5 py-3"
-          >
-            <div className="flex items-baseline gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                {ASPECT_LABEL[aspect].long}
-              </span>
-              <span className="text-[10px] text-gray-400">{ASPECT_LABEL[aspect].short}</span>
-            </div>
-            <div className="mt-0.5 text-[11px] text-gray-400">
-              {ASPECT_LABEL[aspect].ratio} ·{" "}
-              {aspect === "square"
-                ? "clipart"
-                : aspect === "landscape"
-                  ? "illustrations"
-                  : "coloring pages"}
-            </div>
-          </div>
-        ))}
-
-        {/* Rows */}
-        {MODELS.map((model, idx) => (
-          <div key={model.value} className="contents">
-            {/* Model label cell */}
-            <div
-              className={`px-5 py-4 ${
-                idx < MODELS.length - 1 ? "border-b border-gray-100" : ""
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-gray-900">{model.label}</span>
-                {model.badge && (
-                  <span
-                    className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
-                      model.badge.tone === "indigo"
-                        ? "bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-200"
-                        : model.badge.tone === "purple"
-                          ? "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-200"
-                          : "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
-                    }`}
-                  >
-                    {model.badge.label}
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-[11px] text-gray-400">
-                {model.provider} · {model.tagline}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {model.capabilities.map((c) => (
-                  <CapabilityChip key={c} label={c} />
-                ))}
-              </div>
-            </div>
-
-            {/* Price cells */}
-            {aspectKeys.map((aspect) => {
-              const rank = RANK_BY_ASPECT[aspect][model.value];
-              const tone = rankTone(rank);
-              const diff = percentVsCheapest(model.value, aspect);
-              const revenueMarginPct = Math.round(
-                ((REVENUE_PER_CREDIT - model.pricing[aspect]) / REVENUE_PER_CREDIT) * 100,
-              );
-              return (
-                <div
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[820px] text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 bg-gray-50/60">
+              <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                Model
+              </th>
+              <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                Quality
+              </th>
+              {ASPECT_KEYS.map((aspect) => (
+                <th
                   key={aspect}
-                  className={`border-l border-gray-100 px-5 py-4 ${
-                    idx < MODELS.length - 1 ? "border-b" : ""
-                  }`}
+                  className="border-l border-gray-100 px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500"
                 >
-                  <div
-                    className={`inline-flex items-baseline gap-2 rounded-lg px-2.5 py-1 text-sm font-semibold ring-1 ring-inset ${tone.bg} ${tone.text} ${tone.ring}`}
+                  <div>{ASPECT_INFO[aspect].long}</div>
+                  <div className="text-[10px] font-normal normal-case tracking-normal text-gray-400">
+                    {ASPECT_INFO[aspect].ratio} · {ASPECT_INFO[aspect].resolution}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {IMAGE_MODELS.map((model, mi) => {
+              const rows: Quality[] = model.supportsQualityTiers ? QUALITY_ROWS : ["flat"];
+              return rows.map((q, qi) => {
+                const isFirstRow = qi === 0;
+                const isLastModelRow = qi === rows.length - 1;
+                const isNotLastModel = mi < IMAGE_MODELS.length - 1;
+                return (
+                  <tr
+                    key={`${model.key}-${q}`}
+                    className={`${isLastModelRow && isNotLastModel ? "border-b-2 border-gray-200" : "border-b border-gray-50"}`}
                   >
-                    {fmtUsd(model.pricing[aspect])}
-                    {rank === 0 && (
-                      <span aria-hidden className="text-emerald-500">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1.5 text-[11px] text-gray-400">
-                    {diff === 0 ? "cheapest" : `+${diff}% vs cheapest`}
-                  </div>
-                  <div
-                    className={`text-[11px] ${
-                      revenueMarginPct < 0
-                        ? "text-rose-500"
-                        : revenueMarginPct < 20
-                          ? "text-amber-600"
-                          : "text-emerald-600"
-                    }`}
-                  >
-                    {revenueMarginPct >= 0 ? "+" : ""}
-                    {revenueMarginPct}% margin @ $0.05/credit
-                  </div>
-                </div>
-              );
+                    {isFirstRow ? (
+                      <td
+                        rowSpan={rows.length}
+                        className="align-top px-5 py-4"
+                      >
+                        <Link
+                          href={`/admin/models/${model.key}`}
+                          className="group block"
+                          aria-label={`View ${model.label} details`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 group-hover:underline">
+                              {model.label}
+                            </span>
+                            <ModelBadge model={model.key} />
+                          </div>
+                          <p className="mt-0.5 text-[11px] text-gray-400">
+                            {model.provider} · {model.tagline}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {model.capabilities.positive.slice(0, 3).map((c) => (
+                              <CapabilityChip key={c} label={c} />
+                            ))}
+                            {model.capabilities.negative.slice(0, 1).map((c) => (
+                              <CapabilityChip key={c} label={c} negative />
+                            ))}
+                          </div>
+                          <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 opacity-0 transition-opacity group-hover:opacity-100">
+                            View details →
+                          </span>
+                        </Link>
+                      </td>
+                    ) : null}
+                    <td className="px-5 py-3">
+                      {q === "flat" ? (
+                        <span className="inline-flex items-center rounded-md bg-gray-50 px-1.5 py-0.5 text-[11px] font-medium text-gray-500 ring-1 ring-inset ring-gray-200">
+                          flat price
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${
+                            q === "low"
+                              ? "bg-gray-50 text-gray-600 ring-gray-200"
+                              : q === "medium"
+                                ? "bg-gray-100 text-gray-700 ring-gray-300"
+                                : "bg-gray-900 text-white ring-gray-900"
+                          }`}
+                        >
+                          {q}
+                        </span>
+                      )}
+                    </td>
+                    {ASPECT_KEYS.map((aspect) => {
+                      const price = priceFor(model.key, q, aspect);
+                      if (price == null) {
+                        return (
+                          <td key={aspect} className="border-l border-gray-100 px-5 py-3 text-xs text-gray-300">
+                            —
+                          </td>
+                        );
+                      }
+                      const rank = rankByCell[q][aspect][model.key] ?? 0;
+                      const tone = toneForRank(rank);
+                      const margin = Math.round(((REVENUE_PER_CREDIT - price) / REVENUE_PER_CREDIT) * 100);
+                      return (
+                        <td
+                          key={aspect}
+                          className="border-l border-gray-100 px-5 py-3"
+                        >
+                          <div
+                            className={`inline-flex items-baseline gap-1.5 rounded-lg px-2 py-0.5 text-sm font-semibold ring-1 ring-inset ${tone.bg} ${tone.text} ${tone.ring}`}
+                          >
+                            {fmtUsd(price)}
+                            {rank === 0 && <span aria-hidden className="text-emerald-500">✓</span>}
+                          </div>
+                          <div
+                            className={`mt-1 text-[10px] ${
+                              margin < 0 ? "text-rose-500" : margin < 20 ? "text-amber-600" : "text-emerald-600"
+                            }`}
+                          >
+                            {margin >= 0 ? "+" : ""}
+                            {margin}% margin
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              });
             })}
-          </div>
-        ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Footer */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-3 text-[11px] text-gray-500">
         <span>
-          Source: <code className="rounded bg-white px-1 py-0.5 text-gray-600">developers.openai.com</code>{" "}
-          per-image calculator · verified 2026-04-21.
+          Source: <code className="rounded bg-white px-1 py-0.5 text-gray-600">platform.openai.com/docs/guides/image-generation</code>{" "}
+          · verified 2026-04-21.
         </span>
         <span className="text-gray-400">
-          Margin figure assumes lowest pack tier ($0.05/credit). Each image = 1 credit to the user.
+          Margin assumes lowest pack tier ($0.05/credit). 1 image = 1 credit to the user.
         </span>
       </div>
     </div>
@@ -415,14 +405,29 @@ function PricingMatrix() {
 }
 
 // ---------------------------------------------------------------------------
-// Cost pill used in the per-style routing table
+// Per-style cost pill (used in the routing table)
 // ---------------------------------------------------------------------------
 
-function CostPill({ model, aspect }: { model: ModelKey; aspect: AspectKey }) {
-  const rank = RANK_BY_ASPECT[aspect][model];
-  const tone = rankTone(rank);
-  const price = MODEL_BY_KEY[model].pricing[aspect];
-  const diff = percentVsCheapest(model, aspect);
+function CostBadge({
+  model,
+  quality,
+  aspect,
+}: {
+  model: ModelKey;
+  quality: Quality;
+  aspect: AspectKey;
+}) {
+  const price = priceFor(model, quality, aspect);
+  if (price == null) {
+    return <span className="text-xs text-gray-300">—</span>;
+  }
+  const ranks = rankAt(aspect, quality);
+  const rank = ranks[model] ?? 0;
+  const tone = toneForRank(rank);
+  const cheapest = Math.min(...IMAGE_MODELS
+    .map((m) => priceFor(m.key, quality, aspect) ?? Infinity)
+    .filter((p) => Number.isFinite(p)));
+  const diff = cheapest > 0 ? Math.round(((price - cheapest) / cheapest) * 100) : 0;
   return (
     <div className="flex items-center gap-2">
       <span
@@ -439,7 +444,7 @@ function CostPill({ model, aspect }: { model: ModelKey; aspect: AspectKey }) {
 }
 
 // ---------------------------------------------------------------------------
-// Style role pill (the small badge next to each style name)
+// Style role pill
 // ---------------------------------------------------------------------------
 
 function RolePill({ role }: { role: ContentRole }) {
@@ -451,17 +456,11 @@ function RolePill({ role }: { role: ContentRole }) {
   };
   const c = config[role];
   return (
-    <span
-      className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${c.cls}`}
-    >
+    <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${c.cls}`}>
       {c.label}
     </span>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Provider key detection (passed from API check)
-// ---------------------------------------------------------------------------
 
 function getProviderAvailability(): Record<string, boolean> {
   return { gemini: true, openai: true, anthropic: true };
@@ -473,9 +472,9 @@ function getProviderAvailability(): Record<string, boolean> {
 
 export default function AdminModelsPage() {
   const [imageConfig, setImageConfig] = useState<ImageModelConfig | null>(null);
-  const [initialImageConfig, setInitialImageConfig] = useState<string>("");
+  const [qualityConfig, setQualityConfig] = useState<QualityConfig | null>(null);
   const [textConfig, setTextConfig] = useState<TextModelConfig | null>(null);
-  const [initialTextConfig, setInitialTextConfig] = useState<string>("");
+  const [initial, setInitial] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -484,50 +483,52 @@ export default function AdminModelsPage() {
   useEffect(() => {
     Promise.all([
       fetch("/api/admin/settings/model-config").then((r) => r.json()),
+      fetch("/api/admin/settings/model-quality-config").then((r) => r.json()).catch(() => ({})),
       fetch("/api/admin/settings/text-model-config").then((r) => r.json()),
       fetch("/api/admin/settings/text-model-config/keys").then((r) => r.json()).catch(() => getProviderAvailability()),
     ])
-      .then(([img, txt, keys]) => {
+      .then(([img, qual, txt, keys]) => {
         setImageConfig(img);
-        setInitialImageConfig(JSON.stringify(img));
+        setQualityConfig(qual);
         setTextConfig(txt);
-        setInitialTextConfig(JSON.stringify(txt));
+        setInitial(JSON.stringify({ img, qual, txt }));
         setApiKeys(keys);
       })
       .catch(() => setError("Failed to load model config"));
   }, []);
 
   const dirty = useMemo(() => {
-    if (!imageConfig || !textConfig) return false;
-    return (
-      JSON.stringify(imageConfig) !== initialImageConfig ||
-      JSON.stringify(textConfig) !== initialTextConfig
-    );
-  }, [imageConfig, textConfig, initialImageConfig, initialTextConfig]);
+    if (!imageConfig || !qualityConfig || !textConfig) return false;
+    return JSON.stringify({ img: imageConfig, qual: qualityConfig, txt: textConfig }) !== initial;
+  }, [imageConfig, qualityConfig, textConfig, initial]);
 
-  // Aggregate: how many styles are routed to each model?
   const modelDistribution = useMemo(() => {
-    if (!imageConfig) return {} as Record<ModelKey, number>;
+    if (!imageConfig) return { gemini: 0, "gpt-image-1": 0, "gpt-image-2": 0 } as Record<ModelKey, number>;
     const out = { gemini: 0, "gpt-image-1": 0, "gpt-image-2": 0 } as Record<ModelKey, number>;
     for (const style of ALL_STYLES) {
-      const m = normalizeModel(imageConfig[style]);
+      const m = normalizeModelKey(imageConfig[style]);
       out[m] = (out[m] ?? 0) + 1;
     }
     return out;
   }, [imageConfig]);
 
   async function handleSave() {
-    if (!imageConfig || !textConfig) return;
+    if (!imageConfig || !qualityConfig || !textConfig) return;
     setSaving(true);
     setSaved(false);
     setError(null);
 
     try {
-      const [imgRes, txtRes] = await Promise.all([
+      const [imgRes, qualRes, txtRes] = await Promise.all([
         fetch("/api/admin/settings/model-config", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(imageConfig),
+        }),
+        fetch("/api/admin/settings/model-quality-config", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(qualityConfig),
         }),
         fetch("/api/admin/settings/text-model-config", {
           method: "PUT",
@@ -536,17 +537,14 @@ export default function AdminModelsPage() {
         }),
       ]);
 
-      if (!imgRes.ok) {
-        const data = await imgRes.json();
-        throw new Error(data.error || "Failed to save image config");
-      }
-      if (!txtRes.ok) {
-        const data = await txtRes.json();
-        throw new Error(data.error || "Failed to save text config");
+      for (const [res, label] of [[imgRes, "image"], [qualRes, "quality"], [txtRes, "text"]] as const) {
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || `Failed to save ${label} config`);
+        }
       }
 
-      setInitialImageConfig(JSON.stringify(imageConfig));
-      setInitialTextConfig(JSON.stringify(textConfig));
+      setInitial(JSON.stringify({ img: imageConfig, qual: qualityConfig, txt: textConfig }));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -556,7 +554,7 @@ export default function AdminModelsPage() {
     }
   }
 
-  if (!imageConfig || !textConfig) {
+  if (!imageConfig || !qualityConfig || !textConfig) {
     return (
       <div className="space-y-4 py-8">
         <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-100" />
@@ -622,18 +620,18 @@ export default function AdminModelsPage() {
       <section className="mb-14">
         <SectionHeader
           eyebrow="Image Generation"
-          title="Model routing per style"
-          description="Each generation style can use a different engine. Pricing is aspect-ratio-aware — clipart renders at 1:1, illustrations at 4:3, coloring pages at 3:4."
-          tooltip="All styles cost 1 credit to the user regardless of which model is selected. Admin changes here propagate to the generation pipeline within 60 seconds."
+          title="Model & quality routing per style"
+          description="Each style can use a different model and quality tier. Pricing is aspect-ratio-aware — clipart renders at 1:1, illustrations at 4:3, coloring pages at 3:4."
+          tooltip="All styles cost 1 credit to the user regardless of which model or quality is selected — this is a backend cost control, not a user-facing knob. Changes propagate to the generation pipeline within 60 seconds."
           right={
             <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-              {MODELS.map((m) => (
+              {IMAGE_MODELS.map((m) => (
                 <span
-                  key={m.value}
+                  key={m.key}
                   className="rounded-full bg-gray-50 px-2 py-1 ring-1 ring-inset ring-gray-200"
                 >
                   <span className="font-semibold text-gray-700">
-                    {modelDistribution[m.value] ?? 0}
+                    {modelDistribution[m.key] ?? 0}
                   </span>
                   <span className="ml-1 text-gray-400">{m.label}</span>
                 </span>
@@ -642,81 +640,118 @@ export default function AdminModelsPage() {
           }
         />
 
-        {/* Pricing comparison chart */}
         <PricingMatrix />
 
         {/* Style routing table */}
         <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-3">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900">Style → Model routing</h3>
-              <p className="mt-0.5 text-[11px] text-gray-500">
-                {ALL_STYLES.length} styles · cost pill color encodes rank within the style's aspect ratio.
-              </p>
-            </div>
+          <div className="border-b border-gray-100 bg-gray-50/60 px-6 py-3">
+            <h3 className="text-sm font-semibold text-gray-900">Style → Model + Quality routing</h3>
+            <p className="mt-0.5 text-[11px] text-gray-500">
+              {ALL_STYLES.length} styles · cost pill color encodes rank within the style's aspect ratio & quality slot.
+            </p>
           </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-                  Style
-                </th>
-                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-                  Aspect
-                </th>
-                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-                  Model
-                </th>
-                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-                  Cost per image
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {ALL_STYLES.map((style) => {
-                const role = STYLE_CONTENT_TYPE[style] || "clipart";
-                const aspect = CONTENT_ROLE_ASPECT[role];
-                const selected = normalizeModel(imageConfig[style]);
-                return (
-                  <tr key={style} className="transition-colors hover:bg-gray-50/60">
-                    <td className="px-6 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">
-                          {STYLE_LABELS[style] || style}
-                        </span>
-                        <RolePill role={role} />
-                      </div>
-                    </td>
-                    <td className="px-6 py-3.5 text-xs text-gray-500">
-                      <span className="font-mono">{ASPECT_LABEL[aspect].short}</span>
-                      <span className="ml-1.5 text-gray-400">· {ASPECT_LABEL[aspect].ratio}</span>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <select
-                        value={selected}
-                        onChange={(e) =>
-                          setImageConfig((prev) => ({
-                            ...prev!,
-                            [style]: e.target.value as ModelKey,
-                          }))
-                        }
-                        className="w-full max-w-[240px] rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-colors focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                      >
-                        {MODELS.map((m) => (
-                          <option key={m.value} value={m.value}>
-                            {m.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <CostPill model={selected} aspect={aspect} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[780px]">
+              <thead>
+                <tr className="border-b border-gray-100 bg-white">
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    Style
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    Aspect
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    Model
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    Quality
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    Cost per image
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {ALL_STYLES.map((style) => {
+                  const role = STYLE_CONTENT_TYPE[style] || "clipart";
+                  const aspect = ROLE_ASPECT[role];
+                  const selectedModel = normalizeModelKey(imageConfig[style]);
+                  const selectedQuality = normalizeQuality(qualityConfig[style]);
+                  const modelMeta = MODEL_BY_KEY[selectedModel];
+                  const effectiveQuality: Quality = modelMeta.supportsQualityTiers
+                    ? selectedQuality
+                    : "flat";
+                  return (
+                    <tr key={style} className="transition-colors hover:bg-gray-50/60">
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-900">
+                            {STYLE_LABELS[style] || style}
+                          </span>
+                          <RolePill role={role} />
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5 text-xs text-gray-500">
+                        <span className="font-mono">{ASPECT_INFO[aspect].ratio}</span>
+                        <span className="ml-1.5 text-gray-400">· {ASPECT_INFO[aspect].resolution}</span>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <select
+                          value={selectedModel}
+                          onChange={(e) =>
+                            setImageConfig((prev) => ({
+                              ...prev!,
+                              [style]: e.target.value as ModelKey,
+                            }))
+                          }
+                          className="w-full max-w-[220px] rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-colors focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                        >
+                          {IMAGE_MODELS.map((m) => (
+                            <option key={m.key} value={m.key}>
+                              {m.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        {modelMeta.supportsQualityTiers ? (
+                          <div className="inline-flex rounded-lg bg-gray-100 p-0.5">
+                            {(["low", "medium", "high"] as Quality[]).map((q) => (
+                              <button
+                                key={q}
+                                type="button"
+                                onClick={() =>
+                                  setQualityConfig((prev) => ({ ...prev!, [style]: q }))
+                                }
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                                  selectedQuality === q
+                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                                    : "text-gray-500 hover:text-gray-700"
+                                }`}
+                              >
+                                {q}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-500 ring-1 ring-inset ring-gray-200">
+                            flat
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <CostBadge
+                          model={selectedModel}
+                          quality={effectiveQuality}
+                          aspect={aspect}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

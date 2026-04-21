@@ -15,6 +15,8 @@ const ASPECT_TO_SIZE: Record<string, "1024x1024" | "1024x1536" | "1536x1024"> = 
   "4:3": "1536x1024",
 };
 
+export type GptImageQuality = "low" | "medium" | "high";
+
 // gpt-image-2 (ChatGPT Images 2.0, released 2026-04-21).
 // Notes from official docs:
 // - No `input_fidelity` param (always high-fidelity on image inputs).
@@ -27,6 +29,7 @@ const ASPECT_TO_SIZE: Record<string, "1024x1024" | "1024x1536" | "1536x1024"> = 
 export async function generateWithGptImage2(
   prompt: string,
   aspectRatio: string = "1:1",
+  quality: GptImageQuality = "medium",
 ): Promise<Buffer> {
   try {
     const size = ASPECT_TO_SIZE[aspectRatio] || "1024x1024";
@@ -37,7 +40,7 @@ export async function generateWithGptImage2(
       model: "gpt-image-2" as unknown as "gpt-image-1",
       prompt,
       size,
-      quality: "medium",
+      quality,
       n: 1,
     });
 

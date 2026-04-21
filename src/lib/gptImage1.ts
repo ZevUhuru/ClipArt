@@ -15,14 +15,20 @@ const ASPECT_TO_SIZE: Record<string, "1024x1024" | "1024x1536" | "1536x1024"> = 
   "4:3": "1536x1024",
 };
 
-export async function generateWithGptImage1(prompt: string, aspectRatio: string = "1:1"): Promise<Buffer> {
+export type GptImageQuality = "low" | "medium" | "high";
+
+export async function generateWithGptImage1(
+  prompt: string,
+  aspectRatio: string = "1:1",
+  quality: GptImageQuality = "medium",
+): Promise<Buffer> {
   try {
     const size = ASPECT_TO_SIZE[aspectRatio] || "1024x1024";
     const response = await getClient().images.generate({
       model: "gpt-image-1",
       prompt,
       size,
-      quality: "medium",
+      quality,
       n: 1,
     });
 
