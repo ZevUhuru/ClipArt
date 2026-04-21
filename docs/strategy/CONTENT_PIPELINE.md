@@ -1,5 +1,7 @@
 # Automated Content Pipeline
 
+> **Implementation note (2026-04-21):** The execution layer of this pipeline — Image Generator (Agent 2), Quality Gate (Agent 3), asset processing, storage, cost tracking — is being moved into **ESY** (`api.esy.com`). The strategic goals in this document still hold; the implementation details below describe the pre-ESY architecture and will shift. For current ownership of each component see [`docs/esy/01-architecture.md`](../esy/01-architecture.md).
+
 ## Overview
 
 An agent-driven pipeline that generates keyword-targeted clip art at scale, quality-gates each image, and publishes to the site with proper SEO metadata. Goal: build a library of 100K-1M unique clip art images, each targeting a real search query.

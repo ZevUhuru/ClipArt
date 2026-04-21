@@ -1,8 +1,18 @@
 # Multi-Model Image Generation
 
+> ⚠️ **Transitional — being migrated to ESY.**
+>
+> This feature (admin-configurable model routing per style, direct Gemini/OpenAI calls from clip.art) is scheduled to be removed in **Phase 3** of the ESY migration. Model routing moves to the ESY dashboard; clip.art becomes a pure consumer of `api.esy.com/v1/generate`.
+>
+> **Do not build new features on top of this.** New generation capabilities should be specified in the ESY API contract, not added to clip.art's direct-provider path.
+>
+> See [`docs/esy/04-migration-tracker.md`](../esy/04-migration-tracker.md) for current status and [`docs/esy/03-migration-plan.md`](../esy/03-migration-plan.md) for the sunset plan.
+
+---
+
 **Date:** 2026-03-22
-**Updated:** 2026-04-21 (added GPT Image 2 / ChatGPT Images 2.0; renamed legacy "dalle" key to "gpt-image-1")
-**Status:** Shipped
+**Updated:** 2026-04-21 (added GPT Image 2, GPT Image 1.5, batch pricing; renamed legacy "dalle" key to "gpt-image-1")
+**Status:** Shipped — scheduled for deletion in ESY Phase 3
 
 ## Overview
 

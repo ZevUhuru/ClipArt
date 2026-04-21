@@ -2,6 +2,10 @@
  * One-shot migration: move any style currently routed to `gpt-image-1` over
  * to `gpt-image-1.5` in the admin model_config. Safe to re-run.
  *
+ * NOTE: Delete this script after running. It also becomes obsolete post-ESY
+ * migration, since model routing moves to the ESY dashboard in Phase 3 (see
+ * docs/esy/04-migration-tracker.md).
+ *
  * Usage:  npx tsx scripts/migrate-gpt-image-1-to-15.ts [--dry-run]
  *
  * Does NOT touch historical generations rows — those stay labelled with the

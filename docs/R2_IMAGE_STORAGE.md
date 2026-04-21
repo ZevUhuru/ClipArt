@@ -1,5 +1,15 @@
 # R2 Image Storage Plan
 
+> ⚠️ **Transitional — moving to ESY.**
+>
+> R2 upload responsibility moves out of clip.art and into ESY (`api.esy.com`) during Phase 3 of the migration. Post-migration clip.art will NOT hold R2 credentials (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, etc.). ESY's API returns `image_url` pointing at ESY-owned R2; clip.art serves those URLs through `images.clip.art` (which CNAMEs to ESY's bucket).
+>
+> The directory structure conventions below (`{category}/`, `coloring-pages/{theme}/`, `illustrations/{category}/`) remain the source of truth — ESY will mirror them.
+>
+> See [`docs/esy/04-migration-tracker.md`](esy/04-migration-tracker.md) (status: `src/lib/r2.ts`) and [`docs/esy/01-architecture.md`](esy/01-architecture.md#environment-variables) for the post-migration env var setup.
+
+---
+
 ## Overview
 
 Cloudflare R2 storage for all clip art images, served via `images.clip.art` custom domain. Category-based directory structure for SEO and organization.

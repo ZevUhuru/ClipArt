@@ -2,6 +2,9 @@
  * One-shot audit: how much have we spent on OpenAI image generation, and
  * would switching to gpt-image-1.5 have saved money?
  *
+ * NOTE: Delete this script after the ESY migration. ESY owns cost tracking
+ * post-Phase-3 (see docs/esy/04-migration-tracker.md).
+ *
  * Usage:  npx tsx scripts/audit-openai-spend.ts
  *
  * Reads:

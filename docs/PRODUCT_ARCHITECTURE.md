@@ -1,5 +1,7 @@
 # Product Architecture
 
+> **Generation pipeline ownership:** Image generation, provider routing, image processing, storage (R2), classification, and quality scoring are being migrated out of clip.art into ESY (`api.esy.com`). This document describes clip.art's consumer-facing architecture. For the generation infrastructure architecture and the migration plan, see [`docs/esy/`](esy/README.md).
+
 ## Overview
 
 clip.art's product is organized into three top-level **tools** and two **browse** sections. Each tool maps to a sidebar item and a dedicated route. Sub-features within a tool are accessed via an in-page segmented control (mode toggle), not additional sidebar items.
@@ -130,8 +132,8 @@ Unreleased tools appear in the sidebar as non-interactive items with a "Soon" pi
 ```
 src/lib/
   styles.ts                 Two-axis content model (types, styles, templates, validation)
-  imageGen.ts               AI image generation with content type routing
-  classify.ts               Three-branch prompt classification
+  imageGen.ts               AI image generation with content type routing [→ ESY, see docs/esy/]
+  classify.ts               Three-branch prompt classification [→ ESY]
   categories.ts             Category helpers for all content types
 
 src/stores/

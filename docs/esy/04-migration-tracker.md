@@ -124,6 +124,58 @@ Dry-run shows `cartoon` and `watercolor` styles are still routed to `gpt-image-1
 
 ---
 
+## ESY-side deliverables
+
+This section lives here (in the clip.art repo) as a **consumer's view** of what ESY needs to ship. The authoritative ESY-side tracker should live in `apps/esy/server/api.esy.com/` but everything below reflects what clip.art's integration depends on.
+
+### `api.esy.com` — must ship for Phase 1
+
+- [ ] **Auth** — Bearer token, per-consumer API keys, `client_id` enforcement
+- [ ] **`POST /v1/health`** — liveness check
+- [ ] **`POST /v1/generate`** — synchronous generation. Must support all 4 models (`gemini`, `gpt-image-1`, `gpt-image-1.5`, `gpt-image-2`), all 3 qualities (`low`, `medium`, `high`), all 3 aspects (`1:1`, `3:4`, `4:3`). Returns `GenerateResponse` shape from [02-api-contract.md](02-api-contract.md).
+- [ ] **Prompt safety filter** — replaces `src/lib/promptSafety.ts` logic; runs before provider call
+- [ ] **Classification pipeline** — replaces `src/lib/classify.ts`. Outputs `title` (3-8 words, ≤60 chars), `slug` (≤40 chars, collision-checked across clip.art's `generations` table), `description` (150-300 chars, 2-3 sentences), `category`, `tags`.
+- [ ] **R2 upload** — replaces `src/lib/r2.ts`. Writes to ESY's own bucket with path structure matching `docs/R2_IMAGE_STORAGE.md` conventions.
+- [ ] **WEBP conversion** — sharp pipeline; quality 85, effort 4
+- [ ] **Provider routing + retries** — `gemini` via `@google/generative-ai`, `gpt-image-*` via OpenAI SDK. Retry on 429/5xx with exponential backoff.
+- [ ] **Idempotency** — `Idempotency-Key` header, 24h dedupe window
+- [ ] **Rate limits** — 60/min per `client_id` on `/v1/generate`
+- [ ] **Error taxonomy** — return shape from [02-api-contract.md](02-api-contract.md#error-responses): `invalid_request`, `unauthorized`, `quota_exceeded`, `safety_rejected`, `rate_limited`, `provider_failed`, `hitl_required`, `internal_error`
+
+### `api.esy.com` — must ship for Phase 2
+
+- [ ] **`POST /v1/batches`** — batch job submission (50k subjects max per batch)
+- [ ] **`GET /v1/batches/{id}`** — status poll
+- [ ] **`GET /v1/batches/{id}/results`** — NDJSON stream of completed items, `?since=` support
+- [ ] **`POST /v1/batches/{id}/cancel`** — cancel in-flight batch
+- [ ] **Batch API routing** — opportunistically route batch jobs through provider-native batch endpoints for 50% cost savings (24h SLA). This is why batch wasn't wired into clip.art's `imageGen.ts` — ESY owns it.
+- [ ] **Scheduled batch execution** — cron-driven runs with budget caps, pause-on-failure-rate, checkpoint/resume
+- [ ] **Cost tracking** — per-generation cost logging; daily/batch/consumer rollups
+- [ ] **Variation tracking** — per-subject matrix of used (pose × style × variation) combos; novel-combo generator for re-runs
+- [ ] **Provenance** — every generation tagged with `batch_id`, `run_id`, `created_by`, `client_id`
+
+### `api.esy.com` — must ship for Phase 3
+
+- [ ] **Quality scoring pipeline** — automated checks: `has_white_background`, `is_isolated_object`, `resolution_ok`, `file_size_ok`, `safety_passed`, `matches_prompt`, `quality_score` (0-100)
+- [ ] **HITL queue** — staging → review → approve/reject → publish flow. Generations in HITL return 503 `hitl_required` to sync callers; async pollers see them as `needs_review`.
+- [ ] **R2 orphan cleanup** — atomic store-then-commit semantics or sweeper for orphans from failed inserts
+- [ ] **Dead-letter queue** — failed generations tracked, categorized (rate_limit vs safety vs network vs provider), retryable
+
+### `app.esy.com` — must ship for Phase 3
+
+- [ ] **Model routing UI** — replaces clip.art's `app/admin/models/page.tsx`. Same concept, per-style model + quality config, but in ESY dashboard.
+- [ ] **Batch launcher** — replaces `scripts/seed-animal-clipart.ts` invocation. UI to configure + launch batches with safety caps.
+- [ ] **Schedule manager** — recurring batch schedules with budget + failure-rate pauses
+- [ ] **HITL review UI** — queue of flagged generations with approve/reject actions
+- [ ] **Cost reports** — per-run, per-day, per-consumer spend
+
+### Animations (Phase 4)
+
+- [ ] **`POST /v1/animations`** — Kling/fal.ai integration; accepts source `generation_id`, returns video URL + thumbnails
+- [ ] **Separate storage tier for video** — MP4s and thumbnails
+
+---
+
 ## Blockers on migration
 
 1. **ESY API not deployed yet.** Nothing can be integrated until at minimum `/v1/health` + `/v1/generate` exist in ESY staging.
