@@ -28,12 +28,10 @@ What stays in clip.art: UI, routing, auth, credits, SEO, display, sitemap, domai
 
 ## Key Documentation
 
-- `docs/CONTENT_GENERATION_WORKFLOWS.md` — Full ESY integration spec with interface definitions
-- `docs/esy/` — API contract between clip.art and ESY
-- `docs/strategy/sessions/2026-03-21-clip-art-and-esy-strategy.md` — Company strategy session
+- `docs/esy/` — **All ESY migration docs.** Start with `docs/esy/README.md`. Contains migration tracker, API contract, phased rollout plan, and decision log.
 - `docs/PRODUCT_ARCHITECTURE.md` — clip.art architecture
 - `docs/SEO_FRAMEWORK.md` — SEO conventions
-- `docs/AUTO_CLASSIFICATION.md` — Classification pipeline docs
+- `docs/AUTO_CLASSIFICATION.md` — Classification pipeline docs (legacy — being migrated to ESY)
 
 ## Content Types
 

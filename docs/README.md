@@ -2,6 +2,12 @@
 
 Internal documentation, plans, patterns, and strategy for the clip.art project.
 
+## ESY Migration
+
+All documentation for clip.art's ongoing migration to ESY's generation infrastructure lives in a dedicated directory:
+
+**→ [`docs/esy/`](esy/README.md)** — start here. Migration tracker, API contract, phased plan, decision log.
+
 ## Core Guides
 
 | Document | Description |
@@ -31,7 +37,7 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 
 | Session | Date | Topics |
 |---------|------|--------|
-| [clip.art & esy.com Strategy](strategy/sessions/2026-03-21-clip-art-and-esy-strategy.md) | 2026-03-21 | Verticals, $10K-$100K MRR paths, esy.com platform, YouTube, site architecture |
+| [clip.art & ESY Strategy](esy/sessions/2026-03-21-strategy.md) | 2026-03-21 | Verticals, $10K-$100K MRR paths, ESY as infrastructure, site architecture |
 
 ## Fix Write-ups
 

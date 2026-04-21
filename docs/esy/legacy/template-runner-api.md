@@ -1,7 +1,17 @@
-# Esy Template Runner API — Design Document
+# [SUPERSEDED] Esy Template Runner API — Design Document
 
-**Status**: Design Phase
-**Date**: April 4, 2026
+> ⚠️ **This document is no longer current. Do not build from it.**
+>
+> ESY pivoted away from the "template-to-artifact" (worksheet/PDF) framing in April 2026. ESY's first product is **clip.art's generation infrastructure**. This document is kept for historical reference only.
+>
+> **For the current ESY spec, see [`docs/esy/README.md`](../README.md).**
+>
+> See [`docs/esy/05-decision-log.md`](../05-decision-log.md) for the reasoning behind the pivot.
+
+---
+
+**Status**: Superseded
+**Original date**: April 4, 2026
 **Author**: ESY LLC
 **Context**: Designing the `api.esy.com` template runner around clip.art's worksheet use case as the first business-driven template type.
 

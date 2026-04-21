@@ -12,18 +12,29 @@ clip.art delegates all content generation to ESY's API (api.esy.com). ESY handle
 
 The current codebase still has direct AI provider calls. These are transitional and will be replaced by ESY API calls:
 
-- `src/lib/imageGen.ts` — Gemini generation (ESY replaces)
-- `src/lib/gptImage1.ts` — OpenAI gpt-image-1 integration (ESY replaces)
-- `src/lib/gptImage2.ts` — OpenAI gpt-image-2 / ChatGPT Images 2.0 integration (ESY replaces)
+- `src/lib/imageGen.ts` — central model router (ESY replaces)
+- `src/lib/gemini.ts` — Gemini 2.5 Flash Image (ESY replaces)
+- `src/lib/gptImage1.ts` — OpenAI gpt-image-1 (ESY replaces)
+- `src/lib/gptImage15.ts` — OpenAI gpt-image-1.5, recommended default (ESY replaces)
+- `src/lib/gptImage2.ts` — OpenAI gpt-image-2 / ChatGPT Images 2.0 (ESY replaces)
 - `src/lib/r2.ts` — R2 uploads (ESY replaces)
-- `src/lib/classify.ts` — Auto-classification (ESY replaces)
-- `src/lib/promptSafety.ts` — Safety filtering (ESY replaces)
-- `scripts/seed-animal-clipart.ts` — Batch generation (ESY replaces)
-- `app/api/generate/route.ts` — Becomes thin proxy to ESY API
+- `src/lib/classify.ts` — auto-classification (ESY replaces)
+- `src/lib/promptSafety.ts` — safety filtering (ESY replaces)
+- `scripts/seed-animal-clipart.ts` — batch generation (ESY replaces)
+- `app/api/generate/route.ts` — becomes thin proxy to ESY API
+- `app/api/admin/settings/model-config/route.ts` — routing moves to ESY dashboard
+- `app/api/admin/settings/model-quality-config/route.ts` — routing moves to ESY dashboard
 
 When modifying generation pipeline code, note that it will be replaced by ESY. Avoid deep refactors of generation logic — focus changes on the consumer-facing side (UI, SEO, display).
 
 ## Key Reference Docs
 
-- `docs/CONTENT_GENERATION_WORKFLOWS.md` — Full ESY integration spec with interface definitions
-- `docs/esy/` — API contract between clip.art and ESY
+All ESY migration documentation lives in `docs/esy/`. Start here:
+
+- `docs/esy/README.md` — **Entry point.** Index and current status snapshot.
+- `docs/esy/04-migration-tracker.md` — File-by-file status with today's state, deferred work, blockers.
+- `docs/esy/02-api-contract.md` — Endpoints, request/response shapes, error codes.
+- `docs/esy/03-migration-plan.md` — Phased rollout with rollback steps.
+- `docs/esy/05-decision-log.md` — Dated architectural decisions.
+
+Before making any change to a file in the migration status list above, check `docs/esy/04-migration-tracker.md` for its current state and any deferred work.
