@@ -24,6 +24,7 @@ const ALL_STYLES: StyleKey[] = [
 ];
 
 function fmtUsd(n: number): string {
+  if (n < 0.01 && n > 0) return `$${n.toFixed(4)}`;
   return `$${n.toFixed(3)}`;
 }
 
@@ -73,6 +74,7 @@ export default function AdminModelDetailPage({
   const meta = MODEL_BY_KEY[modelKey];
 
   const [imageConfig, setImageConfig] = useState<Record<string, string> | null>(null);
+  const [pricingMode, setPricingMode] = useState<"sync" | "batch">("sync");
 
   useEffect(() => {
     fetch("/api/admin/settings/model-config")
@@ -184,26 +186,68 @@ export default function AdminModelDetailPage({
 
       {/* ─── Pricing matrix ─── */}
       <section className="mt-10">
-        <div className="mb-4">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
-            Pricing
-          </span>
-          <h2 className="mt-1 text-lg font-semibold text-gray-900">
-            Cost per image · {meta.supportsQualityTiers ? "by quality × aspect ratio" : "flat rate"}
-          </h2>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Source:{" "}
-            <a
-              href={meta.docsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900"
-            >
-              official {meta.provider} documentation
-            </a>
-            . Margin column compares each price against the lowest credit-pack tier ($0.05/credit).
-          </p>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+              Pricing
+            </span>
+            <h2 className="mt-1 text-lg font-semibold text-gray-900">
+              Cost per image · {meta.supportsQualityTiers ? "by quality × aspect ratio" : "flat rate"}
+            </h2>
+            <p className="mt-0.5 text-sm text-gray-500">
+              Source:{" "}
+              <a
+                href={meta.docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900"
+              >
+                official {meta.provider} documentation
+              </a>
+              . Margin column compares each price against the lowest credit-pack tier ($0.05/credit).
+            </p>
+          </div>
+          {meta.batch.supported && (
+            <div className="inline-flex rounded-lg bg-gray-100 p-0.5" role="tablist" aria-label="Pricing mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={pricingMode === "sync"}
+                onClick={() => setPricingMode("sync")}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                  pricingMode === "sync"
+                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Sync
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={pricingMode === "batch"}
+                onClick={() => setPricingMode("batch")}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                  pricingMode === "batch"
+                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Batch <span className="ml-1 text-[10px] text-emerald-600">−{Math.round(meta.batch.discount * 100)}%</span>
+              </button>
+            </div>
+          )}
         </div>
+
+        {meta.batch.supported && pricingMode === "batch" && (
+          <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-800">
+            <div className="font-semibold">Batch API · {Math.round(meta.batch.discount * 100)}% off</div>
+            <div className="mt-0.5 text-xs text-emerald-700">
+              {meta.batch.slaHours}-hour completion window.{" "}
+              {meta.batch.notes}
+            </div>
+          </div>
+        )}
 
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <table className="w-full">
@@ -248,7 +292,7 @@ export default function AdminModelDetailPage({
                     )}
                   </td>
                   {ASPECT_KEYS.map((aspect) => {
-                    const price = priceFor(meta.key, q, aspect);
+                    const price = priceFor(meta.key, q, aspect, { batch: pricingMode === "batch" });
                     if (price == null) {
                       return (
                         <td key={aspect} className="border-l border-gray-100 px-5 py-4 text-xs text-gray-300">—</td>

@@ -56,6 +56,16 @@ export interface ImageModelEntry {
   pricing: Partial<Record<Quality, Record<AspectKey, number>>>;
   supportsQualityTiers: boolean;
 
+  // Batch API support. If batchDiscount is set, apply (1 - batchDiscount)
+  // multiplier to every pricing cell to get the batch rate.
+  // slaHours: expected completion window for batch jobs.
+  batch: {
+    supported: boolean;
+    discount: number;
+    slaHours: number;
+    notes?: string;
+  };
+
   params: ModelParam[];
   exampleCall: string;
 }
@@ -90,6 +100,12 @@ export const IMAGE_MODELS: ImageModelEntry[] = [
       flat: { square: 0.039, landscape: 0.039, portrait: 0.039 },
     },
     supportsQualityTiers: false,
+    batch: {
+      supported: true,
+      discount: 0.5,
+      slaHours: 24,
+      notes: "Google's Batch API for Gemini — same model, async processing, no output difference.",
+    },
     params: [
       { name: "prompt",          type: "string", required: true,  description: "Text prompt describing the image." },
       { name: "aspectRatio",     type: "enum",   values: "1:1 | 4:3 | 3:4", description: "Output aspect ratio." },
@@ -122,6 +138,7 @@ const buffer = await generateClipArt(
         "Transparent background",
         "input_fidelity param",
         "Image edits (inpainting/masking)",
+        "Batch API (50% off)",
         "Reference-image workflows",
       ],
       negative: ["Older base model", "Expensive at non-square"],
@@ -132,6 +149,12 @@ const buffer = await generateClipArt(
       high:   { square: 0.167, landscape: 0.250, portrait: 0.250 },
     },
     supportsQualityTiers: true,
+    batch: {
+      supported: true,
+      discount: 0.5,
+      slaHours: 24,
+      notes: "OpenAI Batch API supports /v1/images/generations — 50% off sync pricing. Submit as a .jsonl file.",
+    },
     params: [
       { name: "model",             type: "string", required: true, values: "\"gpt-image-1\"", description: "Model identifier." },
       { name: "prompt",            type: "string", required: true, description: "Text prompt." },
@@ -172,6 +195,7 @@ const buffer = await generateWithGptImage1(
         "Transparent background",
         "input_fidelity param",
         "Image edits (inpainting/masking)",
+        "Batch API (50% off)",
         "Cheaper than gpt-image-1 at every tier",
       ],
       negative: ["No in-image text guarantee (vs gpt-image-2)"],
@@ -182,6 +206,12 @@ const buffer = await generateWithGptImage1(
       high:   { square: 0.133, landscape: 0.200, portrait: 0.200 },
     },
     supportsQualityTiers: true,
+    batch: {
+      supported: true,
+      discount: 0.5,
+      slaHours: 24,
+      notes: "OpenAI Batch API supports /v1/images/generations — 50% off sync pricing. Submit as a .jsonl file.",
+    },
     params: [
       { name: "model",             type: "string", required: true, values: "\"gpt-image-1.5\"", description: "Model identifier." },
       { name: "prompt",            type: "string", required: true, description: "Text prompt." },
@@ -222,6 +252,7 @@ const buffer = await generateWithGptImage15(
         "Up to 2K resolution",
         "Reliable in-image text",
         "Multilingual prompts",
+        "Batch API (50% off)",
         "Always high-fidelity on image inputs",
         "Thousands of valid resolutions",
       ],
@@ -233,6 +264,12 @@ const buffer = await generateWithGptImage15(
       high:   { square: 0.211, landscape: 0.165, portrait: 0.165 },
     },
     supportsQualityTiers: true,
+    batch: {
+      supported: true,
+      discount: 0.5,
+      slaHours: 24,
+      notes: "OpenAI Batch API supports /v1/images/generations — 50% off sync pricing. Submit as a .jsonl file.",
+    },
     params: [
       { name: "model",         type: "string", required: true, values: "\"gpt-image-2\"", description: "Model identifier." },
       { name: "prompt",        type: "string", required: true, description: "Text prompt. Handles multilingual input natively." },
@@ -260,12 +297,19 @@ export const MODEL_BY_KEY: Record<ModelKey, ImageModelEntry> =
 // Helpers
 // ---------------------------------------------------------------------------
 
-export function priceFor(model: ModelKey, quality: Quality, aspect: AspectKey): number | null {
+export function priceFor(
+  model: ModelKey,
+  quality: Quality,
+  aspect: AspectKey,
+  opts: { batch?: boolean } = {},
+): number | null {
   const entry = MODEL_BY_KEY[model];
   if (!entry) return null;
-  // If the model is flat-priced, ignore requested quality and return flat.
   const tier = entry.supportsQualityTiers ? entry.pricing[quality] : entry.pricing.flat;
-  return tier ? tier[aspect] : null;
+  if (!tier) return null;
+  const base = tier[aspect];
+  if (opts.batch && entry.batch.supported) return base * (1 - entry.batch.discount);
+  return base;
 }
 
 export function isKnownModel(value: unknown): value is ModelKey {

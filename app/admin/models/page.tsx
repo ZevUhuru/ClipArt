@@ -103,9 +103,9 @@ type QualityConfig = Record<string, Quality>;
 // competitive slot. Gemini (flat price) competes at all quality tiers.
 // ---------------------------------------------------------------------------
 
-function rankAt(aspect: AspectKey, quality: Quality): Record<ModelKey, number> {
+function rankAt(aspect: AspectKey, quality: Quality, batch = false): Record<ModelKey, number> {
   const entries = IMAGE_MODELS
-    .map((m) => ({ key: m.key, price: priceFor(m.key, quality, aspect) ?? Infinity }))
+    .map((m) => ({ key: m.key, price: priceFor(m.key, quality, aspect, { batch }) ?? Infinity }))
     .filter((e) => Number.isFinite(e.price))
     .sort((a, b) => a.price - b.price);
   const out = {} as Record<ModelKey, number>;
@@ -120,6 +120,13 @@ function toneForRank(rank: number) {
 }
 
 function fmtUsd(n: number): string {
+  return `$${n.toFixed(3)}`;
+}
+
+// Format very small numbers with 4 decimals so batch prices like $0.0195
+// don't round to $0.020 and lose precision in the comparison matrix.
+function fmtUsdPrecise(n: number): string {
+  if (n < 0.01) return `$${n.toFixed(4)}`;
   return `$${n.toFixed(3)}`;
 }
 
@@ -222,6 +229,9 @@ const ASPECT_KEYS: AspectKey[] = ["square", "landscape", "portrait"];
 const QUALITY_ROWS: Quality[] = ["low", "medium", "high"];
 
 function PricingMatrix() {
+  const [mode, setMode] = useState<"sync" | "batch">("sync");
+  const batch = mode === "batch";
+
   const rankByCell = useMemo(() => {
     const map: Record<Quality, Record<AspectKey, Record<ModelKey, number>>> = {
       low:    { square: {}, landscape: {}, portrait: {} } as Record<AspectKey, Record<ModelKey, number>>,
@@ -231,11 +241,14 @@ function PricingMatrix() {
     };
     for (const q of QUALITY_ROWS) {
       for (const a of ASPECT_KEYS) {
-        map[q][a] = rankAt(a, q);
+        map[q][a] = rankAt(a, q, batch);
       }
     }
+    map.flat.square = rankAt("square", "flat", batch);
+    map.flat.landscape = rankAt("landscape", "flat", batch);
+    map.flat.portrait = rankAt("portrait", "flat", batch);
     return map;
-  }, []);
+  }, [batch]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -245,22 +258,62 @@ function PricingMatrix() {
             Pricing comparison — all quality tiers × all aspect ratios
           </h3>
           <p className="mt-0.5 text-xs text-gray-500">
-            Per-image cost from OpenAI's official calculator. Cheapest per (quality × aspect)
-            slot in green. Click a model name to see full capabilities and parameters.
+            Per-image cost. Cheapest per (quality × aspect) slot in green. Toggle Batch
+            for 50%-off async pricing (24h completion window). Click a model name for full details.
           </p>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-gray-400">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" /> Cheapest
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-amber-400" /> Mid
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-rose-400" /> Highest
-          </span>
+        <div className="flex flex-col items-end gap-2">
+          {/* Sync / Batch toggle */}
+          <div className="inline-flex rounded-lg bg-gray-100 p-0.5" role="tablist" aria-label="Pricing mode">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!batch}
+              onClick={() => setMode("sync")}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                !batch
+                  ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Sync
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={batch}
+              onClick={() => setMode("batch")}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                batch
+                  ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Batch <span className="ml-1 text-[10px] text-emerald-600">−50%</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-3 text-[11px] text-gray-400">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" /> Cheapest
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-amber-400" /> Mid
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-rose-400" /> Highest
+            </span>
+          </div>
         </div>
       </div>
+
+      {batch && (
+        <div className="border-b border-emerald-100 bg-emerald-50/60 px-6 py-2.5 text-[11px] text-emerald-700">
+          <strong>Batch mode</strong> — 50% discount, 24-hour completion window. Both OpenAI
+          (<code className="rounded bg-white px-1 py-0.5 text-emerald-800">/v1/images/generations</code>)
+          and Gemini support batch; not usable for user-facing real-time generation. Best
+          for scripted seeding runs.
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] text-sm">
@@ -350,7 +403,7 @@ function PricingMatrix() {
                       )}
                     </td>
                     {ASPECT_KEYS.map((aspect) => {
-                      const price = priceFor(model.key, q, aspect);
+                      const price = priceFor(model.key, q, aspect, { batch });
                       if (price == null) {
                         return (
                           <td key={aspect} className="border-l border-gray-100 px-5 py-3 text-xs text-gray-300">
@@ -369,7 +422,7 @@ function PricingMatrix() {
                           <div
                             className={`inline-flex items-baseline gap-1.5 rounded-lg px-2 py-0.5 text-sm font-semibold ring-1 ring-inset ${tone.bg} ${tone.text} ${tone.ring}`}
                           >
-                            {fmtUsd(price)}
+                            {fmtUsdPrecise(price)}
                             {rank === 0 && <span aria-hidden className="text-emerald-500">✓</span>}
                           </div>
                           <div
