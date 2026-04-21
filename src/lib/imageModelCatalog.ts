@@ -111,11 +111,11 @@ const buffer = await generateClipArt(
     endpoint: "api.openai.com/v1/images/generations",
     apiModelId: "gpt-image-1",
     releaseDate: "2025-04",
-    tagline: "Older OpenAI model — richer textures, transparent BG support",
+    tagline: "Legacy — superseded by gpt-image-1.5 at a lower price",
     description:
-      "The original gpt-image-1 released in early 2025. Stronger than Gemini on complex textures and photographic realism. Supports transparent backgrounds and the input_fidelity parameter for high-fidelity edits.",
+      "The original gpt-image-1 released in early 2025. Still works, but gpt-image-1.5 matches it on capabilities (transparent backgrounds, input_fidelity, edits) at meaningfully lower cost. Keep on-hand only for strict reproducibility of existing content.",
     status: "legacy",
-    badge: { label: "Legacy", tone: "gray" },
+    badge: { label: "Legacy · use 1.5", tone: "gray" },
     docsUrl: "https://platform.openai.com/docs/guides/image-generation?image-generation-model=GPT-image-1",
     capabilities: {
       positive: [
@@ -148,6 +148,56 @@ const buffer = await generateClipArt(
 `import { generateWithGptImage1 } from "@/lib/gptImage1";
 
 const buffer = await generateWithGptImage1(
+  "a golden retriever puppy",
+  "1:1",
+  "medium"
+);`,
+  },
+
+  {
+    key: "gpt-image-1.5",
+    label: "GPT Image 1.5",
+    provider: "OpenAI",
+    endpoint: "api.openai.com/v1/images/generations",
+    apiModelId: "gpt-image-1.5",
+    releaseDate: "2025-11",
+    tagline: "Recommended OpenAI default — cheaper than 1, keeps transparent BG",
+    description:
+      "Mid-generation OpenAI model released late 2025. Drop-in upgrade for gpt-image-1: same API shape, same capabilities (transparent backgrounds, input_fidelity, image edits), but cheaper at every quality × aspect slot. Unlike gpt-image-2 it still supports transparent backgrounds, which makes it the best choice for clipart workflows that need isolated subjects.",
+    status: "current",
+    badge: { label: "Recommended", tone: "emerald" },
+    docsUrl: "https://platform.openai.com/docs/guides/image-generation?image-generation-model=GPT-image-1",
+    capabilities: {
+      positive: [
+        "Transparent background",
+        "input_fidelity param",
+        "Image edits (inpainting/masking)",
+        "Cheaper than gpt-image-1 at every tier",
+      ],
+      negative: ["No in-image text guarantee (vs gpt-image-2)"],
+    },
+    pricing: {
+      low:    { square: 0.009, landscape: 0.013, portrait: 0.013 },
+      medium: { square: 0.034, landscape: 0.050, portrait: 0.050 },
+      high:   { square: 0.133, landscape: 0.200, portrait: 0.200 },
+    },
+    supportsQualityTiers: true,
+    params: [
+      { name: "model",             type: "string", required: true, values: "\"gpt-image-1.5\"", description: "Model identifier." },
+      { name: "prompt",            type: "string", required: true, description: "Text prompt." },
+      { name: "size",              type: "enum",   values: "1024×1024 | 1024×1536 | 1536×1024", description: "Output resolution." },
+      { name: "quality",           type: "enum",   values: "low | medium | high", description: "Rendering quality. Directly controls cost." },
+      { name: "background",        type: "enum",   values: "transparent | opaque | auto", description: "Background handling. Transparent supported on PNG output." },
+      { name: "output_format",     type: "enum",   values: "png | jpeg | webp", description: "File format of returned base64 blob." },
+      { name: "output_compression", type: "number", description: "Compression level for JPEG/WebP (0–100)." },
+      { name: "moderation",        type: "enum",   values: "auto | low", description: "Content moderation strictness." },
+      { name: "input_fidelity",    type: "enum",   values: "low | high", description: "Controls how strongly input images are preserved during edits." },
+      { name: "n",                 type: "number", description: "Number of images (we always pass 1)." },
+    ],
+    exampleCall:
+`import { generateWithGptImage15 } from "@/lib/gptImage15";
+
+const buffer = await generateWithGptImage15(
   "a golden retriever puppy",
   "1:1",
   "medium"

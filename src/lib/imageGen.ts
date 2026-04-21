@@ -1,5 +1,6 @@
 import { generateClipArt } from "./gemini";
 import { generateWithGptImage1, type GptImageQuality } from "./gptImage1";
+import { generateWithGptImage15 } from "./gptImage15";
 import { generateWithGptImage2 } from "./gptImage2";
 import { type StyleKey, type ModelKey, type ContentType, STYLE_MODEL_MAP, CONTENT_TYPE_ASPECT, buildPrompt } from "./styles";
 import { createSupabaseAdmin } from "./supabase/server";
@@ -48,7 +49,7 @@ async function getQualityConfig(): Promise<Record<string, string> | null> {
   return _cachedQualityConfig;
 }
 
-const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gpt-image-1", "gpt-image-2"]);
+const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
 const VALID_QUALITIES: ReadonlySet<GptImageQuality> = new Set(["low", "medium", "high"]);
 
 async function resolveModel(style: StyleKey): Promise<ModelKey> {
@@ -83,6 +84,9 @@ export async function generateImage(
   switch (model) {
     case "gpt-image-1":
       buffer = await generateWithGptImage1(prompt, aspectRatio, quality);
+      break;
+    case "gpt-image-1.5":
+      buffer = await generateWithGptImage15(prompt, aspectRatio, quality);
       break;
     case "gpt-image-2":
       buffer = await generateWithGptImage2(prompt, aspectRatio, quality);
