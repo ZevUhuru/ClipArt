@@ -37,19 +37,21 @@ User prompt + style
 
 ## Models
 
-| Model | Provider | Cost/image (square 1024²) | Cost/image (non-square 1024×1536 or 1536×1024) | Quality | Speed |
-|-------|----------|--------------------------|------------------------------------------------|---------|-------|
+All OpenAI models are called at `quality: "medium"` to match the settled decision in `CLAUDE.md`.
+
+| Model | Provider | Cost/image (square 1024²) | Cost/image (non-square 1024×1536 or 1536×1024) | Notes | Speed |
+|-------|----------|--------------------------|------------------------------------------------|-------|-------|
 | Gemini 2.5 Flash | Google | ~$0.039 | ~$0.039 | Good for clean clip art | ~5-10s |
 | Gemini 2.5 Flash (batch) | Google | ~$0.0195 | ~$0.0195 | Same (batch mode) | Async |
-| GPT Image 1 (low, default) | OpenAI | $0.011 | $0.016 | Cheapest; older model | ~10-15s |
+| GPT Image 1 (medium) | OpenAI | $0.042 | $0.063 | Older model | ~10-15s |
 | GPT Image 2 (medium) | OpenAI | **$0.053** | **$0.041** | SOTA — in-image text, multilingual, up to 2K | ~10-15s |
 
 Pricing source: developers.openai.com per-image calculator, verified 2026-04-21.
 
-Key observations:
+Key observations (medium-to-medium comparison):
 
-- **GPT Image 1 at low quality** is the cheapest option across the board and is ~3.5× cheaper than Gemini for square images.
-- **GPT Image 2 at medium** is **26% more expensive than GPT Image 1 for square clipart** ($0.053 vs $0.042 medium, or $0.011 vs low) but **35% cheaper than GPT Image 1 medium for non-square content** ($0.041 vs $0.063). Illustrations (4:3) and coloring pages (3:4) benefit most from GPT Image 2.
+- **GPT Image 2 is 26% more expensive than GPT Image 1 for square clipart** ($0.053 vs $0.042).
+- **GPT Image 2 is 35% cheaper than GPT Image 1 for non-square content** ($0.041 vs $0.063). Illustrations (4:3) and coloring pages (3:4) benefit most from GPT Image 2 — and it beats Gemini on those aspect ratios too ($0.041 vs $0.039 is close, and gpt-image-2 outputs richer text/multilingual).
 - **GPT Image 2 does not support transparent backgrounds** or the `input_fidelity` param. Our clipart prompts already request plain white backgrounds, so this isn't a blocker.
 - **Token-based editing** (Responses API) is cheaper on GPT Image 2 across the board: image output $30/M vs $40/M, image input $8/M vs $10/M.
 

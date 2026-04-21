@@ -35,10 +35,11 @@ const IMAGE_MODELS = [
 //   clipart and illustration, so we show a range.
 //
 // Pricing sources (2026-04-21):
-//   - gpt-image-1: official per-image table on developers.openai.com (low
-//     quality is the effective default when no quality param is passed).
-//   - gpt-image-2: official per-image table, medium quality (the default
-//     we request in src/lib/gptImage2.ts).
+//   - gpt-image-1 and gpt-image-2: official per-image table on
+//     developers.openai.com. Both are priced at medium quality since that is
+//     the explicit quality passed in src/lib/gptImage1.ts and
+//     src/lib/gptImage2.ts, and matches the settled decision in CLAUDE.md
+//     ("medium quality is the default OpenAI model").
 //   - gemini: verified from docs/features/MULTI_MODEL.md, per-image cost
 //     is roughly constant across aspect ratios at this model/tier.
 // ---------------------------------------------------------------------------
@@ -50,16 +51,16 @@ const IMAGE_MODEL_COSTS: Record<
   Record<CostRole, { label: string; tone: Tone }>
 > = {
   gemini: {
-    clipart:      { label: "~$0.039",        tone: "amber" },
-    illustration: { label: "~$0.039",        tone: "amber" },
-    coloring:     { label: "~$0.039",        tone: "amber" },
-    shared:       { label: "~$0.039",        tone: "amber" },
+    clipart:      { label: "~$0.039",         tone: "amber" },
+    illustration: { label: "~$0.039",         tone: "amber" },
+    coloring:     { label: "~$0.039",         tone: "amber" },
+    shared:       { label: "~$0.039",         tone: "amber" },
   },
   "gpt-image-1": {
-    clipart:      { label: "~$0.011 (low)",  tone: "green" },
-    illustration: { label: "~$0.016 (low)",  tone: "green" },
-    coloring:     { label: "~$0.016 (low)",  tone: "green" },
-    shared:       { label: "~$0.011–0.016",  tone: "green" },
+    clipart:      { label: "$0.042 (medium)", tone: "green" },
+    illustration: { label: "$0.063 (medium)", tone: "green" },
+    coloring:     { label: "$0.063 (medium)", tone: "green" },
+    shared:       { label: "$0.042–0.063",    tone: "green" },
   },
   "gpt-image-2": {
     clipart:      { label: "$0.053 (medium)", tone: "blue" },
@@ -361,22 +362,24 @@ export default function AdminModelsPage() {
         <div className="mt-3 space-y-1 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
           <p>
             <strong>Note:</strong> All styles cost 1 credit to the user regardless of model. Prices
-            shown are per image at the aspect ratio each style actually renders at.
+            shown are per image at medium quality and the aspect ratio each style actually renders at.
           </p>
           <p>
-            <strong>GPT Image 1</strong> (low quality): $0.011 square, $0.016 non-square. Cheapest
-            overall but older model.
+            <strong>GPT Image 1</strong>: $0.042 square, $0.063 non-square. Older model.
           </p>
           <p>
-            <strong>GPT Image 2</strong> (medium, <em>ChatGPT Images 2.0</em>, released 2026-04-21):
+            <strong>GPT Image 2</strong> (<em>ChatGPT Images 2.0</em>, released 2026-04-21):
             $0.053 square, <strong>$0.041 non-square</strong>. Better in-image text, multilingual,
-            up to 2K. Note: no transparent backgrounds (our prompts request plain white, so OK).
-            <em>Non-square is cheaper than gpt-image-1 at medium, so illustrations and coloring pages
-            benefit most from this model.</em>
+            up to 2K. No transparent backgrounds (our prompts request plain white, so OK).
           </p>
           <p>
             <strong>Gemini 2.5 Flash</strong>: ~$0.039 across all aspect ratios. Best for clean
             vector-style clip art.
+          </p>
+          <p className="pt-1 text-[11px] italic text-gray-400">
+            Cost comparison at medium quality: gpt-image-2 is 26% more expensive than gpt-image-1
+            on square but 35% cheaper on non-square — so illustrations (4:3) and coloring pages
+            (3:4) benefit most from the new model.
           </p>
         </div>
       </section>

@@ -188,15 +188,20 @@ The risk is never about the number of pages — it's about the **percentage of l
 
 Assuming ~30% rejection rate → need to generate ~1.3M images to publish 1M.
 
-| Provider | Per image | 1.3M images | Annual cost |
+Quality assumption: all production image generation runs at **medium quality** (settled in `CLAUDE.md`). Low-quality batch seeding is listed separately for reference only.
+
+| Provider (medium quality unless noted) | Per image | 1.3M images | Annual cost |
 |----------|----------|-------------|-------------|
-| **GPT Image 1 Mini** (cheapest) | $0.005 | $6,500 | **$6,500** |
-| **GPT Image 1.5** (best value) | $0.009 | $11,700 | **$11,700** |
-| **NanoBanana 2 1K** (Batch API, 50% off) | $0.0225 | $29,250 | **$29,250** |
-| **NanoBanana 2 1K** (third-party) | $0.04 | $52,000 | **$52,000** |
-| **GPT Image 2** (medium square, ChatGPT Images 2.0) | $0.053 | $68,900 | **$68,900** |
-| **GPT Image 2** (medium non-square, ChatGPT Images 2.0) | $0.041 | $53,300 | **$53,300** |
-| **NanoBanana Pro 1K** | $0.134 | $174,200 | **$174,200** |
+| **Gemini 2.5 Flash batch** (50% off) | $0.0195 | $25,350 | **$25,350** |
+| **Gemini 2.5 Flash** (standard) | $0.039 | $50,700 | **$50,700** |
+| **GPT Image 2** (non-square — illustrations, coloring) | $0.041 | $53,300 | **$53,300** |
+| **GPT Image 1** (square — clipart) | $0.042 | $54,600 | **$54,600** |
+| **GPT Image 2** (square — clipart) | $0.053 | $68,900 | **$68,900** |
+| **GPT Image 1** (non-square — illustrations, coloring) | $0.063 | $81,900 | **$81,900** |
+| **NanoBanana 2 1K** (third-party, medium-equivalent) | $0.04 | $52,000 | **$52,000** |
+| **NanoBanana Pro 1K** (high-end) | $0.134 | $174,200 | **$174,200** |
+| _Batch/low-quality seeding only (reference):_ GPT Image 1 Mini low | $0.005 | $6,500 | $6,500 |
+| _Batch/low-quality seeding only (reference):_ GPT Image 1.5 low | $0.009 | $11,700 | $11,700 |
 
 ### Supporting Costs
 
@@ -219,21 +224,23 @@ Assuming ~30% rejection rate → need to generate ~1.3M images to publish 1M.
 
 ### Total Annual Cost (1M images)
 
+All scenarios below assume medium quality — our production standard.
+
 | Scenario | Generation | Supporting | Infra | **Total** |
 |----------|-----------|------------|-------|-----------|
-| **Budget** (GPT Image 1 Mini) | $6,500 | $6,500 | $3,300 | **$16,300** |
-| **Mid-range** (GPT Image 1.5) | $11,700 | $6,500 | $3,300 | **$21,500** |
-| **Premium** (NanoBanana 2 Batch) | $29,250 | $6,500 | $3,300 | **$39,050** |
-| **High-end** (GPT Image 2 medium square) | $68,900 | $6,500 | $3,300 | **$78,700** |
+| **Budget** (Gemini Flash batch, all ratios) | $25,350 | $6,500 | $3,300 | **$35,150** |
+| **Default** (Gemini Flash standard, all ratios) | $50,700 | $6,500 | $3,300 | **$60,500** |
+| **Mixed OpenAI** (GPT Image 1 square + GPT Image 2 non-square) | ~$48,000 | $6,500 | $3,300 | **$57,800** |
+| **SOTA** (GPT Image 2 everywhere) | $68,900 | $6,500 | $3,300 | **$78,700** |
 
 ### Cost per Published Image
 
 | Scenario | All-in cost per image |
 |----------|----------------------|
-| Budget | $0.016 |
-| Mid-range | $0.022 |
-| Premium | $0.039 |
-| High-end | $0.062 |
+| Budget (Gemini batch) | $0.035 |
+| Default (Gemini standard) | $0.061 |
+| Mixed OpenAI | $0.058 |
+| SOTA (GPT Image 2) | $0.079 |
 
 ### Break-even Analysis
 

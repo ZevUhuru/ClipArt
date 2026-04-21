@@ -22,6 +22,7 @@ export async function generateWithGptImage1(prompt: string, aspectRatio: string 
       model: "gpt-image-1",
       prompt,
       size,
+      quality: "medium",
       n: 1,
     });
 

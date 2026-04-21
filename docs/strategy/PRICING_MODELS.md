@@ -1,22 +1,33 @@
 # Pricing Strategy: Multi-Model Costs
 
 **Date:** 2026-03-22
-**Updated:** 2026-03-23 (corrected pricing from official Google/OpenAI docs)
+**Updated:** 2026-04-21 (GPT Image 2 / ChatGPT Images 2.0 pricing; standardize on medium quality)
 **Status:** Active
 
 ## Current: 1 Credit = 1 Generation (Any Model)
 
 All styles cost 1 credit regardless of which AI model generates the image. This keeps the UX simple — users pick a style, not a model.
 
-## Cost Reality (verified 2026-03-23)
+## Cost Reality (verified 2026-04-21, all at medium quality)
+
+Square 1024×1024 (clipart):
 
 | Model | Cost/image | At 1K imgs/mo | At 10K imgs/mo | At 1M imgs/yr |
 |-------|-----------|---------------|----------------|---------------|
-| GPT Image 1 (OpenAI) | ~$0.011 | $11 | $110 | $11,000 |
 | Gemini 2.5 Flash (Google) | ~$0.039 | $39 | $390 | $39,000 |
 | Gemini 2.5 Flash batch | ~$0.0195 | $19.50 | $195 | $19,500 |
+| GPT Image 1 (OpenAI, medium) | $0.042 | $42 | $420 | $42,000 |
+| GPT Image 2 (OpenAI, medium) | $0.053 | $53 | $530 | $53,000 |
 
-GPT Image 1 at low quality (~$0.011 square) is **~3.5x cheaper** than Gemini 2.5 Flash per image. GPT Image 2 at medium (ChatGPT Images 2.0, released 2026-04-21) costs $0.053 for square 1024² and $0.041 for non-square — more expensive than GPT Image 1 on square but **cheaper on the 3:4 / 4:3 ratios we use for coloring pages and illustrations**.
+Non-square 1024×1536 or 1536×1024 (illustrations, coloring):
+
+| Model | Cost/image | At 1K imgs/mo | At 10K imgs/mo | At 1M imgs/yr |
+|-------|-----------|---------------|----------------|---------------|
+| Gemini 2.5 Flash (Google) | ~$0.039 | $39 | $390 | $39,000 |
+| GPT Image 2 (OpenAI, medium) | **$0.041** | $41 | $410 | $41,000 |
+| GPT Image 1 (OpenAI, medium) | $0.063 | $63 | $630 | $63,000 |
+
+OpenAI calls are pinned to medium quality per the settled decision in `CLAUDE.md`. The non-square table flips the square table's ordering: **GPT Image 2 is the cheap option on non-square**, while GPT Image 1 is the most expensive OpenAI option there.
 
 ## Revenue per credit
 
@@ -26,7 +37,7 @@ GPT Image 1 at low quality (~$0.011 square) is **~3.5x cheaper** than Gemini 2.5
 | Sweet Spot | $4.99 | 100 | $0.05 |
 | Binge | $9.99 | 200 | $0.05 |
 
-Revenue per credit is lower than before — this is intentional. We're optimizing for volume and habit formation over per-transaction margin. Even at the lowest tier ($0.05/credit), revenue still exceeds GPT Image 1 cost ($0.011) and covers Gemini ($0.039) with slim margin.
+Revenue per credit is lower than before — this is intentional. We're optimizing for volume and habit formation over per-transaction margin. At the lowest tier ($0.05/credit), revenue **barely covers** medium-quality image generation across any model (Gemini $0.039, GPT Image 1 $0.042, GPT Image 2 $0.053 square). Margin on credit packs is near zero at this quality — subscriptions and upsells carry the business.
 
 ## When to reconsider
 
