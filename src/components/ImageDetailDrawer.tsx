@@ -216,7 +216,8 @@ interface DrawerContentProps {
 function formatModelLabel(model: string): string {
   const known: Record<string, string> = {
     "gemini": "Gemini 2.0 Flash",
-    "dalle": "DALL·E 3",
+    "gpt-image-1": "GPT Image 1",
+    "gpt-image-2": "GPT Image 2",
     "kling-2.5-turbo": "Kling 2.5 Turbo",
     "kling-3.0-standard": "Kling 3.0 Standard",
     "kling-3.0-pro": "Kling 3.0 Pro",

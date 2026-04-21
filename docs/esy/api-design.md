@@ -203,8 +203,8 @@ The API accepts both and merges them: intent fills defaults, explicit slot value
 | Option | Description | Pros | Cons |
 |--------|-------------|------|------|
 | **A. Esy calls clip.art** | Esy has a service integration with clip.art's generation API | Single source of truth for image generation, consistent quality | Bidirectional dependency, clip.art must expose an API |
-| **B. Esy has its own generation** | Esy integrates directly with DALL-E / OpenAI / etc. | Independent, no dependency on clip.art | Duplicate capability, potentially different quality/style |
-| **C. Pluggable providers** | Template defines an "image provider" — could be clip.art, could be DALL-E, could be user-uploaded | Maximum flexibility, no hard dependency | More complex configuration |
+| **B. Esy has its own generation** | Esy integrates directly with OpenAI GPT Image / Gemini / etc. | Independent, no dependency on clip.art | Duplicate capability, potentially different quality/style |
+| **C. Pluggable providers** | Template defines an "image provider" — could be clip.art, could be a direct model provider, could be user-uploaded | Maximum flexibility, no hard dependency | More complex configuration |
 
 **Recommendation**: **C (pluggable)** with clip.art as the default provider for education templates. This keeps Esy independent while giving clip.art a privileged position. Future templates (e.g., business presentations) could use different image providers.
 
@@ -215,7 +215,7 @@ The API accepts both and merges them: intent fills defaults, explicit slot value
   "assetProviders": {
     "image": {
       "default": "clipart",
-      "supported": ["clipart", "upload", "dalle"]
+      "supported": ["clipart", "upload", "gpt-image"]
     }
   }
 }

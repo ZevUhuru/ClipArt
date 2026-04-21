@@ -22,8 +22,57 @@ STYLE_CONTENT_TYPE["coloring"] = "coloring";
 
 const IMAGE_MODELS = [
   { value: "gemini", label: "Gemini (Google)" },
-  { value: "dalle", label: "GPT Image 1 (OpenAI)" },
+  { value: "gpt-image-1", label: "GPT Image 1 (OpenAI)" },
+  { value: "gpt-image-2", label: "GPT Image 2 (OpenAI) — ChatGPT Images 2.0" },
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Aspect-ratio-aware per-image pricing
+//
+// Each style has a fixed content type which dictates aspect ratio:
+//   clipart → 1:1 (1024×1024), illustration → 4:3 (1536×1024),
+//   coloring → 3:4 (1024×1536). "shared" styles can be used for both
+//   clipart and illustration, so we show a range.
+//
+// Pricing sources (2026-04-21):
+//   - gpt-image-1: official per-image table on developers.openai.com (low
+//     quality is the effective default when no quality param is passed).
+//   - gpt-image-2: official per-image table, medium quality (the default
+//     we request in src/lib/gptImage2.ts).
+//   - gemini: verified from docs/features/MULTI_MODEL.md, per-image cost
+//     is roughly constant across aspect ratios at this model/tier.
+// ---------------------------------------------------------------------------
+type CostRole = "clipart" | "illustration" | "coloring" | "shared";
+type Tone = "green" | "amber" | "blue";
+
+const IMAGE_MODEL_COSTS: Record<
+  string,
+  Record<CostRole, { label: string; tone: Tone }>
+> = {
+  gemini: {
+    clipart:      { label: "~$0.039",        tone: "amber" },
+    illustration: { label: "~$0.039",        tone: "amber" },
+    coloring:     { label: "~$0.039",        tone: "amber" },
+    shared:       { label: "~$0.039",        tone: "amber" },
+  },
+  "gpt-image-1": {
+    clipart:      { label: "~$0.011 (low)",  tone: "green" },
+    illustration: { label: "~$0.016 (low)",  tone: "green" },
+    coloring:     { label: "~$0.016 (low)",  tone: "green" },
+    shared:       { label: "~$0.011–0.016",  tone: "green" },
+  },
+  "gpt-image-2": {
+    clipart:      { label: "$0.053 (medium)", tone: "blue" },
+    illustration: { label: "$0.041 (medium)", tone: "blue" },
+    coloring:     { label: "$0.041 (medium)", tone: "blue" },
+    shared:       { label: "$0.041–0.053",    tone: "blue" },
+  },
+};
+
+function resolveCost(model: string, role: string) {
+  const byModel = IMAGE_MODEL_COSTS[model] ?? IMAGE_MODEL_COSTS.gemini;
+  return byModel[(role as CostRole)] ?? byModel.clipart;
+}
 
 // ---------------------------------------------------------------------------
 // Text AI config — mirrors src/lib/textAI.ts registry
@@ -284,13 +333,24 @@ export default function AdminModelsPage() {
                     </select>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      (imageConfig[style] || "gemini") === "dalle"
-                        ? "bg-green-50 text-green-700"
-                        : "bg-amber-50 text-amber-700"
-                    }`}>
-                      {(imageConfig[style] || "gemini") === "dalle" ? "~$0.011" : "~$0.039"}
-                    </span>
+                    {(() => {
+                      const selected = imageConfig[style] || "gemini";
+                      const role = STYLE_CONTENT_TYPE[style] || "clipart";
+                      const cost = resolveCost(selected, role);
+                      const toneClass =
+                        cost.tone === "green"
+                          ? "bg-green-50 text-green-700"
+                          : cost.tone === "blue"
+                            ? "bg-blue-50 text-blue-700"
+                            : "bg-amber-50 text-amber-700";
+                      return (
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${toneClass}`}
+                        >
+                          {cost.label}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
@@ -298,9 +358,26 @@ export default function AdminModelsPage() {
           </table>
         </div>
 
-        <div className="mt-3 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
-          <strong>Note:</strong> All styles cost 1 credit to the user regardless of model.
-          GPT Image 1 (~$0.011) is ~3.5x cheaper than Gemini (~$0.039) per image.
+        <div className="mt-3 space-y-1 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
+          <p>
+            <strong>Note:</strong> All styles cost 1 credit to the user regardless of model. Prices
+            shown are per image at the aspect ratio each style actually renders at.
+          </p>
+          <p>
+            <strong>GPT Image 1</strong> (low quality): $0.011 square, $0.016 non-square. Cheapest
+            overall but older model.
+          </p>
+          <p>
+            <strong>GPT Image 2</strong> (medium, <em>ChatGPT Images 2.0</em>, released 2026-04-21):
+            $0.053 square, <strong>$0.041 non-square</strong>. Better in-image text, multilingual,
+            up to 2K. Note: no transparent backgrounds (our prompts request plain white, so OK).
+            <em>Non-square is cheaper than gpt-image-1 at medium, so illustrations and coloring pages
+            benefit most from this model.</em>
+          </p>
+          <p>
+            <strong>Gemini 2.5 Flash</strong>: ~$0.039 across all aspect ratios. Best for clean
+            vector-style clip art.
+          </p>
         </div>
       </section>
 

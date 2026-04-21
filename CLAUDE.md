@@ -16,7 +16,8 @@ clip.art delegates all content generation to ESY's API (api.esy.com). ESY handle
 
 **Migration status:** In progress. The current codebase still has direct AI provider calls that will be replaced by ESY API calls:
 - `src/lib/imageGen.ts` — Gemini image generation (ESY replaces)
-- `src/lib/dalle.ts` — OpenAI DALL-E integration (ESY replaces)
+- `src/lib/gptImage1.ts` — OpenAI gpt-image-1 integration (ESY replaces)
+- `src/lib/gptImage2.ts` — OpenAI gpt-image-2 / ChatGPT Images 2.0 integration (ESY replaces)
 - `src/lib/r2.ts` — R2 upload utilities (ESY replaces)
 - `src/lib/classify.ts` — Auto-classification (ESY replaces)
 - `src/lib/promptSafety.ts` — Prompt safety filtering (ESY replaces)

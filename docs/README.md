@@ -18,7 +18,7 @@ Internal documentation, plans, patterns, and strategy for the clip.art project.
 | Document | Description |
 |----------|-------------|
 | [Public/Private Toggle](features/PUBLIC_PRIVATE_TOGGLE.md) | User-facing toggle to control whether generations are shared with the community or kept private |
-| [Multi-Model Generation](features/MULTI_MODEL.md) | Unified model router (Gemini + DALL-E 3) with admin-configurable style-to-model mapping |
+| [Multi-Model Generation](features/MULTI_MODEL.md) | Unified model router (Gemini, GPT Image 1, GPT Image 2) with admin-configurable style-to-model mapping |
 
 ## Strategy
 

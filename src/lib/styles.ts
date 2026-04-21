@@ -59,7 +59,7 @@ export const CONTENT_TYPE_ASPECT: Record<ContentType, AspectRatio> = {
   coloring: "3:4",
 };
 
-export type ModelKey = "gemini" | "dalle";
+export type ModelKey = "gemini" | "gpt-image-1" | "gpt-image-2";
 
 export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
   flat: "gemini",

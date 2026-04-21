@@ -186,7 +186,7 @@ async function generateOneImage(job: Job): Promise<boolean> {
     const imageUrl = await uploadToR2(webpBuffer, key);
 
     const title = `${animal.name} ${style.charAt(0).toUpperCase() + style.slice(1)} Clip Art`;
-    const dbModel = model === "chatgpt-image-latest" ? "dalle" : "gemini";
+    const dbModel = model === "chatgpt-image-latest" ? "gpt-image-1" : "gemini";
 
     await supabase.from("generations").insert({
       user_id: null,

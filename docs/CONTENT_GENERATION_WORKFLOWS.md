@@ -65,7 +65,7 @@ clip.art handles user experience, SEO, display, and monetization. ESY handles ev
 
 ### What Changes in clip.art
 
-Today, clip.art calls OpenAI and Gemini directly from its own API routes (`/api/generate`, `src/lib/imageGen.ts`, `src/lib/dalle.ts`). It handles R2 uploads, WEBP conversion, and classification inline.
+Today, clip.art calls OpenAI and Gemini directly from its own API routes (`/api/generate`, `src/lib/imageGen.ts`, `src/lib/gptImage1.ts`, `src/lib/gptImage2.ts`). It handles R2 uploads, WEBP conversion, and classification inline.
 
 After ESY integration, clip.art's generate route becomes a thin proxy:
 - clip.art sends `{ subject, style, content_type }` to ESY's API
@@ -248,7 +248,7 @@ This documents what exists today in clip.art's codebase. ESY will replace these 
 **Flow:**
 1. User submits prompt + style + content_type
 2. Prompt safety check (`src/lib/promptSafety.ts`)
-3. Image generation via Gemini (`src/lib/imageGen.ts`) or OpenAI (`src/lib/dalle.ts`)
+3. Image generation via Gemini (`src/lib/imageGen.ts`) or OpenAI (`src/lib/gptImage1.ts`, `src/lib/gptImage2.ts`)
 4. WEBP conversion via sharp
 5. R2 upload with content-type-aware key (`resolveR2Key`)
 6. Auto-classification via `classifyPrompt()` — title, description, category, slug
@@ -437,7 +437,8 @@ Post-ESY migration, clip.art only needs `ESY_API_KEY` and `ESY_API_URL`. All pro
 |------|---------|---------------|
 | `scripts/seed-animal-clipart.ts` | Batch clip art generation | Yes — ESY batch API |
 | `src/lib/imageGen.ts` | Gemini image generation | Yes — ESY generation engine |
-| `src/lib/dalle.ts` | OpenAI DALL-E integration | Yes — ESY generation engine |
+| `src/lib/gptImage1.ts` | OpenAI gpt-image-1 integration | Yes — ESY generation engine |
+| `src/lib/gptImage2.ts` | OpenAI gpt-image-2 (ChatGPT Images 2.0) integration | Yes — ESY generation engine |
 | `src/lib/r2.ts` | R2 upload utilities | Yes — ESY storage layer |
 | `src/lib/classify.ts` | Auto-classification and SEO gen | Yes — ESY metadata enrichment |
 | `src/lib/promptSafety.ts` | Prompt safety filtering | Yes — ESY safety layer |

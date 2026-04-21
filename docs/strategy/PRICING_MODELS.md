@@ -16,7 +16,7 @@ All styles cost 1 credit regardless of which AI model generates the image. This 
 | Gemini 2.5 Flash (Google) | ~$0.039 | $39 | $390 | $39,000 |
 | Gemini 2.5 Flash batch | ~$0.0195 | $19.50 | $195 | $19,500 |
 
-GPT Image 1 is **~3.5x cheaper** than Gemini 2.5 Flash per image. DALL-E 2/3 deprecated May 2026.
+GPT Image 1 at low quality (~$0.011 square) is **~3.5x cheaper** than Gemini 2.5 Flash per image. GPT Image 2 at medium (ChatGPT Images 2.0, released 2026-04-21) costs $0.053 for square 1024² and $0.041 for non-square — more expensive than GPT Image 1 on square but **cheaper on the 3:4 / 4:3 ratios we use for coloring pages and illustrations**.
 
 ## Revenue per credit
 

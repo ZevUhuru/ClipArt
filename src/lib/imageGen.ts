@@ -1,5 +1,6 @@
 import { generateClipArt } from "./gemini";
-import { generateWithDallE } from "./dalle";
+import { generateWithGptImage1 } from "./gptImage1";
+import { generateWithGptImage2 } from "./gptImage2";
 import { type StyleKey, type ModelKey, type ContentType, STYLE_MODEL_MAP, CONTENT_TYPE_ASPECT, buildPrompt } from "./styles";
 import { createSupabaseAdmin } from "./supabase/server";
 
@@ -31,11 +32,13 @@ async function getModelConfig(): Promise<Record<string, string> | null> {
   return null;
 }
 
+const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gpt-image-1", "gpt-image-2"]);
+
 async function resolveModel(style: StyleKey): Promise<ModelKey> {
   const dbConfig = await getModelConfig();
   if (dbConfig && dbConfig[style]) {
-    const model = dbConfig[style];
-    if (model === "gemini" || model === "dalle") return model;
+    const model = dbConfig[style] as ModelKey;
+    if (VALID_MODELS.has(model)) return model;
   }
   return STYLE_MODEL_MAP[style];
 }
@@ -52,8 +55,11 @@ export async function generateImage(
 
   let buffer: Buffer;
   switch (model) {
-    case "dalle":
-      buffer = await generateWithDallE(prompt, aspectRatio);
+    case "gpt-image-1":
+      buffer = await generateWithGptImage1(prompt, aspectRatio);
+      break;
+    case "gpt-image-2":
+      buffer = await generateWithGptImage2(prompt, aspectRatio);
       break;
     case "gemini":
     default:

@@ -16,7 +16,7 @@ An agent-driven pipeline that generates keyword-targeted clip art at scale, qual
 ┌─────────────────┐
 │  Agent 2:        │
 │  Image Generator │──→ 2-3 variants per keyword
-│  (DallE/NB API)  │
+│  (GPT Image/NB)  │
 └────────┬────────┘
          ▼
 ┌─────────────────┐
@@ -194,7 +194,8 @@ Assuming ~30% rejection rate → need to generate ~1.3M images to publish 1M.
 | **GPT Image 1.5** (best value) | $0.009 | $11,700 | **$11,700** |
 | **NanoBanana 2 1K** (Batch API, 50% off) | $0.0225 | $29,250 | **$29,250** |
 | **NanoBanana 2 1K** (third-party) | $0.04 | $52,000 | **$52,000** |
-| **DALL-E 3** (standard) | $0.04 | $52,000 | **$52,000** |
+| **GPT Image 2** (medium square, ChatGPT Images 2.0) | $0.053 | $68,900 | **$68,900** |
+| **GPT Image 2** (medium non-square, ChatGPT Images 2.0) | $0.041 | $53,300 | **$53,300** |
 | **NanoBanana Pro 1K** | $0.134 | $174,200 | **$174,200** |
 
 ### Supporting Costs
@@ -223,7 +224,7 @@ Assuming ~30% rejection rate → need to generate ~1.3M images to publish 1M.
 | **Budget** (GPT Image 1 Mini) | $6,500 | $6,500 | $3,300 | **$16,300** |
 | **Mid-range** (GPT Image 1.5) | $11,700 | $6,500 | $3,300 | **$21,500** |
 | **Premium** (NanoBanana 2 Batch) | $29,250 | $6,500 | $3,300 | **$39,050** |
-| **High-end** (DALL-E 3) | $52,000 | $6,500 | $3,300 | **$61,800** |
+| **High-end** (GPT Image 2 medium square) | $68,900 | $6,500 | $3,300 | **$78,700** |
 
 ### Cost per Published Image
 

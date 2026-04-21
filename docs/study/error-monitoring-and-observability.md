@@ -136,7 +136,7 @@ We instrument at **failure boundaries** — the specific points where an operati
 | Fal.ai returns FAILED | `error` | `animation_fal_failure` | Fal.ai explicitly failed, credits refunded |
 | `/api/animate/status` crashes | `error` | `animation_status_error` | Unexpected exception in status polling |
 | `/api/animate` submission crashes | `error` | `animation_submit_error` | Failed to submit animation to Fal.ai |
-| `/api/generate` image gen crashes | `error` | `generation_error` | Image generation (Gemini/DALL-E) failed |
+| `/api/generate` image gen crashes | `error` | `generation_error` | Image generation (Gemini/GPT Image) failed |
 | Any unhandled exception | `error` | (automatic) | Caught by Sentry SDK automatically |
 
 ### What We Don't Instrument
