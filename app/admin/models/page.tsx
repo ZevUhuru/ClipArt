@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { STYLE_LABELS, VALID_STYLES, type StyleKey } from "@/lib/styles";
 
 // ---------------------------------------------------------------------------
-// Image generation config
+// Image models + single source of truth for pricing
 // ---------------------------------------------------------------------------
 
 const ALL_STYLES: StyleKey[] = [
@@ -13,67 +13,88 @@ const ALL_STYLES: StyleKey[] = [
   "coloring",
 ];
 
-const STYLE_CONTENT_TYPE: Record<string, string> = {};
+type ContentRole = "clipart" | "illustration" | "coloring" | "shared";
+
+const STYLE_CONTENT_TYPE: Record<string, ContentRole> = {};
 for (const s of VALID_STYLES.clipart) STYLE_CONTENT_TYPE[s] = "clipart";
 for (const s of VALID_STYLES.illustration) {
   STYLE_CONTENT_TYPE[s] = STYLE_CONTENT_TYPE[s] ? "shared" : "illustration";
 }
 STYLE_CONTENT_TYPE["coloring"] = "coloring";
 
-const IMAGE_MODELS = [
-  { value: "gemini", label: "Gemini (Google)" },
-  { value: "gpt-image-1", label: "GPT Image 1 (OpenAI)" },
-  { value: "gpt-image-2", label: "GPT Image 2 (OpenAI) — ChatGPT Images 2.0" },
-] as const;
+type AspectKey = "square" | "landscape" | "portrait";
 
-// ---------------------------------------------------------------------------
-// Aspect-ratio-aware per-image pricing
-//
-// Each style has a fixed content type which dictates aspect ratio:
-//   clipart → 1:1 (1024×1024), illustration → 4:3 (1536×1024),
-//   coloring → 3:4 (1024×1536). "shared" styles can be used for both
-//   clipart and illustration, so we show a range.
-//
-// Pricing sources (2026-04-21):
-//   - gpt-image-1 and gpt-image-2: official per-image table on
-//     developers.openai.com. Both are priced at medium quality since that is
-//     the explicit quality passed in src/lib/gptImage1.ts and
-//     src/lib/gptImage2.ts, and matches the settled decision in CLAUDE.md
-//     ("medium quality is the default OpenAI model").
-//   - gemini: verified from docs/features/MULTI_MODEL.md, per-image cost
-//     is roughly constant across aspect ratios at this model/tier.
-// ---------------------------------------------------------------------------
-type CostRole = "clipart" | "illustration" | "coloring" | "shared";
-type Tone = "green" | "amber" | "blue";
-
-const IMAGE_MODEL_COSTS: Record<
-  string,
-  Record<CostRole, { label: string; tone: Tone }>
-> = {
-  gemini: {
-    clipart:      { label: "~$0.039",         tone: "amber" },
-    illustration: { label: "~$0.039",         tone: "amber" },
-    coloring:     { label: "~$0.039",         tone: "amber" },
-    shared:       { label: "~$0.039",         tone: "amber" },
-  },
-  "gpt-image-1": {
-    clipart:      { label: "$0.042 (medium)", tone: "green" },
-    illustration: { label: "$0.063 (medium)", tone: "green" },
-    coloring:     { label: "$0.063 (medium)", tone: "green" },
-    shared:       { label: "$0.042–0.063",    tone: "green" },
-  },
-  "gpt-image-2": {
-    clipart:      { label: "$0.053 (medium)", tone: "blue" },
-    illustration: { label: "$0.041 (medium)", tone: "blue" },
-    coloring:     { label: "$0.041 (medium)", tone: "blue" },
-    shared:       { label: "$0.041–0.053",    tone: "blue" },
-  },
+const CONTENT_ROLE_ASPECT: Record<ContentRole, AspectKey> = {
+  clipart: "square",
+  illustration: "landscape",
+  coloring: "portrait",
+  // "shared" styles are most commonly used for clipart; pricing shown reflects that.
+  shared: "square",
 };
 
-function resolveCost(model: string, role: string) {
-  const byModel = IMAGE_MODEL_COSTS[model] ?? IMAGE_MODEL_COSTS.gemini;
-  return byModel[(role as CostRole)] ?? byModel.clipart;
+const ASPECT_LABEL: Record<AspectKey, { short: string; long: string; ratio: string }> = {
+  square:    { short: "1:1",  long: "Square",    ratio: "1024×1024" },
+  landscape: { short: "4:3",  long: "Landscape", ratio: "1536×1024" },
+  portrait:  { short: "3:4",  long: "Portrait",  ratio: "1024×1536" },
+};
+
+type ModelKey = "gemini" | "gpt-image-1" | "gpt-image-2";
+
+interface ModelMeta {
+  value: ModelKey;
+  label: string;
+  provider: string;
+  tagline: string;
+  badge?: { label: string; tone: "indigo" | "purple" | "emerald" };
+  capabilities: string[];
+  pricing: Record<AspectKey, number>;
 }
+
+// Prices verified 2026-04-21 from developers.openai.com per-image calculator.
+// All OpenAI entries use medium quality to match src/lib/gptImage1.ts and
+// src/lib/gptImage2.ts (settled in CLAUDE.md).
+const MODELS: ModelMeta[] = [
+  {
+    value: "gemini",
+    label: "Gemini 2.5 Flash",
+    provider: "Google",
+    tagline: "Clean vector clip art • cheapest default",
+    capabilities: ["Batch API (50% off)", "Transparent BG", "Flat-price across ratios"],
+    pricing: { square: 0.039, landscape: 0.039, portrait: 0.039 },
+  },
+  {
+    value: "gpt-image-1",
+    label: "GPT Image 1",
+    provider: "OpenAI",
+    tagline: "Richer textures • older model",
+    capabilities: ["Transparent BG", "Image edits", "input_fidelity param"],
+    pricing: { square: 0.042, landscape: 0.063, portrait: 0.063 },
+  },
+  {
+    value: "gpt-image-2",
+    label: "GPT Image 2",
+    provider: "OpenAI",
+    tagline: "State of the art • ChatGPT Images 2.0",
+    badge: { label: "New · Apr 2026", tone: "indigo" },
+    capabilities: ["Up to 2K", "In-image text", "Multilingual", "No transparent BG"],
+    pricing: { square: 0.053, landscape: 0.041, portrait: 0.041 },
+  },
+];
+
+const MODEL_BY_KEY: Record<ModelKey, ModelMeta> =
+  Object.fromEntries(MODELS.map((m) => [m.value, m])) as Record<ModelKey, ModelMeta>;
+
+// Coerce any unknown value (e.g. legacy "dalle" from a pre-migration DB row)
+// back to a known ModelKey so the UI renders instead of crashing.
+function normalizeModel(value: unknown): ModelKey {
+  if (typeof value === "string" && value in MODEL_BY_KEY) return value as ModelKey;
+  if (value === "dalle") return "gpt-image-1";
+  return "gemini";
+}
+
+// Revenue per credit at the lowest tier ("Sweet Spot"/"Binge" packs = $0.05/credit).
+// Used to sanity-check margin in the comparison chart.
+const REVENUE_PER_CREDIT = 0.05;
 
 // ---------------------------------------------------------------------------
 // Text AI config — mirrors src/lib/textAI.ts registry
@@ -129,18 +150,50 @@ const TASK_META: Record<TextTask, { label: string; description: string; hint: st
 const TEXT_TASKS: TextTask[] = ["classification", "seo_generation", "animation_suggestions", "prompt_polish"];
 
 type TextModelConfig = Record<TextTask, string>;
-type ImageModelConfig = Record<string, string>;
+type ImageModelConfig = Record<string, ModelKey>;
 
 // ---------------------------------------------------------------------------
-// Info tooltip component
+// Helpers — rank a model's price against the column it competes in
+// ---------------------------------------------------------------------------
+
+function rankForAspect(aspect: AspectKey): Record<ModelKey, number> {
+  const entries = MODELS
+    .map((m) => ({ key: m.value, price: m.pricing[aspect] }))
+    .sort((a, b) => a.price - b.price);
+  const ranked = {} as Record<ModelKey, number>;
+  entries.forEach((e, i) => { ranked[e.key] = i; });
+  return ranked;
+}
+
+const RANK_BY_ASPECT: Record<AspectKey, Record<ModelKey, number>> = {
+  square:    rankForAspect("square"),
+  landscape: rankForAspect("landscape"),
+  portrait:  rankForAspect("portrait"),
+};
+
+function rankTone(rank: number): { bg: string; text: string; ring: string } {
+  if (rank === 0) return { bg: "bg-emerald-50",  text: "text-emerald-700", ring: "ring-emerald-200" };
+  if (rank === 1) return { bg: "bg-amber-50",    text: "text-amber-700",   ring: "ring-amber-200" };
+  return                { bg: "bg-rose-50",      text: "text-rose-700",    ring: "ring-rose-200" };
+}
+
+function percentVsCheapest(model: ModelKey, aspect: AspectKey): number {
+  const cheapest = Math.min(...MODELS.map((m) => m.pricing[aspect]));
+  return Math.round(((MODEL_BY_KEY[model].pricing[aspect] - cheapest) / cheapest) * 100);
+}
+
+function fmtUsd(n: number): string {
+  return `$${n.toFixed(3)}`;
+}
+
+// ---------------------------------------------------------------------------
+// Primitives
 // ---------------------------------------------------------------------------
 
 function InfoTooltip({ text }: { text: string }) {
   const [show, setShow] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
   return (
-    <div className="relative inline-flex" ref={ref}>
+    <div className="relative inline-flex">
       <button
         type="button"
         onMouseEnter={() => setShow(true)}
@@ -162,16 +215,256 @@ function InfoTooltip({ text }: { text: string }) {
   );
 }
 
+function SectionHeader({
+  eyebrow,
+  title,
+  description,
+  tooltip,
+  right,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  tooltip?: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-5 flex items-end justify-between gap-4">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+            {eyebrow}
+          </span>
+          {tooltip && <InfoTooltip text={tooltip} />}
+        </div>
+        <h2 className="mt-1 text-lg font-semibold text-gray-900">{title}</h2>
+        <p className="mt-0.5 max-w-2xl text-sm text-gray-500">{description}</p>
+      </div>
+      {right}
+    </div>
+  );
+}
+
+function CapabilityChip({ label }: { label: string }) {
+  const negative = label.toLowerCase().startsWith("no ");
+  return (
+    <span
+      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${
+        negative
+          ? "bg-gray-50 text-gray-400 ring-gray-200"
+          : "bg-white text-gray-600 ring-gray-200"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pricing comparison chart (the new focal component)
+// ---------------------------------------------------------------------------
+
+function PricingMatrix() {
+  const aspectKeys: AspectKey[] = ["square", "landscape", "portrait"];
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Chart header */}
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 bg-gradient-to-br from-gray-50 to-white px-6 py-5">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">
+            Pricing comparison — per image, medium quality
+          </h3>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Cheapest option per aspect ratio highlighted in green. All OpenAI calls pinned to medium quality.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-gray-400">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" /> Cheapest
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-400" /> Mid
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-rose-400" /> Highest
+          </span>
+        </div>
+      </div>
+
+      {/* Matrix */}
+      <div className="grid grid-cols-[minmax(220px,1fr)_repeat(3,minmax(0,1fr))] text-sm">
+        {/* Column headers */}
+        <div className="border-b border-gray-100 bg-gray-50/60 px-5 py-3" />
+        {aspectKeys.map((aspect) => (
+          <div
+            key={aspect}
+            className="border-b border-l border-gray-100 bg-gray-50/60 px-5 py-3"
+          >
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                {ASPECT_LABEL[aspect].long}
+              </span>
+              <span className="text-[10px] text-gray-400">{ASPECT_LABEL[aspect].short}</span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-gray-400">
+              {ASPECT_LABEL[aspect].ratio} ·{" "}
+              {aspect === "square"
+                ? "clipart"
+                : aspect === "landscape"
+                  ? "illustrations"
+                  : "coloring pages"}
+            </div>
+          </div>
+        ))}
+
+        {/* Rows */}
+        {MODELS.map((model, idx) => (
+          <div key={model.value} className="contents">
+            {/* Model label cell */}
+            <div
+              className={`px-5 py-4 ${
+                idx < MODELS.length - 1 ? "border-b border-gray-100" : ""
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">{model.label}</span>
+                {model.badge && (
+                  <span
+                    className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                      model.badge.tone === "indigo"
+                        ? "bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-200"
+                        : model.badge.tone === "purple"
+                          ? "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-200"
+                          : "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
+                    }`}
+                  >
+                    {model.badge.label}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-[11px] text-gray-400">
+                {model.provider} · {model.tagline}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {model.capabilities.map((c) => (
+                  <CapabilityChip key={c} label={c} />
+                ))}
+              </div>
+            </div>
+
+            {/* Price cells */}
+            {aspectKeys.map((aspect) => {
+              const rank = RANK_BY_ASPECT[aspect][model.value];
+              const tone = rankTone(rank);
+              const diff = percentVsCheapest(model.value, aspect);
+              const revenueMarginPct = Math.round(
+                ((REVENUE_PER_CREDIT - model.pricing[aspect]) / REVENUE_PER_CREDIT) * 100,
+              );
+              return (
+                <div
+                  key={aspect}
+                  className={`border-l border-gray-100 px-5 py-4 ${
+                    idx < MODELS.length - 1 ? "border-b" : ""
+                  }`}
+                >
+                  <div
+                    className={`inline-flex items-baseline gap-2 rounded-lg px-2.5 py-1 text-sm font-semibold ring-1 ring-inset ${tone.bg} ${tone.text} ${tone.ring}`}
+                  >
+                    {fmtUsd(model.pricing[aspect])}
+                    {rank === 0 && (
+                      <span aria-hidden className="text-emerald-500">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1.5 text-[11px] text-gray-400">
+                    {diff === 0 ? "cheapest" : `+${diff}% vs cheapest`}
+                  </div>
+                  <div
+                    className={`text-[11px] ${
+                      revenueMarginPct < 0
+                        ? "text-rose-500"
+                        : revenueMarginPct < 20
+                          ? "text-amber-600"
+                          : "text-emerald-600"
+                    }`}
+                  >
+                    {revenueMarginPct >= 0 ? "+" : ""}
+                    {revenueMarginPct}% margin @ $0.05/credit
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-3 text-[11px] text-gray-500">
+        <span>
+          Source: <code className="rounded bg-white px-1 py-0.5 text-gray-600">developers.openai.com</code>{" "}
+          per-image calculator · verified 2026-04-21.
+        </span>
+        <span className="text-gray-400">
+          Margin figure assumes lowest pack tier ($0.05/credit). Each image = 1 credit to the user.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cost pill used in the per-style routing table
+// ---------------------------------------------------------------------------
+
+function CostPill({ model, aspect }: { model: ModelKey; aspect: AspectKey }) {
+  const rank = RANK_BY_ASPECT[aspect][model];
+  const tone = rankTone(rank);
+  const price = MODEL_BY_KEY[model].pricing[aspect];
+  const diff = percentVsCheapest(model, aspect);
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${tone.bg} ${tone.text} ${tone.ring}`}
+      >
+        {fmtUsd(price)}
+        {rank === 0 && <span aria-hidden>✓</span>}
+      </span>
+      <span className="text-[11px] text-gray-400">
+        {diff === 0 ? "best" : `+${diff}%`}
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Style role pill (the small badge next to each style name)
+// ---------------------------------------------------------------------------
+
+function RolePill({ role }: { role: ContentRole }) {
+  const config: Record<ContentRole, { label: string; cls: string }> = {
+    clipart:      { label: "clipart",      cls: "bg-gray-100 text-gray-600 ring-gray-200" },
+    illustration: { label: "illustration", cls: "bg-purple-50 text-purple-700 ring-purple-200" },
+    coloring:     { label: "coloring",     cls: "bg-blue-50 text-blue-700 ring-blue-200" },
+    shared:       { label: "shared",       cls: "bg-amber-50 text-amber-700 ring-amber-200" },
+  };
+  const c = config[role];
+  return (
+    <span
+      className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${c.cls}`}
+    >
+      {c.label}
+    </span>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Provider key detection (passed from API check)
 // ---------------------------------------------------------------------------
 
 function getProviderAvailability(): Record<string, boolean> {
-  return {
-    gemini: true,
-    openai: true,
-    anthropic: true,
-  };
+  return { gemini: true, openai: true, anthropic: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -180,7 +473,9 @@ function getProviderAvailability(): Record<string, boolean> {
 
 export default function AdminModelsPage() {
   const [imageConfig, setImageConfig] = useState<ImageModelConfig | null>(null);
+  const [initialImageConfig, setInitialImageConfig] = useState<string>("");
   const [textConfig, setTextConfig] = useState<TextModelConfig | null>(null);
+  const [initialTextConfig, setInitialTextConfig] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,11 +489,32 @@ export default function AdminModelsPage() {
     ])
       .then(([img, txt, keys]) => {
         setImageConfig(img);
+        setInitialImageConfig(JSON.stringify(img));
         setTextConfig(txt);
+        setInitialTextConfig(JSON.stringify(txt));
         setApiKeys(keys);
       })
       .catch(() => setError("Failed to load model config"));
   }, []);
+
+  const dirty = useMemo(() => {
+    if (!imageConfig || !textConfig) return false;
+    return (
+      JSON.stringify(imageConfig) !== initialImageConfig ||
+      JSON.stringify(textConfig) !== initialTextConfig
+    );
+  }, [imageConfig, textConfig, initialImageConfig, initialTextConfig]);
+
+  // Aggregate: how many styles are routed to each model?
+  const modelDistribution = useMemo(() => {
+    if (!imageConfig) return {} as Record<ModelKey, number>;
+    const out = { gemini: 0, "gpt-image-1": 0, "gpt-image-2": 0 } as Record<ModelKey, number>;
+    for (const style of ALL_STYLES) {
+      const m = normalizeModel(imageConfig[style]);
+      out[m] = (out[m] ?? 0) + 1;
+    }
+    return out;
+  }, [imageConfig]);
 
   async function handleSave() {
     if (!imageConfig || !textConfig) return;
@@ -229,6 +545,8 @@ export default function AdminModelsPage() {
         throw new Error(data.error || "Failed to save text config");
       }
 
+      setInitialImageConfig(JSON.stringify(imageConfig));
+      setInitialTextConfig(JSON.stringify(textConfig));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -240,8 +558,10 @@ export default function AdminModelsPage() {
 
   if (!imageConfig || !textConfig) {
     return (
-      <div className="py-12 text-center text-gray-500">
-        {error || "Loading model configuration..."}
+      <div className="space-y-4 py-8">
+        <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-100" />
+        <div className="h-48 animate-pulse rounded-2xl bg-gray-100" />
+        <div className="h-96 animate-pulse rounded-2xl bg-gray-100" />
       </div>
     );
   }
@@ -249,149 +569,165 @@ export default function AdminModelsPage() {
   const keys = apiKeys || getProviderAvailability();
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+    <div className="pb-16">
+      {/* ─── Page header ─── */}
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Model Configuration</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Choose which AI models power image generation and text intelligence. Changes take effect immediately.
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400">
+            Admin · Infrastructure
+          </span>
+          <h1 className="mt-1 text-2xl font-bold text-gray-900">Model Configuration</h1>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            Control which AI models power image generation and text intelligence across clip.art.
+            Changes take effect within 60 seconds (config cache TTL).
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-gray-800 disabled:opacity-50"
-        >
-          {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
-        </button>
+        <div className="flex items-center gap-3">
+          {dirty ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              Unsaved changes
+            </span>
+          ) : saved ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Saved
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 ring-1 ring-inset ring-gray-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+              In sync
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving || !dirty}
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {saving && (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            )}
+            {saving ? "Saving…" : saved ? "Saved!" : "Save Changes"}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {error}
         </div>
       )}
 
       {/* ─── IMAGE GENERATION ─── */}
-      <section className="mb-10">
-        <div className="mb-4 flex items-center gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Image Generation
-          </h2>
-          <InfoTooltip text="Each generation style can use a different image model. The model determines the visual engine used when a user creates an image. All styles cost 1 credit to the user regardless of which model is selected." />
-        </div>
+      <section className="mb-14">
+        <SectionHeader
+          eyebrow="Image Generation"
+          title="Model routing per style"
+          description="Each generation style can use a different engine. Pricing is aspect-ratio-aware — clipart renders at 1:1, illustrations at 4:3, coloring pages at 3:4."
+          tooltip="All styles cost 1 credit to the user regardless of which model is selected. Admin changes here propagate to the generation pipeline within 60 seconds."
+          right={
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+              {MODELS.map((m) => (
+                <span
+                  key={m.value}
+                  className="rounded-full bg-gray-50 px-2 py-1 ring-1 ring-inset ring-gray-200"
+                >
+                  <span className="font-semibold text-gray-700">
+                    {modelDistribution[m.value] ?? 0}
+                  </span>
+                  <span className="ml-1 text-gray-400">{m.label}</span>
+                </span>
+              ))}
+            </div>
+          }
+        />
 
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        {/* Pricing comparison chart */}
+        <PricingMatrix />
+
+        {/* Style routing table */}
+        <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-3">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Style → Model routing</h3>
+              <p className="mt-0.5 text-[11px] text-gray-500">
+                {ALL_STYLES.length} styles · cost pill color encodes rank within the style's aspect ratio.
+              </p>
+            </div>
+          </div>
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-gray-100 bg-white">
+                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                   Style
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                  Aspect
+                </th>
+                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                   Model
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                   Cost per image
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {ALL_STYLES.map((style) => (
-                <tr key={style} className="transition-colors hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900">
-                        {STYLE_LABELS[style] || style}
-                      </span>
-                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                        STYLE_CONTENT_TYPE[style] === "shared"
-                          ? "bg-gray-100 text-gray-500"
-                          : STYLE_CONTENT_TYPE[style] === "illustration"
-                            ? "bg-purple-50 text-purple-600"
-                            : STYLE_CONTENT_TYPE[style] === "coloring"
-                              ? "bg-blue-50 text-blue-600"
-                              : "bg-gray-50 text-gray-500"
-                      }`}>
-                        {STYLE_CONTENT_TYPE[style] || "clipart"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={imageConfig[style] || "gemini"}
-                      onChange={(e) =>
-                        setImageConfig((prev) => ({ ...prev!, [style]: e.target.value }))
-                      }
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-                    >
-                      {IMAGE_MODELS.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4">
-                    {(() => {
-                      const selected = imageConfig[style] || "gemini";
-                      const role = STYLE_CONTENT_TYPE[style] || "clipart";
-                      const cost = resolveCost(selected, role);
-                      const toneClass =
-                        cost.tone === "green"
-                          ? "bg-green-50 text-green-700"
-                          : cost.tone === "blue"
-                            ? "bg-blue-50 text-blue-700"
-                            : "bg-amber-50 text-amber-700";
-                      return (
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${toneClass}`}
-                        >
-                          {cost.label}
+              {ALL_STYLES.map((style) => {
+                const role = STYLE_CONTENT_TYPE[style] || "clipart";
+                const aspect = CONTENT_ROLE_ASPECT[role];
+                const selected = normalizeModel(imageConfig[style]);
+                return (
+                  <tr key={style} className="transition-colors hover:bg-gray-50/60">
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {STYLE_LABELS[style] || style}
                         </span>
-                      );
-                    })()}
-                  </td>
-                </tr>
-              ))}
+                        <RolePill role={role} />
+                      </div>
+                    </td>
+                    <td className="px-6 py-3.5 text-xs text-gray-500">
+                      <span className="font-mono">{ASPECT_LABEL[aspect].short}</span>
+                      <span className="ml-1.5 text-gray-400">· {ASPECT_LABEL[aspect].ratio}</span>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <select
+                        value={selected}
+                        onChange={(e) =>
+                          setImageConfig((prev) => ({
+                            ...prev!,
+                            [style]: e.target.value as ModelKey,
+                          }))
+                        }
+                        className="w-full max-w-[240px] rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-colors focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                      >
+                        {MODELS.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <CostPill model={selected} aspect={aspect} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-
-        <div className="mt-3 space-y-1 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
-          <p>
-            <strong>Note:</strong> All styles cost 1 credit to the user regardless of model. Prices
-            shown are per image at medium quality and the aspect ratio each style actually renders at.
-          </p>
-          <p>
-            <strong>GPT Image 1</strong>: $0.042 square, $0.063 non-square. Older model.
-          </p>
-          <p>
-            <strong>GPT Image 2</strong> (<em>ChatGPT Images 2.0</em>, released 2026-04-21):
-            $0.053 square, <strong>$0.041 non-square</strong>. Better in-image text, multilingual,
-            up to 2K. No transparent backgrounds (our prompts request plain white, so OK).
-          </p>
-          <p>
-            <strong>Gemini 2.5 Flash</strong>: ~$0.039 across all aspect ratios. Best for clean
-            vector-style clip art.
-          </p>
-          <p className="pt-1 text-[11px] italic text-gray-400">
-            Cost comparison at medium quality: gpt-image-2 is 26% more expensive than gpt-image-1
-            on square but 35% cheaper on non-square — so illustrations (4:3) and coloring pages
-            (3:4) benefit most from the new model.
-          </p>
         </div>
       </section>
 
       {/* ─── TEXT AI ─── */}
       <section>
-        <div className="mb-4 flex items-center gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Text AI
-          </h2>
-          <InfoTooltip text="Models that power content classification, SEO generation, and animation suggestions. Each task can use a different model so you can optimize cost for high-volume tasks and quality for low-volume tasks. Config is cached for 60 seconds." />
-        </div>
+        <SectionHeader
+          eyebrow="Text AI"
+          title="Task routing per job"
+          description="Each task can use a different language model so you can optimize cost for high-volume jobs and quality for low-volume ones."
+          tooltip="Config is cached for 60 seconds. High-volume tasks (classification) run on every image generation — prioritize cost. Low-volume tasks (SEO generation) run rarely — prioritize quality."
+        />
 
         <div className="space-y-3">
           {TEXT_TASKS.map((task) => {
@@ -402,36 +738,30 @@ export default function AdminModelsPage() {
             return (
               <div
                 key={task}
-                className="rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:border-gray-300"
+                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-gray-300"
               >
                 <div className="flex items-start justify-between gap-4">
-                  {/* Left: task info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-gray-900">{meta.label}</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">{meta.label}</h3>
                       <InfoTooltip text={meta.tooltip} />
                     </div>
                     <p className="mt-0.5 text-sm text-gray-500">{meta.description}</p>
                     <p className="mt-0.5 text-xs text-gray-400">{meta.hint}</p>
                   </div>
 
-                  {/* Right: dropdown + cost */}
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     <select
                       value={selectedId}
                       onChange={(e) =>
                         setTextConfig((prev) => ({ ...prev!, [task]: e.target.value }))
                       }
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-colors focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
                     >
                       {TEXT_MODELS.map((m) => {
                         const providerAvailable = keys[m.provider] !== false;
                         return (
-                          <option
-                            key={m.id}
-                            value={m.id}
-                            disabled={!providerAvailable}
-                          >
+                          <option key={m.id} value={m.id} disabled={!providerAvailable}>
                             {m.label}
                             {!providerAvailable ? " (key missing)" : ""}
                           </option>
@@ -439,10 +769,8 @@ export default function AdminModelsPage() {
                       })}
                     </select>
                     {selectedModel && (
-                      <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">
-                          {selectedModel.costInput}/{selectedModel.costOutput} per 1M
-                        </span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500 ring-1 ring-inset ring-gray-200">
+                        {selectedModel.costInput} in · {selectedModel.costOutput} out / 1M
                       </span>
                     )}
                   </div>
@@ -452,11 +780,16 @@ export default function AdminModelsPage() {
           })}
         </div>
 
-        <div className="mt-3 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-500">
-          <strong>Note:</strong> Cost shown is input/output per 1M tokens.
-          Claude models require <code className="rounded bg-gray-200 px-1 py-0.5">ANTHROPIC_API_KEY</code>.
-          GPT models require <code className="rounded bg-gray-200 px-1 py-0.5">OPENAI_API_KEY</code>.
-          Config is cached for 60 seconds.
+        <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-500">
+          Cost shown is input/output per 1M tokens. Claude requires{" "}
+          <code className="rounded bg-white px-1 py-0.5 text-gray-600 ring-1 ring-inset ring-gray-200">
+            ANTHROPIC_API_KEY
+          </code>
+          ; GPT requires{" "}
+          <code className="rounded bg-white px-1 py-0.5 text-gray-600 ring-1 ring-inset ring-gray-200">
+            OPENAI_API_KEY
+          </code>
+          .
         </div>
       </section>
     </div>
