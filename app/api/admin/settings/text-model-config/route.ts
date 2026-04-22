@@ -11,6 +11,23 @@ const DEFAULTS: Record<TextTask, string> = {
   prompt_polish: "gemini-2.5-flash",
 };
 
+// Migration map for deprecated / date-snapshotted model IDs. When a stored
+// value isn't in the current catalog, we try this map before falling back to
+// the task default. This lets us rename/alias models in textAI.ts without
+// tripping the validator on admins' saved settings.
+const MODEL_ID_MIGRATIONS: Record<string, string> = {
+  "claude-sonnet-4-6-20250514": "claude-sonnet-4-6",
+};
+
+function normalizeModelId(value: unknown, task: TextTask): string {
+  if (typeof value === "string") {
+    if (TEXT_MODEL_IDS.has(value)) return value;
+    const migrated = MODEL_ID_MIGRATIONS[value];
+    if (migrated && TEXT_MODEL_IDS.has(migrated)) return migrated;
+  }
+  return DEFAULTS[task];
+}
+
 async function verifyAdmin() {
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -42,8 +59,16 @@ export async function GET() {
     return NextResponse.json(DEFAULTS);
   }
 
-  const merged = { ...DEFAULTS, ...(data.value as Record<string, string>) };
-  return NextResponse.json(merged);
+  // Normalize every stored value against the current catalog. This self-heals
+  // stale entries (e.g. a previous snapshot-dated Anthropic model ID) by
+  // mapping them to a supported ID or the task default before the admin UI
+  // ever sees them. Next Save then persists the clean value.
+  const stored = (data.value ?? {}) as Record<string, unknown>;
+  const normalized: Record<TextTask, string> = { ...DEFAULTS };
+  for (const task of VALID_TASKS) {
+    normalized[task] = normalizeModelId(stored[task], task);
+  }
+  return NextResponse.json(normalized);
 }
 
 export async function PUT(request: NextRequest) {
@@ -53,18 +78,29 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
 
-  for (const task of VALID_TASKS) {
-    if (body[task] && !TEXT_MODEL_IDS.has(body[task])) {
-      return NextResponse.json(
-        { error: `Invalid model "${body[task]}" for task "${task}"` },
-        { status: 400 },
-      );
-    }
-  }
-
+  // Apply the same migration normalization used on read. Known deprecated IDs
+  // (e.g. date-snapshotted aliases) map forward to a supported ID; genuinely
+  // unknown IDs still reject with 400 so config typos surface loudly.
   const config: Record<string, string> = {};
   for (const task of VALID_TASKS) {
-    config[task] = body[task] || DEFAULTS[task];
+    const incoming = body[task];
+    if (incoming == null || incoming === "") {
+      config[task] = DEFAULTS[task];
+      continue;
+    }
+    if (TEXT_MODEL_IDS.has(incoming)) {
+      config[task] = incoming;
+      continue;
+    }
+    const migrated = MODEL_ID_MIGRATIONS[incoming];
+    if (migrated && TEXT_MODEL_IDS.has(migrated)) {
+      config[task] = migrated;
+      continue;
+    }
+    return NextResponse.json(
+      { error: `Invalid model "${incoming}" for task "${task}"` },
+      { status: 400 },
+    );
   }
 
   const admin = createSupabaseAdmin();
