@@ -12,6 +12,7 @@ import {
   priceFor,
   isKnownModel,
   type AspectKey,
+  type ImageModelEntry,
   type Quality,
 } from "@/lib/imageModelCatalog";
 
@@ -72,15 +73,12 @@ export default function AdminModelDetailPage({
 }) {
   const { model: rawModel } = use(params);
 
-  // Next.js already URL-decodes dynamic params, so "gpt-image-1.5" arrives
-  // intact. We 404 on anything not in the catalog instead of silently
-  // coercing — previously an unknown key rendered the Gemini page, which
-  // made the detail route look broken when users opened a stale link.
-  if (!isKnownModel(rawModel)) {
-    notFound();
-  }
+  // Hooks MUST be called unconditionally in the same order every render —
+  // React's Rules of Hooks. We do the 404 check AFTER all hooks so that a
+  // missing key never changes the hook call sequence. `meta` is looked up
+  // optimistically; if it's undefined we bail via notFound() below.
   const modelKey = rawModel as ModelKey;
-  const meta = MODEL_BY_KEY[modelKey];
+  const meta: ImageModelEntry | undefined = MODEL_BY_KEY[modelKey];
 
   const [imageConfig, setImageConfig] = useState<Record<string, string> | null>(null);
   const [pricingMode, setPricingMode] = useState<"sync" | "batch">("sync");
@@ -99,6 +97,14 @@ export default function AdminModelDetailPage({
       return isKnownModel(raw) && raw === modelKey;
     });
   }, [imageConfig, modelKey]);
+
+  // Next.js already URL-decodes dynamic params, so "gpt-image-1.5" arrives
+  // intact. 404 anything not in the catalog instead of silently coercing —
+  // previously an unknown key rendered the Gemini page, which made the detail
+  // route look broken when users opened a stale link.
+  if (!isKnownModel(rawModel) || !meta) {
+    notFound();
+  }
 
   const qualityRows: Quality[] = meta.supportsQualityTiers ? QUALITY_ROWS : ["flat"];
   const cheapestMedium =
