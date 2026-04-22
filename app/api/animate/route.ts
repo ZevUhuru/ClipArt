@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing source image URL" }, { status: 400 });
     }
 
-    if (!prompt || typeof prompt !== "string" || prompt.length > 1000) {
+    if (!prompt || typeof prompt !== "string" || prompt.length > 2000) {
       return NextResponse.json({ error: "Invalid animation prompt" }, { status: 400 });
     }
 

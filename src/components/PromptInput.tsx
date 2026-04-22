@@ -20,7 +20,7 @@ export function PromptInput({
   onSubmit,
   placeholder = "Describe what you want to create...",
   disabled = false,
-  maxLength = 1000,
+  maxLength = 2000,
   buttonLabel = "Create",
 }: PromptInputProps) {
   const [isFocused, setIsFocused] = useState(false);

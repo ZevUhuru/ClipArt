@@ -317,7 +317,7 @@ function EditPageInner() {
                     placeholder="Describe your edit... (e.g. remove the background, change the color to blue)"
                     className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                     rows={4}
-                    maxLength={1000}
+                    maxLength={2000}
                     disabled={isEditing}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -328,7 +328,7 @@ function EditPageInner() {
                   />
                   <div className="mt-1 flex justify-between text-xs text-gray-300">
                     <span>Cmd+Enter to submit</span>
-                    <span>{instruction.length}/1000</span>
+                    <span>{instruction.length}/2000</span>
                   </div>
                 </div>
 

@@ -137,7 +137,7 @@ export function Generator() {
             placeholder="e.g. happy sun wearing sunglasses, flat mascot style"
             rows={2}
             className="min-h-[56px] w-full resize-none rounded-[0.875rem] border-0 bg-white/90 px-3 py-2.5 text-[15px] leading-snug text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-400/25 disabled:opacity-60 sm:min-h-[104px] sm:px-4 sm:py-3 sm:text-base"
-            maxLength={1000}
+            maxLength={2000}
             disabled={isGenerating}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

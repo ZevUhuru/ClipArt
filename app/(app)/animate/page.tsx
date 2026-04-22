@@ -993,7 +993,7 @@ function AnimatePageInner() {
                     placeholder="Describe how the image should move... or use AI suggestions below"
                     className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 transition-all focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pink-100"
                     rows={prompt.length > 200 ? 6 : prompt.length > 100 ? 4 : 3}
-                    maxLength={1000}
+                    maxLength={2000}
                     disabled={submitting}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -1004,7 +1004,7 @@ function AnimatePageInner() {
                   />
                   <div className="mt-1 flex justify-between text-xs text-gray-300">
                     <span>Cmd+Enter to submit</span>
-                    <span>{prompt.length}/1000</span>
+                    <span>{prompt.length}/2000</span>
                   </div>
                 </div>
 

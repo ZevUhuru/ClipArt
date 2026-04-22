@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       ? body.contentType
       : style === "coloring" ? "coloring" : "clipart";
 
-    if (!prompt || typeof prompt !== "string" || prompt.length > 1000) {
+    if (!prompt || typeof prompt !== "string" || prompt.length > 2000) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
     }
 
