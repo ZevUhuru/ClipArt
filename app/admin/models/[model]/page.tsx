@@ -5,11 +5,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { STYLE_LABELS, VALID_STYLES, type StyleKey, type ModelKey } from "@/lib/styles";
 import {
+  IMAGE_MODELS,
   MODEL_BY_KEY,
   REVENUE_PER_CREDIT,
   ASPECT_INFO,
   priceFor,
-  normalizeModelKey,
+  isKnownModel,
   type AspectKey,
   type Quality,
 } from "@/lib/imageModelCatalog";
@@ -70,7 +71,15 @@ export default function AdminModelDetailPage({
   params: Promise<{ model: string }>;
 }) {
   const { model: rawModel } = use(params);
-  const modelKey = normalizeModelKey(rawModel) as ModelKey;
+
+  // Next.js already URL-decodes dynamic params, so "gpt-image-1.5" arrives
+  // intact. We 404 on anything not in the catalog instead of silently
+  // coercing — previously an unknown key rendered the Gemini page, which
+  // made the detail route look broken when users opened a stale link.
+  if (!isKnownModel(rawModel)) {
+    notFound();
+  }
+  const modelKey = rawModel as ModelKey;
   const meta = MODEL_BY_KEY[modelKey];
 
   const [imageConfig, setImageConfig] = useState<Record<string, string> | null>(null);
@@ -85,12 +94,11 @@ export default function AdminModelDetailPage({
 
   const stylesUsingThisModel = useMemo(() => {
     if (!imageConfig) return [] as StyleKey[];
-    return ALL_STYLES.filter((style) => normalizeModelKey(imageConfig[style]) === modelKey);
+    return ALL_STYLES.filter((style) => {
+      const raw = imageConfig[style];
+      return isKnownModel(raw) && raw === modelKey;
+    });
   }, [imageConfig, modelKey]);
-
-  if (!meta) {
-    notFound();
-  }
 
   const qualityRows: Quality[] = meta.supportsQualityTiers ? QUALITY_ROWS : ["flat"];
   const cheapestMedium =
@@ -107,13 +115,34 @@ export default function AdminModelDetailPage({
 
   return (
     <div className="pb-16">
-      {/* Back link */}
-      <Link
-        href="/admin/models"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900"
-      >
-        <span aria-hidden>←</span> Back to model configuration
-      </Link>
+      {/* Back link + model switcher */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/admin/models"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900"
+        >
+          <span aria-hidden>←</span> Back to model configuration
+        </Link>
+        <div className="inline-flex flex-wrap items-center gap-1 rounded-lg bg-gray-100 p-0.5">
+          {IMAGE_MODELS.map((m) => {
+            const active = m.key === modelKey;
+            return (
+              <Link
+                key={m.key}
+                href={`/admin/models/${encodeURIComponent(m.key)}`}
+                aria-current={active ? "page" : undefined}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                {m.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ─── Hero ─── */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50 shadow-sm">

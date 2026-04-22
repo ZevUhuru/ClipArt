@@ -9,7 +9,9 @@ function getAI() {
   return _ai;
 }
 
-const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
+// Default: Gemini 3.1 Flash Image Preview ("Nano Banana 2", released Feb 2026).
+// Same env var as generation so a single override updates both paths.
+const MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image-preview";
 
 export async function editImage(
   imageBuffer: Buffer,

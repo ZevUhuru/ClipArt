@@ -59,7 +59,7 @@ Complete user experience flow for clip.art — from first visit through generati
 
 1. **Validate** — prompt (string, max 500 chars) and style (must be a valid `StyleKey`)
 2. **Build prompt** — `buildPrompt(prompt, style)` appends style descriptor + "clip art, isolated object, no text"
-3. **Gemini Image API** — `generateClipArt(fullPrompt)` calls `gemini-2.5-flash-image` with `responseModalities: ["IMAGE"]`, aspect ratio `1:1`, returns PNG buffer
+3. **Gemini Image API** — `generateClipArt(fullPrompt)` calls `gemini-3.1-flash-image-preview` ("Nano Banana 2") with `responseModalities: ["IMAGE"]`, aspect ratio `1:1`, returns PNG buffer. Override via `GEMINI_IMAGE_MODEL` env var. Premium jobs can route to `gemini-3-pro-image-preview` ("Nano Banana Pro") via `generateWithGeminiPro()` in `@/lib/geminiPro`.
 4. **Convert to WebP** — Sharp converts PNG → WebP (quality 85, effort 4), ~50-70% smaller
 5. **Auto-classify** — `classifyPrompt(prompt, style)` calls Gemini Flash text to generate clean title, category, SEO description, and URL slug (see [AUTO_CLASSIFICATION.md](AUTO_CLASSIFICATION.md))
 6. **Upload to R2** — WebP buffer uploaded to `images.clip.art/{category}/{slug}-{uid}.webp` with `Content-Type: image/webp` and immutable cache headers

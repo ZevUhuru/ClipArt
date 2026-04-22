@@ -7,9 +7,12 @@
 //   - app/admin/models/[model]/page.tsx  (detail page)
 //   - src/lib/imageGen.ts                (runtime dispatch, cost estimation)
 //
-// Pricing verified 2026-04-21 from the per-image table on
-// platform.openai.com/docs/guides/image-generation. Update the `verifiedAt`
-// field below whenever these numbers are refreshed.
+// Pricing verified 2026-04-21 from:
+//   - OpenAI: platform.openai.com/docs/guides/image-generation
+//   - Google: ai.google.dev/gemini-api/docs/image-generation
+//             (Flash 3.1 "Nano Banana 2" at $0.067/1K,
+//              Pro 3 "Nano Banana Pro" at $0.134/1K)
+// Update whenever these numbers are refreshed.
 // ---------------------------------------------------------------------------
 
 import type { ModelKey } from "./styles";
@@ -76,28 +79,34 @@ export const REVENUE_PER_CREDIT = 0.05;
 export const IMAGE_MODELS: ImageModelEntry[] = [
   {
     key: "gemini",
-    label: "Gemini 2.5 Flash",
+    label: "Gemini 3.1 Flash Image",
     provider: "Google",
     endpoint: "generativelanguage.googleapis.com",
-    apiModelId: "gemini-2.5-flash-image",
-    releaseDate: "2025-02",
-    tagline: "Flat-price, vector-friendly clip art baseline",
+    apiModelId: "gemini-3.1-flash-image-preview",
+    releaseDate: "2026-02-26",
+    tagline: "Nano Banana 2 — flat-price Flash image, #1 on Image Arena",
     description:
-      "Google's multimodal Flash model with image output. Generates clean, vector-style clip art at a single per-image rate regardless of aspect ratio. Supports transparent backgrounds and has a batch mode at 50% cost.",
-    status: "current",
+      "Google's Flash-tier image model, internally codenamed Nano Banana 2 — successor to gemini-2.5-flash-image. Flat per-image pricing with a 1K/2K/4K resolution ladder, 65K-token context window, and strong text rendering. Ranked #1 on the Artificial Analysis Image Arena at release. Best default for clip art, coloring pages, and illustration volume work.",
+    status: "new",
+    badge: { label: "New · Nano Banana 2", tone: "indigo" },
     docsUrl: "https://ai.google.dev/gemini-api/docs/image-generation",
     capabilities: {
       positive: [
-        "Flat price across aspect ratios",
+        "Flat price per resolution",
+        "Up to 4K output (1K / 2K / 4K)",
         "Batch API (50% off)",
         "Transparent background",
-        "Fast — 5–10s",
-        "Clean vector output",
+        "Strong in-image text",
+        "65K-token context window",
+        "Fast — ~5–10s at 1K",
       ],
-      negative: ["No quality tiers", "No in-image text guarantee"],
+      negative: ["Preview API (quota caveats)", "No quality tiers"],
     },
     pricing: {
-      flat: { square: 0.039, landscape: 0.039, portrait: 0.039 },
+      // Google official pricing at 1K — per AI Studio / Vertex price sheet.
+      // 2K and 4K are available but clip.art generates at 1K, so those are
+      // not surfaced in the admin matrix.
+      flat: { square: 0.067, landscape: 0.067, portrait: 0.067 },
     },
     supportsQualityTiers: false,
     batch: {
@@ -107,8 +116,9 @@ export const IMAGE_MODELS: ImageModelEntry[] = [
       notes: "Google's Batch API for Gemini — same model, async processing, no output difference.",
     },
     params: [
-      { name: "prompt",          type: "string", required: true,  description: "Text prompt describing the image." },
-      { name: "aspectRatio",     type: "enum",   values: "1:1 | 4:3 | 3:4", description: "Output aspect ratio." },
+      { name: "prompt",          type: "string", required: true,  description: "Text prompt describing the image. Handles multilingual input." },
+      { name: "aspectRatio",     type: "enum",   values: "1:1 | 4:3 | 3:4 | 16:9 | 9:16 | 21:9", description: "Output aspect ratio." },
+      { name: "imageSize",       type: "enum",   values: "1K | 2K | 4K", description: "Output resolution tier. clip.art uses 1K by default." },
       { name: "batchMode",       type: "boolean", description: "If true, routes through batch API at 50% cost (async, ~24h SLA)." },
     ],
     exampleCall:
@@ -117,6 +127,58 @@ export const IMAGE_MODELS: ImageModelEntry[] = [
 const buffer = await generateClipArt(
   "a golden retriever puppy",
   "1:1"
+);`,
+  },
+
+  {
+    key: "gemini-pro",
+    label: "Gemini 3 Pro Image",
+    provider: "Google",
+    endpoint: "generativelanguage.googleapis.com",
+    apiModelId: "gemini-3-pro-image-preview",
+    releaseDate: "2025-11-20",
+    tagline: "Nano Banana Pro — state-of-the-art Gemini image model",
+    description:
+      "Google's premium image model, internally codenamed Nano Banana Pro. Built for complex, multi-turn image generation and editing with state-of-the-art reasoning, accurate text rendering, and fine control over details. Accepts up to 14 reference images per prompt and outputs up to 4K. Roughly 2× the cost of Flash (NB2) — reserve for hero assets, book covers, and premium illustrations rather than batch/volume work.",
+    status: "new",
+    badge: { label: "Premium · Nano Banana Pro", tone: "purple" },
+    docsUrl: "https://deepmind.google/models/gemini-image/pro/",
+    capabilities: {
+      positive: [
+        "State-of-the-art reasoning",
+        "Accurate text rendering",
+        "Up to 14 reference images",
+        "Up to 4K output",
+        "Multiple aspect ratios",
+        "Batch API (50% off)",
+        "Multi-turn editing",
+      ],
+      negative: ["Preview API (quota caveats)", "~2× Flash price at 1K", "Slower than Flash"],
+    },
+    pricing: {
+      // Google official pricing at 1K — per AI Studio / Vertex price sheet.
+      flat: { square: 0.134, landscape: 0.134, portrait: 0.134 },
+    },
+    supportsQualityTiers: false,
+    batch: {
+      supported: true,
+      discount: 0.5,
+      slaHours: 24,
+      notes: "Google's Batch API for Gemini — same model, async processing, no output difference.",
+    },
+    params: [
+      { name: "prompt",          type: "string", required: true,  description: "Text prompt. Handles multilingual input and long-form instructions." },
+      { name: "referenceImages", type: "array",  values: "up to 14 images", description: "Optional reference images for style/character consistency or multi-image compositions." },
+      { name: "aspectRatio",     type: "enum",   values: "1:1 | 3:2 | 2:3 | 3:4 | 4:3 | 4:5 | 5:4 | 9:16 | 16:9 | 21:9", description: "Output aspect ratio — full range supported." },
+      { name: "imageSize",       type: "enum",   values: "1K | 2K | 4K", description: "Output resolution tier." },
+      { name: "batchMode",       type: "boolean", description: "If true, routes through batch API at 50% cost (async, ~24h SLA)." },
+    ],
+    exampleCall:
+`import { generateWithGeminiPro } from "@/lib/geminiPro";
+
+const buffer = await generateWithGeminiPro(
+  "cover illustration of a sleepy fox reading a book of spells",
+  "3:4"
 );`,
   },
 

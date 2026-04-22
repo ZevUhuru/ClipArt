@@ -1,10 +1,12 @@
 # Image Editing with Gemini (Nano Banana 2)
 
 **Shipped:** April 2026
+**Model:** `gemini-3.1-flash-image-preview` ("Nano Banana 2") — upgraded from
+`gemini-2.5-flash-image` on 2026-04-21.
 
 ## Overview
 
-AI-powered image editing that lets users modify any generated image via text instructions. Built on Gemini's conversational image editing API (`gemini-2.5-flash-image`), the same model used for generation. Users describe what they want changed ("remove the background", "make it cuter", "add an outline") and the AI applies the edit, producing a new image.
+AI-powered image editing that lets users modify any generated image via text instructions. Built on Gemini's conversational image editing API (`gemini-3.1-flash-image-preview`, codenamed "Nano Banana 2"), the same model used for generation. Users describe what they want changed ("remove the background", "make it cuter", "add an outline") and the AI applies the edit, producing a new image.
 
 Every edit costs 1 credit (same as generation) and creates a new entry in the user's gallery with a `parent_id` link back to the source image, enabling version chain tracking.
 

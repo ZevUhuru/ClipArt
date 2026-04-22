@@ -59,7 +59,11 @@ export const CONTENT_TYPE_ASPECT: Record<ContentType, AspectRatio> = {
   coloring: "3:4",
 };
 
-export type ModelKey = "gemini" | "gpt-image-1" | "gpt-image-1.5" | "gpt-image-2";
+// Runtime model routing keys. `gemini` points at the current Gemini Flash
+// Image line (upgraded from 2.5 → 3.1 Flash Image Preview / "Nano Banana 2"
+// on 2026-04-21). `gemini-pro` routes to Gemini 3 Pro Image ("Nano Banana
+// Pro") — premium tier, reserve for hero/cover work.
+export type ModelKey = "gemini" | "gemini-pro" | "gpt-image-1" | "gpt-image-1.5" | "gpt-image-2";
 
 export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
   flat: "gemini",

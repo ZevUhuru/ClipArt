@@ -53,7 +53,7 @@ import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
+const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image-preview";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 

@@ -356,12 +356,12 @@ function PricingMatrix() {
                         className="align-top px-5 py-4"
                       >
                         <Link
-                          href={`/admin/models/${model.key}`}
-                          className="group block"
+                          href={`/admin/models/${encodeURIComponent(model.key)}`}
+                          className="group block cursor-pointer"
                           aria-label={`View ${model.label} details`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 group-hover:underline">
+                            <span className="text-sm font-semibold text-gray-900 underline decoration-gray-200 decoration-dotted underline-offset-4 transition-colors group-hover:text-indigo-600 group-hover:decoration-indigo-400">
                               {model.label}
                             </span>
                             <ModelBadge model={model.key} />
@@ -377,8 +377,8 @@ function PricingMatrix() {
                               <CapabilityChip key={c} label={c} negative />
                             ))}
                           </div>
-                          <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 opacity-0 transition-opacity group-hover:opacity-100">
-                            View details →
+                          <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200 transition-colors group-hover:bg-indigo-100">
+                            View details <span aria-hidden>→</span>
                           </span>
                         </Link>
                       </td>
@@ -556,8 +556,9 @@ export default function AdminModelsPage() {
   }, [imageConfig, qualityConfig, textConfig, initial]);
 
   const modelDistribution = useMemo(() => {
-    if (!imageConfig) return { gemini: 0, "gpt-image-1": 0, "gpt-image-2": 0 } as Record<ModelKey, number>;
-    const out = { gemini: 0, "gpt-image-1": 0, "gpt-image-2": 0 } as Record<ModelKey, number>;
+    const zero = Object.fromEntries(IMAGE_MODELS.map((m) => [m.key, 0])) as Record<ModelKey, number>;
+    if (!imageConfig) return zero;
+    const out = { ...zero };
     for (const style of ALL_STYLES) {
       const m = normalizeModelKey(imageConfig[style]);
       out[m] = (out[m] ?? 0) + 1;

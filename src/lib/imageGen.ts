@@ -1,4 +1,5 @@
 import { generateClipArt } from "./gemini";
+import { generateWithGeminiPro } from "./geminiPro";
 import { generateWithGptImage1, type GptImageQuality } from "./gptImage1";
 import { generateWithGptImage15 } from "./gptImage15";
 import { generateWithGptImage2 } from "./gptImage2";
@@ -49,7 +50,7 @@ async function getQualityConfig(): Promise<Record<string, string> | null> {
   return _cachedQualityConfig;
 }
 
-const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
+const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
 const VALID_QUALITIES: ReadonlySet<GptImageQuality> = new Set(["low", "medium", "high"]);
 
 async function resolveModel(style: StyleKey): Promise<ModelKey> {
@@ -90,6 +91,9 @@ export async function generateImage(
       break;
     case "gpt-image-2":
       buffer = await generateWithGptImage2(prompt, aspectRatio, quality);
+      break;
+    case "gemini-pro":
+      buffer = await generateWithGeminiPro(prompt, aspectRatio);
       break;
     case "gemini":
     default:

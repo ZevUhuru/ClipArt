@@ -49,7 +49,7 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
 
-  const validModels = new Set(["gemini", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
+  const validModels = new Set(["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
   for (const [, model] of Object.entries(body)) {
     if (!validModels.has(model as string)) {
       return NextResponse.json({ error: "Invalid model value" }, { status: 400 });
