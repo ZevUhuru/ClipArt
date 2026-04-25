@@ -9,9 +9,11 @@ export interface Profile {
   credits: number;
   created_at: string;
   last_seen_at: string | null;
+  generation_count: number;
+  last_generation_at: string | null;
 }
 
-async function getUsers() {
+async function getUsers(): Promise<{ users: Profile[]; total: number }> {
   const admin = createSupabaseAdmin();
 
   const { data: users, count } = await admin
@@ -20,9 +22,31 @@ async function getUsers() {
     .not("email", "like", "%@esy.com")
     .order("last_seen_at", { ascending: false, nullsFirst: false });
 
-  const profiles = (users || []) as Profile[];
+  const profiles = (users || []) as Omit<Profile, "generation_count" | "last_generation_at">[];
 
-  return { users: profiles, total: count || 0 };
+  // Pull per-user generation aggregates from the admin_user_stats view.
+  const { data: stats } = await admin
+    .from("admin_user_stats")
+    .select("id, generation_count, last_generation_at");
+
+  const statsMap = new Map<string, { generation_count: number; last_generation_at: string | null }>();
+  for (const row of stats || []) {
+    statsMap.set(row.id as string, {
+      generation_count: Number(row.generation_count) || 0,
+      last_generation_at: (row.last_generation_at as string | null) ?? null,
+    });
+  }
+
+  const merged: Profile[] = profiles.map((p) => {
+    const s = statsMap.get(p.id);
+    return {
+      ...p,
+      generation_count: s?.generation_count ?? 0,
+      last_generation_at: s?.last_generation_at ?? null,
+    };
+  });
+
+  return { users: merged, total: count || 0 };
 }
 
 export default async function AdminUsersPage() {

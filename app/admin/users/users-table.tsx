@@ -1,7 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Profile } from "./page";
+
+function formatDate(ts: string | null) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
   const [users, setUsers] = useState(initialUsers);
@@ -66,6 +78,12 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                 Credits
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Generated
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Last Generation
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Signed Up
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -80,7 +98,12 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
             {filtered.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  {user.email}
+                  <Link
+                    href={`/admin/users/${user.id}`}
+                    className="font-medium text-gray-900 hover:text-pink-600"
+                  >
+                    {user.email}
+                  </Link>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                   {editingId === user.id ? (
@@ -123,27 +146,26 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                     user.credits
                   )}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {new Date(user.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZoneName: "short",
-                  })}
+                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                  {user.generation_count > 0 ? (
+                    <Link
+                      href={`/admin/users/${user.id}`}
+                      className="font-medium text-gray-900 hover:text-pink-600"
+                    >
+                      {user.generation_count.toLocaleString()}
+                    </Link>
+                  ) : (
+                    <span className="text-gray-300">0</span>
+                  )}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {user.last_seen_at
-                    ? new Date(user.last_seen_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZoneName: "short",
-                      })
-                    : "—"}
+                  {formatDate(user.last_generation_at)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {formatDate(user.created_at)}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {formatDate(user.last_seen_at)}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
                   {editingId !== user.id && (
@@ -162,7 +184,7 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400">
+                <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-400">
                   No users found.
                 </td>
               </tr>
