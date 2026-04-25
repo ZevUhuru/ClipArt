@@ -8,7 +8,7 @@ export interface Profile {
   email: string;
   credits: number;
   created_at: string;
-  last_sign_in_at: string | null;
+  last_seen_at: string | null;
 }
 
 async function getUsers() {
@@ -16,24 +16,13 @@ async function getUsers() {
 
   const { data: users, count } = await admin
     .from("profiles")
-    .select("id, email, credits, created_at", { count: "exact" })
+    .select("id, email, credits, created_at, last_seen_at", { count: "exact" })
     .not("email", "like", "%@esy.com")
-    .order("created_at", { ascending: false });
+    .order("last_seen_at", { ascending: false, nullsFirst: false });
 
-  const profiles = (users || []) as { id: string; email: string; credits: number; created_at: string }[];
+  const profiles = (users || []) as Profile[];
 
-  const { data: authData } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const signInMap = new Map<string, string | null>();
-  for (const u of authData?.users || []) {
-    signInMap.set(u.id, u.last_sign_in_at ?? null);
-  }
-
-  const merged: Profile[] = profiles.map((p) => ({
-    ...p,
-    last_sign_in_at: signInMap.get(p.id) ?? null,
-  }));
-
-  return { users: merged, total: count || 0 };
+  return { users: profiles, total: count || 0 };
 }
 
 export default async function AdminUsersPage() {

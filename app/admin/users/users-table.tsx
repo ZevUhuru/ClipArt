@@ -69,7 +69,7 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                 Signed Up
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Last Sign In
+                Last Seen
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                 Actions
@@ -134,8 +134,8 @@ export function UsersTable({ users: initialUsers }: { users: Profile[] }) {
                   })}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {user.last_sign_in_at
-                    ? new Date(user.last_sign_in_at).toLocaleDateString("en-US", {
+                  {user.last_seen_at
+                    ? new Date(user.last_seen_at).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
