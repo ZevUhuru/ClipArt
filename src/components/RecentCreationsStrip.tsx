@@ -35,6 +35,7 @@ export function RecentCreationsStrip({
     slug: g.slug || g.id,
     title: g.prompt,
     url: g.image_url,
+    transparent_url: g.transparent_image_url ?? undefined,
     category: g.category || "free",
     style: g.style,
     content_type: g.content_type,

@@ -8,9 +8,20 @@ import { uploadToR2 } from "@/lib/r2";
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://images.clip.art";
 
-/** Derive the R2 key from a public image URL. */
+/** Derive the R2 key from a public image URL (strips query params). */
 function keyFromUrl(imageUrl: string): string {
-  return imageUrl.replace(`${R2_PUBLIC_URL}/`, "");
+  const clean = imageUrl.split("?")[0];
+  return clean.replace(`${R2_PUBLIC_URL}/`, "");
+}
+
+/**
+ * Build a new R2 key for the transparent variant by inserting "-t" before the
+ * extension: `animals/cute-cat-abc123.webp` → `animals/cute-cat-abc123-t.webp`
+ */
+function transparentKeyFromKey(key: string): string {
+  const lastDot = key.lastIndexOf(".");
+  if (lastDot === -1) return `${key}-t`;
+  return `${key.slice(0, lastDot)}-t${key.slice(lastDot)}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -34,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Fetch the generation — verify ownership and current state
     const { data: generation, error: fetchError } = await admin
       .from("generations")
-      .select("id, image_url, user_id, content_type, has_transparency, category")
+      .select("id, image_url, transparent_image_url, user_id, content_type, has_transparency, category")
       .eq("id", generationId)
       .single();
 
@@ -50,9 +61,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Background removal is only available for clipart" }, { status: 400 });
     }
 
+    // Already has a transparent version — return it without re-processing
+    if (generation.transparent_image_url) {
+      return NextResponse.json({
+        hasTransparency: true,
+        transparentUrl: generation.transparent_image_url,
+      });
+    }
+
     if (generation.has_transparency) {
-      // Already transparent — return current state without re-processing
-      return NextResponse.json({ hasTransparency: true, imageUrl: generation.image_url });
+      // Transparent via auto bg removal during generation — image_url is already the transparent one
+      return NextResponse.json({ hasTransparency: true, transparentUrl: generation.image_url });
     }
 
     // Get the active bg removal model from admin config
@@ -64,33 +83,29 @@ export async function POST(request: NextRequest) {
     // Pass the public URL directly — avoids fetch+encode round-trip
     const transparentPngBuffer = await removeBackground(generation.image_url, bgConfig.modelId);
 
-    // Convert transparent PNG → transparent WebP for R2 storage
+    // Convert transparent PNG → transparent WebP
     const webpBuffer = await sharp(transparentPngBuffer)
       .webp({ quality: 85, effort: 4 })
       .toBuffer();
 
-    // Overwrite the existing R2 object with the transparent version.
-    // Use a shorter max-age so CDN caches refresh within a day.
-    const key = keyFromUrl(generation.image_url);
-    await uploadToR2(webpBuffer, key, {
+    // Upload to a new R2 key — preserves the original image_url
+    const originalKey = keyFromUrl(generation.image_url);
+    const transparentKey = transparentKeyFromKey(originalKey);
+    await uploadToR2(webpBuffer, transparentKey, {
       category: generation.category,
       contentType: "image/webp",
-      cacheControl: "public, max-age=86400",
+      cacheControl: "public, max-age=31536000",
     });
 
-    // Update the DB record
+    const transparentUrl = `${R2_PUBLIC_URL}/${transparentKey}`;
+
+    // Store in transparent_image_url; mark has_transparency
     await admin
       .from("generations")
-      .update({ has_transparency: true })
+      .update({ has_transparency: true, transparent_image_url: transparentUrl })
       .eq("id", generationId);
 
-    // Return the same URL with a cache-buster so the drawer gets the fresh version
-    const cacheBuster = Date.now();
-    return NextResponse.json({
-      hasTransparency: true,
-      imageUrl: generation.image_url,
-      cacheBuster,
-    });
+    return NextResponse.json({ hasTransparency: true, transparentUrl });
   } catch (err) {
     Sentry.captureException(err, { tags: { type: "bg_removal_on_demand" } });
     console.error("On-demand background removal failed:", err);

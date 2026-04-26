@@ -14,6 +14,7 @@ export interface Generation {
   aspect_ratio?: string;
   model?: string | null;
   has_transparency?: boolean | null;
+  transparent_image_url?: string | null;
   created_at: string;
 }
 

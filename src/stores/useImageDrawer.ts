@@ -5,6 +5,8 @@ export interface DrawerImage {
   slug: string;
   title: string;
   url: string;
+  /** Transparent version stored separately — present only when on-demand bg removal ran */
+  transparent_url?: string;
   category: string;
   style: string;
   content_type?: string;

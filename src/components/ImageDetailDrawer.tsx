@@ -205,7 +205,7 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string; model?: string; has_transparency?: boolean; duration?: number };
+  image: { id: string; slug: string; title: string; url: string; transparent_url?: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string; model?: string; has_transparency?: boolean; duration?: number };
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
@@ -301,7 +301,8 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const [bgRemoveState, setBgRemoveState] = useState<BgRemoveState>("idle");
   const [bgRemoveError, setBgRemoveError] = useState<string | null>(null);
   const [localHasTransparency, setLocalHasTransparency] = useState(!!image.has_transparency);
-  const [displayUrl, setDisplayUrl] = useState(image.url);
+  // Prefer the stored transparent version when available
+  const [displayUrl, setDisplayUrl] = useState(image.transparent_url ?? image.url);
 
   const openDrawer = useImageDrawer((s) => s.open);
 
@@ -322,8 +323,8 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Background removal failed");
       setLocalHasTransparency(true);
-      // Append cache-buster so the browser fetches the updated transparent version
-      setDisplayUrl(`${data.imageUrl}?t=${data.cacheBuster ?? Date.now()}`);
+      // transparentUrl is a new R2 key — no cache-buster needed
+      setDisplayUrl(data.transparentUrl);
       setBgRemoveState("done");
     } catch (err) {
       setBgRemoveError((err as Error).message || "Failed. Please try again.");
@@ -579,8 +580,8 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
           <button
             onClick={() =>
               isColoring
-                ? downloadClip(image.url, `${image.slug}.pdf`, { pdf: true, title: image.title })
-                : downloadClip(image.url, `${image.slug}.png`)
+                ? downloadClip(displayUrl, `${image.slug}.pdf`, { pdf: true, title: image.title })
+                : downloadClip(displayUrl, `${image.slug}.png`)
             }
             className="btn-primary w-full py-3.5 text-sm"
           >
