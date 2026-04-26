@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { BG_REMOVAL_CATALOG, BG_REMOVAL_CATALOG_BY_ID, DEFAULT_BG_REMOVAL_MODEL_ID } from "@/lib/bgRemovalCatalog";
 import { STYLE_LABELS, VALID_STYLES, STYLE_MODEL_MAP, type StyleKey, type ModelKey } from "@/lib/styles";
 import {
   IMAGE_MODELS,
@@ -547,6 +548,7 @@ export default function AdminModelsPage() {
   const [apiKeys, setApiKeys] = useState<Record<string, boolean> | null>(null);
   const [activeRoutingTab, setActiveRoutingTab] = useState<RoutingContentType>("clipart");
   const [bgRemovalEnabled, setBgRemovalEnabled] = useState<boolean>(true);
+  const [bgRemovalModelId, setBgRemovalModelId] = useState<string>(DEFAULT_BG_REMOVAL_MODEL_ID);
   const [bgRemovalSaving, setBgRemovalSaving] = useState(false);
 
   useEffect(() => {
@@ -565,18 +567,21 @@ export default function AdminModelsPage() {
         setInitial(JSON.stringify({ img: model, qual: quality, txt }));
         setApiKeys(keys);
         setBgRemovalEnabled(bgRemoval.enabled ?? true);
+        setBgRemovalModelId(bgRemoval.modelId ?? DEFAULT_BG_REMOVAL_MODEL_ID);
       })
       .catch(() => setError("Failed to load model config"));
   }, []);
 
-  async function handleBgRemovalToggle(enabled: boolean) {
-    setBgRemovalEnabled(enabled);
+  async function saveBgRemovalConfig(patch: { enabled?: boolean; modelId?: string }) {
     setBgRemovalSaving(true);
     try {
       await fetch("/api/admin/settings/bg-removal", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled }),
+        body: JSON.stringify({
+          enabled: patch.enabled ?? bgRemovalEnabled,
+          modelId: patch.modelId ?? bgRemovalModelId,
+        }),
       });
     } finally {
       setBgRemovalSaving(false);
@@ -731,27 +736,25 @@ export default function AdminModelsPage() {
 
         <PricingMatrix />
 
-        {/* Background removal toggle */}
+        {/* Background removal — model selector + pricing */}
         <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between gap-4 px-6 py-4">
+          {/* Header row: label + toggle */}
+          <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/60 px-6 py-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-gray-900">Background Removal</span>
                 <span className="inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
-                  fal.ai · BiRefNet v2 Light
+                  fal.ai
                 </span>
                 {bgRemovalSaving && (
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
                 )}
               </div>
               <p className="mt-0.5 text-xs text-gray-500">
-                Strips the white background from <strong>gpt-image-2</strong> and <strong>gpt-image-1</strong> clipart
-                outputs using BiRefNet v2. Those models reject{" "}
-                <code className="rounded bg-gray-100 px-1 text-gray-600">background:&quot;transparent&quot;</code> — this
-                gives you transparent PNG quality on their superior output. Disable to skip the fal.ai call during testing.
-              </p>
-              <p className="mt-1 text-[11px] text-gray-400">
-                Adds ~$0.0004/img · takes effect within 60s (config cache TTL)
+                Post-processes <strong>gpt-image-2</strong> and <strong>gpt-image-1</strong> clipart to remove the white
+                background. Those models reject{" "}
+                <code className="rounded bg-gray-100 px-1 text-gray-600">background:&quot;transparent&quot;</code>.
+                Disable to skip the fal.ai call for testing. Takes effect within 60s.
               </p>
             </div>
             <button
@@ -759,7 +762,11 @@ export default function AdminModelsPage() {
               role="switch"
               aria-checked={bgRemovalEnabled}
               aria-label="Toggle background removal"
-              onClick={() => handleBgRemovalToggle(!bgRemovalEnabled)}
+              onClick={() => {
+                const next = !bgRemovalEnabled;
+                setBgRemovalEnabled(next);
+                saveBgRemovalConfig({ enabled: next });
+              }}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 ${
                 bgRemovalEnabled ? "bg-gray-900" : "bg-gray-200"
               }`}
@@ -770,6 +777,89 @@ export default function AdminModelsPage() {
                 }`}
               />
             </button>
+          </div>
+
+          {/* Model selector table */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px]">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    Model
+                  </th>
+                  <th className="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    Description
+                  </th>
+                  <th className="px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    Est. cost
+                  </th>
+                  <th className="w-16 px-5 py-2.5" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {BG_REMOVAL_CATALOG.map((m) => {
+                  const isActive = bgRemovalModelId === m.id;
+                  // Cost delta vs current selection
+                  const currentModel = BG_REMOVAL_CATALOG_BY_ID[bgRemovalModelId];
+                  const delta = m.estimatedCost - (currentModel?.estimatedCost ?? 0);
+                  return (
+                    <tr
+                      key={m.id}
+                      className={`transition-colors ${isActive ? "bg-indigo-50/40" : "hover:bg-gray-50/60"}`}
+                    >
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-medium ${isActive ? "text-indigo-700" : "text-gray-900"}`}>
+                            {m.label}
+                          </span>
+                          {m.flatRate && (
+                            <span className="inline-flex rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                              flat rate
+                            </span>
+                          )}
+                          {isActive && (
+                            <span className="inline-flex rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
+                              active
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="max-w-xs px-5 py-3 text-xs text-gray-500">
+                        {m.description}
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-semibold text-gray-700">{m.pricingNote}</span>
+                          {!isActive && (
+                            <span className={`text-[10px] ${delta > 0 ? "text-rose-500" : delta < 0 ? "text-emerald-600" : "text-gray-400"}`}>
+                              {delta === 0 ? "same cost" : delta > 0 ? `+$${delta.toFixed(4)}/img vs active` : `-$${Math.abs(delta).toFixed(4)}/img vs active`}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        {!isActive && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBgRemovalModelId(m.id);
+                              saveBgRemovalConfig({ modelId: m.id });
+                            }}
+                            className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700"
+                          >
+                            Use
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="border-t border-gray-100 bg-gray-50/60 px-5 py-2.5 text-[11px] text-gray-400">
+            BiRefNet costs are GPU-time estimates (~$0.0005/s on fal.ai H100). Actual cost varies with image complexity. BRIA is a fixed flat rate.
           </div>
         </div>
 
@@ -933,10 +1023,11 @@ export default function AdminModelsPage() {
                             activeRoutingTab === "clipart" &&
                             BG_REMOVAL_MODELS.has(selectedModel) && (() => {
                               const base = priceFor(selectedModel, effectiveQuality, aspect);
+                              const bgCost = BG_REMOVAL_CATALOG_BY_ID[bgRemovalModelId]?.estimatedCost ?? BG_REMOVAL_COST;
                               return base != null ? (
                                 <span className="text-[10px] text-indigo-500">
-                                  +${BG_REMOVAL_COST.toFixed(4)} bg ={" "}
-                                  <span className="font-semibold">${(base + BG_REMOVAL_COST).toFixed(4)}</span>
+                                  +${bgCost.toFixed(4)} bg ={" "}
+                                  <span className="font-semibold">${(base + bgCost).toFixed(4)}</span>
                                 </span>
                               ) : null;
                             })()}

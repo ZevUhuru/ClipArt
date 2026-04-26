@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import { generateImage, getBgRemovalEnabled } from "@/lib/imageGen";
+import { generateImage, getBgRemovalConfig } from "@/lib/imageGen";
 import { removeBackground } from "@/lib/bgRemoval";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
@@ -139,20 +139,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ requiresCredits: true }, { status: 402 });
       }
 
-      const [{ buffer: rawBuffer, model: imageModel, hasTransparency: nativeTransparency, needsBgRemoval }, bgRemovalEnabled] =
+      const [{ buffer: rawBuffer, model: imageModel, hasTransparency: nativeTransparency, needsBgRemoval }, bgRemovalConfig] =
         await Promise.all([
           generateImage(prompt, styleKey, contentType, safeOverride),
-          getBgRemovalEnabled(),
+          getBgRemovalConfig(),
         ]);
 
       // Post-process background removal for models that don't support native
-      // transparency (e.g. gpt-image-2). BiRefNet v2 on fal.ai runs in ~1-2s.
-      // Can be disabled from admin → Models → Background Removal toggle.
+      // transparency (e.g. gpt-image-2). Can be disabled or swapped from
+      // admin → Models → Background Removal.
       let processedBuffer = rawBuffer;
       let hasTransparency = nativeTransparency;
-      if (needsBgRemoval && bgRemovalEnabled) {
+      if (needsBgRemoval && bgRemovalConfig.enabled) {
         try {
-          processedBuffer = await removeBackground(rawBuffer);
+          processedBuffer = await removeBackground(rawBuffer, bgRemovalConfig.modelId);
           hasTransparency = true;
         } catch (bgErr) {
           // Non-fatal: log and continue with original white-bg image.
@@ -221,16 +221,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Anonymous free generation — generate + upload, skip credits and DB record
-    const [{ buffer: rawBuffer, needsBgRemoval: freeNeedsBgRemoval }, freeBgRemovalEnabled] =
+    const [{ buffer: rawBuffer, needsBgRemoval: freeNeedsBgRemoval }, freeBgConfig] =
       await Promise.all([
         generateImage(prompt, styleKey, contentType),
-        getBgRemovalEnabled(),
+        getBgRemovalConfig(),
       ]);
 
     let freeProcessedBuffer = rawBuffer;
-    if (freeNeedsBgRemoval && freeBgRemovalEnabled) {
+    if (freeNeedsBgRemoval && freeBgConfig.enabled) {
       try {
-        freeProcessedBuffer = await removeBackground(rawBuffer);
+        freeProcessedBuffer = await removeBackground(rawBuffer, freeBgConfig.modelId);
       } catch (bgErr) {
         Sentry.captureException(bgErr, { tags: { type: "bg_removal_error" } });
         console.error("Background removal failed, using original:", bgErr);

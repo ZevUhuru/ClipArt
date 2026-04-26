@@ -1,17 +1,18 @@
 import { fal } from "@fal-ai/client";
+import {
+  BG_REMOVAL_CATALOG_BY_ID,
+  DEFAULT_BG_REMOVAL_MODEL_ID,
+} from "./bgRemovalCatalog";
 
-// Background removal via fal.ai BiRefNet v2.
+// Background removal via fal.ai.
 //
-// Model: fal-ai/birefnet/v2
-// Docs:  https://fal.ai/models/fal-ai/birefnet/v2/api
+// Supports all models in bgRemovalCatalog.ts — BiRefNet v2 variants and
+// BRIA RMBG 2.0. The active model is controlled from /admin/models via the
+// bg_removal_config site_settings key.
 //
-// Uses the "General Use (Light)" variant. AI-generated clipart on a clean
-// white background is the easiest possible segmentation input — the subject
-// is already isolated and edges are well-defined. Light is 90%+ as accurate
-// as Heavy for this input type and runs 3-4x faster (lower GPU-seconds =
-// lower cost). If production output shows edge artifacts on specific styles
-// (most likely "realistic" or character-heavy prompts), upgrade those to
-// "General Use (Heavy)" via a per-style lookup in this file.
+// Default: BiRefNet Light — fast, good quality on AI-generated clipart with
+// white backgrounds. AI-generated cartoon/flat clipart is the easiest possible
+// segmentation input; Light handles it at 90%+ of Heavy's accuracy.
 //
 // Input:  PNG buffer (from image model — white bg, 1024x1024)
 // Output: transparent PNG buffer (alpha channel, ready for sharp → WebP)
@@ -19,9 +20,7 @@ import { fal } from "@fal-ai/client";
 // Passed as a base64 data URI; fal decodes it server-side. No intermediate
 // upload step needed for 1024x1024 images (~500KB-2MB).
 
-const MODEL_ID = "fal-ai/birefnet/v2";
-
-interface BiRefNetOutput {
+interface FalImageOutput {
   image: {
     url: string;
     width: number;
@@ -30,23 +29,35 @@ interface BiRefNetOutput {
   };
 }
 
-export async function removeBackground(pngBuffer: Buffer): Promise<Buffer> {
+export async function removeBackground(
+  pngBuffer: Buffer,
+  modelId: string = DEFAULT_BG_REMOVAL_MODEL_ID,
+): Promise<Buffer> {
+  const model = BG_REMOVAL_CATALOG_BY_ID[modelId] ?? BG_REMOVAL_CATALOG_BY_ID[DEFAULT_BG_REMOVAL_MODEL_ID];
+
   const base64 = pngBuffer.toString("base64");
   const dataUri = `data:image/png;base64,${base64}`;
 
-  const result = await fal.subscribe(MODEL_ID, {
-    input: {
+  let input: Record<string, unknown>;
+
+  if (model.endpoint === "fal-ai/birefnet/v2") {
+    input = {
       image_url: dataUri,
-      model: "General Use (Light)",
+      model: model.variant,
       operating_resolution: "1024x1024",
       output_format: "png",
       refine_foreground: true,
-    },
-  });
+    };
+  } else {
+    // BRIA RMBG 2.0 — simple single-param API
+    input = { image_url: dataUri };
+  }
 
-  const data = result.data as BiRefNetOutput;
+  const result = await fal.subscribe(model.endpoint, { input });
+
+  const data = result.data as FalImageOutput;
   if (!data?.image?.url) {
-    throw new Error("bgRemoval: no image URL returned from fal.ai BiRefNet");
+    throw new Error(`bgRemoval: no image URL returned from fal.ai (model: ${model.id})`);
   }
 
   const res = await fetch(data.image.url);

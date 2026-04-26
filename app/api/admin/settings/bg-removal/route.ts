@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
+import { VALID_BG_REMOVAL_MODEL_IDS, DEFAULT_BG_REMOVAL_MODEL_ID } from "@/lib/bgRemovalCatalog";
 
 async function verifyAdmin() {
   const supabase = await createSupabaseServer();
@@ -16,7 +17,7 @@ async function verifyAdmin() {
   return !!profile?.is_admin;
 }
 
-const DEFAULTS = { enabled: true };
+const DEFAULTS = { enabled: true, modelId: DEFAULT_BG_REMOVAL_MODEL_ID };
 
 export async function GET() {
   if (!(await verifyAdmin())) {
@@ -30,7 +31,11 @@ export async function GET() {
     .eq("key", "bg_removal_config")
     .single();
 
-  return NextResponse.json(data?.value || DEFAULTS);
+  const value = data?.value as { enabled?: boolean; modelId?: string } | null;
+  return NextResponse.json({
+    enabled: value?.enabled ?? DEFAULTS.enabled,
+    modelId: value?.modelId ?? DEFAULTS.modelId,
+  });
 }
 
 export async function PUT(request: NextRequest) {
@@ -44,12 +49,29 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "enabled must be a boolean" }, { status: 400 });
   }
 
+  if (body.modelId !== undefined && !VALID_BG_REMOVAL_MODEL_IDS.has(body.modelId)) {
+    return NextResponse.json({ error: "Invalid modelId" }, { status: 400 });
+  }
+
   const admin = createSupabaseAdmin();
+
+  // Fetch existing config to merge (preserve fields not being updated)
+  const { data: existing } = await admin
+    .from("site_settings")
+    .select("value")
+    .eq("key", "bg_removal_config")
+    .single();
+
+  const current = (existing?.value ?? DEFAULTS) as { enabled: boolean; modelId: string };
+
   const { error } = await admin
     .from("site_settings")
     .upsert({
       key: "bg_removal_config",
-      value: { enabled: body.enabled },
+      value: {
+        enabled: body.enabled,
+        modelId: body.modelId ?? current.modelId ?? DEFAULTS.modelId,
+      },
       updated_at: new Date().toISOString(),
     });
 

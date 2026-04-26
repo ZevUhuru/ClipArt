@@ -6,13 +6,20 @@ import { generateWithGptImage2 } from "./gptImage2";
 import { type StyleKey, type ModelKey, type ContentType, STYLE_MODEL_MAP, CONTENT_TYPE_ASPECT, CONTENT_TYPE_MODEL_OVERRIDE, buildPrompt } from "./styles";
 import { createSupabaseAdmin } from "./supabase/server";
 
+import { DEFAULT_BG_REMOVAL_MODEL_ID } from "./bgRemovalCatalog";
+
 let _cachedModelConfig: Record<string, string> | null = null;
 let _cachedQualityConfig: Record<string, string> | null = null;
-let _cachedBgRemovalEnabled: boolean | null = null;
+let _cachedBgRemovalConfig: BgRemovalConfig | null = null;
 let _modelCacheTime = 0;
 let _qualityCacheTime = 0;
 let _bgRemovalCacheTime = 0;
 const CACHE_TTL_MS = 60_000;
+
+export interface BgRemovalConfig {
+  enabled: boolean;
+  modelId: string;
+}
 
 async function readSetting(key: "model_config" | "model_quality_config" | "bg_removal_config"): Promise<Record<string, unknown> | null> {
   try {
@@ -52,16 +59,18 @@ async function getQualityConfig(): Promise<Record<string, string> | null> {
   return _cachedQualityConfig;
 }
 
-export async function getBgRemovalEnabled(): Promise<boolean> {
+export async function getBgRemovalConfig(): Promise<BgRemovalConfig> {
   const now = Date.now();
-  if (_cachedBgRemovalEnabled !== null && now - _bgRemovalCacheTime < CACHE_TTL_MS) {
-    return _cachedBgRemovalEnabled;
+  if (_cachedBgRemovalConfig && now - _bgRemovalCacheTime < CACHE_TTL_MS) {
+    return _cachedBgRemovalConfig;
   }
   const value = await readSetting("bg_removal_config");
-  // Default: enabled. Only disabled when explicitly set to false.
-  _cachedBgRemovalEnabled = value ? (value.enabled as boolean) : true;
+  _cachedBgRemovalConfig = {
+    enabled: value ? (value.enabled as boolean) : true,
+    modelId: (value?.modelId as string) || DEFAULT_BG_REMOVAL_MODEL_ID,
+  };
   _bgRemovalCacheTime = now;
-  return _cachedBgRemovalEnabled;
+  return _cachedBgRemovalConfig;
 }
 
 const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
