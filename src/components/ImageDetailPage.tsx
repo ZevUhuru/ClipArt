@@ -16,6 +16,9 @@ import { downloadClip } from "@/utils/downloadClip";
 import { buildImageJsonLd, buildDetailBreadcrumb } from "@/lib/seo-jsonld";
 import { AttributionSection } from "@/components/AttributionSection";
 import type { ContentType } from "@/lib/seo";
+import { ImageCard } from "@/components/ImageCard";
+import { ImageGrid } from "@/components/ImageGrid";
+import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
 
 interface RelatedImage {
   title: string;
@@ -30,6 +33,7 @@ interface StyleRelatedImage {
   slug: string;
   category: string;
   url: string;
+  aspect_ratio?: string;
 }
 
 type ContentVariant = "clipart" | "coloring" | "illustration";
@@ -155,15 +159,19 @@ export function ImageDetailPage({
       {/* Hero: two-column on desktop */}
       <article className="mx-auto max-w-6xl px-4 pb-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          {/* Left: Dark-framed image (matches edit/animate style) */}
+          {/* Left: image frame */}
           <div className="flex flex-col items-center gap-2">
-            <div className="w-full overflow-hidden rounded-2xl bg-[#1c1c27]">
-              <div className="p-3">
+            <div className={`w-full overflow-hidden ${
+              isIllustration
+                ? "rounded-2xl"
+                : "rounded-2xl bg-[#1c1c27]"
+            }`}>
+              <div className={isIllustration ? "" : "p-3"}>
                 <button
                   type="button"
                   onClick={() => setLightboxOpen(true)}
-                  className={`group relative block w-full cursor-zoom-in overflow-hidden rounded-xl ${
-                    hasTransparentVersion && heroBg === "white" ? "bg-white" : ""
+                  className={`group relative block w-full cursor-zoom-in overflow-hidden ${
+                    isIllustration ? "rounded-2xl" : `rounded-xl ${hasTransparentVersion && heroBg === "white" ? "bg-white" : ""}`
                   }`}
                 >
                   {/* Printable badge for coloring pages */}
@@ -182,7 +190,7 @@ export function ImageDetailPage({
                       src={image.transparent_url ?? image.url}
                       alt={`${image.title} - Free ${categoryLabel}`}
                       fill
-                      className="object-contain"
+                      className={isIllustration ? "object-cover" : "object-contain"}
                       sizes="(max-width: 1024px) 100vw, 50vw"
                       priority
                       unoptimized
@@ -431,48 +439,41 @@ export function ImageDetailPage({
                   ? `More ${categoryName} illustrations`
                   : `More ${categoryName} clip art`}
             </h2>
-            <div className={
-              isIllustration
-                ? "columns-2 gap-4 sm:columns-3 md:columns-4 [&>*]:mb-4 [&>*]:break-inside-avoid"
-                : "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
-            }>
-              {relatedImages.map((img) => {
-                const href = variant === "coloring"
-                  ? `/coloring-pages/${img.category}/${img.slug}`
-                  : isIllustration
-                    ? `/illustrations/${img.category}/${img.slug}`
+            {isIllustration ? (
+              <IllustrationMosaicGrid
+                items={relatedImages.map((img) => ({
+                  slug: img.slug,
+                  title: img.title,
+                  url: img.url,
+                  category: img.category,
+                  aspect_ratio: img.aspect_ratio,
+                }))}
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+              />
+            ) : (
+              <ImageGrid variant={variant === "coloring" ? "coloring" : "clipart"}>
+                {relatedImages.map((img) => {
+                  const href = variant === "coloring"
+                    ? `/coloring-pages/${img.category}/${img.slug}`
                     : `/${img.category}/${img.slug}`;
-                const aspectClass = isIllustration
-                  ? (img.aspect_ratio === "3:4" ? "aspect-[3/4]" : img.aspect_ratio === "4:3" ? "aspect-[4/3]" : "aspect-square")
-                  : (img.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square");
-                return (
-                  <Link
-                    key={img.slug}
-                    href={href}
-                    className={`group overflow-hidden border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg ${
-                      isIllustration ? "rounded-xl" : "rounded-2xl"
-                    }`}
-                  >
-                    <div className={`relative ${isIllustration ? "bg-gray-900/5" : "bg-gray-50"} ${aspectClass}`}>
-                      <Image
-                        src={img.url}
-                        alt={`${img.title} — free ${categoryLabel.toLowerCase()}`}
-                        fill
-                        className={`transition-transform group-hover:scale-105 ${
-                          isIllustration ? "object-cover" : "object-contain p-3"
-                        }`}
-                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                      />
-                    </div>
-                    <div className="px-3 py-2.5">
-                      <p className="truncate text-xs font-medium text-gray-600">
-                        {img.title}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+                  return (
+                    <ImageCard
+                      key={img.slug}
+                      variant={variant === "coloring" ? "coloring" : "clipart"}
+                      image={{
+                        slug: img.slug,
+                        title: img.title,
+                        url: img.url,
+                        category: img.category,
+                        aspect_ratio: img.aspect_ratio,
+                      }}
+                      href={href}
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                    />
+                  );
+                })}
+              </ImageGrid>
+            )}
           </div>
         </section>
       )}
@@ -504,26 +505,23 @@ export function ImageDetailPage({
           <h2 className="mb-6 text-lg font-bold text-gray-900">
             More in this style
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <ImageGrid variant={isIllustration ? "illustration" : variant === "coloring" ? "coloring" : "clipart"}>
             {styleRelatedImages.map((img) => (
-              <Link
+              <ImageCard
                 key={img.slug}
+                variant={isIllustration ? "illustration" : variant === "coloring" ? "coloring" : "clipart"}
+                image={{
+                  slug: img.slug,
+                  title: img.title,
+                  url: img.url,
+                  category: img.category,
+                  aspect_ratio: img.aspect_ratio,
+                }}
                 href={variant === "coloring" ? `/coloring-pages/${img.category}/${img.slug}` : isIllustration ? `/illustrations/${img.category}/${img.slug}` : `/${img.category}/${img.slug}`}
-                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <div className="relative aspect-square bg-gray-50">
-                  <Image
-                    src={img.url}
-                    alt={`${img.title} — free ${categoryLabel.toLowerCase()}`}
-                    fill
-                    className="object-contain p-2 transition-transform group-hover:scale-105"
-                    sizes="(max-width: 640px) 50vw, 170px"
-                    unoptimized
-                  />
-                </div>
-              </Link>
+                sizes="(max-width: 640px) 50vw, 170px"
+              />
             ))}
-          </div>
+          </ImageGrid>
         </section>
       )}
 

@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { CategoryNav } from "./CategoryNav";
 import type { DbCategory } from "@/lib/categories";
-import { ImageCard } from "@/components/ImageCard";
-import { ImageGrid } from "@/components/ImageGrid";
+import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
 
 export interface IllustrationGalleryImage {
   slug: string;
@@ -78,22 +77,15 @@ export function IllustrationCategoryPage({
       {/* Gallery */}
       {galleryImages.length > 0 ? (
         <section className="mx-auto max-w-6xl px-4 pb-16">
-          <ImageGrid variant="illustration">
-            {galleryImages.map((img) => (
-              <ImageCard
-                key={img.slug}
-                variant="illustration"
-                image={{
-                  slug: img.slug,
-                  title: img.title,
-                  url: img.url,
-                  category: img.category,
-                  aspect_ratio: img.aspect_ratio || "4:3",
-                }}
-                href={`/illustrations/${img.category}/${img.slug}`}
-              />
-            ))}
-          </ImageGrid>
+          <IllustrationMosaicGrid
+            items={galleryImages.map((img) => ({
+              slug: img.slug,
+              title: img.title,
+              url: img.url,
+              category: img.category,
+              aspect_ratio: img.aspect_ratio || "4:3",
+            }))}
+          />
         </section>
       ) : (
         <section className="mx-auto max-w-3xl px-4 pb-16">

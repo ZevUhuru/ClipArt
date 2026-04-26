@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getIllustrationCategories } from "@/lib/categories";
 import { CategoryNav } from "@/components/CategoryNav";
-import { ImageCard } from "@/components/ImageCard";
-import { ImageGrid } from "@/components/ImageGrid";
+import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -119,23 +118,15 @@ export default async function IllustrationsLanding() {
           <h2 className="mb-6 text-center text-xl font-bold text-gray-900 sm:text-2xl">
             Recently created illustrations
           </h2>
-          <ImageGrid variant="illustration">
-            {featured.map((img) => (
-              <ImageCard
-                key={img.id}
-                variant="illustration"
-                image={{
-                  slug: img.slug || img.id,
-                  title: img.title || img.prompt,
-                  url: img.image_url,
-                  category: img.category,
-                  style: img.style,
-                  aspect_ratio: img.aspect_ratio || "4:3",
-                }}
-                href={`/illustrations/${img.category}/${img.slug || img.id}`}
-              />
-            ))}
-          </ImageGrid>
+          <IllustrationMosaicGrid
+            items={featured.map((img) => ({
+              slug: img.slug || img.id,
+              title: img.title || img.prompt,
+              url: img.image_url,
+              category: img.category,
+              aspect_ratio: img.aspect_ratio || "4:3",
+            }))}
+          />
         </section>
       )}
 
