@@ -307,8 +307,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const openDrawer = useImageDrawer((s) => s.open);
 
   const isAnimation = !!image.videoUrl;
+  const isIllustration = image.content_type === "illustration";
+  // Treat anything that isn't animation, coloring, or illustration as clipart —
+  // older images have content_type = null, so checking === "clipart" would hide the button for them.
   const isClipartWithoutTransparency =
-    image.content_type === "clipart" && !localHasTransparency;
+    !isAnimation && !isColoring && !isIllustration && !localHasTransparency;
 
   async function handleRemoveBackground() {
     if (!image.id) return;
