@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import { generateImage } from "@/lib/imageGen";
+import { generateImage, getBgRemovalEnabled } from "@/lib/imageGen";
 import { removeBackground } from "@/lib/bgRemoval";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
@@ -139,13 +139,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ requiresCredits: true }, { status: 402 });
       }
 
-      const { buffer: rawBuffer, model: imageModel, hasTransparency: nativeTransparency, needsBgRemoval } = await generateImage(prompt, styleKey, contentType, safeOverride);
+      const [{ buffer: rawBuffer, model: imageModel, hasTransparency: nativeTransparency, needsBgRemoval }, bgRemovalEnabled] =
+        await Promise.all([
+          generateImage(prompt, styleKey, contentType, safeOverride),
+          getBgRemovalEnabled(),
+        ]);
 
       // Post-process background removal for models that don't support native
       // transparency (e.g. gpt-image-2). BiRefNet v2 on fal.ai runs in ~1-2s.
+      // Can be disabled from admin → Models → Background Removal toggle.
       let processedBuffer = rawBuffer;
       let hasTransparency = nativeTransparency;
-      if (needsBgRemoval) {
+      if (needsBgRemoval && bgRemovalEnabled) {
         try {
           processedBuffer = await removeBackground(rawBuffer);
           hasTransparency = true;
@@ -216,10 +221,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Anonymous free generation — generate + upload, skip credits and DB record
-    const { buffer: rawBuffer, needsBgRemoval: freeNeedsBgRemoval } = await generateImage(prompt, styleKey, contentType);
+    const [{ buffer: rawBuffer, needsBgRemoval: freeNeedsBgRemoval }, freeBgRemovalEnabled] =
+      await Promise.all([
+        generateImage(prompt, styleKey, contentType),
+        getBgRemovalEnabled(),
+      ]);
 
     let freeProcessedBuffer = rawBuffer;
-    if (freeNeedsBgRemoval) {
+    if (freeNeedsBgRemoval && freeBgRemovalEnabled) {
       try {
         freeProcessedBuffer = await removeBackground(rawBuffer);
       } catch (bgErr) {

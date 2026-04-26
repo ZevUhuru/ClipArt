@@ -529,6 +529,13 @@ function getProviderAvailability(): Record<string, boolean> {
 // Page component
 // ---------------------------------------------------------------------------
 
+// Cost added per clipart image when background removal is enabled.
+// BiRefNet v2 Light on fal.ai: ~0.5–1s at $0.0003–0.0005/s GPU time.
+const BG_REMOVAL_COST = 0.0004;
+
+// Models that trigger background removal for clipart (lack native transparency).
+const BG_REMOVAL_MODELS: ReadonlySet<string> = new Set(["gpt-image-2", "gpt-image-1"]);
+
 export default function AdminModelsPage() {
   const [imageConfig, setImageConfig] = useState<ImageModelConfig | null>(null);
   const [qualityConfig, setQualityConfig] = useState<QualityConfig | null>(null);
@@ -539,6 +546,8 @@ export default function AdminModelsPage() {
   const [error, setError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<Record<string, boolean> | null>(null);
   const [activeRoutingTab, setActiveRoutingTab] = useState<RoutingContentType>("clipart");
+  const [bgRemovalEnabled, setBgRemovalEnabled] = useState<boolean>(true);
+  const [bgRemovalSaving, setBgRemovalSaving] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -546,17 +555,33 @@ export default function AdminModelsPage() {
       fetch("/api/admin/settings/model-quality-config").then((r) => r.json()).catch(() => ({})),
       fetch("/api/admin/settings/text-model-config").then((r) => r.json()),
       fetch("/api/admin/settings/text-model-config/keys").then((r) => r.json()).catch(() => getProviderAvailability()),
+      fetch("/api/admin/settings/bg-removal").then((r) => r.json()).catch(() => ({ enabled: true })),
     ])
-      .then(([rawImg, rawQual, txt, keys]) => {
+      .then(([rawImg, rawQual, txt, keys, bgRemoval]) => {
         const { model, quality } = normalizeToComposite(rawImg, rawQual);
         setImageConfig(model);
         setQualityConfig(quality);
         setTextConfig(txt);
         setInitial(JSON.stringify({ img: model, qual: quality, txt }));
         setApiKeys(keys);
+        setBgRemovalEnabled(bgRemoval.enabled ?? true);
       })
       .catch(() => setError("Failed to load model config"));
   }, []);
+
+  async function handleBgRemovalToggle(enabled: boolean) {
+    setBgRemovalEnabled(enabled);
+    setBgRemovalSaving(true);
+    try {
+      await fetch("/api/admin/settings/bg-removal", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      });
+    } finally {
+      setBgRemovalSaving(false);
+    }
+  }
 
   const dirty = useMemo(() => {
     if (!imageConfig || !qualityConfig || !textConfig) return false;
@@ -705,6 +730,48 @@ export default function AdminModelsPage() {
         />
 
         <PricingMatrix />
+
+        {/* Background removal toggle */}
+        <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-4 px-6 py-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900">Background Removal</span>
+                <span className="inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
+                  fal.ai · BiRefNet v2 Light
+                </span>
+                {bgRemovalSaving && (
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Strips the white background from <strong>gpt-image-2</strong> and <strong>gpt-image-1</strong> clipart
+                outputs using BiRefNet v2. Those models reject{" "}
+                <code className="rounded bg-gray-100 px-1 text-gray-600">background:&quot;transparent&quot;</code> — this
+                gives you transparent PNG quality on their superior output. Disable to skip the fal.ai call during testing.
+              </p>
+              <p className="mt-1 text-[11px] text-gray-400">
+                Adds ~$0.0004/img · takes effect within 60s (config cache TTL)
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={bgRemovalEnabled}
+              aria-label="Toggle background removal"
+              onClick={() => handleBgRemovalToggle(!bgRemovalEnabled)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 ${
+                bgRemovalEnabled ? "bg-gray-900" : "bg-gray-200"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+                  bgRemovalEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
 
         {/* Style routing table — per content type, fully decoupled */}
         <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -856,11 +923,24 @@ export default function AdminModelsPage() {
                         )}
                       </td>
                       <td className="px-6 py-3.5">
-                        <CostBadge
-                          model={selectedModel}
-                          quality={effectiveQuality}
-                          aspect={aspect}
-                        />
+                        <div className="flex flex-col gap-1">
+                          <CostBadge
+                            model={selectedModel}
+                            quality={effectiveQuality}
+                            aspect={aspect}
+                          />
+                          {bgRemovalEnabled &&
+                            activeRoutingTab === "clipart" &&
+                            BG_REMOVAL_MODELS.has(selectedModel) && (() => {
+                              const base = priceFor(selectedModel, effectiveQuality, aspect);
+                              return base != null ? (
+                                <span className="text-[10px] text-indigo-500">
+                                  +${BG_REMOVAL_COST.toFixed(4)} bg ={" "}
+                                  <span className="font-semibold">${(base + BG_REMOVAL_COST).toFixed(4)}</span>
+                                </span>
+                              ) : null;
+                            })()}
+                        </div>
                       </td>
                     </tr>
                   );

@@ -8,11 +8,13 @@ import { createSupabaseAdmin } from "./supabase/server";
 
 let _cachedModelConfig: Record<string, string> | null = null;
 let _cachedQualityConfig: Record<string, string> | null = null;
+let _cachedBgRemovalEnabled: boolean | null = null;
 let _modelCacheTime = 0;
 let _qualityCacheTime = 0;
+let _bgRemovalCacheTime = 0;
 const CACHE_TTL_MS = 60_000;
 
-async function readSetting(key: "model_config" | "model_quality_config"): Promise<Record<string, string> | null> {
+async function readSetting(key: "model_config" | "model_quality_config" | "bg_removal_config"): Promise<Record<string, unknown> | null> {
   try {
     const admin = createSupabaseAdmin();
     const { data } = await admin
@@ -21,7 +23,7 @@ async function readSetting(key: "model_config" | "model_quality_config"): Promis
       .eq("key", key)
       .single();
 
-    if (data?.value) return data.value as Record<string, string>;
+    if (data?.value) return data.value as Record<string, unknown>;
   } catch {
     // Table may not exist yet — fall through to defaults.
   }
@@ -33,7 +35,7 @@ async function getModelConfig(): Promise<Record<string, string> | null> {
   if (_cachedModelConfig && now - _modelCacheTime < CACHE_TTL_MS) return _cachedModelConfig;
   const value = await readSetting("model_config");
   if (value) {
-    _cachedModelConfig = value;
+    _cachedModelConfig = value as Record<string, string>;
     _modelCacheTime = now;
   }
   return _cachedModelConfig;
@@ -44,10 +46,22 @@ async function getQualityConfig(): Promise<Record<string, string> | null> {
   if (_cachedQualityConfig && now - _qualityCacheTime < CACHE_TTL_MS) return _cachedQualityConfig;
   const value = await readSetting("model_quality_config");
   if (value) {
-    _cachedQualityConfig = value;
+    _cachedQualityConfig = value as Record<string, string>;
     _qualityCacheTime = now;
   }
   return _cachedQualityConfig;
+}
+
+export async function getBgRemovalEnabled(): Promise<boolean> {
+  const now = Date.now();
+  if (_cachedBgRemovalEnabled !== null && now - _bgRemovalCacheTime < CACHE_TTL_MS) {
+    return _cachedBgRemovalEnabled;
+  }
+  const value = await readSetting("bg_removal_config");
+  // Default: enabled. Only disabled when explicitly set to false.
+  _cachedBgRemovalEnabled = value ? (value.enabled as boolean) : true;
+  _bgRemovalCacheTime = now;
+  return _cachedBgRemovalEnabled;
 }
 
 const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
