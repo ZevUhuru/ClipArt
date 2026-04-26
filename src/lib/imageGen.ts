@@ -84,7 +84,7 @@ export async function generateImage(
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
 
-  const background = contentType === "clipart" ? "transparent" : "auto";
+  const background = "auto";
 
   let buffer: Buffer;
   switch (model) {
