@@ -228,6 +228,46 @@ function formatModelLabel(model: string): string {
 
 import { MagnifyIcon, ImageLightbox } from "@/components/ImageLightbox";
 
+// Optimistic progress bar: animates to ~85% over `duration`ms, snaps to 100% on complete.
+function ProgressBar({
+  active,
+  complete,
+  duration = 4000,
+  colorClass = "bg-indigo-500",
+}: {
+  active: boolean;
+  complete: boolean;
+  duration?: number;
+  colorClass?: string;
+}) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (complete) { setWidth(100); return; }
+    if (active) {
+      const t = setTimeout(() => setWidth(85), 30);
+      return () => clearTimeout(t);
+    }
+    setWidth(0);
+  }, [active, complete]);
+
+  if (!active && !complete) return null;
+
+  return (
+    <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
+      <div
+        className={`h-full ${colorClass} rounded-full`}
+        style={{
+          width: `${width}%`,
+          transition: complete
+            ? "width 200ms ease-out"
+            : `width ${duration}ms cubic-bezier(0.05, 0.6, 0.4, 1)`,
+        }}
+      />
+    </div>
+  );
+}
+
 type RetouchState = "idle" | "open" | "loading" | "result" | "error";
 
 interface RetouchResult {
@@ -393,9 +433,9 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
             )}
           </div>
           {retouchState === "loading" ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
+            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 rounded-b-2xl bg-gradient-to-t from-white/90 to-transparent px-4 pb-3 pt-6">
               <span className="text-xs font-semibold text-gray-500">Retouching…</span>
+              <ProgressBar active colorClass="bg-pink-500" duration={8000} complete={false} />
             </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/5">
@@ -557,24 +597,22 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
             <button
               onClick={handleRemoveBackground}
               disabled={bgRemoveState === "loading"}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-colors ${
+              className={`relative flex w-full flex-col overflow-hidden rounded-xl border transition-colors disabled:cursor-not-allowed ${
                 bgRemoveState === "error"
                   ? "border-rose-200 bg-rose-50 text-rose-600"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
               }`}
             >
-              {bgRemoveState === "loading" ? (
-                <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600" />
-                  Removing background…
-                </>
-              ) : (
-                <>
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-                  </svg>
-                  {bgRemoveState === "error" ? "Retry Remove Background" : "Remove Background"}
-                </>
+              <span className="flex items-center justify-center gap-2 py-3 text-sm font-semibold">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                </svg>
+                {bgRemoveState === "error" ? "Retry Remove Background" : bgRemoveState === "loading" ? "Removing background…" : "Remove Background"}
+              </span>
+              {bgRemoveState === "loading" && (
+                <div className="px-3 pb-2.5">
+                  <ProgressBar active complete={false} duration={4000} colorClass="bg-indigo-500" />
+                </div>
               )}
             </button>
             {bgRemoveError && (
@@ -654,13 +692,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
                   <button
                     onClick={handleRetouch}
                     disabled={!retouchInstruction.trim() || retouchState === "loading"}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-3 flex w-full flex-col overflow-hidden rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    <span className="flex items-center justify-center gap-2 py-2.5">
                     {retouchState === "loading" ? (
-                      <>
-                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Retouching…
-                      </>
+                      <>Retouching…</>
                     ) : (
                       <>
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -668,6 +704,12 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
                         </svg>
                         Retouch — 1 credit
                       </>
+                    )}
+                    </span>
+                    {retouchState === "loading" && (
+                      <div className="px-3 pb-2">
+                        <ProgressBar active complete={false} duration={8000} colorClass="bg-white/50" />
+                      </div>
                     )}
                   </button>
                 )}
