@@ -64,6 +64,8 @@ export function ImageDetailPage({
   imageId,
 }: ImageDetailPageProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  // True when the image has a transparent version — either explicit flag or a transparent_url exists
+  const hasTransparentVersion = !!(image.has_transparency || image.transparent_url);
   // Background preview toggle for transparent images
   const [heroBg, setHeroBg] = useState<"transparent" | "white">("transparent");
 
@@ -154,16 +156,14 @@ export function ImageDetailPage({
       <article className="mx-auto max-w-6xl px-4 pb-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left: Dark-framed image (matches edit/animate style) */}
-          <div className="flex items-start justify-center">
+          <div className="flex flex-col items-center gap-2">
             <div className="w-full overflow-hidden rounded-2xl bg-[#1c1c27]">
               <div className="p-3">
                 <button
                   type="button"
                   onClick={() => setLightboxOpen(true)}
                   className={`group relative block w-full cursor-zoom-in overflow-hidden rounded-xl ${
-                    image.has_transparency
-                      ? heroBg === "white" ? "bg-white" : "bg-gray-100"
-                      : ""
+                    hasTransparentVersion && heroBg === "white" ? "bg-white" : ""
                   }`}
                 >
                   {/* Printable badge for coloring pages */}
@@ -194,38 +194,39 @@ export function ImageDetailPage({
                     <MagnifyIcon className="h-3.5 w-3.5" />
                     Click to magnify
                   </span>
-
-                  {/* Bg preview toggle — only when transparent version exists */}
-                  {image.has_transparency && (
-                    <div
-                      className="absolute bottom-3 left-3 z-10 flex gap-1"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        title="White background"
-                        onClick={() => setHeroBg("white")}
-                        className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
-                          heroBg === "white" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-300 hover:border-gray-400"
-                        } bg-white`}
-                      >
-                        <span className="block h-3.5 w-3.5 rounded-sm bg-white border border-gray-200" />
-                      </button>
-                      <button
-                        type="button"
-                        title="Show transparent (no background)"
-                        onClick={() => setHeroBg("transparent")}
-                        className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
-                          heroBg === "transparent" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-300 hover:border-gray-400"
-                        } bg-gray-100`}
-                      >
-                        <span className="block h-3.5 w-3.5 rounded-sm bg-gray-200 border border-gray-300" />
-                      </button>
-                    </div>
-                  )}
                 </button>
               </div>
             </div>
+
+            {/* Bg preview toggle — below the frame, outside the tap target */}
+            {hasTransparentVersion && (
+              <div className="flex items-center rounded-full border border-white/10 bg-[#1c1c27] p-1">
+                <button
+                  type="button"
+                  onClick={() => setHeroBg("transparent")}
+                  className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+                    heroBg === "transparent"
+                      ? "bg-white/10 text-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  <span className="block h-3 w-3 shrink-0 rounded-sm bg-[#1c1c27] ring-1 ring-white/25" />
+                  No Background
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeroBg("white")}
+                  className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+                    heroBg === "white"
+                      ? "bg-white text-gray-800 shadow-sm"
+                      : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  <span className="block h-3 w-3 shrink-0 rounded-sm bg-white ring-1 ring-black/10" />
+                  White Background
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right: Details + Actions */}
@@ -277,7 +278,7 @@ export function ImageDetailPage({
                   {humanizeTag(tag)}
                 </Link>
               ))}
-              {image.has_transparency && (
+              {hasTransparentVersion && (
                 <>
                   <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
                     <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -322,9 +323,9 @@ export function ImageDetailPage({
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                   />
                 </svg>
-                {isColoringPage ? "Download Free PDF" : image.has_transparency ? "Download Transparent PNG" : "Download Free PNG"}
+                {isColoringPage ? "Download Free PDF" : hasTransparentVersion ? "Download Transparent PNG" : "Download Free PNG"}
               </button>
-              {image.has_transparency && (
+              {hasTransparentVersion && (
                 <button
                   type="button"
                   onClick={handleDownloadWhiteBg}
