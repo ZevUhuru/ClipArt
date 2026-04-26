@@ -7,6 +7,7 @@ export interface SampleImage {
   tags: string[];
   aspect_ratio?: string;
   prompt?: string;
+  has_transparency?: boolean;
 }
 
 export const sampleImages: SampleImage[] = [

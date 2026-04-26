@@ -28,7 +28,7 @@ async function getDbImage(slug: string) {
 
     const { data: bySlug } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at")
+      .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at, has_transparency")
       .eq("slug", slug)
       .eq("is_public", true)
       .eq("content_type", "clipart")
@@ -38,7 +38,7 @@ async function getDbImage(slug: string) {
 
     const { data: byId } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at")
+      .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at, has_transparency")
       .eq("id", slug)
       .eq("is_public", true)
       .eq("content_type", "clipart")
@@ -186,6 +186,7 @@ export default async function Page({ params }: PageProps) {
     aspect_ratio: dbRow.aspect_ratio || "1:1",
     prompt: dbRow.prompt,
     created_at: dbRow.created_at,
+    has_transparency: dbRow.has_transparency ?? false,
   };
 
   const category = await getCategoryBySlug(canonicalCategory);
