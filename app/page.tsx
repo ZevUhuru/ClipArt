@@ -8,10 +8,12 @@ import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { AnimationGrid } from "./animations/AnimationGrid";
+import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
 import {
   getAllCategories,
   getColoringThemes,
   getWorksheetGrades,
+  getIllustrationCategories,
   type DbCategory,
 } from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
@@ -85,6 +87,22 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
 
     const recentList = (recent || []) as CommunityImage[];
     return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+async function getIllustrationGallery(): Promise<CommunityImage[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("generations")
+      .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
+      .eq("is_public", true)
+      .eq("content_type", "illustration")
+      .order("created_at", { ascending: false })
+      .limit(12);
+    return (data || []) as CommunityImage[];
   } catch {
     return [];
   }
@@ -259,8 +277,10 @@ export default async function Home() {
     categories,
     coloringThemes,
     worksheetGrades,
+    illustrationCategories,
     clipArtImages,
     coloringImages,
+    illustrationImages,
     worksheetImages,
     learnPosts,
     featuredAnimations,
@@ -270,8 +290,10 @@ export default async function Home() {
     getAllCategories(),
     getColoringThemes(),
     getWorksheetGrades(),
+    getIllustrationCategories(),
     getCommunityGallery(),
     getColoringGallery(),
+    getIllustrationGallery(),
     getWorksheetGallery(),
     Promise.resolve(getAllPosts()),
     getFeaturedAnimations(),
@@ -282,7 +304,9 @@ export default async function Home() {
   const activeThemes = coloringThemes.filter((t) => t.slug !== "coloring-free");
   const hasClipArt = clipArtImages.length > 0;
   const hasColoring = coloringImages.length > 0;
+  const hasIllustrations = illustrationImages.length > 0;
   const hasWorksheets = worksheetImages.length > 0;
+  const activeIllustrationCategories = illustrationCategories.filter((c) => c.slug !== "illustration-free");
 
   const fallbackClipArt = sampleImages.slice(0, 8);
 
@@ -539,6 +563,60 @@ export default async function Home() {
                     className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 transition-all hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 sm:text-sm"
                   >
                     {theme.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── ILLUSTRATIONS SHOWCASE ── */}
+        <section className="border-t border-gray-100 py-20">
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-blue-500">Illustrations</p>
+                <h2 className="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                  Full-scene AI illustrations
+                </h2>
+              </div>
+              <Link href="/illustrations" className="shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                Browse all illustrations &rarr;
+              </Link>
+            </div>
+
+            {hasIllustrations ? (
+              <div className="mt-8">
+                <IllustrationMosaicGrid
+                  items={illustrationImages.map((img) => ({
+                    slug: img.slug || img.id,
+                    title: img.title || img.prompt,
+                    url: img.image_url,
+                    category: img.category,
+                    aspect_ratio: img.aspect_ratio || "4:3",
+                  }))}
+                />
+              </div>
+            ) : (
+              <div className="mt-8 rounded-3xl border-2 border-dashed border-gray-200 p-16 text-center">
+                <p className="text-lg font-semibold text-gray-400">Illustrations coming soon!</p>
+                <p className="mt-2 text-sm text-gray-400">Be the first to create one.</p>
+                <Link href="/create/illustrations" className="btn-primary mt-6 inline-flex text-sm">
+                  Create an Illustration
+                </Link>
+              </div>
+            )}
+
+            {/* Category pills */}
+            {activeIllustrationCategories.length > 0 && (
+              <div className="mt-8 flex flex-wrap justify-center gap-2">
+                {activeIllustrationCategories.slice(0, 12).map((cat: DbCategory) => (
+                  <Link
+                    key={cat.slug}
+                    href={`/illustrations/${cat.slug}`}
+                    className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 sm:text-sm"
+                  >
+                    {cat.name}
                   </Link>
                 ))}
               </div>
