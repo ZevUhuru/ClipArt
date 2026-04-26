@@ -146,38 +146,44 @@ export function ImageDetailPage({
       <article className="mx-auto max-w-6xl px-4 pb-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left: Dark-framed image (matches edit/animate style) */}
-          <div className="overflow-hidden rounded-2xl bg-[#1c1c27]">
-            <div className="p-3">
-              <button
-                type="button"
-                onClick={() => setLightboxOpen(true)}
-                className="group relative w-full cursor-zoom-in overflow-hidden rounded-xl"
-              >
-                {/* Printable badge for coloring pages */}
-                {isColoringPage && (
-                  <span className="absolute left-4 top-4 z-10 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md">
-                    Printable
+          <div className="flex items-start justify-center">
+            <div className="w-full overflow-hidden rounded-2xl bg-[#1c1c27]">
+              <div className="p-3">
+                <button
+                  type="button"
+                  onClick={() => setLightboxOpen(true)}
+                  className="group relative block w-full cursor-zoom-in overflow-hidden rounded-xl"
+                >
+                  {/* Printable badge for coloring pages */}
+                  {isColoringPage && (
+                    <span className="absolute left-4 top-4 z-10 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md">
+                      Printable
+                    </span>
+                  )}
+
+                  <div className={`relative w-full ${
+                    image.aspect_ratio === "3:4" ? "aspect-[3/4]" :
+                    image.aspect_ratio === "4:3" ? "aspect-[4/3]" :
+                    "aspect-square"
+                  }`}>
+                    <Image
+                      src={image.url}
+                      alt={`${image.title} - Free ${categoryLabel}`}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      priority
+                      unoptimized
+                    />
+                  </div>
+
+                  {/* Magnify overlay */}
+                  <span className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium text-white opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100">
+                    <MagnifyIcon className="h-3.5 w-3.5" />
+                    Click to magnify
                   </span>
-                )}
-
-                <div className={`relative w-full ${image.aspect_ratio === "3:4" ? "aspect-[3/4]" : "aspect-square"}`}>
-                  <Image
-                    src={image.url}
-                    alt={`${image.title} - Free ${categoryLabel}`}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority
-                    unoptimized
-                  />
-                </div>
-
-                {/* Magnify overlay */}
-                <span className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium text-white opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100">
-                  <MagnifyIcon className="h-3.5 w-3.5" />
-                  Click to magnify
-                </span>
-              </button>
+                </button>
+              </div>
             </div>
           </div>
 
