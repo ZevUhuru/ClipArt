@@ -85,12 +85,26 @@ async function resolveQuality(style: StyleKey): Promise<GptImageQuality> {
   return "medium";
 }
 
+export interface GenerateImageResult {
+  buffer: Buffer;
+  model: ModelKey;
+  quality: GptImageQuality;
+  /** True when the image was generated with a native transparent background. */
+  hasTransparency: boolean;
+  /**
+   * True when the image is clipart generated with a model that does NOT
+   * support native transparency (e.g. gpt-image-2). The caller should run
+   * post-processing background removal and set has_transparency = true after.
+   */
+  needsBgRemoval: boolean;
+}
+
 export async function generateImage(
   userPrompt: string,
   style: StyleKey,
   contentType: ContentType = "clipart",
   aspectRatioOverride?: string,
-): Promise<{ buffer: Buffer; model: ModelKey; quality: GptImageQuality; hasTransparency: boolean }> {
+): Promise<GenerateImageResult> {
   const [model, quality] = await Promise.all([resolveModel(style, contentType), resolveQuality(style)]);
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
@@ -99,6 +113,13 @@ export async function generateImage(
   // gpt-image-2 rejects background: "transparent" with a 400.
   const background = (contentType === "clipart" && model === "gpt-image-1.5") ? "transparent" : "auto";
   const hasTransparency = background === "transparent";
+
+  // gpt-image-2 and gpt-image-1 produce white-bg PNG for clipart — flag them
+  // for post-processing background removal via fal.ai BiRefNet.
+  const needsBgRemoval =
+    contentType === "clipart" &&
+    !hasTransparency &&
+    (model === "gpt-image-2" || model === "gpt-image-1");
 
   let buffer: Buffer;
   switch (model) {
@@ -119,5 +140,5 @@ export async function generateImage(
       buffer = await generateClipArt(prompt, aspectRatio);
   }
 
-  return { buffer, model, quality, hasTransparency };
+  return { buffer, model, quality, hasTransparency, needsBgRemoval };
 }

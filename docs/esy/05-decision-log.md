@@ -4,6 +4,28 @@ Dated architectural decisions about the ESY migration. Newest first. Each entry 
 
 ---
 
+## 2026-04-26 · Post-processing background removal via fal.ai BiRefNet v2
+
+**Decision:** Add inline background removal for `gpt-image-2` clipart generations using fal.ai's BiRefNet v2 (`fal-ai/birefnet/v2`), "General Use (Light)" variant. Runs synchronously inside `/api/generate` after the image model returns, before the sharp WebP conversion.
+
+**Rationale:** `gpt-image-2` produces superior quality for complex illustrated subjects (richer detail, better instruction-following, stronger text rendering) but does not support `background: "transparent"` via the API — it returns a 400 if passed. Rather than routing all clipart to `gpt-image-1.5` (which supports native transparency but is less detailed), we keep `gpt-image-2` for its quality and strip the white background in post-processing.
+
+**Model choice — BiRefNet v2 Light vs alternatives:**
+- **BiRefNet v2 Light (chosen):** GPU-time billing on fal.ai — ~$0.0003–0.0005/s, 1024×1024 clipart on white bg runs in ~0.5–1s ≈ $0.0003–0.0005/image. 90%+ accuracy of Heavy for this input type (AI-generated, white bg, bold edges, no photorealistic noise).
+- **BiRefNet v2 Heavy:** 3–4x slower, same per-second rate → 3–4x more expensive. Marginal quality gain on cartoon/flat clipart. Reserved for if production output shows edge artifacts on specific styles.
+- **BRIA RMBG 2.0 (fal.ai):** $0.018/generation flat — 18–60x more expensive than BiRefNet Light. Not chosen.
+- **Photoroom / remove.bg:** ~$0.02/image, requires new vendor + new secret. Not chosen.
+
+**Failure mode:** Non-fatal. If BiRefNet fails, Sentry captures it and generation continues with the original white-bg PNG. `has_transparency` remains `false`. No generation is lost.
+
+**What changed:**
+- `src/lib/bgRemoval.ts` — new file; fal.ai BiRefNet v2 wrapper (`removeBackground(pngBuffer) → Buffer`)
+- `src/lib/imageGen.ts` — `generateImage()` now returns `needsBgRemoval: boolean` (true when `clipart` + `gpt-image-2` or `gpt-image-1`)
+- `app/api/generate/route.ts` — calls `removeBackground()` when `needsBgRemoval`, sets `has_transparency: true` on success
+- `.env.local.example` — added `FAL_KEY=` (was already live; documentation gap only)
+
+---
+
 ## 2026-04-26 · `has_transparency` — DB field for guaranteed-transparent generations
 
 **Decision:** Add a `has_transparency boolean NOT NULL DEFAULT false` column to the `generations` table. Set to `true` only when `background: "transparent"` was actually passed to the provider API during generation — not inferred from model name, prompt content, or visual inspection.

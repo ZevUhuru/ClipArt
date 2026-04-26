@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { generateImage } from "@/lib/imageGen";
+import { removeBackground } from "@/lib/bgRemoval";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
 import { checkPromptSafety } from "@/lib/promptSafety";
@@ -138,9 +139,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ requiresCredits: true }, { status: 402 });
       }
 
-      const { buffer: rawBuffer, model: imageModel, hasTransparency } = await generateImage(prompt, styleKey, contentType, safeOverride);
+      const { buffer: rawBuffer, model: imageModel, hasTransparency: nativeTransparency, needsBgRemoval } = await generateImage(prompt, styleKey, contentType, safeOverride);
 
-      const webpBuffer = await sharp(rawBuffer)
+      // Post-process background removal for models that don't support native
+      // transparency (e.g. gpt-image-2). BiRefNet v2 on fal.ai runs in ~1-2s.
+      let processedBuffer = rawBuffer;
+      let hasTransparency = nativeTransparency;
+      if (needsBgRemoval) {
+        try {
+          processedBuffer = await removeBackground(rawBuffer);
+          hasTransparency = true;
+        } catch (bgErr) {
+          // Non-fatal: log and continue with original white-bg image.
+          Sentry.captureException(bgErr, { tags: { type: "bg_removal_error" } });
+          console.error("Background removal failed, using original:", bgErr);
+        }
+      }
+
+      const webpBuffer = await sharp(processedBuffer)
         .webp({ quality: 85, effort: 4 })
         .toBuffer();
 
@@ -200,9 +216,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Anonymous free generation — generate + upload, skip credits and DB record
-    const { buffer: rawBuffer } = await generateImage(prompt, styleKey, contentType);
+    const { buffer: rawBuffer, needsBgRemoval: freeNeedsBgRemoval } = await generateImage(prompt, styleKey, contentType);
 
-    const webpBuffer = await sharp(rawBuffer)
+    let freeProcessedBuffer = rawBuffer;
+    if (freeNeedsBgRemoval) {
+      try {
+        freeProcessedBuffer = await removeBackground(rawBuffer);
+      } catch (bgErr) {
+        Sentry.captureException(bgErr, { tags: { type: "bg_removal_error" } });
+        console.error("Background removal failed, using original:", bgErr);
+      }
+    }
+
+    const webpBuffer = await sharp(freeProcessedBuffer)
       .webp({ quality: 85, effort: 4 })
       .toBuffer();
 
