@@ -29,20 +29,30 @@ interface FalImageOutput {
   };
 }
 
+/**
+ * Remove the background from an image using fal.ai.
+ *
+ * @param source  Either a PNG Buffer (encoded as base64 data URI) or a public
+ *                URL string (passed directly — avoids an unnecessary fetch+encode
+ *                round-trip when the image is already accessible via CDN).
+ * @param modelId One of the ids from bgRemovalCatalog. Defaults to birefnet-light.
+ */
 export async function removeBackground(
-  pngBuffer: Buffer,
+  source: Buffer | string,
   modelId: string = DEFAULT_BG_REMOVAL_MODEL_ID,
 ): Promise<Buffer> {
   const model = BG_REMOVAL_CATALOG_BY_ID[modelId] ?? BG_REMOVAL_CATALOG_BY_ID[DEFAULT_BG_REMOVAL_MODEL_ID];
 
-  const base64 = pngBuffer.toString("base64");
-  const dataUri = `data:image/png;base64,${base64}`;
+  const imageUrl =
+    typeof source === "string"
+      ? source
+      : `data:image/png;base64,${source.toString("base64")}`;
 
   let input: Record<string, unknown>;
 
   if (model.endpoint === "fal-ai/birefnet/v2") {
     input = {
-      image_url: dataUri,
+      image_url: imageUrl,
       model: model.variant,
       operating_resolution: "1024x1024",
       output_format: "png",
@@ -50,7 +60,7 @@ export async function removeBackground(
     };
   } else {
     // BRIA RMBG 2.0 — simple single-param API
-    input = { image_url: dataUri };
+    input = { image_url: imageUrl };
   }
 
   const result = await fal.subscribe(model.endpoint, { input });

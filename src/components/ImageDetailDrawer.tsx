@@ -256,9 +256,40 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const [retouchResult, setRetouchResult] = useState<RetouchResult | null>(null);
   const [retouchError, setRetouchError] = useState<string | null>(null);
 
+  // Local state for on-demand background removal
+  type BgRemoveState = "idle" | "loading" | "done" | "error";
+  const [bgRemoveState, setBgRemoveState] = useState<BgRemoveState>("idle");
+  const [bgRemoveError, setBgRemoveError] = useState<string | null>(null);
+  const [localHasTransparency, setLocalHasTransparency] = useState(!!image.has_transparency);
+  const [displayUrl, setDisplayUrl] = useState(image.url);
+
   const openDrawer = useImageDrawer((s) => s.open);
 
   const isAnimation = !!image.videoUrl;
+  const isClipartWithoutTransparency =
+    image.content_type === "clipart" && !localHasTransparency;
+
+  async function handleRemoveBackground() {
+    if (!image.id) return;
+    setBgRemoveState("loading");
+    setBgRemoveError(null);
+    try {
+      const res = await fetch("/api/remove-background", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ generationId: image.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Background removal failed");
+      setLocalHasTransparency(true);
+      // Append cache-buster so the browser fetches the updated transparent version
+      setDisplayUrl(`${data.imageUrl}?t=${data.cacheBuster ?? Date.now()}`);
+      setBgRemoveState("done");
+    } catch (err) {
+      setBgRemoveError((err as Error).message || "Failed. Please try again.");
+      setBgRemoveState("error");
+    }
+  }
 
   async function handleRetouch() {
     if (!retouchInstruction.trim()) return;
@@ -352,7 +383,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               />
             ) : (
               <Image
-                src={image.url}
+                src={displayUrl}
                 alt={image.title}
                 fill
                 className="object-contain p-4"
@@ -408,7 +439,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               {formatModelLabel(image.model)}
             </span>
           )}
-          {image.has_transparency && (
+          {localHasTransparency && (
             <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -519,6 +550,38 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
             {isColoring ? "Download Free PDF" : "Download Free PNG"}
           </button>
         ) : null}
+
+        {/* Remove Background — only for clipart the user owns that isn't already transparent */}
+        {isOwner && isClipartWithoutTransparency && bgRemoveState !== "done" && (
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={handleRemoveBackground}
+              disabled={bgRemoveState === "loading"}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-colors ${
+                bgRemoveState === "error"
+                  ? "border-rose-200 bg-rose-50 text-rose-600"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              }`}
+            >
+              {bgRemoveState === "loading" ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600" />
+                  Removing background…
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                  </svg>
+                  {bgRemoveState === "error" ? "Retry Remove Background" : "Remove Background"}
+                </>
+              )}
+            </button>
+            {bgRemoveError && (
+              <p className="text-center text-[11px] text-rose-500">{bgRemoveError}</p>
+            )}
+          </div>
+        )}
 
         {/* Secondary actions — hide Retouch/Animate for animation cards */}
         {!isAnimation && (
