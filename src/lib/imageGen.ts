@@ -84,7 +84,9 @@ export async function generateImage(
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
 
-  const background = "auto";
+  // Only gpt-image-1.5 supports transparent backgrounds via the API param.
+  // gpt-image-2 rejects background: "transparent" with a 400.
+  const background = (contentType === "clipart" && model === "gpt-image-1.5") ? "transparent" : "auto";
 
   let buffer: Buffer;
   switch (model) {

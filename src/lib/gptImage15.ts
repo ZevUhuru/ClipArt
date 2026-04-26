@@ -20,7 +20,9 @@ export type GptImageBackground = "transparent" | "opaque" | "auto";
 
 // gpt-image-1.5 — the mid-generation OpenAI image model. Sits between
 // gpt-image-1 and gpt-image-2 in both capability and cost. Supports
-// transparent backgrounds via `background: "transparent"` (as does gpt-image-2).
+// transparent backgrounds via `background: "transparent"`. This makes it the
+// recommended default for clipart workflows — gpt-image-2 does NOT support
+// transparency (returns 400), confirmed 2026-04-26.
 export async function generateWithGptImage15(
   prompt: string,
   aspectRatio: string = "1:1",

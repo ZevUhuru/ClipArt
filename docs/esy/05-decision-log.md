@@ -15,12 +15,13 @@ Dated architectural decisions about the ESY migration. Newest first. Each entry 
 - The `background: "transparent"` API param on gpt-image-2 produces pixel-perfect alpha — no background removal needed, no edge artifacts.
 
 **What changed (2026-04-26):**
-- `src/lib/gptImage2.ts` — added `background` param, corrected wrong comment (gpt-image-2 DOES support transparency via `background: "transparent"`)
-- `src/lib/gptImage1.ts`, `src/lib/gptImage15.ts` — added `background` param, corrected comment in 1.5 that incorrectly claimed gpt-image-2 drops transparency
-- `src/lib/imageGen.ts` — derives `background: "transparent"` when `contentType === "clipart"`, passes through to all GPT wrappers
+- `src/lib/gptImage1.ts`, `src/lib/gptImage15.ts`, `src/lib/gptImage2.ts` — added `background` param to all three wrappers
+- `src/lib/imageGen.ts` — passes `background: "transparent"` only when `contentType === "clipart"` AND `model === "gpt-image-1.5"`. gpt-image-2 receives `"auto"` — it rejects `"transparent"` with a 400.
 - `src/lib/styles.ts` — clipart template updated from `"plain white background"` to `"transparent background, no background"`
 
-**Gemini caveat:** Gemini Flash Image does not reliably honor transparency even when prompted. Resolution: route clipart exclusively to gpt-image-2 (which is already the active model for user generations). Gemini remains the default for illustrations and coloring pages where transparency is irrelevant.
+**gpt-image-2 transparency:** gpt-image-2 does NOT support `background: "transparent"`. The API returns a 400: "Transparent background is not supported for this model." Only `"opaque"` and `"auto"` are accepted. This was confirmed in prod on 2026-04-26 after an earlier incorrect web search result suggested it was supported.
+
+**Recommended model for clipart:** gpt-image-1.5. It supports real alpha transparency via `background: "transparent"`, confirmed working in prod on 2026-04-26. gpt-image-2 is better for text-heavy assets (worksheets, instruction-following tasks) where transparency is irrelevant.
 
 **Display strategy:**
 - `ImageCard` clipart tiles: render image on `bg-white` card (already effectively the case; `bg-gray-50/80` is close enough and will look correct with transparent images)
@@ -72,7 +73,7 @@ Both cost real money — wrong model, wrong quality, wrong style, catalog-wide.
 
 **Decision:** Default OpenAI model for new configurations is `gpt-image-1.5`. `gpt-image-1` remains selectable but marked "Legacy".
 
-**Rationale:** `gpt-image-1.5` is cheaper at every quality tier and aspect (medium 1024² is $0.034 vs $0.042, ~19% savings), preserves transparent-background support (`gpt-image-2` drops it), and the output quality is comparable for clipart/illustration workloads.
+**Rationale:** `gpt-image-1.5` is cheaper at every quality tier and aspect (medium 1024² is $0.034 vs $0.042, ~19% savings), supports transparent backgrounds (`gpt-image-2` does not — confirmed 2026-04-26), and output quality is comparable for clipart/illustration workloads.
 
 **Impact on migration:** The `ModelKey` union in `src/lib/styles.ts` and ESY's own routing union must include `gpt-image-1.5`. The API contract in [02-api-contract.md](02-api-contract.md) reflects this.
 

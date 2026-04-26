@@ -21,8 +21,9 @@ export type GptImageBackground = "transparent" | "opaque" | "auto";
 // gpt-image-2 (ChatGPT Images 2.0, released 2026-04-21).
 // Docs: https://platform.openai.com/docs/api-reference/images/create
 // - No `input_fidelity` param (always high-fidelity on image inputs).
-// - DOES support transparent backgrounds via `background: "transparent"`.
-//   Requires output_format "png" or "webp" (not "jpeg").
+// - Does NOT support transparent backgrounds. background: "transparent" returns
+//   a 400 error. Only "opaque" and "auto" are accepted. Use gpt-image-1.5 for
+//   clipart workflows that require alpha transparency.
 // - Token accounting differs from prior gpt-image-1.x models; per-image cost
 //   is derived from (size, quality) via OpenAI's calculator rather than a
 //   fixed image-token count.
