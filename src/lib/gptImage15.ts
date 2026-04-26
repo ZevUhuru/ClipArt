@@ -39,7 +39,8 @@ export async function generateWithGptImage15(
       quality,
       background,
       n: 1,
-    } as Parameters<typeof getClient().images.generate>[0]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     const b64 = response.data?.[0]?.b64_json;
     if (!b64) throw new Error("No image returned from OpenAI");
