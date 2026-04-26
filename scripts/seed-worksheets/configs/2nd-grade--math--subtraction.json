@@ -1,0 +1,39 @@
+{
+  "grade": "2nd-grade",
+  "subject": "math",
+  "topic": "subtraction",
+  "topic_label": "Subtraction",
+  "worksheet_count": 40,
+  "activity_templates": [
+    "A 2nd-grade two-digit subtraction worksheet. 8 subtraction problems in stacked column form (e.g. '56 - 24 = __') with space for regrouping. Header reads 'Double-Digit Subtraction'. {{character}} holds a pencil in the corner.",
+    "A 2-digit subtraction-with-regrouping worksheet. 6 problems in column form with clear tens/ones columns and a reference chart at the top showing how to regroup. {{character}} points to the reference.",
+    "A subtraction word-problem worksheet with 4 kid-friendly two-digit subtraction word problems, each with workspace and answer line. {{character}} sits beside the problems thinking.",
+    "A missing-number subtraction worksheet. 8 problems like '34 - __ = 22' or '__ - 15 = 40' laid out in a 2x4 grid. {{character}} scratches head in the corner."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

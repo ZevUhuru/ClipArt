@@ -32,6 +32,14 @@ Everything else is reference.
 | 05 | [Decision Log](05-decision-log.md) | Dated architectural decisions |
 | — | [Backlinks](backlinks.md) | SEO attribution links from clip.art → esy.com (separate from migration) |
 
+### Consumer-side patterns ESY inherits
+
+These docs live outside `docs/esy/` because they're clip.art features, but they define patterns ESY needs to preserve post-migration.
+
+- [docs/features/WORKSHEETS.md](../features/WORKSHEETS.md) — worksheets content type. Taxonomy, URL architecture, create/browse/detail surfaces, sitemap.
+- [docs/features/CONTENT_GENERATION_SAFETY.md](../features/CONTENT_GENERATION_SAFETY.md) — **prompt-composition + per-theme safety-enforcement pattern**. Shared `_characters.json` + `_safety.json` injected into every prompt and used as the HITL reviewer checklist. First shipped theme: `hiphop`. Structure generalizes to any future culturally-sensitive theme. ESY should inherit this exact structure as its batch-safety library.
+- [docs/features/BATCH_MODE.md](../features/BATCH_MODE.md) — how clip.art submits large image-generation jobs via OpenAI's Batch API (50% off, 24h SLA). Plan → submit → poll → collect pipeline, JSONL shape, and "bring your own 1,000 prompts" flow. ESY replaces this wrapper with `POST /v1/batches`.
+
 ### Strategy context
 
 - [2026-03-21 — clip.art & ESY strategy session](sessions/2026-03-21-strategy.md)

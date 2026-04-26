@@ -1,0 +1,34 @@
+{
+  "grade": "2nd-grade",
+  "subject": "math",
+  "topic": "telling-time",
+  "topic_label": "Telling Time",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 2nd-grade telling-time worksheet. 6 cartoon analog clocks showing times to the nearest 5 minutes (e.g. 2:15, 4:45, 7:20); child writes the digital time below each. {{character}} points to the first clock.",
+    "A 'elapsed time' worksheet. Four scenarios showing a start clock and an end clock; child writes how many minutes passed. {{character}} holds a stopwatch.",
+    "A draw-the-hands worksheet. Six blank clock faces, each labeled with a digital time to the nearest 5 minutes; child draws the hands. {{character}} stands by a big clock.",
+    "A time-word-problem worksheet. Four kid-friendly scenarios mixing analog clocks and short story questions. Answer boxes provided. {{character}} thinks."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "park",
+    "sports",
+    "birthday"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "grade": "5th-grade",
+  "subject": "math",
+  "topic": "multiplication",
+  "topic_label": "Multiplication",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 5th-grade multi-digit multiplication worksheet. 6 problems in stacked column form (3-digit x 2-digit, e.g. '234 x 45'). Clear workspace for partial products. Header reads 'Multi-Digit Multiplication'. {{character}} gives a thumbs up.",
+    "A 5th-grade decimal multiplication worksheet. 8 problems (e.g. '2.4 x 0.6', '1.25 x 3'). 2x4 grid, each problem stacked with workspace. {{character}} holds a pencil.",
+    "A 5th-grade multiplication word-problem worksheet with 4 multi-step kid-friendly problems (some with decimals) with workspace and answer box. {{character}} reads.",
+    "A 5th-grade 'powers of 10' multiplication worksheet. 8 problems (e.g. '3.2 x 10 = __', '0.54 x 100 = __'). 2x4 grid. {{character}} points at the first."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

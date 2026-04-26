@@ -1,0 +1,37 @@
+{
+  "grade": "kindergarten",
+  "subject": "math",
+  "topic": "counting",
+  "topic_label": "Counting",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A kindergarten counting-to-20 worksheet. A 4x5 grid with numbers 1-20 written in cute bubble letters, with some numbers missing (blank boxes) for the child to fill in. {{character}} points at the first missing number.",
+    "A count-and-write worksheet. Five rows, each with a group of 1-20 cute cartoon objects; the child counts and writes the total in a box to the right. {{character}} is among the groups.",
+    "A skip counting worksheet for kindergarten: number line across the top. Three rows counting by 2s, by 5s, and by 10s up to 20. Some numbers blank. {{character}} hops along the top number line.",
+    "A ten-frame counting worksheet. Four ten-frames partially filled with cute cartoon counters. Child writes the number shown on each. {{character}} holds a counter in the corner."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "garden",
+    "birthday",
+    "space"
+  ]
+}

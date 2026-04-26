@@ -1,0 +1,119 @@
+{
+  "_comment": "Content-generation safety library for worksheet batches. The seed script ALWAYS injects `global.required` and `global.excluded` into every prompt, and appends `themes.{ref}.required` / `themes.{ref}.excluded` whenever a topic config sets `safety_ref`. The same `excluded` arrays double as the human-reviewer rejection checklist — see docs/features/CONTENT_GENERATION_SAFETY.md.",
+  "global": {
+    "required": [
+      "cute cartoon kid-safe illustrations",
+      "bright friendly colors",
+      "age-appropriate for children",
+      "clean educational layout"
+    ],
+    "excluded": [
+      "photorealistic",
+      "realistic human faces",
+      "violence or weapons",
+      "suggestive or provocative poses",
+      "revealing clothing",
+      "alcohol, drugs, smoking",
+      "scary or horror imagery",
+      "political or religious symbols",
+      "brand logos or copyrighted characters",
+      "gang signs",
+      "graffiti with any text or profanity",
+      "ambiguous body proportions for characters labeled as kids"
+    ]
+  },
+  "themes": {
+    "hiphop": {
+      "description": "Hip hop music theme for kids. Celebrates the positive, creative, community side of hip hop — DJs, breakdancers, beatboxers, rappers, graffiti letters of the alphabet, vinyl records, headphones, turntables. NOT streetwear edginess, grills, gang culture, or anything provocative.",
+      "required": [
+        "kid-friendly hip hop imagery",
+        "cute cartoon kids as DJs, breakdancers, beatboxers, or young rappers holding a toy microphone",
+        "bright playful colors",
+        "clean block-letter graffiti that only spells the educational skill (numbers, alphabet, the topic name)",
+        "age-appropriate streetwear: t-shirts, jeans, sneakers, baseball caps turned forward or sideways"
+      ],
+      "excluded": [
+        "gang signs or hand gestures",
+        "grills or gold teeth",
+        "chains, bling, or money imagery",
+        "guns, knives, or any weapon",
+        "alcohol bottles, red cups, smoke, vapes",
+        "dollar signs or cash bundles",
+        "provocative or sexualized poses",
+        "twerking, grinding, or any suggestive dancing",
+        "baggy clothes falling off, visible underwear, sagging pants",
+        "graffiti that spells anything other than the educational topic or the letters/numbers being taught",
+        "profanity, slurs, or real-world slang that could be offensive",
+        "stereotypical 'ghetto' or 'thug' imagery",
+        "scowling or aggressive facial expressions",
+        "dark moody urban alleys; prefer bright classroom, stage, park, or studio settings"
+      ]
+    },
+    "disability_central": {
+      "description": "Disability representation as central, empowered figures — kids using wheelchairs, crutches, hearing aids, cochlear implants, prosthetic limbs, white canes, or AAC devices are the hero of the worksheet, doing the same activity as peers, not being helped or pitied.",
+      "required": [
+        "child with disability is the main character, smiling and active",
+        "mobility aid (wheelchair, crutches, prosthetic, cane, hearing aid, cochlear implant, AAC device) rendered accurately and positively",
+        "child is doing the educational activity themselves"
+      ],
+      "excluded": [
+        "pity framing, sad expressions, being rescued or carried",
+        "disability as the 'problem to solve' in the worksheet",
+        "outdated or offensive mobility aids",
+        "segregating the child from peers"
+      ]
+    },
+    "emotions": {
+      "description": "Emotional understanding themes — feelings wheels, big-feelings characters, identifying emotions. Must depict the full range (happy, sad, angry, scared, worried, surprised, calm, excited) authentically but age-appropriately.",
+      "required": [
+        "clearly-labeled cartoon faces for each emotion",
+        "safe, calm presentation even of 'big' emotions",
+        "coping cues alongside difficult emotions (deep breath, hug, water, counting)"
+      ],
+      "excluded": [
+        "crying that looks distressing or traumatic",
+        "rage that reads as violent",
+        "fear imagery that could scare a young child (monsters, blood, darkness alone)",
+        "self-harm or body harm imagery"
+      ]
+    },
+    "holidays_christmas": {
+      "description": "Christmas theme kept broadly festive and inclusive — snow, presents, Santa, reindeer, cookies, wreaths, ornaments.",
+      "required": [
+        "classic festive imagery: Santa, reindeer, snow, tree, wreath, stockings, cookies",
+        "diverse children celebrating together",
+        "warm cozy colors"
+      ],
+      "excluded": [
+        "religious iconography (crosses, nativity details) when the topic is not explicitly religious — keep it 'festive Christmas'",
+        "scary Krampus imagery",
+        "alcohol or adults-only party scenes"
+      ]
+    },
+    "dinosaurs": {
+      "description": "Dinosaur theme kept scientifically plausible but cute. T-Rex, Stegosaurus, Triceratops, Brachiosaurus, Pterodactyl, Velociraptor in playful poses.",
+      "required": [
+        "cute cartoon proportions (big head, friendly eyes, rounded teeth)",
+        "correct species silhouette (so T-Rex looks like T-Rex)",
+        "bright friendly colors"
+      ],
+      "excluded": [
+        "blood, gore, prey being eaten",
+        "snarling or aggressive scenes",
+        "extinction / doom imagery (asteroid impact, dying dinosaurs) for worksheet subjects"
+      ]
+    },
+    "seasons": {
+      "description": "Seasonal scenes (spring, summer, fall, winter) that feel universally recognizable and safe.",
+      "required": [
+        "clear seasonal markers (flowers/rain = spring, sun/beach = summer, leaves/pumpkins = fall, snow/mittens = winter)",
+        "diverse kids enjoying the season",
+        "appropriate clothing for weather"
+      ],
+      "excluded": [
+        "sunburn, frostbite, or any weather-related harm",
+        "swimwear that could read as revealing — prefer one-piece swimsuits, swim trunks, rash guards"
+      ]
+    }
+  }
+}

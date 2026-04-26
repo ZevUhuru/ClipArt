@@ -8,7 +8,7 @@ Consumer-facing product for browsing, searching, downloading, and generating cli
 - Supabase (Postgres, Auth, RLS)
 - Cloudflare R2 (image storage via `https://images.clip.art`)
 - Tailwind CSS, Framer Motion
-- AI generation: Gemini (image + text), OpenAI (chatgpt-image-latest)
+- AI generation: Gemini (image + text), OpenAI (`gpt-image-2` — ChatGPT Images 2.0, released 2026-04-21). Do **not** use `chatgpt-image-latest`; that alias points at the older pre-2.0 ChatGPT image model. OpenAI's own docs recommend `gpt-image-2` for API use.
 
 ## Relationship to ESY
 

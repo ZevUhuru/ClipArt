@@ -100,13 +100,25 @@ function resolveContentType(style: string, contentType?: ContentType): ContentTy
   return "clipart";
 }
 
+const WORKSHEET_SYSTEM_PROMPT = `You are a kids' worksheet classifier. Given a worksheet generation prompt, return a JSON object with:
+- "title": A concise 3-8 word name for the worksheet (max 60 chars). Capture the SKILL + VISUAL THEME, properly capitalized. Do NOT include the word "worksheet". Examples: "Farm Animals Addition", "Dinosaur Letter Tracing", "Space Fractions Practice".
+- "category": Always "worksheet-free". The caller overrides this with the real topic slug.
+- "description": A rich, unique description (2-3 sentences, 150-300 chars) describing what the kid will practice, the visual theme, and the grade level if inferable. Mention the cute-cartoon aesthetic. Suggest classroom or home use. Do NOT repeat the prompt.
+- "slug": URL-friendly slug derived from the title (lowercase, hyphens, no special chars, max 40 chars).
+
+Return ONLY valid JSON, no markdown fences, no explanation.`;
+
 export async function classifyPrompt(
   prompt: string,
   style: string,
   contentType?: ContentType,
 ): Promise<Classification> {
   const ct = resolveContentType(style, contentType);
-  const fallbackCategory = ct === "coloring" ? "coloring-free" : ct === "illustration" ? "illustration-free" : "free";
+  const fallbackCategory =
+    ct === "coloring" ? "coloring-free"
+    : ct === "illustration" ? "illustration-free"
+    : ct === "worksheet" ? "worksheet-free"
+    : "free";
 
   const fallback: Classification = {
     title: cleanTitleFromPrompt(prompt),
@@ -119,7 +131,13 @@ export async function classifyPrompt(
     let categorySlugs: string[];
     let systemPrompt: string;
 
-    if (ct === "coloring") {
+    if (ct === "worksheet") {
+      // Category is overridden by caller with the topic slug, so we don't
+      // need to load category slugs here. We still want a good title +
+      // description + slug from the classifier.
+      categorySlugs = ["worksheet-free"];
+      systemPrompt = WORKSHEET_SYSTEM_PROMPT;
+    } else if (ct === "coloring") {
       categorySlugs = await getColoringThemeSlugs();
       systemPrompt = `You are a coloring page classifier. Given a user's coloring page generation prompt, return a JSON object with:
 - "title": A concise 3-8 word name for the main subject (max 60 chars). Properly capitalized. Fix typos. Do NOT repeat the prompt verbatim. Do NOT include commas. Do NOT include "coloring page".

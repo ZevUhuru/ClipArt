@@ -176,6 +176,9 @@ export function GenerationQueue() {
           url: j.imageUrl!,
           category: "free",
           style: j.style,
+          content_type: j.contentType,
+          model: j.model,
+          has_transparency: j.hasTransparency,
         })),
     [jobs],
   );
@@ -189,6 +192,9 @@ export function GenerationQueue() {
       category: "free",
       style: job.style,
       prompt: job.prompt,
+      content_type: job.contentType,
+      model: job.model,
+      has_transparency: job.hasTransparency,
     };
     openDrawer(img, completedDrawerList, true);
   };

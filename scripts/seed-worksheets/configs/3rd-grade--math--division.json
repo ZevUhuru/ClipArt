@@ -1,0 +1,38 @@
+{
+  "grade": "3rd-grade",
+  "subject": "math",
+  "topic": "division",
+  "topic_label": "Division",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 3rd-grade beginning division worksheet. 8 basic division problems (e.g. '24 ÷ 6 = __', '18 ÷ 3 = __') in a 2x4 grid. Header reads 'Division Practice'. {{character}} gives a thumbs up.",
+    "An equal-groups division worksheet. Four problems; each shows a group of cute cartoon objects being split into equal smaller groups, with a blank for the division sentence. {{character}} helps sort objects.",
+    "A division word-problem worksheet with 4 kid-friendly problems (e.g. 'Share 20 cookies equally among 5 kids. How many each?') with workspace and answer box. {{character}} reads a problem.",
+    "A 'fact family' division worksheet. Three fact-family houses; each has a multiplication fact and its two division equivalents with blanks. {{character}} stands by a house."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

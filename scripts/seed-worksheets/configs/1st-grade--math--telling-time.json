@@ -1,0 +1,35 @@
+{
+  "grade": "1st-grade",
+  "subject": "math",
+  "topic": "telling-time",
+  "topic_label": "Telling Time",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 1st-grade telling-time worksheet. 6 cute cartoon analog clocks, each showing the hour or half-hour; child writes the time underneath in digital form (e.g. '3:00', '4:30'). {{character}} points to the first clock.",
+    "A match-the-time worksheet. Left column: 5 analog clocks. Right column: 5 digital times jumbled. Child draws lines to match each clock with the right digital time. {{character}} stands between the columns.",
+    "A 'draw the hands' worksheet. Four blank clock faces; each labeled with a digital time (e.g. '2:00'). Child draws the hour and minute hands. {{character}} holds a big clock in the corner.",
+    "A daily-schedule time worksheet. Four cute cartoon daily activities (wake up, breakfast, school, play) each with an analog clock beside; child writes the matching time. {{character}} stars in the scene."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "park",
+    "birthday"
+  ]
+}

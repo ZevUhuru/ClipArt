@@ -1,0 +1,34 @@
+{
+  "grade": "2nd-grade",
+  "subject": "math",
+  "topic": "money",
+  "topic_label": "Money",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 2nd-grade money worksheet. 6 sets of cartoon US coins (pennies, nickels, dimes, quarters) each with a blank line for the child to write the total value in cents. A coin value key at the top. {{character}} holds a piggy bank.",
+    "A 'making change' worksheet. 4 kid-friendly cartoon shop scenes each showing an item price and coins given, with a blank for the change owed. {{character}} is the shopkeeper.",
+    "A count-the-coins word-problem worksheet. 4 short scenarios (e.g. 'Mia has 2 dimes and 3 pennies, how much?') each with a workspace and answer box. {{character}} thinks.",
+    "A comparing-money worksheet. 5 pairs of coin groups; child writes <, >, or = between them. {{character}} points to the first pair."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "food",
+    "birthday",
+    "park"
+  ]
+}

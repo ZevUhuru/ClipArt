@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     let query = admin
       .from("generations")
-      .select("id, image_url, title, prompt, slug, category, style, content_type, aspect_ratio, model, created_at", { count: "exact" })
+      .select("id, image_url, title, prompt, slug, category, style, content_type, aspect_ratio, model, has_transparency, created_at", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending })
       .range(offset, offset + limit - 1);

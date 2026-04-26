@@ -1,0 +1,70 @@
+{
+  "_comment": "Diverse, kid-safe character library rotated by the seed script across worksheets. The `description` field is injected directly into prompts — keep it concise, visually specific, and emphasize 'cute cartoon kid' framing. See docs/features/CONTENT_GENERATION_SAFETY.md.",
+  "_rotation_policy": "The seed script cycles through characters in order using (topicIndex + variationIndex) % characters.length so every topic gets a diverse cast, not just the first few.",
+  "characters": [
+    {
+      "id": "maya",
+      "description": "cute cartoon Polynesian-African girl, ~6 years old, light brown skin, curly dark hair in two puffs, big brown eyes, friendly smile, colorful striped t-shirt"
+    },
+    {
+      "id": "kai",
+      "description": "cute cartoon East Asian boy, ~7 years old, warm beige skin, short black hair, bright eyes, yellow hoodie"
+    },
+    {
+      "id": "amara",
+      "description": "cute cartoon African girl, ~6 years old, dark brown skin, braided hair with colorful beads, dimpled smile, pink shirt"
+    },
+    {
+      "id": "diego",
+      "description": "cute cartoon Latino boy, ~8 years old, warm tan skin, wavy dark hair, friendly smile, green t-shirt, blue jeans"
+    },
+    {
+      "id": "layla",
+      "description": "cute cartoon Middle Eastern girl, ~7 years old, olive skin, dark wavy hair, hazel eyes, purple shirt with embroidered flower"
+    },
+    {
+      "id": "ben",
+      "description": "cute cartoon European boy, ~6 years old, light skin, sandy blonde hair, freckles, round glasses, blue striped shirt"
+    },
+    {
+      "id": "sanjay",
+      "description": "cute cartoon South Asian boy, ~7 years old, medium brown skin, black hair, bright smile, orange polo shirt"
+    },
+    {
+      "id": "mei",
+      "description": "cute cartoon East Asian girl, ~6 years old, fair skin, shoulder-length black hair with red hair clip, pink dress"
+    },
+    {
+      "id": "ellie",
+      "description": "cute cartoon European-American girl using a bright red child-sized wheelchair, ~7 years old, freckles, red hair in a ponytail, denim overalls over a yellow t-shirt, confident smile"
+    },
+    {
+      "id": "marcus",
+      "description": "cute cartoon African-American boy with a prosthetic leg (below-knee, friendly blue tone), ~8 years old, short curly hair, green sports shirt, proud smile"
+    },
+    {
+      "id": "aisha",
+      "description": "cute cartoon Middle Eastern girl wearing a cochlear implant with a colorful sparkly processor, ~6 years old, soft hijab in pastel colors, joyful smile"
+    },
+    {
+      "id": "theo",
+      "description": "cute cartoon European boy holding a white cane, ~7 years old, dark brown hair, mint green sweater, cheerful upright posture"
+    },
+    {
+      "id": "nia",
+      "description": "cute cartoon African girl with a pink hearing aid, ~7 years old, braided hair in a bun, yellow sundress with sunflowers, warm smile"
+    },
+    {
+      "id": "kenji",
+      "description": "cute cartoon East Asian boy on forearm crutches, ~8 years old, short black hair, red t-shirt with a cartoon dinosaur, determined smile"
+    },
+    {
+      "id": "sofia",
+      "description": "cute cartoon Latino girl using an AAC tablet, ~6 years old, warm tan skin, wavy brown hair with pink ribbon, lavender cardigan"
+    },
+    {
+      "id": "polynesian_boy",
+      "description": "cute cartoon Polynesian boy, ~7 years old, warm brown skin, dark wavy hair, wearing a tropical print shirt, relaxed friendly smile"
+    }
+  ]
+}

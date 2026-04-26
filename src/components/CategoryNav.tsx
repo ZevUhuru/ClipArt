@@ -86,6 +86,18 @@ export function CategoryNav() {
                 Create
               </Link>
               <Link
+                href="/coloring-pages"
+                className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
+              >
+                Coloring Pages
+              </Link>
+              <Link
+                href="/worksheets"
+                className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
+              >
+                Worksheets
+              </Link>
+              <Link
                 href="/my-art"
                 className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
               >
@@ -100,6 +112,18 @@ export function CategoryNav() {
             </>
           ) : (
             <>
+              <Link
+                href="/coloring-pages"
+                className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
+              >
+                Coloring Pages
+              </Link>
+              <Link
+                href="/worksheets"
+                className="rounded-full px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white"
+              >
+                Worksheets
+              </Link>
               <button
                 onClick={() => openAuthModal("signup")}
                 className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] py-1.5 pl-1.5 pr-4 text-sm font-semibold uppercase tracking-wider text-gray-200 transition-all hover:bg-white/[0.12]"
@@ -183,8 +207,17 @@ export function CategoryNav() {
                 <div className="space-y-1">
                   <MenuLink href="/create" onClick={close}>Create Clip Art</MenuLink>
                   <MenuLink href="/create/coloring-pages" onClick={close}>Create Coloring Pages</MenuLink>
+                  <MenuLink href="/create/worksheets" onClick={close}>Create Worksheets</MenuLink>
                   <MenuLink href="/my-art" onClick={close}>My Art</MenuLink>
-                  <MenuLink href="/search" onClick={close}>Browse</MenuLink>
+                </div>
+
+                <div className="my-3 border-t border-white/10" />
+
+                <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-white/40">Browse</p>
+                <div className="space-y-1">
+                  <MenuLink href="/search" onClick={close}>All Clip Art</MenuLink>
+                  <MenuLink href="/coloring-pages" onClick={close}>Coloring Pages</MenuLink>
+                  <MenuLink href="/worksheets" onClick={close}>Worksheets</MenuLink>
                   <MenuLink href="/learn" onClick={close}>Learn</MenuLink>
                 </div>
 
@@ -219,6 +252,7 @@ export function CategoryNav() {
                 <div className="mt-3 space-y-1">
                   <MenuLink href="/create" onClick={close}>Create</MenuLink>
                   <MenuLink href="/coloring-pages" onClick={close}>Coloring Pages</MenuLink>
+                  <MenuLink href="/worksheets" onClick={close}>Worksheets</MenuLink>
                   <MenuLink href="/search" onClick={close}>Browse</MenuLink>
                   <MenuLink href="/learn" onClick={close}>Learn</MenuLink>
                 </div>

@@ -54,6 +54,11 @@ File-by-file status. This is the document to open when you sit down to do migrat
 | Script | Status | Post-migration | Notes |
 |---|---|---|---|
 | `seed-animal-clipart.ts` | 🔴 Pending | Delete, or thin invoker of `POST {ESY}/v1/batches` | Phase 2. |
+| `seed-worksheets.ts` | 🔴 Pending | Delete, or thin invoker of `POST {ESY}/v1/batches` | Composes prompts from per-topic configs + `_characters.json` + `_safety.json`. Safety-library pattern documented in [docs/features/CONTENT_GENERATION_SAFETY.md](../features/CONTENT_GENERATION_SAFETY.md) — ESY should inherit this structure as its own batch-safety library. |
+| `seed-worksheets/_characters.json` | 🔴 Pending | Move to ESY — shared across consumers | Diverse character rotation (ethnicity × ability). |
+| `seed-worksheets/_safety.json` | 🔴 Pending | Move to ESY — safety library | Global + theme-keyed required/excluded arrays. Injected into prompts AND used as reviewer checklist in HITL. First shipped theme: `hiphop`. Structure generalizes to any future culturally-sensitive theme. |
+| `seed-worksheets/_themes.json` | 🔴 Pending | Move to ESY — shared visual theme pool | 30 reusable visual themes (school-room, dinosaurs, pets, hiphop, disability-hero, etc.). Each theme carries a `phrase` and optional `safety_ref`. Topic configs reference by id. ESY inherits this as the batch-level theme catalog. |
+| `seed-worksheets/{grade}--{subject}--{topic}.json` | 🔴 Pending | Become ESY batch definitions | Per-topic skill × theme matrices. `safety_ref` field is a first-class concept. |
 | `migrate-gpt-image-1-to-15.ts` | 🟡 **Added today (one-shot)** | Delete after running | Flips `site_settings.model_config` from `gpt-image-1` to `gpt-image-1.5`. Dry-runs show `cartoon` and `watercolor` pending. |
 | `audit-openai-spend.ts` | 🟡 **Added today (one-shot)** | Obsolete post-migration | ESY will own cost tracking. |
 

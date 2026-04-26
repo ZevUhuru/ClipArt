@@ -1,7 +1,12 @@
 import type { MetadataRoute } from "next";
 import { sampleImages } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
-import { getAllCategories, getColoringThemes, getIllustrationCategories } from "@/lib/categories";
+import {
+  getAllCategories,
+  getColoringThemes,
+  getIllustrationCategories,
+  getWorksheetGrades,
+} from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -177,6 +182,100 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // packs table may not exist yet
   }
 
+  /* --- Worksheets --- */
+
+  const worksheetsLanding: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/worksheets`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+  ];
+
+  const worksheetGrades = await getWorksheetGrades();
+  const worksheetGradePages: MetadataRoute.Sitemap = worksheetGrades.map((g) => ({
+    url: `${baseUrl}/worksheets/${g.slug}`,
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.9,
+  }));
+
+  const worksheetSubjectPages: MetadataRoute.Sitemap = [];
+  const worksheetTopicPages: MetadataRoute.Sitemap = [];
+  try {
+    const admin = createSupabaseAdmin();
+    const { data: worksheetCats } = await admin
+      .from("categories")
+      .select("slug")
+      .eq("type", "worksheet")
+      .eq("is_active", true);
+
+    for (const cat of (worksheetCats || []) as { slug: string }[]) {
+      const parts = cat.slug.split("--");
+      if (parts.length === 2) {
+        const [grade, subject] = parts;
+        worksheetSubjectPages.push({
+          url: `${baseUrl}/worksheets/${grade}/${subject}`,
+          lastModified: now,
+          changeFrequency: "daily",
+          priority: 0.9,
+        });
+      } else if (parts.length === 3) {
+        const [grade, subject, topic] = parts;
+        worksheetTopicPages.push({
+          url: `${baseUrl}/worksheets/${grade}/${subject}/${topic}`,
+          lastModified: now,
+          changeFrequency: "daily",
+          priority: 0.85,
+        });
+      }
+    }
+  } catch {
+    // categories table may be unavailable during build
+  }
+
+  // Worksheet detail pages need the grade/subject/topic columns so we query
+  // directly rather than reusing the generic `getPublicImageSlugs` helper.
+  const worksheetDetailPages: MetadataRoute.Sitemap = await (async () => {
+    try {
+      const admin = createSupabaseAdmin();
+      const { data } = await admin
+        .from("generations")
+        .select("slug, id, grade, subject, topic, created_at")
+        .eq("is_public", true)
+        .eq("content_type", "worksheet")
+        .order("created_at", { ascending: false })
+        .limit(5000);
+
+      return (data || [])
+        .filter(
+          (r: {
+            grade: string | null;
+            subject: string | null;
+            topic: string | null;
+          }) => r.grade && r.subject && r.topic,
+        )
+        .map(
+          (r: {
+            slug: string | null;
+            id: string;
+            grade: string;
+            subject: string;
+            topic: string;
+            created_at: string;
+          }) => ({
+            url: `${baseUrl}/worksheets/${r.grade}/${r.subject}/${r.topic}/${r.slug || r.id}`,
+            lastModified: new Date(r.created_at),
+            changeFrequency: "weekly" as const,
+            priority: 0.5,
+          }),
+        );
+    } catch {
+      return [];
+    }
+  })();
+
   /* --- Animations --- */
 
   const animationsLanding: MetadataRoute.Sitemap = [
@@ -263,6 +362,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...illustrationsLanding,
     ...illustrationCategoryPages,
     ...illustrationDetailPages,
+    ...worksheetsLanding,
+    ...worksheetGradePages,
+    ...worksheetSubjectPages,
+    ...worksheetTopicPages,
+    ...worksheetDetailPages,
     ...packsLanding,
     ...packCategoryPages,
     ...packDetailPages,

@@ -1,0 +1,34 @@
+{
+  "grade": "kindergarten",
+  "subject": "math",
+  "topic": "shapes",
+  "topic_label": "Shapes",
+  "worksheet_count": 25,
+  "activity_templates": [
+    "A kindergarten shapes identification worksheet. Six large cute cartoon shapes (circle, square, triangle, rectangle, oval, star) each with a small label line underneath to write the shape name. {{character}} points at the circle.",
+    "A trace-the-shape worksheet with dotted outlines of five shapes (circle, square, triangle, rectangle, heart) for the child to trace. {{character}} holds a giant pencil.",
+    "A color-the-shape worksheet: a grid of 2D shapes mixed with cute cartoon objects of the same shape (ball = circle, window = square). Child colors the matching pair. {{character}} smiles in the corner.",
+    "A shape counting worksheet: a silly cartoon scene made entirely of basic shapes, and below the scene the child counts how many circles, squares, and triangles they see. {{character}} stands next to the scene."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "winter",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "park",
+    "space"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "grade": "4th-grade",
+  "subject": "math",
+  "topic": "fractions",
+  "topic_label": "Fractions",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 4th-grade adding-fractions-with-like-denominators worksheet. 8 problems (e.g. '2/6 + 3/6 = __'). A 2x4 grid layout. Header reads 'Adding Fractions'. {{character}} gives a thumbs up.",
+    "A 4th-grade subtracting-fractions worksheet. 8 like-denominator subtraction problems (e.g. '5/8 - 3/8 = __') in a 2x4 grid. {{character}} holds a pencil.",
+    "A 4th-grade equivalent-fractions worksheet. 6 problems, each showing a fraction and asking the child to fill in the missing numerator or denominator to make it equivalent (e.g. '2/3 = __/6'). {{character}} points at the first.",
+    "A 4th-grade fractions-word-problem worksheet with 4 kid-friendly problems involving like-denominator addition and subtraction, each with workspace and answer box. {{character}} reads."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "food",
+    "birthday",
+    "space",
+    "sports"
+  ]
+}

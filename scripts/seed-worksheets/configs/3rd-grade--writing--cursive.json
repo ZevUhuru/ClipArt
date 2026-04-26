@@ -1,0 +1,35 @@
+{
+  "grade": "3rd-grade",
+  "subject": "writing",
+  "topic": "cursive",
+  "topic_label": "Cursive",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 3rd-grade cursive worksheet for a single uppercase cursive letter. Top: the letter shown in large cursive form with directional arrows. Below: 4 rows of dotted cursive letters on handwriting lines for tracing. {{character}} holds a fancy pen.",
+    "A lowercase cursive letter practice worksheet. Letter at top in large cursive form with stroke arrows. 4 tracing rows and 2 blank rows on handwriting guidelines. {{character}} sits at a desk.",
+    "A cursive word practice worksheet. A kid-friendly word shown in large cursive with dotted tracing form, then 3 tracing rows and 2 blank rows for the child to write it independently. A small illustration of the word next to the title. {{character}} cheers.",
+    "A short cursive sentence worksheet. A 3-word sentence in dotted cursive at the top, then 3 tracing rows and 2 blank practice rows on handwriting guidelines. {{character}} reads the sentence."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "garden",
+    "park"
+  ]
+}

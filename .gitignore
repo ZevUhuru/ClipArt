@@ -35,3 +35,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# openai batch job state (requests.jsonl, meta.json, submission.json, results.jsonl)
+.batches/

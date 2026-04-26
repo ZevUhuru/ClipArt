@@ -1,0 +1,35 @@
+{
+  "grade": "prek",
+  "subject": "math",
+  "topic": "counting",
+  "topic_label": "Counting",
+  "worksheet_count": 25,
+  "activity_templates": [
+    "A Pre-K counting-to-10 worksheet. Five rows, each showing a group of 1-10 cute cartoon objects, with a circle next to each row for the child to write the total count. Numbers 1-10 printed across the top as a reference strip. {{character}} waves at the top.",
+    "A trace-and-count worksheet for Pre-K. Numbers 1-10 in large dotted outlines for tracing, with small cute cartoon objects next to each number showing the quantity. {{character}} traces number 1 with a crayon.",
+    "A match-the-number worksheet. On the left, five groups of cute cartoon objects (2 apples, 5 stars, etc.). On the right, numbers 1-10. Child draws lines matching quantity to number. {{character}} cheers in the center.",
+    "A count-and-color Pre-K worksheet. A friendly cartoon scene with 1 cloud, 2 birds, 3 flowers, etc., up to 5. The child counts each group and colors the matching number below. {{character}} is the star of the scene."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "winter",
+    "fall",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "garden",
+    "park"
+  ]
+}

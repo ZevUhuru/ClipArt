@@ -123,9 +123,12 @@ async function generateWithGemini(prompt: string): Promise<Buffer> {
   return Buffer.from(part.inlineData.data, "base64");
 }
 
+// gpt-image-2 is the API model id for ChatGPT Images 2.0 (released
+// 2026-04-21). `chatgpt-image-latest` is the OLD ChatGPT image model —
+// OpenAI explicitly recommends gpt-image-2 for API use.
 async function generateWithGPT(prompt: string): Promise<Buffer> {
   const response = await openai.images.generate({
-    model: "chatgpt-image-latest",
+    model: "gpt-image-2-2026-04-21" as unknown as "gpt-image-1",
     prompt,
     size: "1024x1024",
     quality: "high",
@@ -133,7 +136,7 @@ async function generateWithGPT(prompt: string): Promise<Buffer> {
   });
 
   const b64 = response.data?.[0]?.b64_json;
-  if (!b64) throw new Error("No image returned from chatgpt-image-latest");
+  if (!b64) throw new Error("No image returned from gpt-image-2");
   return Buffer.from(b64, "base64");
 }
 
@@ -186,7 +189,7 @@ async function generateOneImage(job: Job): Promise<boolean> {
     const imageUrl = await uploadToR2(webpBuffer, key);
 
     const title = `${animal.name} ${style.charAt(0).toUpperCase() + style.slice(1)} Clip Art`;
-    const dbModel = model === "chatgpt-image-latest" ? "gpt-image-1" : "gemini";
+    const dbModel = model === "chatgpt-image-latest" ? "gpt-image-2-2026-04-21" : "gemini";
 
     await supabase.from("generations").insert({
       user_id: null,
@@ -300,7 +303,7 @@ async function main() {
       ? runPool(geminiJobs, GEMINI_CONCURRENCY, "Gemini")
       : Promise.resolve({ ok: 0, fail: 0 }),
     openaiJobs.length > 0
-      ? runPool(openaiJobs, OPENAI_CONCURRENCY, "OpenAI chatgpt-image-latest")
+      ? runPool(openaiJobs, OPENAI_CONCURRENCY, "OpenAI gpt-image-2")
       : Promise.resolve({ ok: 0, fail: 0 }),
   ]);
 

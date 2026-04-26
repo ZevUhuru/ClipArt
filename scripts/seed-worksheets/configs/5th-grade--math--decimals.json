@@ -1,0 +1,35 @@
+{
+  "grade": "5th-grade",
+  "subject": "math",
+  "topic": "decimals",
+  "topic_label": "Decimals",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 5th-grade decimal place-value worksheet. 6 decimal numbers (e.g. '4.728'). For each, child writes the value of the tenths, hundredths, and thousandths digits. {{character}} points at a decimal number.",
+    "A 5th-grade adding-and-subtracting-decimals worksheet. 8 problems in stacked column form (e.g. '2.45 + 1.37', '5.6 - 2.18') with decimal alignment. 2x4 grid. {{character}} gives a thumbs up.",
+    "A 5th-grade comparing-decimals worksheet. 6 pairs of decimal numbers; child writes <, >, or = between them. A decimal place-value chart at the top. {{character}} cheers.",
+    "A 5th-grade rounding-decimals worksheet. 6 decimal numbers; child rounds each to the nearest tenth and hundredth in two boxes. {{character}} stands next to a rounding hint box."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

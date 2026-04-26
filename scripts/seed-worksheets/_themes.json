@@ -1,0 +1,125 @@
+{
+  "_comment": "Shared theme pool. Topic configs reference themes by id in their `themes` array. Each theme's `phrase` is appended to the activity template. Template vars {{character}}, {{topic_label}}, {{topic_label_upper}} are expanded by the seed script. When a theme has `safety_ref`, the corresponding entry from _safety.json is injected too.",
+  "themes": {
+    "school-room": {
+      "phrase": "in a bright cheerful classroom setting",
+      "safety_ref": null
+    },
+    "pets": {
+      "phrase": "with cute pet puppies and kittens decorating the margins",
+      "safety_ref": null
+    },
+    "zoo-animals": {
+      "phrase": "with cute zoo animals (elephant, giraffe, lion cub) decorating the margins",
+      "safety_ref": null
+    },
+    "dinosaurs": {
+      "phrase": "with cute cartoon dinosaurs helping (T-Rex, Stegosaurus, Triceratops, Brachiosaurus)",
+      "safety_ref": "dinosaurs"
+    },
+    "insects": {
+      "phrase": "with cute cartoon insects (ladybugs, butterflies, bees) flying along the border",
+      "safety_ref": null
+    },
+    "jungle": {
+      "phrase": "with a cute cartoon jungle background (friendly monkeys in trees, vines, parrots)",
+      "safety_ref": null
+    },
+    "forest": {
+      "phrase": "with a cute cartoon forest setting (squirrels, acorns, mushrooms, owls)",
+      "safety_ref": null
+    },
+    "arctic": {
+      "phrase": "with a cute cartoon arctic background (penguins, polar bear cubs, seals, snow)",
+      "safety_ref": null
+    },
+    "ocean": {
+      "phrase": "with a cute cartoon ocean setting (friendly dolphins, colorful fish, sea turtles)",
+      "safety_ref": null
+    },
+    "christmas": {
+      "phrase": "with Christmas decorations (cute cartoon snowflakes, tiny Santa in corner, holly, ornaments)",
+      "safety_ref": "holidays_christmas"
+    },
+    "spring": {
+      "phrase": "with a spring scene (cute cartoon flowers, rainbow, butterflies, baby animals)",
+      "safety_ref": "seasons"
+    },
+    "summer": {
+      "phrase": "with a summer scene (cute cartoon sun wearing sunglasses, beach ball, watermelon)",
+      "safety_ref": "seasons"
+    },
+    "fall": {
+      "phrase": "with a fall scene (cute cartoon pumpkins, falling leaves, acorns, hay bales)",
+      "safety_ref": "seasons"
+    },
+    "winter": {
+      "phrase": "with a winter scene (cute cartoon snowmen, mittens, hot cocoa)",
+      "safety_ref": "seasons"
+    },
+    "robots": {
+      "phrase": "with cute friendly cartoon robots helping with the activity",
+      "safety_ref": null
+    },
+    "tech-gadgets": {
+      "phrase": "with cute cartoon tech gadgets (tablets, headphones, game controllers) in the margins",
+      "safety_ref": null
+    },
+    "space": {
+      "phrase": "with a cute cartoon space background (friendly planets with faces, shooting stars, rockets)",
+      "safety_ref": null
+    },
+    "emotions": {
+      "phrase": "where {{character}} shows different cartoon emotions (happy, excited, proud, calm) during the activity",
+      "safety_ref": "emotions"
+    },
+    "disability-hero": {
+      "phrase": "with a child using a mobility aid (wheelchair, crutches, hearing aid, or cochlear implant) as the confident main character",
+      "safety_ref": "disability_central"
+    },
+    "caring": {
+      "phrase": "showing {{character}} helping a friend with the activity (caring for others, kindness)",
+      "safety_ref": null
+    },
+    "music": {
+      "phrase": "with cute cartoon music notes and toy instruments (toy drums, maracas, tambourine) in the margins",
+      "safety_ref": null
+    },
+    "hiphop": {
+      "phrase": "with a kid-friendly hip hop style — {{character}} wearing a cute cap, holding a toy microphone, and clean block-letter graffiti spelling only '{{topic_label_upper}}' across the top, no other text",
+      "safety_ref": "hiphop"
+    },
+    "farm": {
+      "phrase": "with a cute cartoon farm scene (friendly cows, pigs, chickens, a red barn)",
+      "safety_ref": null
+    },
+    "garden": {
+      "phrase": "with a cute cartoon garden scene (vegetable patches, watering cans, bees, bunnies)",
+      "safety_ref": null
+    },
+    "superheroes": {
+      "phrase": "with {{character}} dressed as a kid-friendly cartoon superhero (cape, mask, bright colors) saving the day by solving the activity",
+      "safety_ref": null
+    },
+    "sports": {
+      "phrase": "with cute cartoon sports equipment (soccer ball, basketball, baseball, tennis racket) in the margins",
+      "safety_ref": null
+    },
+    "food": {
+      "phrase": "with cute cartoon food (smiling pizza slice, happy taco, cheerful donut) in the margins",
+      "safety_ref": null
+    },
+    "birthday": {
+      "phrase": "with a cute birthday party scene (cake with candles, balloons, party hats, confetti)",
+      "safety_ref": null
+    },
+    "library": {
+      "phrase": "in a cozy cartoon library setting with stacks of friendly books and a reading nook",
+      "safety_ref": null
+    },
+    "park": {
+      "phrase": "at a cute cartoon playground or park (swings, slide, trees, flowers)",
+      "safety_ref": null
+    }
+  }
+}

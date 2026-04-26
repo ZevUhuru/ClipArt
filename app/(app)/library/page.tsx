@@ -670,6 +670,7 @@ function CreationsGrid() {
     aspect_ratio: gen.aspect_ratio,
     prompt: gen.prompt,
     model: gen.model || undefined,
+    has_transparency: gen.has_transparency ?? undefined,
   }));
 
   return (
@@ -1012,6 +1013,7 @@ function CreationsGrid() {
                           aspect_ratio: gen.aspect_ratio,
                           prompt: gen.prompt,
                           model: gen.model || undefined,
+                          has_transparency: gen.has_transparency ?? undefined,
                         };
                         openDrawer(img, drawerList, true);
                       }}

@@ -1,0 +1,37 @@
+{
+  "grade": "1st-grade",
+  "subject": "reading",
+  "topic": "sight-words",
+  "topic_label": "Sight Words",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 1st-grade sight words worksheet. Header reads 'Sight Words Practice'. A 4x3 grid of cute cartoon boxes, each containing a common sight word (the, and, said, have, from, they, this, what, were, your, when, there). {{character}} is in the corner holding a book.",
+    "A trace-and-write sight word worksheet. One target sight word at the top in large dotted form for tracing, then three blank lines for the child to write it themselves. A silly cartoon sentence using the word appears in a speech bubble from {{character}}.",
+    "A find-the-sight-word worksheet: a short kid-friendly sentence printed five times, each with one blank. A word bank of sight words at the bottom. Child fills each blank using the correct sight word. {{character}} is reading alongside.",
+    "A sight-word coloring worksheet: a cartoon scene divided into areas labeled with sight words. A color-key at the top ('the = red, and = blue...') tells the child how to color each area. {{character}} is in the scene."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "park",
+    "superheroes"
+  ]
+}

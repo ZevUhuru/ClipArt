@@ -1,0 +1,56 @@
+---
+description: Always use explicit, pinned model ids in API requests. Never use vague aliases like "latest" or "default".
+globs: "**/*"
+alwaysApply: true
+---
+
+# Model Pinning — No Vague Aliases
+
+Every call to an AI provider API in this repo MUST specify an explicit, versioned model id. Never use product-marketing aliases that silently float to whatever the provider considers "current."
+
+## Why this rule exists
+
+Provider aliases drift. Examples we have been burned by:
+
+- **OpenAI `chatgpt-image-latest`** — looks like "the latest image model from ChatGPT." It is not. After ChatGPT Images 2.0 shipped on 2026-04-21, this alias still pointed at the **older** pre-2.0 model. OpenAI's own docs say: *"This points to the Image snapshot previously used in ChatGPT. We recommend `gpt-image-2` for API use."* If you had assumed `chatgpt-image-latest` meant "always the newest," you'd silently ship the old model.
+- **Gemini `gemini-2.5-flash-image`** — shipped as the default in this repo for months after Google released `gemini-3.1-flash-image-preview` (Nano Banana 2). The naming made it look current. It was not.
+
+Consequence: we generate thousands of images on the wrong model, pay for it, and sometimes don't notice until someone asks "wait, is this really the latest?"
+
+## The rule
+
+When calling any image, video, text, or embedding model via a provider SDK or HTTP:
+
+1. **Use a dated snapshot id whenever the provider publishes one.**
+   - Good: `"gpt-image-2-2026-04-21"`, `"gemini-3.1-flash-image-preview-2026-03-15"`
+   - Acceptable: `"gpt-image-2"`, `"gemini-3-pro-image"` (floating within a major version is tolerable for live user traffic where auto-patch is desirable)
+   - **Forbidden:** `"*-latest"`, `"chatgpt-*"`, `"default"`, `"auto"`, any alias that crosses major versions.
+
+2. **For batch seeds that produce permanent catalog assets: always pin to the dated snapshot.** A 1,000-image seed run across 2+ hours (or re-runs weeks apart) must produce a visually consistent catalog. Pinning guarantees that.
+
+3. **When writing a new provider wrapper** (`src/lib/*.ts`):
+   - Export a named constant: `export const MODEL_ID = "gpt-image-2-2026-04-21";`
+   - Include a comment block above it citing the provider doc URL and the release date.
+   - Never inline the string inside the API call without a constant.
+
+4. **When updating a model id:** bump the constant in a single commit with a note in `docs/esy/05-decision-log.md`. Don't do silent upgrades buried in unrelated commits.
+
+## Where "latest" is OK
+
+The only place floating aliases are acceptable is **live user-facing generation** where automatic patch-level upgrades are desirable and output consistency across time doesn't matter (each user request is independent). Even there, prefer the un-dated major version id (`"gpt-image-2"`) over a marketing alias (`"chatgpt-image-latest"`).
+
+**Never** use an alias for:
+
+- Seed scripts
+- Batch jobs that produce catalog content
+- Internal tests where you need deterministic output
+- Anywhere the output is persisted to the DB or R2
+
+## Checklist when adding a new API call
+
+- [ ] Is the model id a dated snapshot or a documented major-version tag, not a "*-latest" alias?
+- [ ] Is the id pulled from a named constant, not a hardcoded string?
+- [ ] Does the constant's comment cite the provider doc URL and release date?
+- [ ] Is the `model` column in any Supabase insert recording the same exact id (not a prettified short name)?
+
+If any of these are "no," stop and fix it before shipping.

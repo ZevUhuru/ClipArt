@@ -1,0 +1,37 @@
+{
+  "grade": "5th-grade",
+  "subject": "reading",
+  "topic": "reading-comprehension",
+  "topic_label": "Reading Comprehension",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 5th-grade reading comprehension worksheet. A 3-paragraph kid-friendly fiction passage with a small illustration. 5 short-answer questions below (main idea, theme, inference, character analysis, vocabulary) with writing lines. {{character}} reads alongside.",
+    "A 5th-grade non-fiction comprehension worksheet about a kid-safe science or history topic. 3-paragraph passage with a diagram. 4 comprehension questions, mix of multiple-choice and short-answer. {{character}} points at the diagram.",
+    "A 5th-grade figurative-language worksheet. A short passage with underlined similes, metaphors, and idioms. 5 questions asking the child to identify and interpret each. {{character}} taps chin thoughtfully.",
+    "A 5th-grade 'summarize the passage' worksheet. A 3-paragraph passage at the top and three summary-outline boxes below (beginning, middle, end) for the child to fill in. {{character}} sits beside the passage."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "space",
+    "superheroes"
+  ]
+}

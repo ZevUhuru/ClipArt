@@ -205,7 +205,7 @@ export function ImageDetailDrawer() {
 }
 
 interface DrawerContentProps {
-  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string; model?: string; duration?: number };
+  image: { id: string; slug: string; title: string; url: string; category: string; style: string; content_type?: string; aspect_ratio?: string; videoUrl?: string; prompt?: string; model?: string; has_transparency?: boolean; duration?: number };
   categorySlug: string;
   detailHref: string;
   isColoring: boolean;
@@ -406,6 +406,14 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
           {image.model && (
             <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
               {formatModelLabel(image.model)}
+            </span>
+          )}
+          {image.has_transparency && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Transparent PNG
             </span>
           )}
           {image.duration && (

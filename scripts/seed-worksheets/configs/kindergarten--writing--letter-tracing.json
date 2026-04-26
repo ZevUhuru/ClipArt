@@ -1,0 +1,37 @@
+{
+  "grade": "kindergarten",
+  "subject": "writing",
+  "topic": "letter-tracing",
+  "topic_label": "Letter Tracing",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A kindergarten letter tracing worksheet for a single uppercase letter. Four rows of large dotted-line letters (each spanning the height of a handwriting line) for the child to trace. Header displays the letter and a cute cartoon example word. {{character}} holds a pencil and traces the first letter.",
+    "A pair-letter tracing worksheet (uppercase and lowercase of the same letter). Two rows for each, all dotted for tracing. A cartoon picture of a word starting with that letter appears in the top-right corner. {{character}} waves underneath.",
+    "A name-practice style worksheet with blank practice rows showing one letter repeated in dotted-line form at different sizes, decreasing in size row by row. {{character}} cheers at the top.",
+    "A find-and-trace worksheet: a big cartoon scene with the target letter hidden 5 times. Child circles each instance, then traces a row of the letter at the bottom. {{character}} is in the scene holding a magnifying glass."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "garden",
+    "library",
+    "park"
+  ]
+}

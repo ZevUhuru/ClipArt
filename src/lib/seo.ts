@@ -3,13 +3,14 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://clip.art";
 export const SITE_NAME = "clip.art";
 
-export type ContentType = "clipart" | "coloring" | "illustration" | "pack";
+export type ContentType = "clipart" | "coloring" | "illustration" | "pack" | "worksheet";
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   clipart: "Clip Art",
   coloring: "Coloring Page",
   illustration: "Illustration",
   pack: "Design Pack",
+  worksheet: "Worksheet",
 };
 
 const CONTENT_TYPE_LABELS_PLURAL: Record<ContentType, string> = {
@@ -17,6 +18,7 @@ const CONTENT_TYPE_LABELS_PLURAL: Record<ContentType, string> = {
   coloring: "Coloring Pages",
   illustration: "Illustrations",
   pack: "Design Packs",
+  worksheet: "Worksheets",
 };
 
 const MAX_TITLE_LENGTH = 60;
@@ -91,9 +93,23 @@ export function contentTypePath(
       return `illustrations/${category}/${slug}`;
     case "pack":
       return `design-bundles/${category}/${slug}`;
+    case "worksheet":
+      // Worksheets have a 4-level path; `category` here is expected to be the
+      // composite "grade/subject/topic" string. Callers that can't build that
+      // composite should use `worksheetDetailPath()` instead.
+      return `worksheets/${category}/${slug}`;
     default:
       return `${category}/${slug}`;
   }
+}
+
+export function worksheetDetailPath(
+  grade: string,
+  subject: string,
+  topic: string,
+  slug: string,
+): string {
+  return `worksheets/${grade}/${subject}/${topic}/${slug}`;
 }
 
 export function categoryPath(
@@ -107,6 +123,10 @@ export function categoryPath(
       return `illustrations/${categorySlug}`;
     case "pack":
       return `design-bundles/${categorySlug}`;
+    case "worksheet":
+      // `categorySlug` for worksheets is the composite "grade" or "grade/subject"
+      // or "grade/subject/topic" — caller decides which hub level to link to.
+      return `worksheets/${categorySlug}`;
     default:
       return categorySlug;
   }

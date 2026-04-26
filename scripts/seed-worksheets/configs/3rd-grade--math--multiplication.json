@@ -1,0 +1,39 @@
+{
+  "grade": "3rd-grade",
+  "subject": "math",
+  "topic": "multiplication",
+  "topic_label": "Multiplication",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 3rd grade multiplication facts worksheet. A grid of 10 multiplication problems (0-12 facts, e.g. '7 x 8 = __') printed in big clear numbers. {{character}} gives a thumbs up in the top corner. Header reads 'Multiplication Practice'.",
+    "A multiplication arrays worksheet. Three cute cartoon arrays of objects (e.g. 4 rows of 5 stars) with a blank line to write the matching multiplication sentence. {{character}} points to the first array.",
+    "A multiplication word problem worksheet with 4 kid-friendly word problems (e.g. 'If 6 friends each have 4 cookies, how many cookies total?'). Each problem has space to write the answer. {{character}} reads a book beside the problems.",
+    "A skip-counting worksheet supporting multiplication: three rows of skip counting by 2s, 5s, and 10s with cute cartoon icons (hops, steps, leaps). {{character}} is jumping along the 5s row."
+  ],
+  "themes": [
+    "school-room",
+    "dinosaurs",
+    "pets",
+    "zoo-animals",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

@@ -12,6 +12,7 @@ export interface DrawerImage {
   videoUrl?: string;
   prompt?: string;
   model?: string;
+  has_transparency?: boolean;
   duration?: number;
 }
 

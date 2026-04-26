@@ -1,0 +1,35 @@
+{
+  "grade": "kindergarten",
+  "subject": "phonics",
+  "topic": "letter-sounds",
+  "topic_label": "Letter Sounds",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A kindergarten beginning-sound worksheet. Six cute cartoon pictures each with a blank line to write the starting letter. A letter key across the top helps the child. {{character}} cheers at the right.",
+    "A 'what's the first sound?' worksheet. Four rows. Each row: one big cartoon picture and three letter choices (A/B/C bubbles) — child circles the correct starting letter. {{character}} points to the first choice.",
+    "A sound-matching worksheet. Left column: 5 letters. Right column: 5 cute cartoon pictures. Child draws lines to match each letter with the picture that starts with that sound. {{character}} waves in the center.",
+    "A sort-by-sound worksheet. Two boxes labeled with two different starting letters (e.g. 'B' and 'M'). Below, 6 pictures scattered. Child writes the correct letter under each picture. {{character}} stands between the boxes."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "garden"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "grade": "1st-grade",
+  "subject": "math",
+  "topic": "addition",
+  "topic_label": "Addition",
+  "worksheet_count": 40,
+  "activity_templates": [
+    "A cute cartoon kid character solving a single-digit addition worksheet. Show 6 addition problems like '2 + 3 = __' in large friendly numbers across the page. {{character}} smiles and holds a pencil in the corner.",
+    "A single-page addition worksheet with 8 problems (e.g. '1 + 4 = __', '5 + 2 = __'). Header reads 'Addition Practice' in big playful letters. {{character}} waves in the top corner.",
+    "A counting-to-add worksheet: three rows, each showing groups of cute cartoon objects to be counted and added (e.g. 3 apples + 2 apples). {{character}} cheers in the margin.",
+    "An addition number-line worksheet with a colorful number line 0-10. {{character}} hops along the number line to solve '3 + 4 = __', and there are 4 more problems below."
+  ],
+  "themes": [
+    "school-room",
+    "dinosaurs",
+    "pets",
+    "zoo-animals",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "birthday"
+  ]
+}

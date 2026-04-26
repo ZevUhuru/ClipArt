@@ -1,0 +1,38 @@
+{
+  "grade": "2nd-grade",
+  "subject": "reading",
+  "topic": "reading-comprehension",
+  "topic_label": "Reading Comprehension",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 2nd-grade reading comprehension worksheet. Top half: a short 4-sentence kid-friendly story with a small illustration. Bottom half: 4 questions with lines to write answers (who, what, where, main idea). {{character}} appears next to the illustration.",
+    "A 2nd-grade 'Read and Draw' worksheet. A 3-sentence story at the top, and a large empty drawing box labeled 'Draw the main idea' at the bottom. Two comprehension questions in the margin. {{character}} is beside the story with a pencil.",
+    "A fiction passage comprehension worksheet. A 5-sentence cartoon-style story with a small picture, followed by 3 multiple-choice questions (A/B/C bubbles). {{character}} reads a book in the corner.",
+    "A non-fiction passage comprehension worksheet about a friendly animal fact (e.g. 'Bees live in hives. They make honey...'), with a picture of the animal. 3 short-answer questions underneath with writing lines. {{character}} points at the picture."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "farm",
+    "space",
+    "superheroes"
+  ]
+}

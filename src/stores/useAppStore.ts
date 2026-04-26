@@ -13,6 +13,7 @@ export interface Generation {
   slug: string | null;
   aspect_ratio?: string;
   model?: string | null;
+  has_transparency?: boolean | null;
   created_at: string;
 }
 

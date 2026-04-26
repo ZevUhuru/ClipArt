@@ -1,0 +1,37 @@
+{
+  "grade": "4th-grade",
+  "subject": "reading",
+  "topic": "reading-comprehension",
+  "topic_label": "Reading Comprehension",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 4th-grade reading comprehension worksheet. A 2-paragraph kid-friendly fiction passage with a small illustration. 5 short-answer questions below (main idea, character, setting, inference, theme) with writing lines. {{character}} reads alongside.",
+    "A 4th-grade non-fiction comprehension worksheet about a kid-safe science or history topic. 2-paragraph passage with a diagram. 4 comprehension questions (2 multiple-choice, 2 short-answer). {{character}} points at the diagram.",
+    "A 'context clues' vocabulary worksheet. A short passage with 4 bolded unfamiliar kid-friendly words. Child writes the meaning of each based on context clues. {{character}} taps chin thoughtfully.",
+    "A 'compare and contrast' worksheet. Two short cartoon-style passages followed by a Venn diagram for the child to fill in similarities and differences. {{character}} stands between them."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "space",
+    "superheroes"
+  ]
+}

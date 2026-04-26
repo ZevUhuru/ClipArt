@@ -1,0 +1,34 @@
+{
+  "grade": "prek",
+  "subject": "writing",
+  "topic": "line-tracing",
+  "topic_label": "Line Tracing",
+  "worksheet_count": 25,
+  "activity_templates": [
+    "A Pre-K pre-writing line tracing worksheet. Five rows of dotted lines showing different stroke patterns (straight, wavy, zigzag, loopy, curved) for the child to trace. {{character}} starts at the first row holding a crayon.",
+    "A shape-path tracing worksheet. A cute cartoon character needs to reach a goal by tracing a dotted path (circles, spirals, diagonals). Four paths of increasing difficulty. {{character}} is at the start, a friend waits at the end.",
+    "A trace-the-curve worksheet focused on curved lines (rainbows, waves, loops). Five dotted curves of varying styles for the child to trace. {{character}} jumps over the curves.",
+    "A trace-the-shape-outlines worksheet. Five large dotted shape outlines (circle, square, triangle, heart, star) for the child to trace completely. {{character}} holds a giant pencil."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "garden",
+    "park",
+    "space"
+  ]
+}

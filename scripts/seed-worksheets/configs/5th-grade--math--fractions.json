@@ -1,0 +1,36 @@
+{
+  "grade": "5th-grade",
+  "subject": "math",
+  "topic": "fractions",
+  "topic_label": "Fractions",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 5th-grade adding-fractions-with-unlike-denominators worksheet. 6 problems (e.g. '1/3 + 1/4 = __') with workspace for finding common denominators. Header reads 'Adding Fractions'. {{character}} gives a thumbs up.",
+    "A 5th-grade subtracting-mixed-numbers worksheet. 6 problems (e.g. '3 1/2 - 1 3/4 = __') with workspace. {{character}} holds a pencil.",
+    "A 5th-grade multiplying-fractions worksheet. 8 problems (e.g. '2/3 x 3/4 = __') in a 2x4 grid with reduction space. {{character}} waves.",
+    "A 5th-grade fractions-word-problem worksheet with 4 multi-step kid-friendly problems involving unlike-denominator addition, subtraction, or multiplication. Workspace and answer box for each. {{character}} reads."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "food",
+    "birthday",
+    "space",
+    "sports"
+  ]
+}

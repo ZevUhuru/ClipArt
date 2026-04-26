@@ -1,0 +1,37 @@
+{
+  "grade": "kindergarten",
+  "subject": "reading",
+  "topic": "sight-words",
+  "topic_label": "Sight Words",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A kindergarten sight-words worksheet featuring Dolch pre-primer words (a, and, away, big, blue, can, come, down, find, for, funny, go, help, here, I, in, is, it, jump, little, look, make). A 4x3 grid of boxes, each with one sight word in big friendly letters. {{character}} reads a book at the side.",
+    "A trace-and-write sight-word worksheet. Target sight word at top in large dotted outline; three rows for tracing and two blank lines for independent writing. A cartoon kid sentence with the word in a speech bubble. {{character}} sits below.",
+    "A sight-word-search worksheet. A 6x6 grid with letters; 5 sight words hidden among them (horizontal and vertical). Word bank on the right. {{character}} holds a magnifying glass.",
+    "A 'color by sight word' worksheet. A cute cartoon picture made of shapes each labeled with a sight word. Color key at the top. Child colors according to the key. {{character}} holds crayons."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "farm",
+    "superheroes"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "grade": "1st-grade",
+  "subject": "math",
+  "topic": "subtraction",
+  "topic_label": "Subtraction",
+  "worksheet_count": 40,
+  "activity_templates": [
+    "A 1st-grade subtraction-within-20 worksheet. 8 subtraction problems in big clear numbers (e.g. '15 - 7 = __'). Header reads 'Subtraction Practice'. {{character}} waves in the top corner.",
+    "A take-away picture subtraction worksheet. Four problems showing a group of cute cartoon objects with some crossed out, and a blank for the answer. {{character}} smiles next to the first problem.",
+    "A subtraction number-line worksheet. A number line 0-20 at the top; 4 problems below asking the child to hop backwards along the line to solve. {{character}} hops backwards on the line.",
+    "A subtraction word-problem worksheet with 4 short kid-friendly word problems (e.g. 'I had 12 cookies and ate 4. How many are left?') with answer boxes. {{character}} holds a pencil."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

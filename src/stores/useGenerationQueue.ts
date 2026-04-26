@@ -10,6 +10,9 @@ export interface QueuedGeneration {
   imageUrl?: string;
   generationId?: string;
   title?: string;
+  model?: string;
+  contentType?: string;
+  hasTransparency?: boolean;
   error?: string;
   startedAt: number;
 }
@@ -17,6 +20,9 @@ export interface QueuedGeneration {
 interface AddJobOptions {
   contentType?: string;
   aspectRatio?: string;
+  grade?: string;
+  subject?: string;
+  topic?: string;
 }
 
 interface GenerationQueueState {
@@ -47,6 +53,9 @@ export const useGenerationQueue = create<GenerationQueueState>()(
     const body: Record<string, unknown> = { prompt, style, isPublic };
     if (options?.contentType) body.contentType = options.contentType;
     if (options?.aspectRatio) body.aspectRatio = options.aspectRatio;
+    if (options?.grade) body.grade = options.grade;
+    if (options?.subject) body.subject = options.subject;
+    if (options?.topic) body.topic = options.topic;
 
     fetch("/api/generate", {
       method: "POST",
@@ -79,6 +88,9 @@ export const useGenerationQueue = create<GenerationQueueState>()(
           imageUrl: data.imageUrl || data.generation?.image_url,
           generationId: data.generation?.id,
           title: data.generation?.title,
+          model: data.generation?.model || undefined,
+          contentType: data.generation?.content_type || options?.contentType,
+          hasTransparency: data.generation?.has_transparency ?? false,
         });
       })
       .catch((err) => {

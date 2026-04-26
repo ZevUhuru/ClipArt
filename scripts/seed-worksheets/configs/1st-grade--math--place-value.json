@@ -1,0 +1,35 @@
+{
+  "grade": "1st-grade",
+  "subject": "math",
+  "topic": "place-value",
+  "topic_label": "Place Value",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 1st-grade place-value worksheet using tens-and-ones blocks. Four problems; each shows groups of cartoon base-ten blocks (tens rods and unit cubes) with boxes for the child to write the number of tens, ones, and the total. {{character}} stands to the right.",
+    "An 'expanded form' worksheet. Four two-digit numbers in a column; the child rewrites each as '__ tens + __ ones = __'. {{character}} holds a big '10' sign.",
+    "A compare-numbers place-value worksheet with 5 pairs of two-digit numbers. Child writes <, >, or = in the box between them. Place-value chart printed across the top for reference. {{character}} cheers.",
+    "A build-a-number worksheet. Three friendly cartoon scenarios each give a digit count (e.g. '3 tens and 4 ones'); child writes the two-digit number and draws the blocks. {{character}} is building blocks."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "space"
+  ]
+}

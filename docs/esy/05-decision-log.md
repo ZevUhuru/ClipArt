@@ -4,6 +4,36 @@ Dated architectural decisions about the ESY migration. Newest first. Each entry 
 
 ---
 
+## 2026-04-26 · `has_transparency` — DB field for guaranteed-transparent generations
+
+**Decision:** Add a `has_transparency boolean NOT NULL DEFAULT false` column to the `generations` table. Set to `true` only when `background: "transparent"` was actually passed to the provider API during generation — not inferred from model name, prompt content, or visual inspection.
+
+**Rationale:** The initial transparency implementation (same date, entry below) used `model === "gpt-image-1.5"` as the badge condition in the UI. This is fragile:
+- If a new model also supports transparency, the badge silently breaks until the UI is updated.
+- The library page reads from DB — if model routing changes, old generations would be mislabeled.
+- The badge condition being spread across the UI and the routing logic creates two sources of truth that can drift.
+
+`has_transparency` is a single write-once fact set at the point of generation, where we actually know. The rest of the stack (queue, library, drawer badge) just reads the flag — zero model-awareness required anywhere outside `imageGen.ts`.
+
+**Migration file:** `db/add-has-transparency.sql`
+
+**Full documentation:** `docs/features/TRANSPARENCY.md` — covers model support matrix, data flow, how to add support for new models, display strategy, catalog inconsistency, and ESY carry-forward.
+
+**What changed:**
+- `src/lib/imageGen.ts` — `generateImage()` now returns `hasTransparency: boolean`
+- `app/api/generate/route.ts` — stores `has_transparency` in DB insert; includes it in the `select` response
+- `app/api/me/images/route.ts` — includes `has_transparency` in select
+- `src/stores/useAppStore.ts` — `Generation` type gets `has_transparency?: boolean | null`
+- `src/stores/useImageDrawer.ts` — `DrawerImage` type gets `has_transparency?: boolean`
+- `src/stores/useGenerationQueue.ts` — `QueuedGeneration` gets `hasTransparency`; stored from `data.generation.has_transparency`
+- `src/components/GenerationQueue.tsx` — passes `has_transparency` to `DrawerImage`
+- `app/(app)/library/page.tsx` — passes `has_transparency` through `drawerList` and `onClick`
+- `src/components/ImageDetailDrawer.tsx` — badge condition changed from `model === "gpt-image-1.5"` to `image.has_transparency`
+
+**Status:** Active — shipped 2026-04-26.
+
+---
+
 ## 2026-04-26 · Clip art storage format: transparent PNG as master, white bg for display
 
 **Decision:** All clip art generations are stored as transparent-background WebP (alpha channel preserved). White background is a display-only concern handled by CSS — never baked into the stored file. Users can toggle between preview backgrounds in the detail view.

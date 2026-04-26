@@ -1,0 +1,39 @@
+{
+  "grade": "2nd-grade",
+  "subject": "math",
+  "topic": "addition",
+  "topic_label": "Addition",
+  "worksheet_count": 40,
+  "activity_templates": [
+    "A 2nd-grade two-digit addition worksheet. 8 problems arranged in two columns (e.g. '34 + 25 = __'), stacked vertically with space for regrouping work. Header reads 'Double-Digit Addition'. {{character}} gives a thumbs up.",
+    "A 2nd-grade addition word-problem worksheet with 4 short kid-friendly word problems involving two-digit numbers. Each problem has a labeled workspace and an answer box. {{character}} reads the first problem.",
+    "A 2-digit addition-with-regrouping worksheet. 6 problems in column form, each with a tens and ones column clearly divided. A tens/ones hint chart at the top. {{character}} points to the hint chart.",
+    "A mixed 2-digit + 1-digit addition practice worksheet. 10 problems in a 2x5 grid in stacked column form with clear workspace. {{character}} waves at the top."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "grade": "3rd-grade",
+  "subject": "reading",
+  "topic": "reading-comprehension",
+  "topic_label": "Reading Comprehension",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 3rd-grade reading comprehension worksheet. Top half: a short 6-sentence kid-friendly fiction passage with a small illustration. Bottom half: 4 short-answer questions (main idea, supporting detail, inference, vocabulary) with writing lines. {{character}} reads beside the passage.",
+    "A 3rd-grade non-fiction comprehension worksheet about a kid-safe science topic. 5-sentence passage with a diagram. 3 multiple-choice questions and 1 short-answer question beneath. {{character}} points at the diagram.",
+    "A 'make an inference' worksheet. A short cartoon-style story, followed by 3 inference questions asking 'How do you think...?' with writing lines. {{character}} taps chin thoughtfully.",
+    "A main-idea-and-detail worksheet. Passage at the top, a main-idea box and 3 supporting-detail boxes below; child fills each from the passage. {{character}} waves."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "space",
+    "superheroes"
+  ]
+}

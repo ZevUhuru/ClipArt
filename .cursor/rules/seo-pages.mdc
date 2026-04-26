@@ -63,4 +63,19 @@ When setting the `path` parameter:
 - Clip art: `{category}/{slug}`
 - Coloring: `coloring-pages/{theme}/{slug}`
 - Illustrations: `illustrations/{category}/{slug}`
+- Worksheets: `worksheets/{grade}/{subject}/{topic}/{slug}`
 - Learn: `learn/{slug}`
+
+## Worksheet URL Pattern
+
+Worksheets are the only content type with a 4-level URL hierarchy (grade → subject → topic → slug). When building worksheet pages:
+
+- Landing: `/worksheets` — priority 0.95 in sitemap.
+- Grade hub: `/worksheets/{grade}` — priority 0.9.
+- Subject hub: `/worksheets/{grade}/{subject}` — priority 0.9.
+- Topic hub: `/worksheets/{grade}/{subject}/{topic}` — priority 0.85.
+- Detail: `/worksheets/{grade}/{subject}/{topic}/{slug}` — priority 0.5.
+- Category slugs encode the hierarchy with `--` separators: `1st-grade--math--addition`.
+- Use `worksheetDetailPath()` from `@/lib/seo` for detail paths; use `categoryPath("worksheet", "grade/subject")` for hub paths.
+- JSON-LD `BreadcrumbList` must include all 4 hub levels plus Home.
+- Detail pages must render as PDF downloads (aspect 3:4), not PNG.

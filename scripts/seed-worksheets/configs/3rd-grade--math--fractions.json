@@ -1,0 +1,36 @@
+{
+  "grade": "3rd-grade",
+  "subject": "math",
+  "topic": "fractions",
+  "topic_label": "Fractions",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 3rd-grade intro-to-fractions worksheet. 6 cute cartoon shapes (circles, rectangles, stars) each partially shaded; child writes the fraction represented. Fraction key at the top. {{character}} points to the first shape.",
+    "A 'shade the fraction' worksheet. 6 blank shapes, each labeled with a target fraction (1/2, 1/3, 2/4, 3/5, 1/6, 3/8); child shades in the correct portion. {{character}} holds a crayon.",
+    "A compare-fractions worksheet. 5 pairs of fractions (with visual models underneath each pair). Child writes <, >, or = between them. {{character}} cheers.",
+    "An equivalent-fractions worksheet. 4 pairs of pie charts showing equivalent fractions (e.g. 1/2 and 2/4). Child writes the two equivalent fractions below each pair. {{character}} points between the pies."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "food",
+    "birthday",
+    "space",
+    "sports",
+    "hiphop"
+  ]
+}

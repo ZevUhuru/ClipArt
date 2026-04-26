@@ -50,6 +50,8 @@ export async function PUT(request: NextRequest) {
   const body = await request.json();
 
   const validModels = new Set(["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
+  // Keys are either legacy style-only ("flat") or composite content-type:style
+  // ("clipart:flat"). Both are valid — the generation pipeline handles both formats.
   for (const [, model] of Object.entries(body)) {
     if (!validModels.has(model as string)) {
       return NextResponse.json({ error: "Invalid model value" }, { status: 400 });

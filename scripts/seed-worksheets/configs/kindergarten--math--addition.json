@@ -1,0 +1,38 @@
+{
+  "grade": "kindergarten",
+  "subject": "math",
+  "topic": "addition",
+  "topic_label": "Addition",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A kindergarten picture-addition worksheet. Four problems, each with two groups of cute cartoon objects and a '+' between them, and a box for the child to write the total. Sums stay within 10. {{character}} cheers next to the first problem.",
+    "A kindergarten addition-within-10 worksheet with 6 number-only problems in big clear numbers (e.g. '3 + 2 = __'). Header reads 'Add It Up!'. {{character}} holds a pencil in the top corner.",
+    "A kindergarten number-bond worksheet. Three number bonds showing parts-of-10 (e.g. part 3, part ?, total 10) for the child to fill the missing part. {{character}} stands in the middle.",
+    "A kindergarten count-on addition worksheet with a number line 0-10. Four problems, each asking the child to 'count on' starting from a number and draw jumps. {{character}} hops along the line."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "farm",
+    "birthday",
+    "space"
+  ]
+}

@@ -8,6 +8,7 @@ const modes = [
   { href: "/create", label: "Clip Art", key: "clipart" },
   { href: "/create/illustrations", label: "Illustrations", key: "illustrations" },
   { href: "/create/coloring-pages", label: "Coloring Pages", key: "coloring" },
+  { href: "/create/worksheets", label: "Worksheets", key: "worksheets" },
   { href: "/create/packs", label: "Bundles", key: "packs" },
 ];
 

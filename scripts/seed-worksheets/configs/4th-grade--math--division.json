@@ -1,0 +1,37 @@
+{
+  "grade": "4th-grade",
+  "subject": "math",
+  "topic": "division",
+  "topic_label": "Division",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 4th-grade long-division worksheet. 4 long-division problems (e.g. '672 ÷ 4', '945 ÷ 7') using standard long-division notation with ample workspace. Header reads 'Long Division'. {{character}} gives a thumbs up.",
+    "A 4th-grade division-with-remainders worksheet. 6 problems (e.g. '37 ÷ 5 = __ R __'). Each problem has workspace and two answer boxes (quotient, remainder). {{character}} thinks.",
+    "A 4th-grade division word-problem worksheet with 4 multi-step kid-friendly problems involving division with remainders. Workspace and answer box for each. {{character}} reads.",
+    "A mixed division practice worksheet with 8 problems in a 2x4 grid (some with remainders, some without) in standard long-division layout. {{character}} waves at the top."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

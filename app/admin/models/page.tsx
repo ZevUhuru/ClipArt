@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { STYLE_LABELS, VALID_STYLES, type StyleKey, type ModelKey } from "@/lib/styles";
+import { STYLE_LABELS, VALID_STYLES, STYLE_MODEL_MAP, type StyleKey, type ModelKey } from "@/lib/styles";
 import {
   IMAGE_MODELS,
   MODEL_BY_KEY,
@@ -16,30 +16,55 @@ import {
 } from "@/lib/imageModelCatalog";
 
 // ---------------------------------------------------------------------------
-// Style → content role / aspect mapping (local to admin UI)
+// Content-type routing — decoupled per content type
 // ---------------------------------------------------------------------------
 
-const ALL_STYLES: StyleKey[] = [
-  ...VALID_STYLES.clipart,
-  ...VALID_STYLES.illustration.filter((s) => !VALID_STYLES.clipart.includes(s)),
-  "coloring",
-];
+// Routing config is keyed by "contentType:style" composite strings so that
+// shared styles (flat, cartoon, etc.) can have different models for clipart
+// vs illustration. Legacy style-only keys ("flat") still work as fallbacks
+// in imageGen.ts but are no longer written by the admin UI.
 
-type ContentRole = "clipart" | "illustration" | "coloring" | "shared";
+type RoutingContentType = "clipart" | "illustration" | "coloring";
 
-const STYLE_CONTENT_TYPE: Record<string, ContentRole> = {};
-for (const s of VALID_STYLES.clipart) STYLE_CONTENT_TYPE[s] = "clipart";
-for (const s of VALID_STYLES.illustration) {
-  STYLE_CONTENT_TYPE[s] = STYLE_CONTENT_TYPE[s] ? "shared" : "illustration";
-}
-STYLE_CONTENT_TYPE["coloring"] = "coloring";
+const ROUTING_CONTENT_TYPES: RoutingContentType[] = ["clipart", "illustration", "coloring"];
 
-const ROLE_ASPECT: Record<ContentRole, AspectKey> = {
+const CONTENT_TYPE_ASPECT: Record<RoutingContentType, AspectKey> = {
   clipart: "square",
   illustration: "landscape",
   coloring: "portrait",
-  shared: "square",
 };
+
+const CONTENT_TYPE_LABELS: Record<RoutingContentType, string> = {
+  clipart: "Clip Art",
+  illustration: "Illustration",
+  coloring: "Coloring",
+};
+
+// Build composite key: "clipart:flat"
+function ck(ct: RoutingContentType, style: StyleKey): string {
+  return `${ct}:${style}`;
+}
+
+// Normalize a raw config (may have legacy style-only keys or new composite keys)
+// into a fully-populated composite-key config. Called once on load.
+function normalizeToComposite(
+  rawModel: Record<string, string>,
+  rawQuality: Record<string, string>,
+): { model: ImageModelConfig; quality: QualityConfig } {
+  const model: ImageModelConfig = {};
+  const quality: QualityConfig = {};
+
+  for (const ct of ROUTING_CONTENT_TYPES) {
+    for (const style of VALID_STYLES[ct] as StyleKey[]) {
+      const key = ck(ct, style);
+      // Composite key takes priority, then legacy style-only key, then hardcoded default
+      model[key] = normalizeModelKey(rawModel[key] ?? rawModel[style] ?? STYLE_MODEL_MAP[style] ?? "gemini");
+      quality[key] = normalizeQuality(rawQuality[key] ?? rawQuality[style]);
+    }
+  }
+
+  return { model, quality };
+}
 
 // ---------------------------------------------------------------------------
 // Text AI registry (unchanged)
@@ -496,25 +521,6 @@ function CostBadge({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Style role pill
-// ---------------------------------------------------------------------------
-
-function RolePill({ role }: { role: ContentRole }) {
-  const config: Record<ContentRole, { label: string; cls: string }> = {
-    clipart:      { label: "clipart",      cls: "bg-gray-100 text-gray-600 ring-gray-200" },
-    illustration: { label: "illustration", cls: "bg-purple-50 text-purple-700 ring-purple-200" },
-    coloring:     { label: "coloring",     cls: "bg-blue-50 text-blue-700 ring-blue-200" },
-    shared:       { label: "shared",       cls: "bg-amber-50 text-amber-700 ring-amber-200" },
-  };
-  const c = config[role];
-  return (
-    <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${c.cls}`}>
-      {c.label}
-    </span>
-  );
-}
-
 function getProviderAvailability(): Record<string, boolean> {
   return { gemini: true, openai: true, anthropic: true };
 }
@@ -532,6 +538,7 @@ export default function AdminModelsPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<Record<string, boolean> | null>(null);
+  const [activeRoutingTab, setActiveRoutingTab] = useState<RoutingContentType>("clipart");
 
   useEffect(() => {
     Promise.all([
@@ -540,11 +547,12 @@ export default function AdminModelsPage() {
       fetch("/api/admin/settings/text-model-config").then((r) => r.json()),
       fetch("/api/admin/settings/text-model-config/keys").then((r) => r.json()).catch(() => getProviderAvailability()),
     ])
-      .then(([img, qual, txt, keys]) => {
-        setImageConfig(img);
-        setQualityConfig(qual);
+      .then(([rawImg, rawQual, txt, keys]) => {
+        const { model, quality } = normalizeToComposite(rawImg, rawQual);
+        setImageConfig(model);
+        setQualityConfig(quality);
         setTextConfig(txt);
-        setInitial(JSON.stringify({ img, qual, txt }));
+        setInitial(JSON.stringify({ img: model, qual: quality, txt }));
         setApiKeys(keys);
       })
       .catch(() => setError("Failed to load model config"));
@@ -559,9 +567,11 @@ export default function AdminModelsPage() {
     const zero = Object.fromEntries(IMAGE_MODELS.map((m) => [m.key, 0])) as Record<ModelKey, number>;
     if (!imageConfig) return zero;
     const out = { ...zero };
-    for (const style of ALL_STYLES) {
-      const m = normalizeModelKey(imageConfig[style]);
-      out[m] = (out[m] ?? 0) + 1;
+    for (const ct of ROUTING_CONTENT_TYPES) {
+      for (const style of VALID_STYLES[ct] as StyleKey[]) {
+        const m = normalizeModelKey(imageConfig[ck(ct, style)]);
+        out[m] = (out[m] ?? 0) + 1;
+      }
     }
     return out;
   }, [imageConfig]);
@@ -696,14 +706,56 @@ export default function AdminModelsPage() {
 
         <PricingMatrix />
 
-        {/* Style routing table */}
+        {/* Style routing table — per content type, fully decoupled */}
         <div className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 bg-gray-50/60 px-6 py-3">
-            <h3 className="text-sm font-semibold text-gray-900">Style → Model + Quality routing</h3>
-            <p className="mt-0.5 text-[11px] text-gray-500">
-              {ALL_STYLES.length} styles · cost pill color encodes rank within the style's aspect ratio & quality slot.
-            </p>
+          {/* Tab bar + bulk-set */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50/60 px-6 py-3">
+            <div className="flex items-center gap-1">
+              {ROUTING_CONTENT_TYPES.map((ct) => (
+                <button
+                  key={ct}
+                  type="button"
+                  onClick={() => setActiveRoutingTab(ct)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    activeRoutingTab === ct
+                      ? "bg-white text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {CONTENT_TYPE_LABELS[ct]}
+                  <span className="ml-1.5 text-[10px] font-normal text-gray-400">
+                    {(VALID_STYLES[ct] as StyleKey[]).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Bulk-set all styles in active tab to a single model */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-gray-400">Set all to:</span>
+              <div className="flex items-center gap-1">
+                {IMAGE_MODELS.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => {
+                      setImageConfig((prev) => {
+                        const next = { ...prev! };
+                        for (const style of VALID_STYLES[activeRoutingTab] as StyleKey[]) {
+                          next[ck(activeRoutingTab, style)] = m.key;
+                        }
+                        return next;
+                      });
+                    }}
+                    className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:border-gray-900 hover:bg-gray-900 hover:text-white"
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+
           <div className="overflow-x-auto">
             <table className="w-full min-w-[780px]">
               <thead>
@@ -726,23 +778,33 @@ export default function AdminModelsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {ALL_STYLES.map((style) => {
-                  const role = STYLE_CONTENT_TYPE[style] || "clipart";
-                  const aspect = ROLE_ASPECT[role];
-                  const selectedModel = normalizeModelKey(imageConfig[style]);
-                  const selectedQuality = normalizeQuality(qualityConfig[style]);
+                {(VALID_STYLES[activeRoutingTab] as StyleKey[]).map((style) => {
+                  const key = ck(activeRoutingTab, style);
+                  const aspect = CONTENT_TYPE_ASPECT[activeRoutingTab];
+                  const selectedModel = normalizeModelKey(imageConfig[key]);
+                  const selectedQuality = normalizeQuality(qualityConfig[key]);
                   const modelMeta = MODEL_BY_KEY[selectedModel];
                   const effectiveQuality: Quality = modelMeta.supportsQualityTiers
                     ? selectedQuality
                     : "flat";
+                  // Flag shared styles (appear in both clipart and illustration)
+                  const isShared =
+                    activeRoutingTab !== "coloring" &&
+                    VALID_STYLES.clipart.includes(style) &&
+                    VALID_STYLES.illustration.includes(style);
+
                   return (
-                    <tr key={style} className="transition-colors hover:bg-gray-50/60">
+                    <tr key={key} className="transition-colors hover:bg-gray-50/60">
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-gray-900">
                             {STYLE_LABELS[style] || style}
                           </span>
-                          <RolePill role={role} />
+                          {isShared && (
+                            <span className="inline-flex rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                              shared style
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-3.5 text-xs text-gray-500">
@@ -755,7 +817,7 @@ export default function AdminModelsPage() {
                           onChange={(e) =>
                             setImageConfig((prev) => ({
                               ...prev!,
-                              [style]: e.target.value as ModelKey,
+                              [key]: e.target.value as ModelKey,
                             }))
                           }
                           className="w-full max-w-[220px] rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 transition-colors focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
@@ -775,7 +837,7 @@ export default function AdminModelsPage() {
                                 key={q}
                                 type="button"
                                 onClick={() =>
-                                  setQualityConfig((prev) => ({ ...prev!, [style]: q }))
+                                  setQualityConfig((prev) => ({ ...prev!, [key]: q }))
                                 }
                                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                                   selectedQuality === q
@@ -805,6 +867,10 @@ export default function AdminModelsPage() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-2.5 text-[11px] text-gray-500">
+            Styles marked <span className="mx-1 inline-flex rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-700 ring-1 ring-inset ring-amber-200">shared style</span> appear in both Clip Art and Illustration — each now has its own independent model and quality setting.
           </div>
         </div>
       </section>

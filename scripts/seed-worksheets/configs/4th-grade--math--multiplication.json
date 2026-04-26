@@ -1,0 +1,39 @@
+{
+  "grade": "4th-grade",
+  "subject": "math",
+  "topic": "multiplication",
+  "topic_label": "Multiplication",
+  "worksheet_count": 35,
+  "activity_templates": [
+    "A 4th-grade multi-digit multiplication worksheet. 6 problems in stacked column form (e.g. '34 x 7', '128 x 6') with clear workspace. Header reads 'Multi-Digit Multiplication'. {{character}} gives a thumbs up.",
+    "A 4th-grade 2-digit by 2-digit multiplication worksheet. 4 problems (e.g. '24 x 36') in stacked form with partial-product workspace lines. {{character}} points to the first.",
+    "A multiplication word-problem worksheet with 4 multi-step kid-friendly problems involving multi-digit numbers. Workspace and answer box for each. {{character}} reads a problem.",
+    "A 'missing factor' multiplication worksheet. 8 problems like '__ x 7 = 63' or '12 x __ = 84'. {{character}} waves."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "tech-gadgets",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "music",
+    "hiphop",
+    "space",
+    "superheroes",
+    "sports"
+  ]
+}

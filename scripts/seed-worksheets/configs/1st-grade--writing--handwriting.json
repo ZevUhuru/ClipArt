@@ -1,0 +1,35 @@
+{
+  "grade": "1st-grade",
+  "subject": "writing",
+  "topic": "handwriting",
+  "topic_label": "Handwriting",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A 1st-grade handwriting worksheet focused on uppercase letters. Top row shows one target letter in large dotted form for tracing. Below: 4 lined handwriting rows (with guide lines) for the child to practice. {{character}} holds a pencil.",
+    "A 1st-grade handwriting worksheet for lowercase letters. Letter at top in dotted outline with directional arrows showing stroke order. 4 practice rows on handwriting guidelines beneath. {{character}} sits at a desk in the corner.",
+    "A handwriting worksheet focused on a short sight-word or CVC word. Word in dotted form at the top, then 3 tracing rows and 2 blank rows for the child to write independently. A cute cartoon illustration of the word next to the title. {{character}} smiles.",
+    "A name-practice-style handwriting worksheet. A kid-friendly 3-word sentence at the top in dotted form. Below, 3 handwriting rows to copy the sentence. {{character}} reads the sentence."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "forest",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "library",
+    "park"
+  ]
+}

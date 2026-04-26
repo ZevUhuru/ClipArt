@@ -1,0 +1,34 @@
+{
+  "grade": "prek",
+  "subject": "phonics",
+  "topic": "letter-recognition",
+  "topic_label": "Letter Recognition",
+  "worksheet_count": 30,
+  "activity_templates": [
+    "A Pre-K letter recognition worksheet. One uppercase and one lowercase letter displayed huge at the top. Below, a grid of 6 cute cartoon objects — the child circles only the ones that start with that letter. {{character}} points at the big letter.",
+    "A find-the-letter worksheet: a fun cartoon scene where the target letter is hidden five times in different sizes and colors. Child circles each letter. {{character}} holds a magnifying glass in the scene.",
+    "A match-uppercase-to-lowercase worksheet. Left column: 5 uppercase letters. Right column: 5 lowercase letters jumbled. Child draws lines to match pairs. {{character}} waves between the columns.",
+    "An 'ABC sort' worksheet. Two boxes: one labeled with a target letter, one labeled 'Not {letter}'. Below, 6 cartoon pictures. Child circles pictures that start with the target letter. {{character}} cheers."
+  ],
+  "themes": [
+    "school-room",
+    "pets",
+    "zoo-animals",
+    "dinosaurs",
+    "insects",
+    "jungle",
+    "arctic",
+    "ocean",
+    "christmas",
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+    "robots",
+    "emotions",
+    "disability-hero",
+    "caring",
+    "farm",
+    "garden"
+  ]
+}

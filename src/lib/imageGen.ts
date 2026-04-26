@@ -58,9 +58,20 @@ async function resolveModel(style: StyleKey, contentType: ContentType): Promise<
   if (override) return override;
 
   const dbConfig = await getModelConfig();
-  if (dbConfig && dbConfig[style]) {
-    const model = dbConfig[style] as ModelKey;
-    if (VALID_MODELS.has(model)) return model;
+  if (dbConfig) {
+    // Prefer content-type-specific composite key (e.g. "clipart:flat") over
+    // legacy style-only key ("flat"). Composite keys are written by the admin UI;
+    // style-only keys are backward-compat fallbacks for configs saved before
+    // per-content-type routing was added.
+    const compositeKey = `${contentType}:${style}`;
+    if (dbConfig[compositeKey]) {
+      const model = dbConfig[compositeKey] as ModelKey;
+      if (VALID_MODELS.has(model)) return model;
+    }
+    if (dbConfig[style]) {
+      const model = dbConfig[style] as ModelKey;
+      if (VALID_MODELS.has(model)) return model;
+    }
   }
   return STYLE_MODEL_MAP[style];
 }
@@ -79,7 +90,7 @@ export async function generateImage(
   style: StyleKey,
   contentType: ContentType = "clipart",
   aspectRatioOverride?: string,
-): Promise<{ buffer: Buffer; model: ModelKey; quality: GptImageQuality }> {
+): Promise<{ buffer: Buffer; model: ModelKey; quality: GptImageQuality; hasTransparency: boolean }> {
   const [model, quality] = await Promise.all([resolveModel(style, contentType), resolveQuality(style)]);
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
@@ -87,6 +98,7 @@ export async function generateImage(
   // Only gpt-image-1.5 supports transparent backgrounds via the API param.
   // gpt-image-2 rejects background: "transparent" with a 400.
   const background = (contentType === "clipart" && model === "gpt-image-1.5") ? "transparent" : "auto";
+  const hasTransparency = background === "transparent";
 
   let buffer: Buffer;
   switch (model) {
@@ -107,5 +119,5 @@ export async function generateImage(
       buffer = await generateClipArt(prompt, aspectRatio);
   }
 
-  return { buffer, model, quality };
+  return { buffer, model, quality, hasTransparency };
 }

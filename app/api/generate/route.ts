@@ -9,20 +9,39 @@ import { classifyPrompt } from "@/lib/classify";
 import { checkPromptSafety } from "@/lib/promptSafety";
 import { type StyleKey, type ContentType, STYLE_DESCRIPTORS, CONTENT_TYPE_ASPECT, isValidStyleForContentType } from "@/lib/styles";
 
-const VALID_CONTENT_TYPES: ContentType[] = ["clipart", "illustration", "coloring"];
+const VALID_CONTENT_TYPES: ContentType[] = ["clipart", "illustration", "coloring", "worksheet"];
 
-function resolveR2Key(contentType: ContentType, cat: string, uniqueSlug: string): string {
+interface WorksheetTaxonomy {
+  grade: string;
+  subject: string;
+  topic: string;
+}
+
+function resolveR2Key(
+  contentType: ContentType,
+  cat: string,
+  uniqueSlug: string,
+  ws?: WorksheetTaxonomy,
+): string {
   switch (contentType) {
     case "coloring":
       return `coloring-pages/${cat}/${uniqueSlug}.webp`;
     case "illustration":
       return `illustrations/${cat}/${uniqueSlug}.webp`;
+    case "worksheet":
+      return ws
+        ? `worksheets/${ws.grade}/${ws.subject}/${ws.topic}/${uniqueSlug}.webp`
+        : `worksheets/${cat}/${uniqueSlug}.webp`;
     default:
       return `${cat}/${uniqueSlug}.webp`;
   }
 }
 
-function revalidateForContentType(contentType: ContentType, cat: string) {
+function revalidateForContentType(
+  contentType: ContentType,
+  cat: string,
+  ws?: WorksheetTaxonomy,
+) {
   switch (contentType) {
     case "coloring":
       revalidatePath(`/coloring-pages/${cat}`);
@@ -32,10 +51,24 @@ function revalidateForContentType(contentType: ContentType, cat: string) {
       revalidatePath(`/illustrations/${cat}`);
       revalidatePath("/illustrations");
       break;
+    case "worksheet":
+      if (ws) {
+        revalidatePath(`/worksheets/${ws.grade}/${ws.subject}/${ws.topic}`);
+        revalidatePath(`/worksheets/${ws.grade}/${ws.subject}`);
+        revalidatePath(`/worksheets/${ws.grade}`);
+      }
+      revalidatePath("/worksheets");
+      break;
     default:
       revalidatePath(`/${cat}`);
       break;
   }
+}
+
+const WORKSHEET_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
+
+function isValidWorksheetSlug(value: unknown): value is string {
+  return typeof value === "string" && WORKSHEET_SLUG_RE.test(value);
 }
 
 export async function POST(request: NextRequest) {
@@ -45,6 +78,21 @@ export async function POST(request: NextRequest) {
     const contentType: ContentType = VALID_CONTENT_TYPES.includes(body.contentType)
       ? body.contentType
       : style === "coloring" ? "coloring" : "clipart";
+
+    let worksheet: WorksheetTaxonomy | undefined;
+    if (contentType === "worksheet") {
+      if (
+        !isValidWorksheetSlug(body.grade) ||
+        !isValidWorksheetSlug(body.subject) ||
+        !isValidWorksheetSlug(body.topic)
+      ) {
+        return NextResponse.json(
+          { error: "Worksheet requires valid grade, subject, and topic slugs" },
+          { status: 400 },
+        );
+      }
+      worksheet = { grade: body.grade, subject: body.subject, topic: body.topic };
+    }
 
     if (!prompt || typeof prompt !== "string" || prompt.length > 2000) {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
@@ -68,7 +116,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const isFreeGen = !user && freeGen === true;
+    const isFreeGen = !user && freeGen === true && contentType !== "worksheet";
 
     if (!user && !isFreeGen) {
       return NextResponse.json({ requiresAuth: true }, { status: 401 });
@@ -90,17 +138,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ requiresCredits: true }, { status: 402 });
       }
 
-      const { buffer: rawBuffer, model: imageModel } = await generateImage(prompt, styleKey, contentType, safeOverride);
+      const { buffer: rawBuffer, model: imageModel, hasTransparency } = await generateImage(prompt, styleKey, contentType, safeOverride);
 
       const webpBuffer = await sharp(rawBuffer)
         .webp({ quality: 85, effort: 4 })
         .toBuffer();
 
       const classification = await classifyPrompt(prompt, style, contentType);
-      const cat = classification.category;
+      // For worksheets, category is the topic slug (topic hub owns the gallery).
+      // For other content types, the classifier's category wins.
+      const cat = worksheet ? worksheet.topic : classification.category;
       const suffix = Math.random().toString(36).slice(2, 8);
       const uniqueSlug = `${classification.slug}-${suffix}`;
-      const key = resolveR2Key(contentType, cat, uniqueSlug);
+      const key = resolveR2Key(contentType, cat, uniqueSlug, worksheet);
       const imageUrl = await uploadToR2(webpBuffer, key, {
         category: cat,
         contentType: "image/webp",
@@ -111,27 +161,35 @@ export async function POST(request: NextRequest) {
         .update({ credits: profile.credits - 1 })
         .eq("id", user!.id);
 
+      const insertRow: Record<string, unknown> = {
+        user_id: user!.id,
+        prompt,
+        style,
+        content_type: contentType,
+        image_url: imageUrl,
+        category: cat,
+        is_public: isPublic !== false,
+        title: classification.title,
+        slug: uniqueSlug,
+        description: classification.description,
+        aspect_ratio: aspectRatio,
+        model: imageModel,
+        has_transparency: hasTransparency,
+      };
+      if (worksheet) {
+        insertRow.grade = worksheet.grade;
+        insertRow.subject = worksheet.subject;
+        insertRow.topic = worksheet.topic;
+      }
+
       const { data: generation } = await admin
         .from("generations")
-        .insert({
-          user_id: user!.id,
-          prompt,
-          style,
-          content_type: contentType,
-          image_url: imageUrl,
-          category: cat,
-          is_public: isPublic !== false,
-          title: classification.title,
-          slug: uniqueSlug,
-          description: classification.description,
-          aspect_ratio: aspectRatio,
-          model: imageModel,
-        })
-        .select("id, image_url, prompt, title, style, content_type, category, slug, aspect_ratio, model, created_at")
+        .insert(insertRow)
+        .select("id, image_url, prompt, title, style, content_type, category, slug, aspect_ratio, model, has_transparency, created_at")
         .single();
 
       if (isPublic !== false) {
-        revalidateForContentType(contentType, cat);
+        revalidateForContentType(contentType, cat, worksheet);
       }
 
       return NextResponse.json({

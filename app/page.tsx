@@ -8,7 +8,12 @@ import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { AnimationGrid } from "./animations/AnimationGrid";
-import { getAllCategories, getColoringThemes, type DbCategory } from "@/lib/categories";
+import {
+  getAllCategories,
+  getColoringThemes,
+  getWorksheetGrades,
+  type DbCategory,
+} from "@/lib/categories";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { sampleImages } from "@/data/sampleGallery";
@@ -25,6 +30,30 @@ interface CommunityImage {
   category: string;
   slug: string | null;
   aspect_ratio: string;
+}
+
+interface WorksheetImage extends CommunityImage {
+  grade: string | null;
+  subject: string | null;
+  topic: string | null;
+}
+
+async function getWorksheetGallery(): Promise<WorksheetImage[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("generations")
+      .select(
+        "id, prompt, title, image_url, style, category, slug, aspect_ratio, grade, subject, topic",
+      )
+      .eq("is_public", true)
+      .eq("content_type", "worksheet")
+      .order("created_at", { ascending: false })
+      .limit(8);
+    return (data || []) as WorksheetImage[];
+  } catch {
+    return [];
+  }
 }
 
 async function getCommunityGallery(): Promise<CommunityImage[]> {
@@ -226,11 +255,24 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect("/create");
 
-  const [categories, coloringThemes, clipArtImages, coloringImages, learnPosts, featuredAnimations, mosaicAnimationItems, homepageConfig] = await Promise.all([
+  const [
+    categories,
+    coloringThemes,
+    worksheetGrades,
+    clipArtImages,
+    coloringImages,
+    worksheetImages,
+    learnPosts,
+    featuredAnimations,
+    mosaicAnimationItems,
+    homepageConfig,
+  ] = await Promise.all([
     getAllCategories(),
     getColoringThemes(),
+    getWorksheetGrades(),
     getCommunityGallery(),
     getColoringGallery(),
+    getWorksheetGallery(),
     Promise.resolve(getAllPosts()),
     getFeaturedAnimations(),
     getMosaicAnimations(),
@@ -240,6 +282,7 @@ export default async function Home() {
   const activeThemes = coloringThemes.filter((t) => t.slug !== "coloring-free");
   const hasClipArt = clipArtImages.length > 0;
   const hasColoring = coloringImages.length > 0;
+  const hasWorksheets = worksheetImages.length > 0;
 
   const fallbackClipArt = sampleImages.slice(0, 8);
 
@@ -503,6 +546,72 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* ── WORKSHEETS SHOWCASE ── */}
+        <section className="border-t border-gray-100 py-20">
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-emerald-500">Worksheets</p>
+                <h2 className="mt-1 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                  Printable worksheets for every grade
+                </h2>
+              </div>
+              <Link href="/worksheets" className="shrink-0 text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+                Browse worksheets &rarr;
+              </Link>
+            </div>
+
+            {hasWorksheets ? (
+              <ImageGrid variant="coloring" className="mt-8">
+                {worksheetImages.map((img) => {
+                  const href =
+                    img.grade && img.subject && img.topic
+                      ? `/worksheets/${img.grade}/${img.subject}/${img.topic}/${img.slug || img.id}`
+                      : "/worksheets";
+                  return (
+                    <ImageCard
+                      key={img.id}
+                      image={{
+                        slug: img.slug || img.id,
+                        title: img.title || img.prompt,
+                        url: img.image_url,
+                        category: img.category,
+                        style: "cartoon",
+                        aspect_ratio: img.aspect_ratio || "3:4",
+                      }}
+                      variant="coloring"
+                      href={href}
+                    />
+                  );
+                })}
+              </ImageGrid>
+            ) : (
+              <div className="mt-8 rounded-3xl border-2 border-dashed border-gray-200 p-16 text-center">
+                <p className="text-lg font-semibold text-gray-400">Worksheets are new!</p>
+                <p className="mt-2 text-sm text-gray-400">Pick a grade, subject and topic and generate one.</p>
+                <Link href="/create/worksheets" className="btn-primary mt-6 inline-flex text-sm">
+                  Create a Worksheet
+                </Link>
+              </div>
+            )}
+
+            {/* Grade pills */}
+            {worksheetGrades.length > 0 && (
+              <div className="mt-8 flex flex-wrap justify-center gap-2">
+                {worksheetGrades.map((grade: DbCategory) => (
+                  <Link
+                    key={grade.slug}
+                    href={`/worksheets/${grade.slug}`}
+                    className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 sm:text-sm"
+                  >
+                    {grade.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* ── WHAT YOU CAN DO ── */}
         <section className="py-20">
           <div className="mx-auto max-w-6xl px-4">
@@ -619,6 +728,9 @@ export default async function Home() {
                   </Link>
                   <Link href="/create/coloring-pages" className="btn-secondary px-8 text-base">
                     Create Coloring Pages
+                  </Link>
+                  <Link href="/create/worksheets" className="btn-secondary px-8 text-base">
+                    Create Worksheets
                   </Link>
                 </div>
               </div>
