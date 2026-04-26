@@ -996,6 +996,7 @@ function CreationsGrid() {
                         slug: gen.slug || gen.id,
                         title: gen.prompt,
                         url: gen.image_url,
+                        transparent_url: gen.transparent_image_url ?? undefined,
                         category: gen.category || "free",
                         style: gen.style,
                         content_type: gen.content_type,

@@ -303,6 +303,8 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const [localHasTransparency, setLocalHasTransparency] = useState(!!image.has_transparency);
   // Prefer the stored transparent version when available
   const [displayUrl, setDisplayUrl] = useState(image.transparent_url ?? image.url);
+  // Preview background: checkerboard shows true transparency; white shows as-printed look
+  const [bgPreview, setBgPreview] = useState<"transparent" | "white">("transparent");
 
   const openDrawer = useImageDrawer((s) => s.open);
 
@@ -406,7 +408,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
         <button
           type="button"
           onClick={() => retouchState !== "loading" && setLightboxOpen(true)}
-          className="group relative w-full overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 transition-all hover:border-gray-200 hover:shadow-md"
+          className={`group relative w-full overflow-hidden rounded-2xl border border-gray-100 transition-all hover:border-gray-200 hover:shadow-md ${
+            localHasTransparency
+              ? bgPreview === "white" ? "bg-white" : "bg-gray-50"
+              : "bg-gray-50"
+          }`}
         >
           <div
             className={`relative w-full transition-opacity duration-300 ${retouchState === "loading" ? "opacity-40" : "opacity-100"}`}
@@ -446,6 +452,34 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               </span>
             </div>
           )}
+          {/* Bg preview toggle — only when a transparent version exists */}
+          {localHasTransparency && !isAnimation && (
+            <div
+              className="absolute bottom-3 left-3 z-10 flex gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                title="White background"
+                onClick={() => setBgPreview("white")}
+                className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
+                  bgPreview === "white" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-200 hover:border-gray-300"
+                } bg-white`}
+              >
+                <span className="block h-3.5 w-3.5 rounded-sm bg-white border border-gray-200" />
+              </button>
+              <button
+                type="button"
+                title="Show transparent (no background)"
+                onClick={() => setBgPreview("transparent")}
+                className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
+                  bgPreview === "transparent" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-200 hover:border-gray-300"
+                } bg-gray-50`}
+              >
+                <span className="block h-3.5 w-3.5 rounded-sm bg-gray-100 border border-gray-300" />
+              </button>
+            </div>
+          )}
         </button>
 
         {/* Title */}
@@ -481,12 +515,20 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
             </span>
           )}
           {localHasTransparency && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
-              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Transparent PNG
-            </span>
+            <>
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Transparent PNG
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+                No Background
+              </span>
+            </>
           )}
           {image.duration && (
             <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
@@ -577,19 +619,30 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
         )}
 
         {!isAnimation ? (
-          <button
-            onClick={() =>
-              isColoring
-                ? downloadClip(displayUrl, `${image.slug}.pdf`, { pdf: true, title: image.title })
-                : downloadClip(displayUrl, `${image.slug}.png`)
-            }
-            className="btn-primary w-full py-3.5 text-sm"
-          >
-            <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            {isColoring ? "Download Free PDF" : "Download Free PNG"}
-          </button>
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={() =>
+                isColoring
+                  ? downloadClip(displayUrl, `${image.slug}.pdf`, { pdf: true, title: image.title })
+                  : downloadClip(displayUrl, `${image.slug}.png`)
+              }
+              className="btn-primary w-full py-3.5 text-sm"
+            >
+              <svg className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {isColoring ? "Download Free PDF" : localHasTransparency ? "Download Transparent PNG" : "Download Free PNG"}
+            </button>
+            {localHasTransparency && (
+              <button
+                type="button"
+                onClick={() => downloadClip(image.url, `${image.slug}.png`)}
+                className="py-1 text-xs text-gray-400 transition-colors hover:text-gray-600"
+              >
+                or download with background
+              </button>
+            )}
+          </div>
         ) : null}
 
         {/* Remove Background — only for clipart the user owns that isn't already transparent */}

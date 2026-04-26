@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     let query = admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, aspect_ratio, model, created_at, is_featured, featured_order", { count: "exact" })
+      .select("id, prompt, title, image_url, transparent_image_url, has_transparency, style, category, content_type, aspect_ratio, model, created_at, is_featured, featured_order", { count: "exact" })
       .eq("is_public", true);
 
     if (contentType === "coloring") {
@@ -81,16 +81,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results: [], total: 0 });
     }
 
-    const results = (data || []).map((row: Record<string, string>) => ({
-      id: row.id,
-      slug: row.id,
-      title: row.title || row.prompt,
-      url: row.image_url,
-      description: row.prompt,
-      category: row.category,
-      style: row.style,
-      aspect_ratio: row.aspect_ratio || undefined,
-      model: row.model || undefined,
+    const results = (data || []).map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      slug: row.id as string,
+      title: (row.title || row.prompt) as string,
+      url: row.image_url as string,
+      transparent_url: (row.transparent_image_url as string) || undefined,
+      has_transparency: (row.has_transparency as boolean) || false,
+      description: row.prompt as string,
+      category: row.category as string,
+      style: row.style as string,
+      content_type: (row.content_type as string) || undefined,
+      aspect_ratio: (row.aspect_ratio as string) || undefined,
+      model: (row.model as string) || undefined,
     }));
 
     return NextResponse.json({ results, total: count ?? results.length });

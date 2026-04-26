@@ -28,7 +28,7 @@ async function getDbImage(slug: string) {
 
     const { data: bySlug } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at, has_transparency")
+      .select("id, prompt, title, image_url, transparent_image_url, style, category, slug, description, aspect_ratio, created_at, has_transparency")
       .eq("slug", slug)
       .eq("is_public", true)
       .eq("content_type", "clipart")
@@ -38,7 +38,7 @@ async function getDbImage(slug: string) {
 
     const { data: byId } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, description, aspect_ratio, created_at, has_transparency")
+      .select("id, prompt, title, image_url, transparent_image_url, style, category, slug, description, aspect_ratio, created_at, has_transparency")
       .eq("id", slug)
       .eq("is_public", true)
       .eq("content_type", "clipart")
@@ -181,6 +181,7 @@ export default async function Page({ params }: PageProps) {
     slug: canonicalSlug,
     category: canonicalCategory,
     url: dbRow.image_url,
+    transparent_url: dbRow.transparent_image_url ?? undefined,
     description: dbRow.description || dbRow.prompt,
     tags: [dbRow.style, dbRow.category].filter(Boolean) as string[],
     aspect_ratio: dbRow.aspect_ratio || "1:1",

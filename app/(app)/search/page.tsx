@@ -55,6 +55,8 @@ interface SearchResult {
   slug: string;
   title: string;
   url: string;
+  transparent_url?: string;
+  has_transparency?: boolean;
   description: string;
   category: string;
   style: string;
@@ -102,6 +104,8 @@ function SearchPageInner() {
       slug: r.slug,
       title: r.title,
       url: r.url,
+      transparent_url: r.transparent_url,
+      has_transparency: r.has_transparency,
       category: r.category,
       style: r.style,
       content_type: r.content_type,
@@ -353,34 +357,38 @@ function SearchPageInner() {
                             <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
                             Animated
                           </span>
-                          <span className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                            </svg>
-                          </span>
                         </div>
                       );
                     })}
                   </ImageGrid>
                 ) : (
                   <ImageGrid variant={gridVariant}>
-                    {safeResults.map((item: SearchResult) => (
-                      <ImageCard
-                        key={item.id}
-                        variant={gridVariant}
-                        image={{
-                          id: item.id,
-                          slug: item.slug,
-                          title: item.title,
-                          url: item.url,
-                          category: item.category,
-                          style: item.style,
-                          aspect_ratio: item.aspect_ratio,
-                        }}
-                        onClick={() => openDrawer(item, safeResults)}
-                        animationPreviewUrl={item.previewUrl || undefined}
-                      />
-                    ))}
+                    {safeResults.map((item: SearchResult) => {
+                      const ct = item.content_type || gridVariant;
+                      const cardVariant =
+                        ct === "illustration" ? "illustration" as const
+                        : ct === "coloring" ? "coloring" as const
+                        : "clipart" as const;
+                      return (
+                        <ImageCard
+                          key={item.id}
+                          variant={cardVariant}
+                          image={{
+                            id: item.id,
+                            slug: item.slug,
+                            title: item.title,
+                            url: item.url,
+                            transparent_url: item.transparent_url,
+                            category: item.category,
+                            style: item.style,
+                            content_type: item.content_type,
+                            aspect_ratio: item.aspect_ratio,
+                          }}
+                          onClick={() => openDrawer(item, safeResults)}
+                          animationPreviewUrl={item.previewUrl || undefined}
+                        />
+                      );
+                    })}
                   </ImageGrid>
                 )}
 

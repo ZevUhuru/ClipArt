@@ -15,6 +15,7 @@ export interface ImageCardImage {
   slug: string;
   title: string;
   url: string;
+  transparent_url?: string;
   category?: string;
   style?: string;
   content_type?: string;
@@ -104,7 +105,7 @@ export function ImageCard({
         </>
       ) : (
         <Image
-          src={image.url}
+          src={image.transparent_url ?? image.url}
           alt={`${image.title} — free ${isColoring ? "coloring page" : isIllustration ? "illustration" : "clip art"}`}
           fill
           className={`transition-transform duration-300 group-hover:scale-105 ${

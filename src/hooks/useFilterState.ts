@@ -19,6 +19,8 @@ export interface SearchResult {
   slug: string;
   title: string;
   url: string;
+  transparent_url?: string;
+  has_transparency?: boolean;
   description: string;
   category: string;
   style: string;
@@ -153,16 +155,19 @@ export function useFilterState(options: UseFilterStateOptions = {}) {
             };
           });
         } else if (mode === "private") {
-          newResults = (data.images || []).map((g: Record<string, string>) => ({
-            id: g.id,
-            slug: g.slug || g.id,
-            title: g.title || g.prompt,
-            url: g.image_url,
-            description: g.prompt,
-            category: g.category || "free",
-            style: g.style,
-            content_type: g.content_type,
-            model: g.model || undefined,
+          newResults = (data.images || []).map((g: Record<string, unknown>) => ({
+            id: g.id as string,
+            slug: (g.slug as string) || (g.id as string),
+            title: (g.title as string) || (g.prompt as string),
+            url: g.image_url as string,
+            transparent_url: (g.transparent_image_url as string) ?? undefined,
+            has_transparency: (g.has_transparency as boolean) ?? false,
+            description: g.prompt as string,
+            category: (g.category as string) || "free",
+            style: g.style as string,
+            content_type: g.content_type as string | undefined,
+            aspect_ratio: g.aspect_ratio as string | undefined,
+            model: (g.model as string) || undefined,
           }));
         } else {
           newResults = (data.results || []).map((r: SearchResult) => ({

@@ -64,6 +64,8 @@ export function ImageDetailPage({
   imageId,
 }: ImageDetailPageProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  // Background preview toggle for transparent images
+  const [heroBg, setHeroBg] = useState<"transparent" | "white">("transparent");
 
   const variant: ContentVariant = contentTypeProp || (isColoringPage ? "coloring" : "clipart");
   const isIllustration = variant === "illustration";
@@ -95,12 +97,18 @@ export function ImageDetailPage({
             .filter((img) => img.slug !== image.slug)
             .slice(0, 8));
 
+  const downloadUrl = image.transparent_url ?? image.url;
+
   function handleDownload() {
     if (isColoringPage) {
       downloadClip(image.url, `${image.slug}.pdf`, { pdf: true, title: image.title });
     } else {
-      downloadClip(image.url, `${image.slug}.png`);
+      downloadClip(downloadUrl, `${image.slug}.png`);
     }
+  }
+
+  function handleDownloadWhiteBg() {
+    downloadClip(image.url, `${image.slug}.png`);
   }
 
   return (
@@ -152,7 +160,11 @@ export function ImageDetailPage({
                 <button
                   type="button"
                   onClick={() => setLightboxOpen(true)}
-                  className="group relative block w-full cursor-zoom-in overflow-hidden rounded-xl"
+                  className={`group relative block w-full cursor-zoom-in overflow-hidden rounded-xl ${
+                    image.has_transparency
+                      ? heroBg === "white" ? "bg-white" : "bg-gray-100"
+                      : ""
+                  }`}
                 >
                   {/* Printable badge for coloring pages */}
                   {isColoringPage && (
@@ -167,7 +179,7 @@ export function ImageDetailPage({
                     "aspect-square"
                   }`}>
                     <Image
-                      src={image.url}
+                      src={image.transparent_url ?? image.url}
                       alt={`${image.title} - Free ${categoryLabel}`}
                       fill
                       className="object-contain"
@@ -182,6 +194,35 @@ export function ImageDetailPage({
                     <MagnifyIcon className="h-3.5 w-3.5" />
                     Click to magnify
                   </span>
+
+                  {/* Bg preview toggle — only when transparent version exists */}
+                  {image.has_transparency && (
+                    <div
+                      className="absolute bottom-3 left-3 z-10 flex gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        title="White background"
+                        onClick={() => setHeroBg("white")}
+                        className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
+                          heroBg === "white" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-300 hover:border-gray-400"
+                        } bg-white`}
+                      >
+                        <span className="block h-3.5 w-3.5 rounded-sm bg-white border border-gray-200" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Show transparent (no background)"
+                        onClick={() => setHeroBg("transparent")}
+                        className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
+                          heroBg === "transparent" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-300 hover:border-gray-400"
+                        } bg-gray-100`}
+                      >
+                        <span className="block h-3.5 w-3.5 rounded-sm bg-gray-200 border border-gray-300" />
+                      </button>
+                    </div>
+                  )}
                 </button>
               </div>
             </div>
@@ -255,33 +296,44 @@ export function ImageDetailPage({
             </div>
 
             {/* Download CTA with shimmer */}
-            <button
-              onClick={handleDownload}
-              className="btn-primary group relative mt-8 w-full overflow-hidden py-4 text-base"
-            >
-              <span
-                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100"
-                style={{
-                  background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
-                  backgroundSize: "200% 100%",
-                  animation: "shimmer 1.5s infinite",
-                }}
-              />
-              <svg
-                className="-ml-1 mr-2 h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <button
+                onClick={handleDownload}
+                className="btn-primary group relative w-full overflow-hidden py-4 text-base"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                <span
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100"
+                  style={{
+                    background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
+                    backgroundSize: "200% 100%",
+                    animation: "shimmer 1.5s infinite",
+                  }}
                 />
-              </svg>
-              {isColoringPage ? "Download Free PDF" : "Download Free PNG"}
-            </button>
+                <svg
+                  className="-ml-1 mr-2 h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+                {isColoringPage ? "Download Free PDF" : image.has_transparency ? "Download Transparent PNG" : "Download Free PNG"}
+              </button>
+              {image.has_transparency && (
+                <button
+                  type="button"
+                  onClick={handleDownloadWhiteBg}
+                  className="py-1 text-xs text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  or download with background
+                </button>
+              )}
+            </div>
 
             {/* Edit + Animate */}
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -505,7 +557,7 @@ export function ImageDetailPage({
       <AnimatePresence>
         {lightboxOpen && (
           <ImageLightbox
-            src={image.url}
+            src={image.transparent_url ?? image.url}
             alt={image.title}
             onClose={() => setLightboxOpen(false)}
           />

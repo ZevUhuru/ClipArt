@@ -3,6 +3,7 @@ export interface SampleImage {
   slug: string;
   category: string;
   url: string;
+  transparent_url?: string;
   description: string;
   tags: string[];
   aspect_ratio?: string;
