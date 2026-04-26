@@ -76,7 +76,10 @@ export function ImageCard({
     : isColoring
       ? getAspectClass(image.aspect_ratio)
       : "aspect-square";
-  const bgClass = isColoring ? "bg-white" : isIllustration ? "bg-gray-900/5" : "bg-gray-50/80";
+  const bgClass = isColoring ? "bg-white"
+    : isIllustration ? "bg-gray-900/5"
+    : image.transparent_url ? "bg-gray-900/5"
+    : "bg-gray-50/80";
 
   const defaultSizes = isColoring
     ? "(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
