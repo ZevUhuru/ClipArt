@@ -1,7 +1,9 @@
+import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { UserGenerationsView, type UserGeneration } from "./generations-view";
+import { LocalTime } from "@/components/admin/LocalTime";
 
 export const revalidate = 0;
 
@@ -44,11 +46,6 @@ async function getUser(id: string) {
   };
 }
 
-function formatDate(ts: string | null) {
-  if (!ts) return "—";
-  return new Date(ts).toLocaleString();
-}
-
 interface PageProps {
   params: { id: string };
 }
@@ -78,8 +75,8 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm md:grid-cols-4">
             <Stat label="Credits" value={profile.credits.toLocaleString()} />
             <Stat label="Generated" value={total.toLocaleString()} />
-            <Stat label="Signed up" value={formatDate(profile.created_at)} />
-            <Stat label="Last seen" value={formatDate(profile.last_seen_at)} />
+            <Stat label="Signed up" value={<LocalTime ts={profile.created_at} />} />
+            <Stat label="Last seen" value={<LocalTime ts={profile.last_seen_at} />} />
           </div>
         </div>
       </div>
@@ -105,7 +102,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
