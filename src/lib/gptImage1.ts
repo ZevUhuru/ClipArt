@@ -16,11 +16,13 @@ const ASPECT_TO_SIZE: Record<string, "1024x1024" | "1024x1536" | "1536x1024"> = 
 };
 
 export type GptImageQuality = "low" | "medium" | "high";
+export type GptImageBackground = "transparent" | "opaque" | "auto";
 
 export async function generateWithGptImage1(
   prompt: string,
   aspectRatio: string = "1:1",
   quality: GptImageQuality = "medium",
+  background: GptImageBackground = "auto",
 ): Promise<Buffer> {
   try {
     const size = ASPECT_TO_SIZE[aspectRatio] || "1024x1024";
@@ -29,8 +31,9 @@ export async function generateWithGptImage1(
       prompt,
       size,
       quality,
+      background,
       n: 1,
-    });
+    } as Parameters<typeof getClient().images.generate>[0]);
 
     const b64 = response.data?.[0]?.b64_json;
     if (!b64) throw new Error("No image returned from OpenAI");

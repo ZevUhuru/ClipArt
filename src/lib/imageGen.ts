@@ -3,7 +3,7 @@ import { generateWithGeminiPro } from "./geminiPro";
 import { generateWithGptImage1, type GptImageQuality } from "./gptImage1";
 import { generateWithGptImage15 } from "./gptImage15";
 import { generateWithGptImage2 } from "./gptImage2";
-import { type StyleKey, type ModelKey, type ContentType, STYLE_MODEL_MAP, CONTENT_TYPE_ASPECT, buildPrompt } from "./styles";
+import { type StyleKey, type ModelKey, type ContentType, STYLE_MODEL_MAP, CONTENT_TYPE_ASPECT, CONTENT_TYPE_MODEL_OVERRIDE, buildPrompt } from "./styles";
 import { createSupabaseAdmin } from "./supabase/server";
 
 let _cachedModelConfig: Record<string, string> | null = null;
@@ -53,7 +53,10 @@ async function getQualityConfig(): Promise<Record<string, string> | null> {
 const VALID_MODELS: ReadonlySet<ModelKey> = new Set(["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
 const VALID_QUALITIES: ReadonlySet<GptImageQuality> = new Set(["low", "medium", "high"]);
 
-async function resolveModel(style: StyleKey): Promise<ModelKey> {
+async function resolveModel(style: StyleKey, contentType: ContentType): Promise<ModelKey> {
+  const override = CONTENT_TYPE_MODEL_OVERRIDE[contentType];
+  if (override) return override;
+
   const dbConfig = await getModelConfig();
   if (dbConfig && dbConfig[style]) {
     const model = dbConfig[style] as ModelKey;
@@ -77,20 +80,22 @@ export async function generateImage(
   contentType: ContentType = "clipart",
   aspectRatioOverride?: string,
 ): Promise<{ buffer: Buffer; model: ModelKey; quality: GptImageQuality }> {
-  const [model, quality] = await Promise.all([resolveModel(style), resolveQuality(style)]);
+  const [model, quality] = await Promise.all([resolveModel(style, contentType), resolveQuality(style)]);
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
+
+  const background = contentType === "clipart" ? "transparent" : "auto";
 
   let buffer: Buffer;
   switch (model) {
     case "gpt-image-1":
-      buffer = await generateWithGptImage1(prompt, aspectRatio, quality);
+      buffer = await generateWithGptImage1(prompt, aspectRatio, quality, background);
       break;
     case "gpt-image-1.5":
-      buffer = await generateWithGptImage15(prompt, aspectRatio, quality);
+      buffer = await generateWithGptImage15(prompt, aspectRatio, quality, background);
       break;
     case "gpt-image-2":
-      buffer = await generateWithGptImage2(prompt, aspectRatio, quality);
+      buffer = await generateWithGptImage2(prompt, aspectRatio, quality, background);
       break;
     case "gemini-pro":
       buffer = await generateWithGeminiPro(prompt, aspectRatio);

@@ -2,7 +2,7 @@
 // Two-axis content model: ContentType (output format) x Style (visual aesthetic)
 // ---------------------------------------------------------------------------
 
-export type ContentType = "clipart" | "illustration" | "coloring";
+export type ContentType = "clipart" | "illustration" | "coloring" | "worksheet";
 
 // Pure aesthetic descriptors — no background/isolation/format directives
 export const STYLE_DESCRIPTORS = {
@@ -39,9 +39,14 @@ export const STYLE_DESCRIPTORS = {
 export type StyleKey = keyof typeof STYLE_DESCRIPTORS;
 
 export const CONTENT_TYPE_TEMPLATES: Record<ContentType, string> = {
-  clipart: "clip art, isolated object on plain white background",
+  clipart: "clip art, isolated object, transparent background, no background",
   illustration: "illustration, full scene with detailed background, environment, and lighting",
   coloring: "coloring book page, printable line art, black outlines only, no fills, no shading, no color, no gradients, white background",
+  // Worksheets: printable kid-safe practice pages. Cute cartoon is non-negotiable
+  // — the safety library (`scripts/seed-worksheets/_safety.json`) re-asserts this
+  // per theme, but the base template locks it in so one-off user prompts can't drift.
+  worksheet:
+    "printable worksheet for children, portrait 8.5x11, clear title bar, ample writing space, no answer key, cute cartoon kid-safe illustrations in a warm picture-book style. Never photorealistic.",
 };
 
 export const VALID_STYLES: Record<ContentType, StyleKey[]> = {
@@ -51,12 +56,14 @@ export const VALID_STYLES: Record<ContentType, StyleKey[]> = {
     "storybook", "digital-art", "fantasy", "anime", "collage", "gouache", "paper-art", "chalk-pastel", "retro",
   ],
   coloring: ["coloring"],
+  worksheet: ["cartoon"],
 };
 
 export const CONTENT_TYPE_ASPECT: Record<ContentType, AspectRatio> = {
   clipart: "1:1",
   illustration: "4:3",
   coloring: "3:4",
+  worksheet: "3:4",
 };
 
 // Runtime model routing keys. `gemini` points at the current Gemini Flash
@@ -64,6 +71,14 @@ export const CONTENT_TYPE_ASPECT: Record<ContentType, AspectRatio> = {
 // on 2026-04-21). `gemini-pro` routes to Gemini 3 Pro Image ("Nano Banana
 // Pro") — premium tier, reserve for hero/cover work.
 export type ModelKey = "gemini" | "gemini-pro" | "gpt-image-1" | "gpt-image-1.5" | "gpt-image-2";
+
+// Per-content-type model override. When set, this wins over STYLE_MODEL_MAP
+// for the given content type. Worksheets must use gpt-image-2 because it has
+// meaningfully better text rendering (problem numbers, instructions, title bars)
+// than Gemini Flash Image at this tier.
+export const CONTENT_TYPE_MODEL_OVERRIDE: Partial<Record<ContentType, ModelKey>> = {
+  worksheet: "gpt-image-2",
+};
 
 export const STYLE_MODEL_MAP: Record<StyleKey, ModelKey> = {
   flat: "gemini",

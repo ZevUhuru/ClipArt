@@ -4,6 +4,58 @@ Dated architectural decisions about the ESY migration. Newest first. Each entry 
 
 ---
 
+## 2026-04-26 · Clip art storage format: transparent PNG as master, white bg for display
+
+**Decision:** All clip art generations are stored as transparent-background WebP (alpha channel preserved). White background is a display-only concern handled by CSS — never baked into the stored file. Users can toggle between preview backgrounds in the detail view.
+
+**Rationale:**
+- Clip art's primary use case is compositing onto other surfaces (Canva, slides, documents, t-shirts, etc.). A white background baked into the file makes it less useful for the majority of professional use cases.
+- A user with 0 credits attempted to purchase the $4.99 pack 3 times but did not convert. Analysis of their Clarity session revealed they were generating character clip art with inconsistent backgrounds — 5/10 images came back with opaque white backgrounds despite not requesting one. The inconsistency is the direct conversion blocker: a user evaluating quality cannot trust the product when output is non-deterministic on the most basic attribute.
+- Going transparent → white is a trivial CSS rule. Going white → transparent requires background removal (additional cost, quality loss on complex edges, extra latency). Transparent is the better master.
+- The `background: "transparent"` API param on gpt-image-2 produces pixel-perfect alpha — no background removal needed, no edge artifacts.
+
+**What changed (2026-04-26):**
+- `src/lib/gptImage2.ts` — added `background` param, corrected wrong comment (gpt-image-2 DOES support transparency via `background: "transparent"`)
+- `src/lib/gptImage1.ts`, `src/lib/gptImage15.ts` — added `background` param, corrected comment in 1.5 that incorrectly claimed gpt-image-2 drops transparency
+- `src/lib/imageGen.ts` — derives `background: "transparent"` when `contentType === "clipart"`, passes through to all GPT wrappers
+- `src/lib/styles.ts` — clipart template updated from `"plain white background"` to `"transparent background, no background"`
+
+**Gemini caveat:** Gemini Flash Image does not reliably honor transparency even when prompted. Resolution: route clipart exclusively to gpt-image-2 (which is already the active model for user generations). Gemini remains the default for illustrations and coloring pages where transparency is irrelevant.
+
+**Display strategy:**
+- `ImageCard` clipart tiles: render image on `bg-white` card (already effectively the case; `bg-gray-50/80` is close enough and will look correct with transparent images)
+- Detail page: background-toggle control (white / light gray / dark / transparent/checkered) so users can preview the image on different surfaces before downloading
+- Download options: transparent PNG (master), white bg PNG (derived client-side or server-side on request), future SVG (vectorization requires transparent PNG as input — this architecture supports it without additional processing)
+
+**Catalog inconsistency note:** Existing catalog images were generated with white backgrounds. New generations will have transparent backgrounds. The Library will show a mixed set during the transition. This is acceptable — old images are still usable, and the inconsistency fades as new content is generated. No backfill planned unless a background-removal batch job becomes cost-effective.
+
+**Carry-forward to ESY:** ESY's generation pipeline must preserve the `background` parameter in the API contract for clipart requests. The `contentType` field in the request is sufficient signal — ESY should default to `background: "transparent"` whenever `content_type === "clipart"`.
+
+**Status:** Active — shipped 2026-04-26.
+
+---
+
+## 2026-04-22 · Ban vague model aliases in API requests
+
+**Decision:** All AI-provider API calls in this repo must use explicit, dated model snapshots (e.g. `gpt-image-2-2026-04-21`) or documented major-version ids (e.g. `gpt-image-2`). Marketing aliases that cross major versions (`chatgpt-image-latest`, `gpt-image-latest`, `*-default`, `*-auto`) are banned outright for anything that persists output to DB/R2.
+
+**Rationale:** Twice in this codebase we have shipped the wrong model because an alias drifted or was misleading:
+1. `gemini-2.5-flash-image` stayed wired in as the default long after Gemini 3.1 Flash Image Preview (Nano Banana 2) shipped.
+2. `chatgpt-image-latest` was used in seed scripts under the mistaken assumption it tracked "the newest ChatGPT image model." OpenAI's own docs state the alias points at the pre-2.0 model; API users should call `gpt-image-2` directly.
+
+Both cost real money — wrong model, wrong quality, wrong style, catalog-wide.
+
+**Enforcement:**
+- New cursor rule `.cursor/rules/model-pinning.mdc` (always-applied) spells out the rule and the checklist.
+- Seed scripts (`scripts/seed-worksheets.ts`, `scripts/seed-animal-clipart.ts`) now pin to `gpt-image-2-2026-04-21`.
+- `CLAUDE.md` updated to reflect `gpt-image-2` as the OpenAI default and explicitly call out `chatgpt-image-latest` as the wrong choice.
+
+**Carry-forward to ESY:** ESY's provider routing layer inherits this rule — the batch-safety library and batch definitions must encode dated snapshots at the source, not resolve aliases at dispatch time. A batch definition from 2026-04-22 should generate the same output if replayed in 2027-04-22.
+
+**Status:** Active.
+
+---
+
 ## 2026-04-21 · Defer OpenAI Batch API runtime wiring to ESY
 
 **Decision:** Record OpenAI Batch API support (50% off, 24h SLA) in `src/lib/imageModelCatalog.ts` and surface it in admin UI, but do NOT wire batch mode into `src/lib/imageGen.ts`.

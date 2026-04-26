@@ -16,13 +16,13 @@ const ASPECT_TO_SIZE: Record<string, "1024x1024" | "1024x1536" | "1536x1024"> = 
 };
 
 export type GptImageQuality = "low" | "medium" | "high";
+export type GptImageBackground = "transparent" | "opaque" | "auto";
 
 // gpt-image-2 (ChatGPT Images 2.0, released 2026-04-21).
-// Notes from official docs:
+// Docs: https://platform.openai.com/docs/api-reference/images/create
 // - No `input_fidelity` param (always high-fidelity on image inputs).
-// - Does not support transparent backgrounds. Our clipart prompts request a
-//   plain white background in `CONTENT_TYPE_TEMPLATES`, so this is fine for
-//   the current pipeline.
+// - DOES support transparent backgrounds via `background: "transparent"`.
+//   Requires output_format "png" or "webp" (not "jpeg").
 // - Token accounting differs from prior gpt-image-1.x models; per-image cost
 //   is derived from (size, quality) via OpenAI's calculator rather than a
 //   fixed image-token count.
@@ -30,6 +30,7 @@ export async function generateWithGptImage2(
   prompt: string,
   aspectRatio: string = "1:1",
   quality: GptImageQuality = "medium",
+  background: GptImageBackground = "auto",
 ): Promise<Buffer> {
   try {
     const size = ASPECT_TO_SIZE[aspectRatio] || "1024x1024";
@@ -41,8 +42,9 @@ export async function generateWithGptImage2(
       prompt,
       size,
       quality,
+      background,
       n: 1,
-    });
+    } as Parameters<typeof getClient().images.generate>[0]);
 
     const b64 = response.data?.[0]?.b64_json;
     if (!b64) throw new Error("No image returned from OpenAI");
