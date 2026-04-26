@@ -307,11 +307,8 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const openDrawer = useImageDrawer((s) => s.open);
 
   const isAnimation = !!image.videoUrl;
-  // content_type is null on images generated before the column was added; those are all clipart.
-  // Every other content type (illustration, coloring, future types) is excluded explicitly.
   const isClipartWithoutTransparency =
-    (image.content_type === "clipart" || image.content_type == null) &&
-    !localHasTransparency;
+    image.content_type === "clipart" && !localHasTransparency;
 
   async function handleRemoveBackground() {
     if (!image.id) return;
