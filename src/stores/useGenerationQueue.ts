@@ -94,10 +94,13 @@ export const useGenerationQueue = create<GenerationQueueState>()(
         });
       })
       .catch((err) => {
-        get().updateJob(id, {
-          status: "failed",
-          error: err instanceof Error ? err.message : "Something went wrong",
-        });
+        const message = err instanceof Error ? err.message : "Something went wrong";
+        // Abort errors happen when the page refreshes or navigates away mid-request.
+        // The server likely completed the generation; don't mark as failed.
+        // The job stays "generating" in sessionStorage and is filtered out on next load.
+        // The completed image will appear in Library.
+        if (err?.name === "AbortError" || message === "Failed to fetch") return;
+        get().updateJob(id, { status: "failed", error: message });
       });
   },
 
