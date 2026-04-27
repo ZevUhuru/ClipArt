@@ -529,8 +529,8 @@ export function PromptLibrary({ onSelect }: PromptLibraryProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18, delay: i * 0.02, ease: "easeOut" }}
-                onClick={() => {
-                  void trackUse(entry);
+                onClick={async () => {
+                  await trackUse(entry);
                   onSelect(entry.prompt, entry.style);
                 }}
                 className="group relative flex flex-col gap-0 overflow-hidden rounded-xl border border-gray-100 bg-white text-left transition-all hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-lg hover:shadow-gray-100/80"
