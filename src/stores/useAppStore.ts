@@ -25,6 +25,8 @@ interface AppState {
   isBuyCreditsOpen: boolean;
   generations: Generation[];
   generationsLoaded: boolean;
+  /** ID of the most recently clicked prompt-library row — cleared after a generation fires. */
+  lastPromptLibraryUseId: number | null;
 
   setUser: (user: { id: string; email: string } | null) => void;
   setCredits: (credits: number) => void;
@@ -36,6 +38,7 @@ interface AppState {
   closeAuthModal: () => void;
   openBuyCreditsModal: () => void;
   closeBuyCreditsModal: () => void;
+  setLastPromptLibraryUseId: (id: number | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -45,6 +48,7 @@ export const useAppStore = create<AppState>((set) => ({
   isBuyCreditsOpen: false,
   generations: [],
   generationsLoaded: false,
+  lastPromptLibraryUseId: null,
 
   setUser: (user) => set({ user }),
   setCredits: (credits) => set({ credits }),
@@ -58,4 +62,5 @@ export const useAppStore = create<AppState>((set) => ({
   closeAuthModal: () => set({ authModalMode: null }),
   openBuyCreditsModal: () => set({ isBuyCreditsOpen: true }),
   closeBuyCreditsModal: () => set({ isBuyCreditsOpen: false }),
+  setLastPromptLibraryUseId: (id) => set({ lastPromptLibraryUseId: id }),
 }));

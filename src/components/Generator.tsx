@@ -39,8 +39,10 @@ export function Generator() {
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const { openAuthModal, openBuyCreditsModal, setCredits, prependGeneration, user } =
-    useAppStore();
+  const {
+    openAuthModal, openBuyCreditsModal, setCredits, prependGeneration, user,
+    lastPromptLibraryUseId, setLastPromptLibraryUseId,
+  } = useAppStore();
 
   const canFreeGen = !user && !freeGenUsed;
 
@@ -59,6 +61,10 @@ export function Generator() {
     try {
       const payload: Record<string, unknown> = { prompt: prompt.trim(), style };
       if (canFreeGen) payload.freeGen = true;
+      if (lastPromptLibraryUseId) {
+        payload.source = "prompt_library";
+        payload.promptLibraryUseId = lastPromptLibraryUseId;
+      }
 
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -103,6 +109,9 @@ export function Generator() {
       if (data.generation) {
         prependGeneration(data.generation);
       }
+
+      // Clear prompt library attribution after a successful generation
+      setLastPromptLibraryUseId(null);
 
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });

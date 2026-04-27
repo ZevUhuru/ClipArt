@@ -75,7 +75,7 @@ function isValidWorksheetSlug(value: unknown): value is string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, style, isPublic, aspectRatio: aspectRatioOverride, freeGen } = body;
+    const { prompt, style, isPublic, aspectRatio: aspectRatioOverride, freeGen, source, promptLibraryUseId } = body;
     const contentType: ContentType = VALID_CONTENT_TYPES.includes(body.contentType)
       ? body.contentType
       : style === "coloring" ? "coloring" : "clipart";
@@ -202,6 +202,8 @@ export async function POST(request: NextRequest) {
         insertRow.subject = worksheet.subject;
         insertRow.topic = worksheet.topic;
       }
+      if (source) insertRow.source = source;
+      if (promptLibraryUseId) insertRow.prompt_library_use_id = Number(promptLibraryUseId);
 
       const { data: generation } = await admin
         .from("generations")

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type StyleKey } from "@/lib/styles";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { useAppStore } from "@/stores/useAppStore";
 
 type Difficulty = "starter" | "intermediate" | "advanced";
 
@@ -432,24 +433,50 @@ interface PromptLibraryProps {
 
 export function PromptLibrary({ onSelect }: PromptLibraryProps) {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [useCounts, setUseCounts] = useState<Record<string, number>>({});
+  const setLastPromptLibraryUseId = useAppStore((s) => s.setLastPromptLibraryUseId);
 
   const filtered = useMemo(
     () => (activeCategory === "All" ? PROMPTS : PROMPTS.filter((p) => p.category === activeCategory)),
     [activeCategory],
   );
 
+  // Load aggregate use counts for all prompts
+  useEffect(() => {
+    fetch("/api/prompt-library-counts")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { prompt_text: string; count: number }[] | null) => {
+        if (!data) return;
+        const map: Record<string, number> = {};
+        for (const row of data) map[row.prompt_text] = row.count;
+        setUseCounts(map);
+      })
+      .catch(() => {});
+  }, []);
+
   const trackUse = useCallback(async (entry: PromptEntry) => {
     const sb = createBrowserClient();
     if (!sb) return;
     const { data: { user } } = await sb.auth.getUser();
-    await sb.from("prompt_library_uses").insert({
-      prompt_text: entry.prompt,
-      category: entry.category,
-      style: entry.style,
-      difficulty: entry.difficulty,
-      user_id: user?.id ?? null,
-    });
-  }, []);
+    const { data } = await sb
+      .from("prompt_library_uses")
+      .insert({
+        prompt_text: entry.prompt,
+        category: entry.category,
+        style: entry.style,
+        difficulty: entry.difficulty,
+        user_id: user?.id ?? null,
+      })
+      .select("id")
+      .single();
+    // Store the use id so Generator can attribute the generation
+    if (data?.id) setLastPromptLibraryUseId(data.id);
+    // Optimistically bump the local count
+    setUseCounts((prev) => ({
+      ...prev,
+      [entry.prompt]: (prev[entry.prompt] ?? 0) + 1,
+    }));
+  }, [setLastPromptLibraryUseId]);
 
   return (
     <div className="py-4">
@@ -535,12 +562,22 @@ export function PromptLibrary({ onSelect }: PromptLibraryProps) {
                   <span className="text-[11px] font-medium text-gray-300 transition-colors group-hover:text-pink-500">
                     Use this prompt
                   </span>
-                  <svg
-                    className="h-3.5 w-3.5 text-gray-200 transition-all group-hover:translate-x-0.5 group-hover:text-pink-400"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
+                  <div className="flex items-center gap-2">
+                    {(useCounts[entry.prompt] ?? 0) > 0 && (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold tabular-nums text-gray-300">
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                        </svg>
+                        {useCounts[entry.prompt].toLocaleString()}
+                      </span>
+                    )}
+                    <svg
+                      className="h-3.5 w-3.5 text-gray-200 transition-all group-hover:translate-x-0.5 group-hover:text-pink-400"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </div>
                 </div>
               </motion.button>
             );
