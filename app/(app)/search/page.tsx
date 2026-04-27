@@ -22,7 +22,6 @@ import {
   type ChipItem,
 } from "@/components/filters";
 import { useFilterState, type ContentType } from "@/hooks/useFilterState";
-import { ExploreTabs } from "@/components/ExploreTabs";
 
 const CONTENT_TABS: TabItem[] = [
   { key: "clipart", label: "Clip Art" },
@@ -202,29 +201,30 @@ function SearchPageInner() {
 
   return (
     <div className="pb-8">
-      {/* Sticky search + toolbar */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-4 pt-4 pb-3">
-          <div className="mb-3">
-            <ExploreTabs />
-          </div>
-          <SearchBar
-            onSearch={handleSearch}
-            placeholders={
-              filters.contentType === "coloring"
-                ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
-                : filters.contentType === "illustration"
-                  ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
-                  : filters.contentType === "animations"
-                    ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
-                    : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
-            }
-            defaultValue={filters.query || ""}
-          />
+      {/* Sticky search + filters */}
+      <div className="sticky top-10 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto max-w-5xl px-4">
 
-          {/* Toolbar: Tabs + filter popovers + sort */}
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <div className="flex shrink-0 items-center gap-2">
+          {/* Search row */}
+          <div className="py-3">
+            <SearchBar
+              onSearch={handleSearch}
+              placeholders={
+                filters.contentType === "coloring"
+                  ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
+                  : filters.contentType === "illustration"
+                    ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
+                    : filters.contentType === "animations"
+                      ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
+                      : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
+              }
+              defaultValue={filters.query || ""}
+            />
+          </div>
+
+          {/* Filter row */}
+          <div className="flex items-center justify-between gap-2 pb-2.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               <ContentTypeTabs
                 tabs={CONTENT_TABS}
                 activeKey={filters.contentType}
@@ -250,34 +250,34 @@ function SearchPageInner() {
               )}
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5">
               <SortSelect
                 options={SORT_OPTIONS}
                 value={filters.sort}
                 onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
               />
-          {(showCategoryRow || showStyleRow) && (
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-              </svg>
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
-                  {activeFilterCount}
-                </span>
+              {(showCategoryRow || showStyleRow) && (
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                  </svg>
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
               )}
-            </button>
-          )}
-        </div>
-      </div>
+            </div>
+          </div>
 
           {/* Active filters + result count */}
           {(activeFilters.length > 0 || totalCount !== null) && (
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 pb-2.5">
               <AnimatePresence>
                 {activeFilters.length > 0 && (
                   <ActiveFilters
@@ -298,7 +298,7 @@ function SearchPageInner() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto max-w-5xl px-4">
       {/* Cross-link to SEO category page */}
       {activeCategoryData && activeCategoryData.slug !== "free" && (
         <div className="mt-2">

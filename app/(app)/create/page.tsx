@@ -7,7 +7,7 @@ import { StyleIndicator } from "@/data/styleIndicators";
 import { useAppStore } from "@/stores/useAppStore";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { VALID_STYLES, STYLE_LABELS, type StyleKey } from "@/lib/styles";
-import { PromptBuilder, CLIPART_BUILDER } from "@/components/prompt-builder";
+import { PromptLibrary } from "@/components/PromptLibrary";
 
 const ANON_RESULT_KEY = "clip_art_anon_result";
 
@@ -96,8 +96,9 @@ export default function CreatePage() {
     setPrompt("");
   }, [prompt, style, isPublic, user, openAuthModal, addJob]);
 
-  const handleDraftChange = useCallback((draft: string) => {
-    if (draft) setPrompt(draft);
+  const handleLibrarySelect = useCallback((prompt: string, selectedStyle: StyleKey) => {
+    setPrompt(prompt);
+    setStyle(selectedStyle);
   }, []);
 
   return (
@@ -140,12 +141,7 @@ export default function CreatePage() {
         />
       )}
 
-      <PromptBuilder
-        config={CLIPART_BUILDER}
-        style={style}
-        onDraftChange={handleDraftChange}
-        onSelectSuggestion={setPrompt}
-      />
+      <PromptLibrary onSelect={handleLibrarySelect} />
     </CreatePageLayout>
   );
 }

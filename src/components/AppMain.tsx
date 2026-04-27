@@ -1,6 +1,7 @@
 "use client";
 
 import { useSidebar } from "@/stores/useSidebar";
+import { AppTopBar } from "./AppTopBar";
 
 function DesktopCornerOverlay({ position }: { position: "top" | "bottom" }) {
   const collapsed = useSidebar((s) => s.collapsed);
@@ -49,6 +50,7 @@ export function AppMain({ children }: { children: React.ReactNode }) {
           collapsed ? "md:ml-[68px]" : "md:ml-60"
         }`}
       >
+        <AppTopBar />
         {children}
       </main>
     </>

@@ -35,7 +35,7 @@ const browseItems = [
   },
   {
     href: "/design-bundles",
-    label: "Bundles",
+    label: "Theme Packs",
     matchFn: (pathname: string) =>
       pathname === "/design-bundles" || pathname.startsWith("/design-bundles/"),
     icon: (

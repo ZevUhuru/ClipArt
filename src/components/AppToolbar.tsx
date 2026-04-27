@@ -84,7 +84,7 @@ const MENU_GROUPS: MenuGroup[] = [
       { href: "/create/illustrations", label: "Illustrations", description: "Full-scene artwork with backgrounds", icon: <IllustrationIcon /> },
       { href: "/create/coloring-pages", label: "Coloring Pages", description: "Printable line art for any theme", icon: <ColoringIcon /> },
       { href: "/create/worksheets", label: "Worksheets", description: "Educational printables by grade", icon: <WorksheetIcon /> },
-      { href: "/create/packs", label: "Bundles", description: "Curate a themed collection", icon: <BundleIcon /> },
+      { href: "/create/packs", label: "Theme Packs", description: "Curate a themed collection", icon: <BundleIcon /> },
     ],
   },
   {
@@ -94,7 +94,7 @@ const MENU_GROUPS: MenuGroup[] = [
     items: [
       { href: "/search", label: "Explore", description: "Discover community creations", icon: <ExploreIcon /> },
       { href: "/library", label: "Library", description: "Your saved and generated art", icon: <LibraryIcon /> },
-      { href: "/design-bundles", label: "Bundles", description: "Download themed collections", icon: <BundleIcon /> },
+      { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections", icon: <BundleIcon /> },
     ],
   },
   {
