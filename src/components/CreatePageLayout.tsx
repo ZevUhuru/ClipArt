@@ -2,7 +2,7 @@
 
 import { type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreateModeToggle } from "./CreateModeToggle";
+import { AppToolbar } from "./AppToolbar";
 import { PromptInput } from "./PromptInput";
 import { GenerationQueue } from "./GenerationQueue";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
@@ -13,6 +13,7 @@ interface CreatePageLayoutProps {
   onSubmit: () => void;
   promptPlaceholder?: string;
   submitDisabled?: boolean;
+  /** Slot rendered inline inside the command bar (style chip, public toggle, etc.) */
   options: ReactNode;
   error: string | null;
   children: ReactNode;
@@ -33,17 +34,21 @@ export function CreatePageLayout({
   return (
     <div className="min-h-screen">
       <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-5xl px-4 py-4">
-          <CreateModeToggle />
-          <PromptInput
-            value={prompt}
-            onChange={onPromptChange}
-            onSubmit={onSubmit}
-            placeholder={promptPlaceholder}
-            disabled={submitDisabled}
-          />
-          <div className="mt-3 flex items-center justify-between">
-            {options}
+        <div className="mx-auto max-w-5xl px-4">
+          {/* Menubar row */}
+          <div className="flex h-10 items-center border-b border-gray-100/60">
+            <AppToolbar />
+          </div>
+          {/* Command bar row */}
+          <div className="py-3">
+            <PromptInput
+              value={prompt}
+              onChange={onPromptChange}
+              onSubmit={onSubmit}
+              placeholder={promptPlaceholder}
+              disabled={submitDisabled}
+              optionsSlot={options}
+            />
           </div>
         </div>
       </div>

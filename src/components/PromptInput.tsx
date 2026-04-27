@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { type ReactNode, useState, useRef, useCallback, useEffect } from "react";
 
 interface PromptInputProps {
   value: string;
@@ -10,6 +10,8 @@ interface PromptInputProps {
   disabled?: boolean;
   maxLength?: number;
   buttonLabel?: string;
+  /** Slot rendered inline between the textarea and the Create button — style chip, public toggle, etc. */
+  optionsSlot?: ReactNode;
 }
 
 const MAX_HEIGHT = 160;
@@ -22,6 +24,7 @@ export function PromptInput({
   disabled = false,
   maxLength = 2000,
   buttonLabel = "Create",
+  optionsSlot,
 }: PromptInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -38,10 +41,10 @@ export function PromptInput({
   }, [value, resize]);
 
   return (
-    <div className="flex items-end gap-3">
+    <div className="flex items-center gap-2">
       <div
         className={`
-          relative flex flex-1 rounded-xl
+          relative flex flex-1 items-center rounded-xl
           transition-all duration-200
           ${isFocused
             ? "bg-white shadow-lg shadow-gray-200/50 ring-1 ring-gray-200"
@@ -57,7 +60,7 @@ export function PromptInput({
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
           rows={1}
-          className="w-full resize-none bg-transparent py-3.5 px-4 text-[15px] leading-snug text-gray-900 placeholder-gray-400 outline-none transition-[height] duration-150"
+          className="flex-1 resize-none bg-transparent py-3.5 pl-4 pr-3 text-[15px] leading-snug text-gray-900 placeholder-gray-400 outline-none transition-[height] duration-150"
           style={{ maxHeight: MAX_HEIGHT, overflowY: textareaRef.current && textareaRef.current.scrollHeight > MAX_HEIGHT ? "auto" : "hidden" }}
           maxLength={maxLength}
           onKeyDown={(e) => {
@@ -67,11 +70,16 @@ export function PromptInput({
             }
           }}
         />
+        {optionsSlot && (
+          <div className="flex shrink-0 items-center gap-1 pr-2">
+            {optionsSlot}
+          </div>
+        )}
       </div>
       <button
         onClick={onSubmit}
         disabled={disabled}
-        className="shrink-0 rounded-xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+        className="shrink-0 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {buttonLabel}
       </button>
