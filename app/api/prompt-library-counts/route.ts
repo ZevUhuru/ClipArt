@@ -21,8 +21,11 @@ export async function GET() {
       return NextResponse.json([], { status: 200 });
     }
 
+    // Supabase types don't include dynamically-added columns — cast the rows
+    const gensTyped = gens as unknown as { prompt_library_use_id: number }[];
+
     // Step 2: look up prompt_text for each use id
-    const useIds = [...new Set(gens.map((g) => g.prompt_library_use_id as number))];
+    const useIds = [...new Set(gensTyped.map((g) => g.prompt_library_use_id))];
 
     const { data: uses, error: usesError } = await admin
       .from("prompt_library_uses")
@@ -36,12 +39,15 @@ export async function GET() {
 
     // Map use_id → prompt_text
     const idToPrompt: Record<number, string> = {};
-    for (const u of uses ?? []) idToPrompt[u.id] = u.prompt_text;
+    for (const u of uses ?? []) {
+      const row = u as unknown as { id: number; prompt_text: string };
+      idToPrompt[row.id] = row.prompt_text;
+    }
 
     // Count generations per prompt_text
     const counts: Record<string, number> = {};
-    for (const gen of gens) {
-      const pt = idToPrompt[gen.prompt_library_use_id as number];
+    for (const gen of gensTyped) {
+      const pt = idToPrompt[gen.prompt_library_use_id];
       if (pt) counts[pt] = (counts[pt] ?? 0) + 1;
     }
 
