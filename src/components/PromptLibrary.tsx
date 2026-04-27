@@ -471,11 +471,7 @@ export function PromptLibrary({ onSelect }: PromptLibraryProps) {
       .single();
     // Store the use id so Generator can attribute the generation
     if (data?.id) setLastPromptLibraryUseId(data.id);
-    // Optimistically bump the local count
-    setUseCounts((prev) => ({
-      ...prev,
-      [entry.prompt]: (prev[entry.prompt] ?? 0) + 1,
-    }));
+    // No optimistic count bump — counts reflect actual generations, loaded from server
   }, [setLastPromptLibraryUseId]);
 
   return (
