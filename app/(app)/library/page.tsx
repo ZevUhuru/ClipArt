@@ -101,9 +101,7 @@ const CONTENT_TABS: TabItem[] = [
   { key: "illustrations", label: "Illustrations" },
   { key: "coloring", label: "Coloring" },
   { key: "animations", label: "Animations" },
-  { key: "projects", label: "Projects" },
   { key: "packs", label: "Bundles" },
-  { key: "shared", label: "Shared" },
 ];
 
 const SORT_OPTIONS = [
@@ -819,8 +817,9 @@ function CreationsGrid() {
                 </div>
               )}
 
-              {/* Toolbar: Tabs + filter popover + sort */}
-              <div className={`${showSearchAndSort ? "md:mt-3" : ""} flex items-center justify-between gap-2 px-2 py-2 md:px-0 md:py-0`}>
+              {/* Toolbar: mirrors Explore's divider row now that the extra
+                  Projects/Shared tabs are no longer in the primary rail. */}
+              <div className="flex items-center justify-between gap-2 px-2 py-2 md:border-t md:border-gray-200/80">
                 <div className="hidden min-w-0 flex-1 items-center gap-1.5 overflow-x-auto md:flex md:overflow-visible">
                   <ContentTypeTabs
                     tabs={CONTENT_TABS}
