@@ -490,22 +490,36 @@ export function PromptLibrary({ onSelect }: PromptLibraryProps) {
         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       </div>
 
-      {/* Category filter */}
-      <div className="mb-5 flex flex-wrap gap-1.5">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => setActiveCategory(cat)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-              activeCategory === cat
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Category filter — horizontal scroll on mobile to handle 30+ categories
+          without a wall of wrapped chips; wraps as a grid on desktop. */}
+      <div className="relative mb-5 -mx-4 sm:mx-0">
+        <div
+          className="flex gap-1.5 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          role="tablist"
+          aria-label="Prompt categories"
+        >
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              role="tab"
+              aria-selected={activeCategory === cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                activeCategory === cat
+                  ? "bg-gray-900 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+        {/* Right-edge fade hint that more categories exist (mobile only). */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent sm:hidden"
+        />
       </div>
 
       {/* Cards grid */}

@@ -3,6 +3,7 @@
 import { type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppToolbar } from "./AppToolbar";
+import { CreateMobileHeader } from "./CreateMobileHeader";
 import { PromptInput } from "./PromptInput";
 import { GenerationQueue } from "./GenerationQueue";
 import { useGenerationQueue } from "@/stores/useGenerationQueue";
@@ -32,15 +33,19 @@ export function CreatePageLayout({
   const queueJobs = useGenerationQueue((s) => s.jobs);
 
   return (
-    <div className="min-h-screen">
-      <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-5xl px-4">
-          {/* Menubar row */}
-          <div className="flex h-10 items-center border-b border-gray-100/60">
+    <div className="min-h-screen overflow-x-hidden">
+      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 sm:z-20 sm:border-gray-100 sm:bg-white/80 sm:shadow-none sm:backdrop-blur-xl">
+        <div className="mx-auto w-full max-w-5xl px-4">
+          {/* Mobile: brand + content-type selector. Hidden on desktop. */}
+          <div className="sm:hidden">
+            <CreateMobileHeader />
+          </div>
+          {/* Desktop menubar row. Hidden on mobile. */}
+          <div className="hidden h-10 items-center border-b border-gray-100/60 sm:flex">
             <AppToolbar />
           </div>
           {/* Command bar row */}
-          <div className="py-3">
+          <div className="pb-4 pt-1 sm:py-3">
             <PromptInput
               value={prompt}
               onChange={onPromptChange}
@@ -53,7 +58,7 @@ export function CreatePageLayout({
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="mx-auto w-full max-w-5xl px-4 py-6">
         {queueJobs.length > 0 && (
           <div className="mb-6">
             <GenerationQueue />

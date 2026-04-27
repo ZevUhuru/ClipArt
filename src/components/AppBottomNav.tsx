@@ -44,21 +44,6 @@ const tabs: Tab[] = [
     matchPrefixes: ["/search", "/templates", "/design-bundles"],
   },
   {
-    href: "/animate",
-    label: "Animate",
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-2.625 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-2.625 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5c0 .621-.504 1.125-1.125 1.125m1.5 0h12m-12 0c-.621 0-1.125.504-1.125 1.125M18 12h1.5m-1.5 0c.621 0 1.125.504 1.125 1.125m0 0v1.5c0 .621-.504 1.125-1.125 1.125M18 12c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5m1.5 0c.621 0 1.125.504 1.125 1.125" />
-      </svg>
-    ),
-    activeIcon: (
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M1.5 5.625c0-1.036.84-1.875 1.875-1.875h17.25c1.035 0 1.875.84 1.875 1.875v12.75c0 1.035-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 18.375V5.625zM4.875 6a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5A.375.375 0 006.75 7.875v-1.5A.375.375 0 006.375 6h-1.5zm13.5 0a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5A.375.375 0 0019.875 6h-1.5zM4.875 9a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5A.375.375 0 006.375 9h-1.5zm13.5 0a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5A.375.375 0 0019.875 9h-1.5zM4.875 12a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5A.375.375 0 006.375 12h-1.5zm13.5 0a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5a.375.375 0 00-.375-.375h-1.5zm-13.5 3a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5A.375.375 0 006.375 15h-1.5zm13.5 0a.375.375 0 00-.375.375v1.5c0 .207.168.375.375.375h1.5a.375.375 0 00.375-.375v-1.5a.375.375 0 00-.375-.375h-1.5z" />
-      </svg>
-    ),
-    matchPrefixes: ["/animate"],
-  },
-  {
     href: "/my-art",
     label: "My Art",
     icon: (
@@ -79,8 +64,20 @@ export function AppBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 bg-[#1c1c27] md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-      <div className="flex h-14 items-center justify-around">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 overflow-hidden bg-[#1c1c27] px-4 pt-2 md:hidden"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
+      aria-label="Primary navigation"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-10 bottom-0 h-24 w-28 rounded-full bg-pink-500/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 bottom-2 h-24 w-28 rounded-full bg-orange-300/15 blur-3xl"
+      />
+      <div className="relative flex h-14 items-center justify-around rounded-2xl bg-white/10 p-1 ring-1 ring-white/12 backdrop-blur">
         {tabs.map((tab) => {
           const isActive = tab.matchPrefixes
             ? tab.matchPrefixes.some((p) => pathname.startsWith(p))
@@ -89,15 +86,20 @@ export function AppBottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className="relative flex flex-col items-center gap-0.5 px-3 py-2.5 transition-colors"
+              aria-current={isActive ? "page" : undefined}
+              className={`relative flex h-12 min-w-[5.25rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl transition-all ${
+                isActive
+                  ? "text-gray-950"
+                  : "text-white/55 hover:bg-white/5 hover:text-white active:bg-white/10"
+              }`}
             >
               {isActive && (
-                <span className="absolute inset-x-1 inset-y-1 rounded-xl bg-white/[0.08]" />
+                <span className="absolute inset-0 rounded-xl bg-white shadow-sm" />
               )}
-              <span className={`relative ${isActive ? "text-brand-400" : "text-gray-500"}`}>
+              <span className="relative">
                 {isActive ? tab.activeIcon : tab.icon}
               </span>
-              <span className={`relative text-[10px] font-medium ${isActive ? "text-white" : "text-gray-500"}`}>
+              <span className="relative text-[10px] font-bold">
                 {tab.label}
               </span>
             </Link>

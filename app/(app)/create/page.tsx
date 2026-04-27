@@ -121,13 +121,14 @@ export default function CreatePage() {
           <button
             type="button"
             onClick={() => setIsPublic((v) => !v)}
-            className="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-gray-100"
+            aria-label={isPublic ? "Visibility: Public — tap to make private" : "Visibility: Private — tap to make public"}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-gray-100 sm:gap-2"
             title={isPublic ? "Your creation will be shared with the community" : "Your creation will be private"}
           >
             <span className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isPublic ? "bg-green-400" : "bg-gray-200"}`}>
               <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${isPublic ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
             </span>
-            <span className="text-gray-500">
+            <span className="hidden text-gray-500 sm:inline">
               {isPublic ? "Public" : "Private"}
             </span>
           </button>
