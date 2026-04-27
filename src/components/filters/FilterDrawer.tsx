@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FilterChipRow, type ChipItem } from "./FilterChipRow";
+import { SearchBar } from "../SearchBar";
+import { type SortOption } from "./SortSelect";
 
 interface FilterDrawerProps {
   isOpen: boolean;
@@ -15,6 +17,12 @@ interface FilterDrawerProps {
   onStyleSelect: (key: string | null) => void;
   onReset: () => void;
   showStyles?: boolean;
+  searchDefaultValue?: string;
+  searchPlaceholders?: string[];
+  onSearch?: (query: string) => void;
+  sortOptions?: SortOption[];
+  sortValue?: string;
+  onSortChange?: (key: string) => void;
 }
 
 export function FilterDrawer({
@@ -28,6 +36,12 @@ export function FilterDrawer({
   onStyleSelect,
   onReset,
   showStyles = true,
+  searchDefaultValue,
+  searchPlaceholders,
+  onSearch,
+  sortOptions,
+  sortValue,
+  onSortChange,
 }: FilterDrawerProps) {
   useEffect(() => {
     if (isOpen) {
@@ -78,6 +92,46 @@ export function FilterDrawer({
                   Reset all
                 </button>
               </div>
+
+              {onSearch && (
+                <div>
+                  <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Search
+                  </p>
+                  <SearchBar
+                    onSearch={onSearch}
+                    placeholders={searchPlaceholders}
+                    defaultValue={searchDefaultValue || ""}
+                  />
+                </div>
+              )}
+
+              {sortOptions && sortOptions.length > 0 && sortValue && onSortChange && (
+                <div>
+                  <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Sort
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {sortOptions.map((option) => {
+                      const isActive = sortValue === option.key;
+                      return (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => onSortChange(option.key)}
+                          className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                            isActive
+                              ? "bg-gray-900 text-white"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {categoryItems.length > 0 && (
                 <div>

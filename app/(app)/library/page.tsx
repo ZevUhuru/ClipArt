@@ -719,10 +719,7 @@ function CreationsGrid() {
               </Link>
 
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/45">
-                  Saved
-                </p>
-                <div className="truncate font-futura text-[22px] font-black leading-tight tracking-tight text-white">
+                <div className="truncate font-futura text-[24px] font-black leading-tight tracking-tight text-white">
                   Library
                 </div>
               </div>
@@ -798,25 +795,25 @@ function CreationsGrid() {
             <div className="overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70 md:bg-transparent md:shadow-none md:ring-0">
               {/* Search bar — hidden on projects tab */}
               {showSearchAndSort && (
-                <SearchBar
-                  onSearch={handleSearch}
-                  placeholders={["Search your library...", "Find that sunset illustration...", "Where was that cute cat..."]}
-                  defaultValue={searchQuery}
-                  embedded
-                />
+                <div className="hidden md:block">
+                  <SearchBar
+                    onSearch={handleSearch}
+                    placeholders={["Search your library...", "Find that sunset illustration...", "Where was that cute cat..."]}
+                    defaultValue={searchQuery}
+                    embedded
+                  />
+                </div>
               )}
 
               {/* Toolbar: Tabs + filter popover + sort */}
-              <div className={`${showSearchAndSort ? "border-t border-gray-200/80 md:mt-3 md:border-t-0" : ""} flex items-center justify-between gap-2 px-2 py-2 md:px-0 md:py-0`}>
-                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:overflow-visible [&::-webkit-scrollbar]:hidden">
-                  <div className="hidden md:block">
-                    <ContentTypeTabs
-                      tabs={CONTENT_TABS}
-                      activeKey={filter}
-                      onSelect={(key) => handleFilterChange(key as ContentFilter)}
-                      layoutId="library-tab"
-                    />
-                  </div>
+              <div className={`${showSearchAndSort ? "md:mt-3" : ""} flex items-center justify-between gap-2 px-2 py-2 md:px-0 md:py-0`}>
+                <div className="hidden min-w-0 flex-1 items-center gap-1.5 overflow-x-auto md:flex md:overflow-visible">
+                  <ContentTypeTabs
+                    tabs={CONTENT_TABS}
+                    activeKey={filter}
+                    onSelect={(key) => handleFilterChange(key as ContentFilter)}
+                    layoutId="library-tab"
+                  />
                   {showStyleFilter && (
                     <FilterPopover
                       label="Style"
@@ -829,28 +826,28 @@ function CreationsGrid() {
                 </div>
 
                 {showSearchAndSort && (
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <SortSelect
-                      options={SORT_OPTIONS}
-                      value={sort}
-                      onChange={handleSortChange}
-                    />
-                    {showStyleFilter && (
-                      <button
-                        onClick={() => setDrawerOpen(true)}
-                        className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
-                      >
-                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-                        </svg>
-                        Filters
-                        {activeFilterCount > 0 && (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
-                            {activeFilterCount}
-                          </span>
-                        )}
-                      </button>
-                    )}
+                  <div className="flex w-full shrink-0 items-center gap-1.5 md:w-auto">
+                    <div className="hidden md:block">
+                      <SortSelect
+                        options={SORT_OPTIONS}
+                        value={sort}
+                        onChange={handleSortChange}
+                      />
+                    </div>
+                    <button
+                      onClick={() => setDrawerOpen(true)}
+                      className="relative flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 md:hidden"
+                    >
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                      </svg>
+                      Search & Filters
+                      {activeFilterCount > 0 && (
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </button>
                   </div>
                 )}
               </div>
@@ -1188,7 +1185,7 @@ function CreationsGrid() {
       </AnimatePresence>
 
       {/* Mobile filter drawer */}
-      {showStyleFilter && (
+      {showSearchAndSort && (
         <FilterDrawer
           isOpen={drawerOpen}
           onClose={() => setDrawerOpen(false)}
@@ -1200,6 +1197,12 @@ function CreationsGrid() {
           onStyleSelect={(key) => { handleStyleSelect(key); }}
           onReset={() => { handleClearAll(); setDrawerOpen(false); }}
           showStyles={showStyleFilter}
+          searchDefaultValue={searchQuery}
+          searchPlaceholders={["Search your library...", "Find that sunset illustration...", "Where was that cute cat..."]}
+          onSearch={handleSearch}
+          sortOptions={SORT_OPTIONS}
+          sortValue={sort}
+          onSortChange={handleSortChange}
         />
       )}
     </div>

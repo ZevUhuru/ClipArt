@@ -281,10 +281,7 @@ function SearchPageInner() {
               </Link>
 
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/45">
-                  Browse
-                </p>
-                <div className="truncate font-futura text-[22px] font-black leading-tight tracking-tight text-white">
+                <div className="truncate font-futura text-[24px] font-black leading-tight tracking-tight text-white">
                   Explore
                 </div>
               </div>
@@ -360,31 +357,31 @@ function SearchPageInner() {
 
           <div className="pb-4 pt-1 md:py-3">
           <div className="overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70">
-            <SearchBar
-              onSearch={handleSearch}
-              placeholders={
-                filters.contentType === "coloring"
-                  ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
-                  : filters.contentType === "illustration"
-                    ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
-                    : filters.contentType === "animations"
-                      ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
-                      : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
-              }
-              defaultValue={filters.query || ""}
-              embedded
-            />
+            <div className="hidden md:block">
+              <SearchBar
+                onSearch={handleSearch}
+                placeholders={
+                  filters.contentType === "coloring"
+                    ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
+                    : filters.contentType === "illustration"
+                      ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
+                      : filters.contentType === "animations"
+                        ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
+                        : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
+                }
+                defaultValue={filters.query || ""}
+                embedded
+              />
+            </div>
 
             {/* Filter row */}
-            <div className="flex items-center justify-between gap-2 border-t border-gray-200/80 px-2 py-2">
-              <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <div className="hidden md:block">
-                  <ContentTypeTabs
-                    tabs={CONTENT_TABS}
-                    activeKey={filters.contentType}
-                    onSelect={(key) => setContentType(key as ContentType)}
-                  />
-                </div>
+            <div className="flex items-center justify-between gap-2 px-2 py-2 md:border-t md:border-gray-200/80">
+              <div className="hidden min-w-0 flex-1 items-center gap-1.5 overflow-x-auto md:flex md:overflow-visible">
+                <ContentTypeTabs
+                  tabs={CONTENT_TABS}
+                  activeKey={filters.contentType}
+                  onSelect={(key) => setContentType(key as ContentType)}
+                />
                 {showCategoryRow && currentCategoryChips.length > 0 && (
                   <FilterPopover
                     label="Category"
@@ -405,28 +402,28 @@ function SearchPageInner() {
                 )}
               </div>
 
-              <div className="flex shrink-0 items-center gap-1.5">
-                <SortSelect
-                  options={SORT_OPTIONS}
-                  value={filters.sort}
-                  onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
-                />
-                {(showCategoryRow || showStyleRow) && (
-                  <button
-                    onClick={() => setDrawerOpen(true)}
-                    className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
-                  >
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-                    </svg>
-                    Filters
-                    {activeFilterCount > 0 && (
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
-                )}
+              <div className="flex w-full shrink-0 items-center gap-1.5 md:w-auto">
+                <div className="hidden md:block">
+                  <SortSelect
+                    options={SORT_OPTIONS}
+                    value={filters.sort}
+                    onChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
+                  />
+                </div>
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  className="relative flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 md:hidden"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                  </svg>
+                  Search & Filters
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -628,6 +625,20 @@ function SearchPageInner() {
         onStyleSelect={setStyle}
         onReset={() => { clearAll(); setDrawerOpen(false); }}
         showStyles={showStyleRow}
+        searchDefaultValue={filters.query || ""}
+        searchPlaceholders={
+          filters.contentType === "coloring"
+            ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
+            : filters.contentType === "illustration"
+              ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
+              : filters.contentType === "animations"
+                ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
+                : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
+        }
+        onSearch={handleSearch}
+        sortOptions={SORT_OPTIONS}
+        sortValue={filters.sort}
+        onSortChange={(key) => setSort(key as "newest" | "featured" | "oldest")}
       />
     </div>
   );
