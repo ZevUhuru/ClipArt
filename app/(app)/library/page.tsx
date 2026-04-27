@@ -111,6 +111,14 @@ const SORT_OPTIONS = [
   { key: "oldest", label: "Oldest" },
 ];
 
+const LIBRARY_MENU_LINKS = [
+  { href: "/create", label: "Create", description: "Generate new artwork" },
+  { href: "/search", label: "Explore", description: "Discover community creations" },
+  { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections" },
+  { href: "/animate", label: "Animate", description: "Bring your art to life" },
+  { href: "/settings", label: "Settings", description: "Account and preferences" },
+];
+
 const PAGE_SIZE = 60;
 
 function buildStyleChips(): ChipItem[] {
@@ -652,6 +660,7 @@ function CreationsGrid() {
   const activeFilterCount = (searchQuery ? 1 : 0) + (activeStyle ? 1 : 0);
 
   const safeItems = items.filter((gen) => gen.id && gen.image_url);
+  const [menuOpen, setMenuOpen] = useState(false);
   const useMasonry = filter === "all" || filter === "illustrations";
   const gridVariant = useMasonry
     ? "illustration" as const
@@ -674,86 +683,204 @@ function CreationsGrid() {
     has_transparency: gen.has_transparency ?? undefined,
   }));
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [menuOpen]);
+
   return (
-    <>
-      {/* Search bar — hidden on projects tab */}
-      {showSearchAndSort && (
-        <SearchBar
-          onSearch={handleSearch}
-          placeholders={["Search your library...", "Find that sunset illustration...", "Where was that cute cat..."]}
-          defaultValue={searchQuery}
-        />
-      )}
-
-      {/* Toolbar: Tabs + filter popover + sort */}
-      <div className={`${showSearchAndSort ? "mt-3" : ""} flex items-center justify-between gap-3`}>
-        <div className="flex items-center gap-2">
-          <ContentTypeTabs
-            tabs={CONTENT_TABS}
-            activeKey={filter}
-            onSelect={(key) => handleFilterChange(key as ContentFilter)}
-            layoutId="library-tab"
-          />
-          {showStyleFilter && (
-            <FilterPopover
-              label="Style"
-              items={currentStyleChips}
-              activeKey={activeStyle}
-              onSelect={handleStyleSelect}
-              allLabel="All Styles"
+    <div className="overflow-x-hidden">
+      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 md:static md:border-0 md:bg-transparent md:shadow-none">
+        <div className="mx-auto max-w-5xl px-4 md:px-0">
+          <div className="relative -mx-4 overflow-hidden px-4 pt-3 pb-3 text-white md:hidden">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-12 -top-16 h-36 w-36 rounded-full bg-pink-500/30 blur-3xl"
             />
-          )}
-        </div>
-
-        {showSearchAndSort && (
-          <div className="flex items-center gap-2">
-            <SortSelect
-              options={SORT_OPTIONS}
-              value={sort}
-              onChange={handleSortChange}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-14 top-4 h-32 w-32 rounded-full bg-orange-300/20 blur-3xl"
             />
-            {showStyleFilter && (
-              <button
-                onClick={() => setDrawerOpen(true)}
-                className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
+
+            <div className="relative flex min-h-14 items-center justify-between gap-4">
+              <Link
+                href="/"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur"
+                aria-label="clip.art home"
+                title="clip.art home"
               >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-                </svg>
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
-                    {activeFilterCount}
-                  </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icon-transparent.png" alt="" className="h-7 w-7" />
+              </Link>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/45">
+                  Saved
+                </p>
+                <div className="truncate font-futura text-[22px] font-black leading-tight tracking-tight text-white">
+                  Library
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-expanded={menuOpen}
+                className={`relative z-[120] flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1 backdrop-blur transition-colors ${
+                  menuOpen
+                    ? "bg-white text-gray-950 ring-white shadow-lg shadow-black/20"
+                    : "bg-white/10 text-white ring-white/15 hover:bg-white/15 active:bg-white/20"
+                }`}
+              >
+                {menuOpen ? (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.25}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
                 )}
               </button>
+            </div>
+
+            <div className="relative mt-3 rounded-2xl bg-white/10 p-1 ring-1 ring-white/12 backdrop-blur">
+              <div
+                className="flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                role="tablist"
+                aria-label="Library type"
+              >
+                {CONTENT_TABS.map((tab) => {
+                  const isActive = filter === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => handleFilterChange(tab.key as ContentFilter)}
+                      className={`relative flex h-11 shrink-0 items-center rounded-xl px-4 text-[14px] font-bold transition-colors ${
+                        isActive ? "text-gray-950" : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.span
+                          layoutId="library-type-pill"
+                          className="absolute inset-0 rounded-xl bg-white shadow-sm"
+                          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                        />
+                      )}
+                      <span className="relative z-10">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-1 right-1 w-10 rounded-r-2xl bg-gradient-to-l from-[#1c1c27] to-transparent"
+              />
+            </div>
+
+            <AnimatePresence>
+              {menuOpen && (
+                <LibraryMenuSheet onClose={() => setMenuOpen(false)} />
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="pb-4 pt-1 md:pb-0 md:pt-0">
+            <div className="overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70 md:bg-transparent md:shadow-none md:ring-0">
+              {/* Search bar — hidden on projects tab */}
+              {showSearchAndSort && (
+                <SearchBar
+                  onSearch={handleSearch}
+                  placeholders={["Search your library...", "Find that sunset illustration...", "Where was that cute cat..."]}
+                  defaultValue={searchQuery}
+                  embedded
+                />
+              )}
+
+              {/* Toolbar: Tabs + filter popover + sort */}
+              <div className={`${showSearchAndSort ? "border-t border-gray-200/80 md:mt-3 md:border-t-0" : ""} flex items-center justify-between gap-2 px-2 py-2 md:px-0 md:py-0`}>
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:overflow-visible [&::-webkit-scrollbar]:hidden">
+                  <div className="hidden md:block">
+                    <ContentTypeTabs
+                      tabs={CONTENT_TABS}
+                      activeKey={filter}
+                      onSelect={(key) => handleFilterChange(key as ContentFilter)}
+                      layoutId="library-tab"
+                    />
+                  </div>
+                  {showStyleFilter && (
+                    <FilterPopover
+                      label="Style"
+                      items={currentStyleChips}
+                      activeKey={activeStyle}
+                      onSelect={handleStyleSelect}
+                      allLabel="All Styles"
+                    />
+                  )}
+                </div>
+
+                {showSearchAndSort && (
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <SortSelect
+                      options={SORT_OPTIONS}
+                      value={sort}
+                      onChange={handleSortChange}
+                    />
+                    {showStyleFilter && (
+                      <button
+                        onClick={() => setDrawerOpen(true)}
+                        className="relative flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+                      >
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                        </svg>
+                        Filters
+                        {activeFilterCount > 0 && (
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
+                            {activeFilterCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Active filters + result count */}
+            {showSearchAndSort && (activeFilters.length > 0 || totalCount !== null) && (
+              <div className="flex flex-wrap items-center gap-3 pt-2.5 md:mt-3 md:pt-0">
+                <AnimatePresence>
+                  {activeFilters.length > 0 && (
+                    <ActiveFilters
+                      filters={activeFilters}
+                      onRemove={(type) => {
+                        if (type === "query") { setSearchQuery(""); loadInitial(filter, undefined, activeStyle); }
+                        if (type === "style") { setActiveStyle(null); loadInitial(filter, searchQuery || undefined, null); }
+                      }}
+                      onClearAll={handleClearAll}
+                    />
+                  )}
+                </AnimatePresence>
+                <ResultCount
+                  total={totalCount}
+                  isLoading={isLoading}
+                  contentType={filter === "all" ? undefined : filter === "illustrations" ? "illustration" : filter}
+                />
+              </div>
             )}
           </div>
-        )}
-      </div>
-
-      {/* Active filters + result count */}
-      {showSearchAndSort && (activeFilters.length > 0 || totalCount !== null) && (
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <AnimatePresence>
-            {activeFilters.length > 0 && (
-              <ActiveFilters
-                filters={activeFilters}
-                onRemove={(type) => {
-                  if (type === "query") { setSearchQuery(""); loadInitial(filter, undefined, activeStyle); }
-                  if (type === "style") { setActiveStyle(null); loadInitial(filter, searchQuery || undefined, null); }
-                }}
-                onClearAll={handleClearAll}
-              />
-            )}
-          </AnimatePresence>
-          <ResultCount
-            total={totalCount}
-            isLoading={isLoading}
-            contentType={filter === "all" ? undefined : filter === "illustrations" ? "illustration" : filter}
-          />
         </div>
-      )}
+      </div>
 
       {/* Results */}
       <AnimatePresence mode="wait">
@@ -763,7 +890,7 @@ function CreationsGrid() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="mt-4"
+          className="mt-4 px-4 md:px-0"
         >
           {filter === "projects" ? (
             <ProjectsView />
@@ -1075,6 +1202,96 @@ function CreationsGrid() {
           showStyles={showStyleFilter}
         />
       )}
+    </div>
+  );
+}
+
+function LibraryMenuSheet({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[90] bg-black/45 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden
+      />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 400, damping: 40 }}
+        className="fixed inset-x-0 bottom-0 z-[100] max-h-[82vh] overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl shadow-black/30"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+      >
+        <div className="sticky top-0 z-10 bg-white px-5 pt-2.5 pb-4">
+          <div className="mx-auto h-1 w-10 rounded-full bg-gray-200" />
+          <div className="mt-4 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-400">
+                Navigation
+              </p>
+              <h2 className="mt-0.5 text-2xl font-black tracking-tight text-gray-950">
+                More places
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close navigation menu"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.25}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 pb-4">
+          <h2 className="px-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">
+            App
+          </h2>
+          <div className="mt-2 flex flex-col gap-1">
+            {LIBRARY_MENU_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50/80 px-3.5 py-3.5 transition-all hover:border-gray-200 hover:bg-white hover:shadow-sm active:bg-gray-100"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-gray-500">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-semibold leading-tight text-gray-900">
+                    {item.label}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] leading-snug text-gray-500">
+                    {item.description}
+                  </span>
+                </span>
+                <span className="h-2 w-2 shrink-0 rounded-full bg-gray-200 transition-colors group-hover:bg-gray-300" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </motion.div>
     </>
   );
 }
@@ -1141,8 +1358,8 @@ export default function LibraryPage() {
   const { user } = useAppStore();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-8 pt-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="pb-8 md:mx-auto md:max-w-6xl md:px-4 md:pt-8">
+      <div className="mb-6 hidden items-center justify-between md:flex">
         <h1 className="font-futura text-2xl font-bold text-gray-900">Library</h1>
         {user && (
           <Link href="/create" className="btn-primary text-sm">

@@ -50,7 +50,7 @@
   }
 
   .mobile-main {
-    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.5rem);
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem);
   }
 
   @media (min-width: 768px) {

@@ -93,7 +93,7 @@ export function CreateMobileHeader() {
   }, [menuOpen]);
 
   return (
-    <div className="relative -mx-4 px-4 pt-3 pb-3 text-white">
+    <div className="relative -mx-4 overflow-hidden px-4 pt-3 pb-3 text-white">
       <div
         aria-hidden
         className="pointer-events-none absolute -left-12 -top-16 h-36 w-36 rounded-full bg-pink-500/30 blur-3xl"

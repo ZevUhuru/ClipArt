@@ -26,7 +26,7 @@ function MobileBottomCorner({ side }: { side: "left" | "right" }) {
     <div
       className="fixed z-[25] h-4 w-4 bg-[#1c1c27] md:hidden"
       style={{
-        bottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))",
+        bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))",
         [side]: 0,
       }}
       aria-hidden="true"

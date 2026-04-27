@@ -9,6 +9,7 @@ interface SearchBarProps {
   placeholders?: string[];
   isLoading?: boolean;
   defaultValue?: string;
+  embedded?: boolean;
 }
 
 const ROTATE_INTERVAL = 3200;
@@ -19,6 +20,7 @@ export function SearchBar({
   placeholders,
   isLoading = false,
   defaultValue = "",
+  embedded = false,
 }: SearchBarProps) {
   const [value, setValue] = useState(defaultValue);
   const [isFocused, setIsFocused] = useState(false);
@@ -87,12 +89,14 @@ export function SearchBar({
     <form onSubmit={handleSubmit} className="relative">
       <div
         className={`
-          relative flex items-center rounded-xl
+          relative flex items-center ${embedded ? "rounded-none" : "rounded-2xl sm:rounded-xl"}
           transition-all duration-200
-          ${isFocused
-            ? "bg-white shadow-lg shadow-gray-200/50 ring-1 ring-gray-200"
-            : "bg-gray-100/80 hover:bg-gray-200/60"
-          }
+          ${embedded
+            ? "bg-transparent"
+            : isFocused
+              ? "bg-white shadow-lg shadow-black/10 ring-1 ring-gray-200"
+              : "bg-white/95 shadow-lg shadow-black/10 ring-1 ring-white/70 hover:bg-white sm:bg-gray-100/80 sm:shadow-none sm:ring-0 sm:hover:bg-gray-200/60"
+        }
         `}
       >
         <div className="pointer-events-none absolute left-4 text-brand-400">
@@ -109,7 +113,7 @@ export function SearchBar({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={currentPlaceholder}
-          className="w-full bg-transparent py-3.5 pl-11 pr-20 text-[15px] text-gray-900 placeholder-gray-400 outline-none"
+          className="min-h-[3.75rem] w-full bg-transparent py-3.5 pl-11 pr-20 text-[16px] text-gray-950 placeholder:text-gray-500 outline-none sm:min-h-0 sm:text-[15px]"
           aria-label="Search"
         />
 
