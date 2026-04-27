@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type StyleKey } from "@/lib/styles";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/stores/useAppStore";
 
 type Difficulty = "starter" | "intermediate" | "advanced";
@@ -455,23 +454,26 @@ export function PromptLibrary({ onSelect }: PromptLibraryProps) {
   }, []);
 
   const trackUse = useCallback(async (entry: PromptEntry) => {
-    const sb = createBrowserClient();
-    if (!sb) return;
-    const { data: { user } } = await sb.auth.getUser();
-    const { data } = await sb
-      .from("prompt_library_uses")
-      .insert({
-        prompt_text: entry.prompt,
-        category: entry.category,
-        style: entry.style,
-        difficulty: entry.difficulty,
-        user_id: user?.id ?? null,
-      })
-      .select("id")
-      .single();
-    // Store the use id so Generator can attribute the generation
-    if (data?.id) setLastPromptLibraryUseId(data.id);
-    // No optimistic count bump — counts reflect actual generations, loaded from server
+    try {
+      // Use the server-side API route so the admin client handles the insert —
+      // avoids RLS select-back issues for both anonymous and authenticated users.
+      const res = await fetch("/api/prompt-library-track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt_text: entry.prompt,
+          category: entry.category,
+          style: entry.style,
+          difficulty: entry.difficulty,
+        }),
+      });
+      if (res.ok) {
+        const { id } = await res.json() as { id: number };
+        if (id) setLastPromptLibraryUseId(id);
+      }
+    } catch {
+      // Non-critical — generation still proceeds without attribution
+    }
   }, [setLastPromptLibraryUseId]);
 
   return (
