@@ -50,12 +50,22 @@ export const useGenerationQueue = create<GenerationQueueState>()(
 
     set((s) => ({ jobs: [job, ...s.jobs] }));
 
+    // Capture and clear prompt library attribution at submit time
+    const promptLibraryUseId = useAppStore.getState().lastPromptLibraryUseId;
+    if (promptLibraryUseId) {
+      useAppStore.getState().setLastPromptLibraryUseId(null);
+    }
+
     const body: Record<string, unknown> = { prompt, style, isPublic };
     if (options?.contentType) body.contentType = options.contentType;
     if (options?.aspectRatio) body.aspectRatio = options.aspectRatio;
     if (options?.grade) body.grade = options.grade;
     if (options?.subject) body.subject = options.subject;
     if (options?.topic) body.topic = options.topic;
+    if (promptLibraryUseId) {
+      body.source = "prompt_library";
+      body.promptLibraryUseId = promptLibraryUseId;
+    }
 
     fetch("/api/generate", {
       method: "POST",
