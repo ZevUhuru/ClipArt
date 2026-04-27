@@ -997,6 +997,7 @@ function CreationsGrid() {
                         title: gen.prompt,
                         url: gen.image_url,
                         transparent_url: gen.transparent_image_url ?? undefined,
+                        has_transparency: gen.has_transparency ?? undefined,
                         category: gen.category || "free",
                         style: gen.style,
                         content_type: gen.content_type,

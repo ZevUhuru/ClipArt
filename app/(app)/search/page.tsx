@@ -439,6 +439,7 @@ function SearchPageInner() {
                             title: item.title,
                             url: item.url,
                             transparent_url: item.transparent_url,
+                            has_transparency: item.has_transparency,
                             category: item.category,
                             style: item.style,
                             content_type: item.content_type,

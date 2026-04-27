@@ -16,6 +16,7 @@ export interface ImageCardImage {
   title: string;
   url: string;
   transparent_url?: string;
+  has_transparency?: boolean;
   category?: string;
   style?: string;
   content_type?: string;
@@ -76,9 +77,10 @@ export function ImageCard({
     : isColoring
       ? getAspectClass(image.aspect_ratio)
       : "aspect-square";
+  const hasTransparency = Boolean(image.transparent_url || image.has_transparency);
   const bgClass = isColoring ? "bg-white"
     : isIllustration ? "bg-gray-900/5"
-    : image.transparent_url ? "bg-gray-900/5"
+    : hasTransparency ? "bg-gray-900/5"
     : "bg-gray-50/80";
 
   const defaultSizes = isColoring
