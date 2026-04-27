@@ -1377,15 +1377,6 @@ export default function LibraryPage() {
 
   return (
     <div className="pb-8 md:mx-auto md:max-w-6xl md:px-4 md:pt-8">
-      <div className="mb-6 hidden items-center justify-between md:flex">
-        <h1 className="font-futura text-2xl font-bold text-gray-900">Library</h1>
-        {user && (
-          <Link href="/create" className="btn-primary text-sm">
-            Create new
-          </Link>
-        )}
-      </div>
-
       {user ? (
         <Suspense>
           <CreationsGrid />
