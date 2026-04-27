@@ -2,7 +2,6 @@
 
 import { type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppToolbar } from "./AppToolbar";
 import { CreateMobileHeader } from "./CreateMobileHeader";
 import { PromptInput } from "./PromptInput";
 import { GenerationQueue } from "./GenerationQueue";
@@ -34,18 +33,14 @@ export function CreatePageLayout({
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 sm:z-20 sm:border-gray-100 sm:bg-white/80 sm:shadow-none sm:backdrop-blur-xl">
+      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 sm:z-20 sm:border-0 sm:bg-transparent sm:shadow-none">
         <div className="mx-auto w-full max-w-5xl px-4">
           {/* Mobile: brand + content-type selector. Hidden on desktop. */}
           <div className="sm:hidden">
             <CreateMobileHeader />
           </div>
-          {/* Desktop menubar row. Hidden on mobile. */}
-          <div className="hidden h-10 items-center border-b border-gray-100/60 sm:flex">
-            <AppToolbar />
-          </div>
-          {/* Command bar row */}
-          <div className="pb-4 pt-1 sm:py-3">
+          {/* Mobile command bar row. */}
+          <div className="pb-4 pt-1 sm:hidden">
             <PromptInput
               value={prompt}
               onChange={onPromptChange}
@@ -54,6 +49,32 @@ export function CreatePageLayout({
               disabled={submitDisabled}
               optionsSlot={options}
             />
+          </div>
+          {/* Desktop command surface. */}
+          <div className="hidden py-5 sm:block">
+            <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-xl shadow-gray-200/60 ring-1 ring-gray-200/60 backdrop-blur-xl">
+              <div className="mb-3 flex items-end justify-between gap-4 px-1">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-pink-500/70">
+                    Studio
+                  </p>
+                  <h1 className="font-futura text-2xl font-black tracking-tight text-gray-950">
+                    Create
+                  </h1>
+                </div>
+                <p className="hidden max-w-sm text-right text-xs font-medium leading-snug text-gray-400 md:block">
+                  Describe the asset, choose a style, and generate artwork in one focused command bar.
+                </p>
+              </div>
+              <PromptInput
+                value={prompt}
+                onChange={onPromptChange}
+                onSubmit={onSubmit}
+                placeholder={promptPlaceholder}
+                disabled={submitDisabled}
+                optionsSlot={options}
+              />
+            </div>
           </div>
         </div>
       </div>

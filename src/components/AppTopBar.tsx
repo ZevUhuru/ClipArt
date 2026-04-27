@@ -128,20 +128,23 @@ function pageMeta(pathname: string) {
 
 export function AppTopBar() {
   const pathname = usePathname() ?? "/";
-  const customMobileHeader =
+  const customPageHeader =
     pathname === "/search" ||
     pathname.startsWith("/search/") ||
-    pathname.startsWith("/templates") ||
     pathname === "/library" ||
     pathname.startsWith("/library/") ||
     pathname === "/my-art" ||
     pathname.startsWith("/my-art/");
+  const customMobileHeader =
+    customPageHeader || pathname.startsWith("/templates");
 
   const hidden = HIDDEN_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
   );
 
   if (hidden) return null;
+
+  if (customPageHeader) return null;
 
   if (customMobileHeader) {
     return (

@@ -256,7 +256,7 @@ function SearchPageInner() {
   return (
     <div className="overflow-x-hidden pb-8">
       {/* Explore command region — mirrors /create on mobile. */}
-      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 md:top-10 md:z-20 md:border-gray-100 md:bg-white/80 md:shadow-none md:backdrop-blur-xl">
+      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 md:z-20 md:border-0 md:bg-transparent md:shadow-none">
         <div className="mx-auto max-w-5xl px-4">
           <div className="relative -mx-4 overflow-hidden px-4 pt-3 pb-3 text-white md:hidden">
             <div
@@ -355,8 +355,22 @@ function SearchPageInner() {
             </AnimatePresence>
           </div>
 
-          <div className="pb-4 pt-1 md:py-3">
-          <div className="overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70">
+          <div className="pb-4 pt-1 md:py-5">
+          <div className="md:overflow-hidden md:rounded-[2rem] md:border md:border-white/70 md:bg-white/85 md:p-4 md:shadow-xl md:shadow-gray-200/60 md:ring-1 md:ring-gray-200/60 md:backdrop-blur-xl">
+            <div className="mb-3 hidden items-end justify-between gap-4 px-1 md:flex">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-pink-500/70">
+                  Discover
+                </p>
+                <h1 className="font-futura text-2xl font-black tracking-tight text-gray-950">
+                  Explore
+                </h1>
+              </div>
+              <p className="max-w-sm text-right text-xs font-medium leading-snug text-gray-400">
+                Search the catalog and refine results without leaving the gallery.
+              </p>
+            </div>
+          <div className="overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70 md:bg-white md:shadow-md md:shadow-gray-200/60">
             <div className="hidden md:block">
               <SearchBar
                 onSearch={handleSearch}
@@ -449,6 +463,7 @@ function SearchPageInner() {
           )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Content */}
@@ -610,7 +625,6 @@ function SearchPageInner() {
           </motion.div>
         </AnimatePresence>
       </div>
-
       </div>
 
       {/* Mobile filter drawer */}
