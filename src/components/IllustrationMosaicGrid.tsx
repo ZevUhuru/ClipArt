@@ -17,6 +17,8 @@ interface IllustrationMosaicGridProps {
   /** URL prefix; href is built as `{basePath}/{item.category}/{item.slug}`. Defaults to "/illustrations". */
   basePath?: string;
   sizes?: string;
+  /** When provided, cards fire this callback instead of navigating via href. */
+  onItemClick?: (item: MosaicIllustration) => void;
 }
 
 function useColumnCount() {
@@ -48,7 +50,7 @@ function distributeByHeight(items: MosaicIllustration[], colCount: number): Mosa
   return columns;
 }
 
-export function IllustrationMosaicGrid({ items, basePath = "/illustrations", sizes }: IllustrationMosaicGridProps) {
+export function IllustrationMosaicGrid({ items, basePath = "/illustrations", sizes, onItemClick }: IllustrationMosaicGridProps) {
   const colCount = useColumnCount();
   const columns = useMemo(() => distributeByHeight(items, colCount), [items, colCount]);
 
@@ -71,7 +73,10 @@ export function IllustrationMosaicGrid({ items, basePath = "/illustrations", siz
                 aspect_ratio: item.aspect_ratio,
                 transparent_url: item.transparent_url,
               }}
-              href={`${basePath}/${item.category}/${item.slug}`}
+              {...(onItemClick
+                ? { onClick: () => onItemClick(item) }
+                : { href: `${basePath}/${item.category}/${item.slug}` }
+              )}
               sizes={sizes || "(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"}
             />
           ))}

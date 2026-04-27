@@ -8,6 +8,7 @@ import { categories } from "@/data/categories";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
+import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { type StyleKey, VALID_STYLES, STYLE_LABELS } from "@/lib/styles";
 import { StyleIndicator } from "@/data/styleIndicators";
@@ -66,6 +67,34 @@ interface SearchResult {
   model?: string;
 }
 
+// ── Masonry helpers (shared with AnimationGrid / IllustrationMosaicGrid) ────
+function useMasonryColumnCount() {
+  const [cols, setCols] = useState(4);
+  const update = useCallback(() => {
+    const w = window.innerWidth;
+    setCols(w < 640 ? 2 : w < 768 ? 3 : 4);
+  }, []);
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [update]);
+  return cols;
+}
+
+function distributeByHeight<T extends { aspect_ratio?: string }>(items: T[], colCount: number): T[][] {
+  const columns: T[][] = Array.from({ length: colCount }, () => []);
+  const heights = new Array<number>(colCount).fill(0);
+  for (const item of items) {
+    const [w, h] = (item.aspect_ratio || "1:1").split(":").map(Number);
+    const normalizedHeight = (h || 1) / (w || 1);
+    const shortestIdx = heights.indexOf(Math.min(...heights));
+    columns[shortestIdx].push(item);
+    heights[shortestIdx] += normalizedHeight;
+  }
+  return columns;
+}
+
 export default function SearchPage() {
   return (
     <Suspense>
@@ -96,6 +125,8 @@ function SearchPageInner() {
 
   const openDrawerRaw = useImageDrawer((s) => s.open);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const masonryCols = useMasonryColumnCount();
 
   const openDrawer = useCallback((item: SearchResult, list: SearchResult[]) => {
     const toDrawer = (r: SearchResult) => ({
@@ -198,6 +229,11 @@ function SearchPageInner() {
   const handleSearch = useCallback((q: string) => setQuery(q), [setQuery]);
 
   const safeResults = results.filter((item) => item.id && (item.url || item.videoUrl));
+
+  const animationColumns = useMemo(
+    () => filters.contentType === "animations" ? distributeByHeight(safeResults, masonryCols) : [],
+    [safeResults, masonryCols, filters.contentType],
+  );
 
   return (
     <div className="pb-8">
@@ -333,34 +369,58 @@ function SearchPageInner() {
             ) : safeResults.length > 0 ? (
               <>
                 {filters.contentType === "animations" ? (
-                  <ImageGrid variant="animations">
-                    {safeResults.map((item: SearchResult) => {
-                      const ar = item.aspect_ratio?.replace(":", "/") || "1/1";
-                      return (
-                        <div
-                          key={item.id}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => openDrawer(item, safeResults)}
-                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(item, safeResults); }}
-                          className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-gray-200"
-                        >
-                          <div className="relative" style={{ aspectRatio: ar }}>
-                            <VideoPlayer
-                              src={item.videoUrl || ""}
-                              poster={item.url}
-                              mode="preview"
-                              className="absolute inset-0"
-                            />
-                          </div>
-                          <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                            <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
-                            Animated
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </ImageGrid>
+                  // Masonry mosaic — mirrors /animations page
+                  <div
+                    className="grid gap-2.5"
+                    style={{ gridTemplateColumns: `repeat(${masonryCols}, minmax(0, 1fr))` }}
+                  >
+                    {animationColumns.map((col, ci) => (
+                      <div key={ci} className="flex flex-col gap-2.5">
+                        {col.map((item) => {
+                          const ar = item.aspect_ratio?.replace(":", "/") || "1/1";
+                          return (
+                            <div
+                              key={item.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => openDrawer(item, safeResults)}
+                              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(item, safeResults); }}
+                              className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-purple-400/40"
+                            >
+                              <div className="relative" style={{ aspectRatio: ar }}>
+                                <VideoPlayer
+                                  src={item.videoUrl || ""}
+                                  poster={item.url}
+                                  mode="preview"
+                                  className="absolute inset-0"
+                                />
+                              </div>
+                              <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                                <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
+                                Animated
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                ) : filters.contentType === "illustration" ? (
+                  // Masonry mosaic — mirrors /illustrations page
+                  <IllustrationMosaicGrid
+                    items={safeResults.map((r) => ({
+                      slug: r.slug,
+                      title: r.title,
+                      url: r.url,
+                      category: r.category,
+                      aspect_ratio: r.aspect_ratio,
+                      transparent_url: r.transparent_url,
+                    }))}
+                    onItemClick={(mosaicItem) => {
+                      const original = safeResults.find((r) => r.slug === mosaicItem.slug);
+                      if (original) openDrawer(original, safeResults);
+                    }}
+                  />
                 ) : (
                   <ImageGrid variant={gridVariant}>
                     {safeResults.map((item: SearchResult) => {
