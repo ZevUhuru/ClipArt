@@ -98,17 +98,17 @@ const STARTER_PACKS = [
 ];
 
 const STUDIO_PROMISES = [
-  "Start with a product idea, not a blank upload form.",
-  "Generate new clipart directly into the pack.",
-  "Import your existing library assets when they fit.",
-  "Pick a cover and publish a ZIP-ready theme pack.",
+  "Set the pack brief.",
+  "Add generated or existing clipart.",
+  "Choose a cover image.",
+  "Publish when the pack is ready.",
 ];
 
 const STUDIO_WORKFLOW = [
-  { label: "Brief", detail: "Define the buyer and use case." },
-  { label: "Assets", detail: "Generate or import cohesive clipart." },
-  { label: "Cover", detail: "Pick the image that sells the set." },
-  { label: "Publish", detail: "Prepare the ZIP-ready pack." },
+  { label: "Brief", detail: "Title, audience, goal." },
+  { label: "Assets", detail: "Generate or import." },
+  { label: "Cover", detail: "Select a preview." },
+  { label: "Publish", detail: "Build the ZIP." },
 ];
 
 export default function CreatePacksPageWrapper() {
@@ -596,8 +596,8 @@ function CreatePacksPage() {
 
   if (!pack) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_12%_0%,rgba(236,72,153,0.14),transparent_30%),radial-gradient(circle_at_88%_10%,rgba(251,146,60,0.12),transparent_28%),linear-gradient(180deg,#fff_0%,#fafafa_58%,#fff_100%)] pb-16">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+      <div className="min-h-screen bg-[#fbfaf9] pb-16">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
           <AnimatePresence>
             {error && (
               <motion.p
@@ -611,25 +611,24 @@ function CreatePacksPage() {
             )}
           </AnimatePresence>
 
-          <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-            <div className="pt-4 sm:pt-8">
-              <p className="text-xs font-bold uppercase tracking-[0.26em] text-pink-500">
-                Clipart Pack Studio
+          <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <div className="rounded-[1.75rem] border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-500">
+                Packs
               </p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-black tracking-tight text-gray-950 sm:text-5xl lg:text-6xl">
-                Build a clipart pack people instantly understand.
+              <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-gray-800 sm:text-4xl">
+                Create or continue a clipart pack.
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-relaxed text-gray-500 sm:text-lg">
-                Start with a theme, audience, and use case. Then generate matching transparent
-                clip art, import your best library assets, choose a cover, and publish a ZIP-ready
-                pack from one workspace.
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-500 sm:text-base">
+                Set up the basic brief first. After that, you can generate pack-specific assets,
+                import from your library, pick a cover, and publish.
               </p>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
                 {STUDIO_PROMISES.map((promise) => (
                   <div
                     key={promise}
-                    className="rounded-2xl border border-white/80 bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-lg shadow-gray-100/60 backdrop-blur"
+                    className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3 text-sm font-medium text-gray-600"
                   >
                     {promise}
                   </div>
@@ -637,9 +636,9 @@ function CreatePacksPage() {
               </div>
 
               {recentPacks.length > 0 && (
-                <div className="mt-8 rounded-[1.5rem] border border-gray-100 bg-white/80 p-4 shadow-xl shadow-gray-100/70 backdrop-blur">
+                <div className="mt-6 rounded-[1.5rem] border border-gray-100 bg-white p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-sm font-black text-gray-950">Continue a pack</h2>
+                    <h2 className="text-sm font-semibold text-gray-800">Continue a pack</h2>
                     <span className="text-xs font-semibold text-gray-400">
                       {recentPacks.length} drafts
                     </span>
@@ -649,7 +648,7 @@ function CreatePacksPage() {
                       <button
                         key={recentPack.id}
                         onClick={() => router.push(`/create/packs?id=${recentPack.id}`)}
-                        className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 text-left transition hover:border-pink-200 hover:shadow-md"
+                        className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 text-left transition hover:border-pink-200 hover:bg-pink-50/30"
                       >
                         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gray-100">
                           {recentPack.cover_image_url ? (
@@ -663,7 +662,7 @@ function CreatePacksPage() {
                           ) : null}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-gray-900">
+                          <p className="truncate text-sm font-semibold text-gray-700">
                             {recentPack.title}
                           </p>
                           <p className="text-xs text-gray-400">
@@ -679,17 +678,16 @@ function CreatePacksPage() {
               )}
             </div>
 
-            <div className="rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-2xl shadow-pink-100/50 ring-1 ring-gray-100 backdrop-blur sm:p-6">
-              <div className="rounded-[1.5rem] bg-gray-950 p-5 text-white">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-300">
+            <div className="rounded-[1.75rem] border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+              <div className="rounded-[1.25rem] border border-pink-100 bg-pink-50/60 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-500">
                   New Pack
                 </p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight">
-                  Define the product before the images.
+                <h2 className="mt-2 text-xl font-semibold tracking-tight text-gray-800">
+                  Pack setup
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-white/55">
-                  A strong pack has a buyer, a job, a consistent style, and enough related assets
-                  to feel complete.
+                <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                  These fields guide generation and make the pack easier to organize later.
                 </p>
               </div>
 
@@ -787,7 +785,7 @@ function CreatePacksPage() {
                           setAudience(starter.audience);
                           setPackGoal(starter.goal);
                         }}
-                        className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm transition hover:bg-gray-950 hover:text-white"
+                        className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-sm ring-1 ring-pink-100 transition hover:bg-pink-100 hover:text-pink-700"
                       >
                         {starter.title.replace(" Clip Art Pack", "")}
                       </button>
@@ -798,7 +796,7 @@ function CreatePacksPage() {
                 <button
                   onClick={createPack}
                   disabled={!title.trim() || saving}
-                  className="w-full rounded-2xl bg-brand-gradient px-5 py-3.5 text-sm font-black text-white shadow-xl shadow-pink-100 transition-all hover:shadow-2xl hover:brightness-105 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-brand-gradient px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-pink-100 transition-all hover:brightness-105 disabled:opacity-50"
                 >
                   {saving ? "Creating Pack..." : "Create Pack Studio"}
                 </button>
@@ -837,7 +835,7 @@ function CreatePacksPage() {
   const canPublish = Boolean(pack && items.length > 0 && title.trim());
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,rgba(236,72,153,0.12),transparent_30%),radial-gradient(circle_at_85%_4%,rgba(251,146,60,0.10),transparent_28%),linear-gradient(180deg,#fff_0%,#fafafa_55%,#fff_100%)] pb-32">
+    <div className="min-h-screen bg-[#fbfaf9] pb-24">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
         <AnimatePresence>
           {error && (
@@ -864,69 +862,65 @@ function CreatePacksPage() {
 
         {pack && (
           <>
-            <section className="mb-6 overflow-hidden rounded-[2rem] bg-gray-950 shadow-2xl shadow-gray-200/80">
-              <div className="relative grid gap-6 p-5 text-white sm:p-7 lg:grid-cols-[1fr_360px] lg:items-center">
-                <div aria-hidden className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-pink-500/25 blur-3xl" />
-                <div aria-hidden className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-orange-400/15 blur-3xl" />
-                <div className="relative">
-                  <p className="text-xs font-bold uppercase tracking-[0.26em] text-pink-300">
-                    Clipart Pack Studio
+            <section className="mb-6 rounded-[1.75rem] border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+              <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-center">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-500">
+                    Pack Workspace
                   </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-800 sm:text-3xl">
                       {title || pack.title}
                     </h1>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/70 ring-1 ring-white/10">
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
                       {items.length} assets
                     </span>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/70 ring-1 ring-white/10">
+                    <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-600">
                       {completeChecklistCount}/{checklist.length} ready
                     </span>
                   </div>
-                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/55 sm:text-base">
-                    Build a cohesive transparent clipart pack for {audience.toLowerCase()}.
-                    Use this workspace to shape the brief, create matching assets, set the cover,
-                    and prepare the pack for download or sale.
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">
+                    Daily workspace for the pack brief, assets, cover, and publish readiness.
                   </p>
-                  <div className="mt-6 grid gap-2 sm:grid-cols-4">
+                  <div className="mt-5 grid gap-2 sm:grid-cols-4">
                     {STUDIO_WORKFLOW.map((step, index) => (
                       <div
                         key={step.label}
-                        className="rounded-2xl border border-white/10 bg-white/[0.055] p-3"
+                        className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-black text-gray-950">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-semibold text-pink-600 ring-1 ring-pink-100">
                             {index + 1}
                           </span>
-                          <p className="text-sm font-black">{step.label}</p>
+                          <p className="text-sm font-semibold text-gray-700">{step.label}</p>
                         </div>
-                        <p className="mt-2 text-xs leading-relaxed text-white/45">{step.detail}</p>
+                        <p className="mt-2 text-xs leading-relaxed text-gray-400">{step.detail}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="relative rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/35">
-                    Next Best Action
+                <div className="rounded-[1.5rem] border border-pink-100 bg-pink-50/50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-500">
+                    Next Step
                   </p>
-                  <h2 className="mt-2 text-xl font-black">
-                    {items.length === 0 ? "Add the first 8-12 assets" : "Choose a strong cover"}
+                  <h2 className="mt-2 text-lg font-semibold text-gray-800">
+                    {items.length === 0 ? "Add assets" : "Review cover and publish status"}
                   </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-white/50">
+                  <p className="mt-2 text-sm leading-relaxed text-gray-500">
                     {items.length === 0
-                      ? "Generate a coordinated starter set, then import any library pieces that match the style."
-                      : "The cover is what makes the pack feel valuable in listings and search results."}
+                      ? "Generate a starter set or import matching clipart from your library."
+                      : "Set the cover, fill any missing brief fields, then publish when ready."}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       onClick={() => setView("generate")}
-                      className="rounded-full bg-white px-4 py-2 text-sm font-black text-gray-950 transition hover:bg-gray-100"
+                      className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-pink-600 shadow-sm ring-1 ring-pink-100 transition hover:bg-pink-100"
                     >
                       Generate Assets
                     </button>
                     <button
                       onClick={() => setView("library")}
-                      className="rounded-full border border-white/15 px-4 py-2 text-sm font-black text-white transition hover:bg-white/10"
+                      className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
                     >
                       Import Library
                     </button>
@@ -965,14 +959,14 @@ function CreatePacksPage() {
                   </div>
                   <div className="p-5">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-500">
-                      Product Brief
+                      Pack Summary
                     </p>
-                    <h2 className="mt-2 text-xl font-black tracking-tight text-gray-950">
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight text-gray-800">
                       {title || "Untitled Clipart Pack"}
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-gray-500">
                       {description ||
-                        "Describe who this pack is for and what a buyer can make with it."}
+                        "Add a short description so the pack stays easy to organize."}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600">
@@ -984,11 +978,11 @@ function CreatePacksPage() {
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                       <div className="rounded-2xl bg-gray-50 p-3">
-                        <p className="font-bold text-gray-900">{items.length}</p>
+                        <p className="font-semibold text-gray-700">{items.length}</p>
                         <p className="mt-0.5 text-gray-500">Assets</p>
                       </div>
                       <div className="rounded-2xl bg-gray-50 p-3">
-                        <p className="font-bold text-gray-900">{transparentCount}</p>
+                        <p className="font-semibold text-gray-700">{transparentCount}</p>
                         <p className="mt-0.5 text-gray-500">Transparent</p>
                       </div>
                     </div>
@@ -1001,7 +995,7 @@ function CreatePacksPage() {
                       <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">
                         Publish Readiness
                       </p>
-                      <h3 className="mt-1 text-lg font-black text-gray-950">
+                      <h3 className="mt-1 text-lg font-semibold text-gray-800">
                         {completeChecklistCount}/{checklist.length} ready
                       </h3>
                     </div>
@@ -1025,7 +1019,7 @@ function CreatePacksPage() {
                     {checklist.map((item) => (
                       <div key={item.label} className="flex items-center gap-2 text-sm">
                         <span
-                          className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+                          className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
                             item.complete
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-100 text-gray-400"
@@ -1040,8 +1034,8 @@ function CreatePacksPage() {
                     ))}
                   </div>
                   <p className="mt-4 text-xs leading-relaxed text-gray-400">
-                    You can publish with fewer than eight assets, but strong packs usually feel
-                    more valuable when they include a complete reusable set.
+                    You can publish early, but this checklist helps keep packs organized before
+                    they are shared or downloaded.
                   </p>
                 </div>
               </aside>
@@ -1054,9 +1048,9 @@ function CreatePacksPage() {
                 className="flex w-full items-center justify-between px-5 py-4 text-left"
               >
                 <span>
-                  <span className="block text-sm font-black text-gray-900">Pack Brief</span>
+                  <span className="block text-sm font-semibold text-gray-800">Pack Brief</span>
                   <span className="mt-0.5 block text-xs text-gray-400">
-                    This is the product definition that guides generation and publishing.
+                    Basic context used for generation, organization, and publishing.
                   </span>
                 </span>
                 <svg
@@ -1186,10 +1180,10 @@ function CreatePacksPage() {
               <div className="grid gap-2 md:grid-cols-4">
               <button
                 onClick={() => setView("editor")}
-                className={`rounded-2xl px-4 py-3 text-left text-sm font-black transition-colors ${
+                className={`rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-colors ${
                   view === "editor"
-                    ? "bg-gray-950 text-white shadow-lg shadow-gray-200"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-pink-50 text-pink-700 ring-1 ring-pink-100"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                 }`}
               >
                 Canvas
@@ -1197,10 +1191,10 @@ function CreatePacksPage() {
               </button>
               <button
                 onClick={() => setView("library")}
-                className={`rounded-2xl px-4 py-3 text-left text-sm font-black transition-colors ${
+                className={`rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-colors ${
                   view === "library"
-                    ? "bg-gray-950 text-white shadow-lg shadow-gray-200"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-pink-50 text-pink-700 ring-1 ring-pink-100"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                 }`}
               >
                 Library
@@ -1208,10 +1202,10 @@ function CreatePacksPage() {
               </button>
               <button
                 onClick={() => setView("browse")}
-                className={`rounded-2xl px-4 py-3 text-left text-sm font-black transition-colors ${
+                className={`rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-colors ${
                   view === "browse"
-                    ? "bg-gray-950 text-white shadow-lg shadow-gray-200"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-pink-50 text-pink-700 ring-1 ring-pink-100"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                 }`}
               >
                 Catalog
@@ -1219,10 +1213,10 @@ function CreatePacksPage() {
               </button>
               <button
                 onClick={() => setView("generate")}
-                className={`rounded-2xl px-4 py-3 text-left text-sm font-black transition-colors ${
+                className={`rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-colors ${
                   view === "generate"
-                    ? "bg-gray-950 text-white shadow-lg shadow-gray-200"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-pink-50 text-pink-700 ring-1 ring-pink-100"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                 }`}
               >
                 Generate
@@ -1238,26 +1232,26 @@ function CreatePacksPage() {
                   <div className="overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-xl shadow-gray-100/70">
                     <div className="grid gap-0 lg:grid-cols-[1fr_300px]">
                       <div className="p-7 sm:p-10">
-                        <div className="inline-flex rounded-full bg-pink-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-pink-500">
+                        <div className="inline-flex rounded-full bg-pink-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-pink-500">
                           Empty Canvas
                         </div>
-                        <h3 className="mt-4 max-w-xl text-3xl font-black tracking-tight text-gray-950">
-                          Start with a coordinated set, not random singles.
+                        <h3 className="mt-4 max-w-xl text-2xl font-semibold tracking-tight text-gray-800">
+                          Add assets to this pack.
                         </h3>
                         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-500">
-                          Generate a first batch around this pack brief, then import your best
-                          existing clipart if it matches the same style and purpose.
+                          Generate a starter batch from the brief, or import existing clipart
+                          that matches the pack.
                         </p>
                         <div className="mt-6 flex flex-wrap gap-3">
                           <button
                             onClick={() => setView("generate")}
-                            className="rounded-full bg-brand-gradient px-5 py-3 text-sm font-black text-white shadow-lg shadow-pink-100 hover:shadow-xl"
+                            className="rounded-full bg-brand-gradient px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-100 hover:brightness-105"
                           >
                             Generate Starter Set
                           </button>
                           <button
                             onClick={() => setView("library")}
-                            className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-black text-gray-800 shadow-sm hover:bg-gray-50"
+                            className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-600 shadow-sm hover:bg-gray-50"
                           >
                             Import From Library
                           </button>
@@ -1401,7 +1395,7 @@ function CreatePacksPage() {
                   <button
                     onClick={loadLibrary}
                     disabled={libraryLoading}
-                    className="shrink-0 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                    className="shrink-0 rounded-xl bg-pink-50 px-5 py-2.5 text-sm font-semibold text-pink-700 ring-1 ring-pink-100 hover:bg-pink-100 disabled:opacity-50"
                   >
                     {libraryLoading ? "Loading..." : "Search"}
                   </button>
@@ -1490,7 +1484,7 @@ function CreatePacksPage() {
                   <button
                     onClick={searchAssets}
                     disabled={!searchQuery.trim() || searching}
-                    className="shrink-0 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                    className="shrink-0 rounded-xl bg-pink-50 px-5 py-2.5 text-sm font-semibold text-pink-700 ring-1 ring-pink-100 hover:bg-pink-100 disabled:opacity-50"
                   >
                     {searching ? "Searching..." : "Search"}
                   </button>
@@ -1629,44 +1623,44 @@ function CreatePacksPage() {
         )}
       </div>
 
-      {/* Sticky bottom publish bar */}
+      {/* Compact publish actions */}
       {pack && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-100 bg-white/90 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-            <div className="flex min-w-0 items-center gap-3 text-sm text-gray-500">
-              <span>{items.length} items</span>
-              <span className="hidden sm:inline">
-                {completeChecklistCount}/{checklist.length} checklist
-              </span>
-              {pack.zip_status === "ready" && (
-                <span className="text-green-600">ZIP ready</span>
-              )}
-              {pack.zip_status === "building" && (
-                <span className="text-amber-600">Building ZIP...</span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
+        <div className="pointer-events-none fixed bottom-4 left-0 right-0 z-30 px-4">
+          <div className="mx-auto flex max-w-7xl justify-end">
+            <div className="pointer-events-auto flex max-w-full items-center gap-2 rounded-2xl border border-gray-100 bg-white/92 p-2 shadow-xl shadow-gray-200/70 backdrop-blur-xl">
+              <div className="hidden min-w-0 px-2 text-xs text-gray-500 sm:block">
+                <span className="font-semibold text-gray-700">{items.length}</span> assets
+                <span className="mx-2 text-gray-300">/</span>
+                <span className="font-semibold text-gray-700">{completeChecklistCount}</span>
+                <span>/{checklist.length} ready</span>
+                {pack.zip_status === "ready" && (
+                  <span className="ml-2 text-green-600">ZIP ready</span>
+                )}
+                {pack.zip_status === "building" && (
+                  <span className="ml-2 text-amber-600">Building ZIP</span>
+                )}
+              </div>
               {pack.is_published && pack.zip_status === "ready" && pack.categories?.slug && (
                 <button
                   onClick={() =>
                     router.push(`/design-bundles/${pack.categories!.slug}/${pack.slug}`)
                   }
-                  className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                 >
-                  View Pack
+                  View
                 </button>
               )}
               <button
                 onClick={publishPack}
                 disabled={publishing || !canPublish}
-                className="rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+                className="rounded-xl bg-brand-gradient px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:brightness-105 disabled:opacity-50"
               >
                 {publishing
                   ? "Publishing..."
                   : pack.is_published
                     ? "Republish"
                     : visibility === "public"
-                      ? "Publish Pack"
+                      ? "Publish"
                       : "Save Private"}
               </button>
             </div>
