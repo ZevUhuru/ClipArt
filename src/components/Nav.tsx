@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAppStore } from "@/stores/useAppStore";
 import { createBrowserClient } from "@/lib/supabase/client";
 
@@ -30,10 +32,15 @@ function CloseIcon() {
 }
 
 export function Nav() {
-  const { openAuthModal, openBuyCreditsModal, user, credits, resetUserState } = useAppStore();
+  const { openAuthModal, user, resetUserState } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const close = useCallback(() => setMenuOpen(false), []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -53,7 +60,21 @@ export function Nav() {
     close();
   }
 
+  const mobileMenuPortal = mounted
+    ? createPortal(
+        <AnimatePresence>
+          {menuOpen && (
+            <MobileMenuSheet
+              onClose={close}
+            />
+          )}
+        </AnimatePresence>,
+        document.body,
+      )
+    : null;
+
   return (
+    <>
     <nav className="relative z-10 flex-shrink-0 bg-[#111111]">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-3 sm:h-16 sm:px-4">
         {/* Logo */}
@@ -120,113 +141,72 @@ export function Nav() {
             </button>
           )}
           <button
+            type="button"
             onClick={() => setMenuOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Open menu"
+            aria-expanded={menuOpen}
           >
             <HamburgerIcon />
           </button>
         </div>
       </div>
+    </nav>
+    {mobileMenuPortal}
+    </>
+  );
+}
 
-      {/* ── Mobile slide-over ── */}
-      <div
-        className={`fixed inset-0 z-50 transition-opacity duration-300 md:hidden ${menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+function MobileMenuSheet({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  return (
+    <div className="md:hidden">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden
+      />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 400, damping: 40 }}
+        className="fixed inset-x-0 bottom-0 z-[60] max-h-[82vh] overflow-y-auto rounded-t-[2rem] bg-[#111111] shadow-2xl shadow-black/40"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
-
-        {/* Panel */}
-        <div
-          className={`absolute right-0 top-0 h-full w-72 bg-[#111111] shadow-2xl transition-transform duration-300 ease-out ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
-        >
-          {/* Panel header */}
-          <div className="flex h-14 items-center justify-between px-4">
+        <div className="sticky top-0 z-10 bg-[#111111] px-4 pt-2.5 pb-4">
+          <div className="mx-auto h-1 w-10 rounded-full bg-white/15" />
+          <div className="mt-4 flex items-center justify-between">
             <span className="text-sm font-semibold text-white/50">Menu</span>
             <button
-              onClick={close}
+              onClick={onClose}
               className="flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
               aria-label="Close menu"
             >
               <CloseIcon />
             </button>
           </div>
+        </div>
 
-          <div className="flex flex-col px-4">
-            {user ? (
-              <>
-                {/* Credit balance */}
-                <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-white/[0.06] px-4 py-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400">
-                    <BoltIcon className="h-4 w-4 text-black" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{credits} credit{credits !== 1 ? "s" : ""}</p>
-                    <button
-                      onClick={() => { openBuyCreditsModal(); close(); }}
-                      className="text-xs font-medium text-amber-400 transition-colors hover:text-amber-300"
-                    >
-                      Buy more
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <MenuLink href="/create" onClick={close}>Create Clip Art</MenuLink>
-                  <MenuLink href="/create/coloring-pages" onClick={close}>Create Coloring Pages</MenuLink>
-                  <MenuLink href="/animations" onClick={close}>Animations</MenuLink>
-                  <MenuLink href="/my-art" onClick={close}>My Art</MenuLink>
-                  <MenuLink href="/search" onClick={close}>Browse</MenuLink>
-                  <MenuLink href="/learn" onClick={close}>Learn</MenuLink>
-                </div>
-
-                <div className="my-4 border-t border-white/10" />
-
-                <div className="space-y-1">
-                  <MenuLink href="/settings" onClick={close}>Settings</MenuLink>
-                </div>
-
-                <div className="my-2 border-t border-white/10" />
-
-                <button
-                  onClick={handleSignOut}
-                  className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => { openAuthModal("signup"); close(); }}
-                  className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-3 text-sm font-bold uppercase tracking-wider text-black transition-all hover:bg-amber-300"
-                >
-                  <BoltIcon className="h-4 w-4" />
-                  Get Free Credits
-                </button>
-
-                <button
-                  onClick={() => { openAuthModal("signin"); close(); }}
-                  className="mb-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/20"
-                >
-                  Sign in
-                </button>
-
-                <div className="my-1 border-t border-white/10" />
-
-                <div className="mt-3 space-y-1">
-                  <MenuLink href="/create" onClick={close}>Create</MenuLink>
-                  <MenuLink href="/animations" onClick={close}>Animations</MenuLink>
-                  <MenuLink href="/coloring-pages" onClick={close}>Coloring Pages</MenuLink>
-                  <MenuLink href="/search" onClick={close}>Browse</MenuLink>
-                  <MenuLink href="/learn" onClick={close}>Learn</MenuLink>
-                </div>
-              </>
-            )}
+        <div className="flex flex-col px-4">
+          <div className="mt-3 space-y-1">
+            <MenuLink href="/create" onClick={onClose}>Create</MenuLink>
+            <MenuLink href="/search" onClick={onClose}>Browse</MenuLink>
+            <MenuLink href="/learn" onClick={onClose}>Learn</MenuLink>
           </div>
         </div>
-      </div>
-    </nav>
+      </motion.div>
+    </div>
   );
 }
 

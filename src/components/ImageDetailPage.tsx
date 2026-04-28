@@ -126,9 +126,8 @@ export function ImageDetailPage({
     <div className="min-h-screen overflow-x-hidden bg-[#f6f7f9]">
       <CategoryNav />
 
-      <div className="relative overflow-x-hidden">
-        <div className="absolute inset-x-0 top-0 h-[36rem] bg-[radial-gradient(circle_at_12%_8%,rgba(236,72,153,0.16),transparent_28%),radial-gradient(circle_at_86%_10%,rgba(251,146,60,0.16),transparent_30%),linear-gradient(180deg,#fff7ed_0%,#fdf2f8_42%,#f6f7f9_100%)]" />
-        <div className="absolute left-1/2 top-0 h-px w-[80rem] -translate-x-1/2 bg-gradient-to-r from-transparent via-pink-200 to-transparent" />
+      <div className="relative overflow-x-hidden bg-gradient-to-b from-white via-[#f8f9fb] to-[#f6f7f9]">
+        <div className="absolute inset-x-0 top-0 h-px bg-gray-200/80" />
 
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="relative mx-auto w-full max-w-7xl px-4 pb-4 pt-5 sm:px-6 lg:px-8">
