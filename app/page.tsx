@@ -5,12 +5,10 @@ import { redirect } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground, type MosaicAnimation } from "@/components/MosaicBackground";
-import { ImageCard } from "@/components/ImageCard";
-import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { getAllCategories, type DbCategory } from "@/lib/categories";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import { sampleImages } from "@/data/sampleGallery";
+import { sampleImages, type SampleImage } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
 import { STYLE_LABELS, VALID_STYLES, type StyleKey } from "@/lib/styles";
 
@@ -21,10 +19,23 @@ interface CommunityImage {
   prompt: string;
   title: string | null;
   image_url: string;
+  transparent_image_url?: string | null;
+  has_transparency?: boolean;
   style: string;
   category: string;
   slug: string | null;
   aspect_ratio: string;
+}
+
+interface HomeVisual {
+  key: string;
+  title: string;
+  slug: string;
+  category: string;
+  url: string;
+  transparentUrl?: string | null;
+  hasTransparency?: boolean;
+  style?: string;
 }
 
 interface HomepagePack {
@@ -44,22 +55,22 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
     const admin = createSupabaseAdmin();
     const { data: featured } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
+      .select("id, prompt, title, image_url, transparent_image_url, has_transparency, style, category, slug, aspect_ratio")
       .eq("is_public", true)
       .eq("is_featured", true)
       .eq("content_type", "clipart")
       .order("featured_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .limit(8);
+      .limit(32);
 
-    if (featured && featured.length >= 8) return featured as CommunityImage[];
+    if (featured && featured.length >= 24) return featured as CommunityImage[];
 
     const featuredList = (featured || []) as CommunityImage[];
     const existing = new Set(featuredList.map((f) => f.id));
-    const remaining = 8 - featuredList.length;
+    const remaining = 32 - featuredList.length;
     const { data: recent } = await admin
       .from("generations")
-      .select("id, prompt, title, image_url, style, category, slug, aspect_ratio")
+      .select("id, prompt, title, image_url, transparent_image_url, has_transparency, style, category, slug, aspect_ratio")
       .eq("is_public", true)
       .eq("content_type", "clipart")
       .eq("is_featured", false)
@@ -67,7 +78,7 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
       .limit(remaining);
 
     const recentList = (recent || []) as CommunityImage[];
-    return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 8);
+    return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 32);
   } catch {
     return [];
   }
@@ -83,7 +94,7 @@ async function getHomepagePacks(): Promise<HomepagePack[]> {
       .eq("visibility", "public")
       .order("is_featured", { ascending: false })
       .order("downloads", { ascending: false })
-      .limit(3);
+      .limit(6);
     return (data || []) as HomepagePack[];
   } catch {
     return [];
@@ -278,6 +289,50 @@ const SECONDARY_PRODUCTS = [
 
 const FEATURED_STYLES: StyleKey[] = ["flat", "cartoon", "sticker", "watercolor", "vintage", "kawaii", "outline", "3d"];
 
+function isCommunityImage(img: CommunityImage | SampleImage): img is CommunityImage {
+  return "image_url" in img;
+}
+
+function normalizeHomeImage(img: CommunityImage | SampleImage): HomeVisual {
+  if (isCommunityImage(img)) {
+    return {
+      key: img.id,
+      title: img.title || img.prompt,
+      slug: img.slug || img.id,
+      category: img.category,
+      url: img.image_url,
+      transparentUrl: img.transparent_image_url,
+      hasTransparency: img.has_transparency,
+      style: img.style,
+    };
+  }
+
+  return {
+    key: img.slug,
+    title: img.title,
+    slug: img.slug,
+    category: img.category || getCategorySlugForImage(img),
+    url: img.url,
+    transparentUrl: img.transparent_url,
+    hasTransparency: img.has_transparency,
+    style: img.tags?.[0],
+  };
+}
+
+function takeVisuals(images: HomeVisual[], start: number, count: number): HomeVisual[] {
+  if (images.length === 0) return [];
+  return Array.from({ length: count }, (_, index) => images[(start + index) % images.length]);
+}
+
+function categoryVisuals(images: HomeVisual[], category: DbCategory, start: number): HomeVisual[] {
+  const matches = images.filter((img) => img.category === category.slug);
+  return (matches.length >= 3 ? matches : takeVisuals(images, start, 3)).slice(0, 3);
+}
+
+function imageHref(img: HomeVisual) {
+  return `/${img.category}/${img.slug}`;
+}
+
 const faqItems = [
   {
     q: "Is clip.art really free?",
@@ -325,8 +380,14 @@ export default async function Home() {
   ]);
 
   const hasClipArt = clipArtImages.length > 0;
-  const fallbackClipArt = sampleImages.slice(0, 8);
+  const fallbackClipArt = sampleImages.slice(0, 32);
   const featuredClipArt = hasClipArt ? clipArtImages : fallbackClipArt;
+  const visualImages = featuredClipArt.map(normalizeHomeImage);
+  const heroVisuals = takeVisuals(visualImages, 0, 9);
+  const qualityVisuals = takeVisuals(visualImages, 9, 8);
+  const useCaseVisuals = takeVisuals(visualImages, 17, 12);
+  const packVisuals = takeVisuals(visualImages, 6, 8);
+  const promptVisuals = takeVisuals(visualImages, 12, 10);
   const featuredCategories = FEATURED_CATEGORY_SLUGS
     .map((slug) => categories.find((category) => category.slug === slug))
     .filter(Boolean) as DbCategory[];
@@ -417,14 +478,14 @@ export default async function Home() {
       <div className="relative z-10 bg-white">
         <section className="pb-16 pt-8 sm:pb-24">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+            <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-pink-500">Clip Art Catalog</p>
                 <h2 className="mt-3 max-w-2xl text-4xl font-black tracking-tight text-gray-950 sm:text-5xl">
-                  Explore free transparent clip art for real projects.
+                  Browse clip art by what you need to make.
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-relaxed text-gray-500">
-                  Search classroom visuals, seasonal artwork, business icons, stickers, craft assets, and everyday objects. Every path points back to clip art that is easy to download, reuse, and customize.
+                  Scan a visual catalog of classroom graphics, seasonal artwork, stickers, craft assets, icons, and everyday objects. The page should feel like a useful art shelf, not a list of links.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link href="/search" className="btn-primary px-6 text-sm">
@@ -434,29 +495,44 @@ export default async function Home() {
                     Generate Your Own
                   </Link>
                 </div>
+                <div className="mt-8 grid max-w-md grid-cols-3 gap-2">
+                  {["Transparent PNG", "Commercial use", "Clipart first"].map((label) => (
+                    <div key={label} className="rounded-2xl border border-gray-100 bg-gray-50 px-3 py-3 text-xs font-bold text-gray-600">
+                      {label}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="rounded-[2rem] border border-gray-100 bg-gray-50/80 p-3 shadow-2xl shadow-gray-200/70">
-                <ImageGrid className="grid-cols-4 gap-2 sm:grid-cols-4 lg:grid-cols-4">
-                  {featuredClipArt.slice(0, 8).map((img) => {
-                    const isDb = "id" in img && "image_url" in img;
-                    const src = isDb ? (img as CommunityImage).image_url : (img as typeof sampleImages[0]).url;
-                    const title = isDb ? ((img as CommunityImage).title || (img as CommunityImage).prompt) : (img as typeof sampleImages[0]).title;
-                    const slug = isDb ? ((img as CommunityImage).slug || (img as CommunityImage).id) : (img as typeof sampleImages[0]).slug;
-                    const cat = isDb ? (img as CommunityImage).category : getCategorySlugForImage(img as typeof sampleImages[0]);
-                    const style = isDb ? (img as CommunityImage).style : undefined;
-                    const key = isDb ? (img as CommunityImage).id : (img as typeof sampleImages[0]).slug;
-
-                    return (
-                      <ImageCard
-                        key={key}
-                        image={{ slug, title, url: src, category: cat, style }}
-                        href={`/${cat}/${slug}`}
-                        sizes="(max-width: 1024px) 25vw, 150px"
-                      />
-                    );
-                  })}
-                </ImageGrid>
+              <div className="rounded-[2rem] border border-gray-100 bg-white p-3 shadow-2xl shadow-gray-200/70">
+                <div className="grid grid-cols-4 gap-2">
+                  {heroVisuals.map((img, index) => (
+                    <Link
+                      key={`${img.key}-${index}`}
+                      href={imageHref(img)}
+                      className={`group relative overflow-hidden rounded-2xl bg-gray-50 ring-1 ring-gray-100 transition hover:-translate-y-0.5 hover:ring-pink-200 ${
+                        index === 0 ? "col-span-2 row-span-2" : ""
+                      }`}
+                    >
+                      <div className={index === 0 ? "aspect-square" : "aspect-square"}>
+                        <Image
+                          src={img.transparentUrl || img.url}
+                          alt={`${img.title} — free clip art`}
+                          fill
+                          className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                          sizes={index === 0 ? "(max-width: 1024px) 50vw, 300px" : "(max-width: 1024px) 25vw, 150px"}
+                          unoptimized
+                        />
+                      </div>
+                      {index === 0 && (
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/85 to-transparent p-3 pt-10">
+                          <p className="line-clamp-1 text-sm font-black text-gray-950">{img.title}</p>
+                          <p className="text-xs font-semibold text-pink-500">{img.category} clip art</p>
+                        </div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -473,27 +549,45 @@ export default async function Home() {
                     Explore all clip art &rarr;
                   </Link>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {categoryAtlas.map((category) => (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {categoryAtlas.map((category, index) => {
+                    const visuals = categoryVisuals(visualImages, category, index * 2);
+                    return (
                     <Link
                       key={category.slug}
                       href={`/${category.slug}`}
-                      className="group rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-xl hover:shadow-pink-100/60"
+                      className="group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-xl hover:shadow-pink-100/60"
                     >
-                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-pink-400">
-                        {category.name}
-                      </span>
-                      <h4 className="mt-2 text-lg font-black text-gray-950">
-                        {category.name} Clip Art
-                      </h4>
-                      <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                        {CATEGORY_USE_CASES[category.slug] || category.intro || `Browse and generate ${category.name.toLowerCase()} clip art for your next project.`}
-                      </p>
-                      <span className="mt-4 inline-flex text-sm font-semibold text-gray-400 transition-colors group-hover:text-pink-600">
-                        Browse category &rarr;
-                      </span>
+                      <div className="grid grid-cols-3 gap-1 bg-gray-50 p-2">
+                        {visuals.map((img) => (
+                          <div key={`${category.slug}-${img.key}`} className="relative aspect-square rounded-2xl bg-white">
+                            <Image
+                              src={img.transparentUrl || img.url}
+                              alt={`${img.title} — ${category.name.toLowerCase()} clip art`}
+                              fill
+                              className="object-contain p-1.5"
+                              sizes="90px"
+                              unoptimized
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-5">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-pink-400">
+                          {category.name}
+                        </span>
+                        <h4 className="mt-2 text-lg font-black text-gray-950">
+                          {category.name} Clip Art
+                        </h4>
+                        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-gray-500">
+                          {CATEGORY_USE_CASES[category.slug] || category.intro || `Browse and generate ${category.name.toLowerCase()} clip art for your next project.`}
+                        </p>
+                        <span className="mt-4 inline-flex text-sm font-semibold text-gray-400 transition-colors group-hover:text-pink-600">
+                          Browse category &rarr;
+                        </span>
+                      </div>
                     </Link>
-                  ))}
+                  )})}
                 </div>
               </div>
             )}
@@ -502,24 +596,53 @@ export default async function Home() {
 
         <section className="border-t border-gray-100 bg-gray-50/70 py-16 sm:py-24">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-500">Quality facts</p>
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
-                  Clip art should be easy to use the moment you download it.
+                  Reusable artwork should look ready before you download.
                 </h2>
                 <p className="mt-4 text-base leading-relaxed text-gray-500">
-                  The product promise is not just generation. It is reusable artwork: clean subject isolation, practical formats, useful styles, and licensing that does not slow down your project.
+                  Show the product promise visually: isolated subjects, clean square formats, varied styles, and assets that can move from worksheets to shops to presentations without extra cleanup.
                 </p>
+                <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                  {QUALITY_FACTS.map((fact) => (
+                    <div key={fact.title} className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">{fact.label}</p>
+                      <h3 className="mt-2 text-base font-black text-gray-950">{fact.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-500">{fact.body}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {QUALITY_FACTS.map((fact) => (
-                  <div key={fact.title} className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">{fact.label}</p>
-                    <h3 className="mt-2 text-lg font-black text-gray-950">{fact.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-500">{fact.body}</p>
-                  </div>
-                ))}
+              <div className="rounded-[2rem] border border-gray-100 bg-white p-4 shadow-2xl shadow-gray-200/60">
+                <div className="grid grid-cols-4 gap-2">
+                  {qualityVisuals.map((img, index) => (
+                    <Link
+                      key={`${img.key}-quality-${index}`}
+                      href={imageHref(img)}
+                      className={`group relative overflow-hidden rounded-2xl bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%),linear-gradient(-45deg,#f8fafc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f8fafc_75%),linear-gradient(-45deg,transparent_75%,#f8fafc_75%)] bg-[length:18px_18px] bg-[position:0_0,0_9px,9px_-9px,-9px_0] ring-1 ring-gray-100 transition hover:ring-orange-200 ${
+                        index === 0 || index === 5 ? "col-span-2 row-span-2" : ""
+                      }`}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={img.transparentUrl || img.url}
+                          alt={`${img.title} reusable clip art`}
+                          fill
+                          className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                          sizes={index === 0 || index === 5 ? "(max-width: 1024px) 50vw, 300px" : "(max-width: 1024px) 25vw, 150px"}
+                          unoptimized
+                        />
+                      </div>
+                      {(index === 0 || index === 5) && (
+                        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-gray-600 shadow-sm">
+                          Transparent-ready
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -527,40 +650,64 @@ export default async function Home() {
 
         <section className="py-16 sm:py-24">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="mb-10 max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-pink-500">Use cases</p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
-                Find the right clip art by the job it needs to do.
-              </h2>
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-pink-500">Use cases</p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
+                  Start with the job, then choose the artwork.
+                </h2>
+              </div>
+              <Link href="/search" className="text-sm font-semibold text-pink-600 hover:text-pink-700">
+                Search the catalog &rarr;
+              </Link>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              {USE_CASE_PATHS.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="group rounded-[2rem] border border-gray-100 bg-white p-7 shadow-sm transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-xl hover:shadow-gray-200/70"
-                >
-                  <h3 className="text-xl font-black text-gray-950">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-gray-500">{item.body}</p>
-                  <span className="mt-5 inline-flex text-sm font-semibold text-pink-600">
-                    {item.link} &rarr;
-                  </span>
-                </Link>
-              ))}
+              {USE_CASE_PATHS.map((item, index) => {
+                const visuals = takeVisuals(useCaseVisuals, index * 3, 3);
+                return (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className="group overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-xl hover:shadow-gray-200/70"
+                  >
+                    <div className="grid grid-cols-3 gap-2 bg-gray-50 p-3">
+                      {visuals.map((img) => (
+                        <div key={`${item.title}-${img.key}`} className="relative aspect-square rounded-2xl bg-white ring-1 ring-gray-100">
+                          <Image
+                            src={img.transparentUrl || img.url}
+                            alt={`${img.title} for ${item.title.toLowerCase()}`}
+                            fill
+                            className="object-contain p-2"
+                            sizes="120px"
+                            unoptimized
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-7">
+                      <h3 className="text-xl font-black text-gray-950">{item.title}</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-gray-500">{item.body}</p>
+                      <span className="mt-5 inline-flex text-sm font-semibold text-pink-600">
+                        {item.link} &rarr;
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
 
         <section className="border-t border-gray-100 bg-[radial-gradient(circle_at_12%_18%,rgba(236,72,153,0.10),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(251,146,60,0.12),transparent_28%),#fff] py-16 sm:py-24">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-500">Theme packs</p>
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
-                  Ready-made clipart bundles for projects that need a set.
+                  Build with sets, not scattered singles.
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-relaxed text-gray-500">
-                  Sometimes one image is not enough. Theme packs group related clip art into coordinated bundles for classrooms, craft shops, seasonal campaigns, party printables, and design systems.
+                  Packs make clip art easier to understand: one theme, multiple related assets, one download. This is where clip.art can feel more useful than a loose stock library.
                 </p>
                 <div className="mt-6 grid gap-2">
                   {PACK_BENEFITS.map((benefit) => (
@@ -584,13 +731,14 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/80 bg-white/80 p-3 shadow-2xl shadow-pink-100/70 ring-1 ring-gray-100 backdrop-blur">
-                {leadPack?.cover_image_url ? (
-                  <Link
-                    href={`/design-bundles/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
-                    className="group block overflow-hidden rounded-[1.6rem] bg-gray-950"
-                  >
-                    <div className="relative aspect-[4/3] bg-gray-100">
+              <div className="rounded-[2rem] border border-white/80 bg-white/85 p-3 shadow-2xl shadow-pink-100/70 ring-1 ring-gray-100 backdrop-blur">
+                <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+                  {leadPack?.cover_image_url ? (
+                    <Link
+                      href={`/design-bundles/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
+                      className="group block overflow-hidden rounded-[1.6rem] bg-gray-100"
+                    >
+                      <div className="relative aspect-[4/5] bg-gray-100 sm:aspect-[4/3] lg:aspect-[4/5]">
                       <Image
                         src={leadPack.cover_image_url}
                         alt={`${leadPack.title} clipart theme pack preview`}
@@ -619,34 +767,46 @@ export default async function Home() {
                           </span>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ) : (
-                  <div className="rounded-[1.6rem] bg-gray-950 p-6 text-white">
-                    <div className="grid grid-cols-3 gap-2">
-                      {featuredClipArt.slice(0, 6).map((img) => {
-                        const isDb = "id" in img && "image_url" in img;
-                        const src = isDb ? (img as CommunityImage).image_url : (img as typeof sampleImages[0]).url;
-                        const title = isDb ? ((img as CommunityImage).title || (img as CommunityImage).prompt) : (img as typeof sampleImages[0]).title;
-                        return (
-                          <div key={`${title}-${src}`} className="relative aspect-square rounded-2xl bg-white/10">
-                            <Image src={src} alt={`${title} clip art bundle example`} fill className="object-contain p-2" sizes="120px" unoptimized />
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="rounded-[1.6rem] bg-gray-950 p-6 text-white">
+                      <div className="grid grid-cols-3 gap-2">
+                        {packVisuals.slice(0, 6).map((img) => (
+                          <div key={`${img.key}-pack-fallback`} className="relative aspect-square rounded-2xl bg-white/10">
+                            <Image src={img.transparentUrl || img.url} alt={`${img.title} clip art bundle example`} fill className="object-contain p-2" sizes="120px" unoptimized />
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
+                      <h3 className="mt-5 text-2xl font-black tracking-tight">
+                        Build a matching set of clip art.
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-400">
+                        Browse curated bundles or create a pack for one theme, event, classroom unit, or shop collection.
+                      </p>
                     </div>
-                    <h3 className="mt-5 text-2xl font-black tracking-tight">
-                      Build a matching set of clip art.
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-400">
-                      Browse curated bundles or create a pack for one theme, event, classroom unit, or shop collection.
-                    </p>
-                  </div>
-                )}
+                  )}
 
-                {homepagePacks.length > 1 && (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {homepagePacks.slice(1, 3).map((pack) => (
+                  <div className="grid gap-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      {packVisuals.slice(0, 6).map((img) => (
+                        <Link
+                          key={`${img.key}-pack-mosaic`}
+                          href={imageHref(img)}
+                          className="relative aspect-square rounded-2xl bg-gray-50 ring-1 ring-gray-100 transition hover:ring-pink-200"
+                        >
+                          <Image
+                            src={img.transparentUrl || img.url}
+                            alt={`${img.title} bundle asset example`}
+                            fill
+                            className="object-contain p-2"
+                            sizes="140px"
+                            unoptimized
+                          />
+                        </Link>
+                      ))}
+                    </div>
+                    {homepagePacks.slice(1, 4).map((pack) => (
                       <Link
                         key={pack.id}
                         href={`/design-bundles/${pack.categories?.slug || "all"}/${pack.slug}`}
@@ -662,52 +822,74 @@ export default async function Home() {
                       </Link>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="border-t border-gray-100 bg-gray-950 py-16 text-white sm:py-24">
+        <section className="border-t border-gray-100 bg-gray-50/70 py-16 sm:py-24">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-pink-300">Prompt discovery</p>
-                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-pink-500">Prompt discovery</p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
                   Search by subject, style, or use case.
                 </h2>
-                <p className="mt-4 text-sm leading-relaxed text-gray-400 sm:text-base">
-                  A good clip art search is specific enough to be useful but broad enough to discover options. Start with a subject, then refine by category or style.
+                <p className="mt-4 text-sm leading-relaxed text-gray-500 sm:text-base">
+                  Prompt chips are more useful when users can see examples next to them. Pair searches and styles with real artwork so discovery feels visual.
                 </p>
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Try a search</p>
+                <div className="mt-6">
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">Try a search</p>
                   <div className="flex flex-wrap gap-2">
                     {PROMPT_EXAMPLES.map((prompt) => (
                       <Link
                         key={prompt}
                         href={`/search?q=${encodeURIComponent(prompt)}`}
-                        className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:border-pink-300/40 hover:bg-pink-400/10 hover:text-white"
+                        className="rounded-full border border-gray-100 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700"
                       >
                         {prompt}
                       </Link>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Browse by style</p>
+                <div className="mt-6">
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">Browse by style</p>
                   <div className="flex flex-wrap gap-2">
                     {FEATURED_STYLES.filter((style) => VALID_STYLES.clipart.includes(style)).map((style) => (
                       <Link
                         key={style}
                         href={`/search?style=${style}`}
-                        className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:border-orange-300/40 hover:bg-orange-400/10 hover:text-white"
+                        className="rounded-full border border-gray-100 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-colors hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
                       >
                         {STYLE_LABELS[style]}
                       </Link>
                     ))}
                   </div>
+                </div>
+              </div>
+              <div className="rounded-[2rem] border border-gray-100 bg-white p-3 shadow-2xl shadow-gray-200/60">
+                <div className="grid grid-cols-5 gap-2">
+                  {promptVisuals.map((img, index) => (
+                    <Link
+                      key={`${img.key}-prompt-${index}`}
+                      href={imageHref(img)}
+                      className={`group relative overflow-hidden rounded-2xl bg-gray-50 ring-1 ring-gray-100 transition hover:ring-pink-200 ${
+                        index === 0 || index === 6 ? "col-span-2 row-span-2" : ""
+                      }`}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={img.transparentUrl || img.url}
+                          alt={`${img.title} prompt example`}
+                          fill
+                          className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+                          sizes={index === 0 || index === 6 ? "(max-width: 1024px) 40vw, 260px" : "120px"}
+                          unoptimized
+                        />
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
@@ -716,7 +898,7 @@ export default async function Home() {
 
         <section className="border-t border-gray-100 bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="rounded-[2rem] border border-gray-100 bg-gray-50/80 p-6 sm:p-8">
+            <div className="rounded-[2rem] border border-gray-100 bg-gray-50/80 p-6 shadow-sm sm:p-8">
               <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-gray-400">Also available</p>
@@ -735,6 +917,20 @@ export default async function Home() {
                     href={product.href}
                     className="rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-lg"
                   >
+                    <div className="mb-4 flex gap-1.5">
+                      {takeVisuals(visualImages, product.title.length, 3).map((img) => (
+                        <div key={`${product.title}-${img.key}`} className="relative h-10 w-10 rounded-xl bg-gray-50 ring-1 ring-gray-100">
+                          <Image
+                            src={img.transparentUrl || img.url}
+                            alt={`${img.title} example`}
+                            fill
+                            className="object-contain p-1"
+                            sizes="40px"
+                            unoptimized
+                          />
+                        </div>
+                      ))}
+                    </div>
                     <h3 className="font-black text-gray-950">{product.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-gray-500">{product.body}</p>
                   </Link>
@@ -793,6 +989,24 @@ export default async function Home() {
                 <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-gray-500 sm:text-base">
                   Start with 10 free credits. Describe the object, character, theme, or style you need and download reusable clip art for your next project.
                 </p>
+                <div className="mx-auto mt-7 grid max-w-xl grid-cols-6 gap-2">
+                  {takeVisuals(visualImages, 22, 6).map((img) => (
+                    <Link
+                      key={`${img.key}-final`}
+                      href={imageHref(img)}
+                      className="relative aspect-square rounded-2xl bg-gray-50 ring-1 ring-gray-100 transition hover:ring-pink-200"
+                    >
+                      <Image
+                        src={img.transparentUrl || img.url}
+                        alt={`${img.title} clip art example`}
+                        fill
+                        className="object-contain p-1.5"
+                        sizes="80px"
+                        unoptimized
+                      />
+                    </Link>
+                  ))}
+                </div>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
                   <Link href="/create" className="btn-primary px-8 text-base">
                     Generate Clip Art
