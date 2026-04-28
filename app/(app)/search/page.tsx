@@ -8,28 +8,17 @@ import { categories } from "@/data/categories";
 import { useImageDrawer } from "@/stores/useImageDrawer";
 import { ImageCard, ImageCardSkeleton } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
-import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
-import { VideoPlayer } from "@/components/VideoPlayer";
 import { type StyleKey, VALID_STYLES, STYLE_LABELS } from "@/lib/styles";
 import { StyleIndicator } from "@/data/styleIndicators";
 import {
-  ContentTypeTabs,
   FilterPopover,
   ActiveFilters,
   SortSelect,
   ResultCount,
   FilterDrawer,
-  type TabItem,
   type ChipItem,
 } from "@/components/filters";
-import { useFilterState, type ContentType } from "@/hooks/useFilterState";
-
-const CONTENT_TABS: TabItem[] = [
-  { key: "clipart", label: "Clip Art" },
-  { key: "illustration", label: "Illustrations" },
-  { key: "coloring", label: "Coloring Pages" },
-  { key: "animations", label: "Animations" },
-];
+import { useFilterState } from "@/hooks/useFilterState";
 
 const SORT_OPTIONS = [
   { key: "newest", label: "Newest" },
@@ -50,8 +39,27 @@ const clipartCategoryChips: ChipItem[] = categories.map((c) => ({
   label: c.name,
 }));
 
-function buildStyleChips(ct: "clipart" | "illustration"): ChipItem[] {
-  return VALID_STYLES[ct].map((key) => ({
+const POPULAR_CATEGORY_SLUGS = [
+  "christmas",
+  "halloween",
+  "school",
+  "book",
+  "cat",
+  "dog",
+  "flower",
+  "heart",
+  "sports",
+  "food",
+  "music",
+  "objects",
+];
+
+const popularClipartCategories = POPULAR_CATEGORY_SLUGS
+  .map((slug) => categories.find((category) => category.slug === slug))
+  .filter(Boolean) as typeof categories;
+
+function buildClipartStyleChips(): ChipItem[] {
+  return VALID_STYLES.clipart.map((key) => ({
     key,
     label: STYLE_LABELS[key] || key,
     indicator: <StyleIndicator styleKey={key} />,
@@ -75,34 +83,6 @@ interface SearchResult {
   model?: string;
 }
 
-// ── Masonry helpers (shared with AnimationGrid / IllustrationMosaicGrid) ────
-function useMasonryColumnCount() {
-  const [cols, setCols] = useState(4);
-  const update = useCallback(() => {
-    const w = window.innerWidth;
-    setCols(w < 640 ? 2 : w < 768 ? 3 : 4);
-  }, []);
-  useEffect(() => {
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [update]);
-  return cols;
-}
-
-function distributeByHeight<T extends { aspect_ratio?: string }>(items: T[], colCount: number): T[][] {
-  const columns: T[][] = Array.from({ length: colCount }, () => []);
-  const heights = new Array<number>(colCount).fill(0);
-  for (const item of items) {
-    const [w, h] = (item.aspect_ratio || "1:1").split(":").map(Number);
-    const normalizedHeight = (h || 1) / (w || 1);
-    const shortestIdx = heights.indexOf(Math.min(...heights));
-    columns[shortestIdx].push(item);
-    heights[shortestIdx] += normalizedHeight;
-  }
-  return columns;
-}
-
 export default function SearchPage() {
   return (
     <Suspense>
@@ -121,7 +101,6 @@ function SearchPageInner() {
     hasSearched,
     totalCount,
     activeFilterCount,
-    setContentType,
     setCategory,
     setStyle,
     setQuery,
@@ -129,12 +108,10 @@ function SearchPageInner() {
     clearFilter,
     clearAll,
     loadMore,
-  } = useFilterState({ mode: "public", defaultSort: "newest" });
+  } = useFilterState({ mode: "public", defaultSort: "newest", lockedContentType: "clipart" });
 
   const openDrawerRaw = useImageDrawer((s) => s.open);
   const sentinelRef = useRef<HTMLDivElement>(null);
-
-  const masonryCols = useMasonryColumnCount();
 
   const openDrawer = useCallback((item: SearchResult, list: SearchResult[]) => {
     const toDrawer = (r: SearchResult) => ({
@@ -157,9 +134,6 @@ function SearchPageInner() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [coloringCategories, setColoringCategories] = useState<ChipItem[]>([]);
-  const [illustrationCategories, setIllustrationCategories] = useState<ChipItem[]>([]);
-
   useEffect(() => {
     if (!menuOpen) return;
     const original = document.body.style.overflow;
@@ -168,31 +142,6 @@ function SearchPageInner() {
       document.body.style.overflow = original;
     };
   }, [menuOpen]);
-
-  useEffect(() => {
-    fetch("/api/categories/coloring")
-      .then((r) => r.json())
-      .then((d) =>
-        setColoringCategories(
-          (d.categories || []).map((c: { slug: string; name: string }) => ({
-            key: c.slug,
-            label: c.name,
-          })),
-        ),
-      )
-      .catch(() => {});
-    fetch("/api/categories/illustration")
-      .then((r) => r.json())
-      .then((d) =>
-        setIllustrationCategories(
-          (d.categories || []).map((c: { slug: string; name: string }) => ({
-            key: c.slug,
-            label: c.name,
-          })),
-        ),
-      )
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -205,20 +154,8 @@ function SearchPageInner() {
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const currentCategoryChips = useMemo(() => {
-    if (filters.contentType === "coloring") return coloringCategories;
-    if (filters.contentType === "illustration") return illustrationCategories;
-    return clipartCategoryChips;
-  }, [filters.contentType, coloringCategories, illustrationCategories]);
-
-  const currentStyleChips = useMemo(() => {
-    if (filters.contentType === "clipart") return buildStyleChips("clipart");
-    if (filters.contentType === "illustration") return buildStyleChips("illustration");
-    return [];
-  }, [filters.contentType]);
-
-  const showCategoryRow = filters.contentType !== "animations";
-  const showStyleRow = filters.contentType === "clipart" || filters.contentType === "illustration";
+  const currentCategoryChips = clipartCategoryChips;
+  const currentStyleChips = useMemo(() => buildClipartStyleChips(), []);
 
   const activeFilters = useMemo(() => {
     const list: { key: string; label: string; type: "category" | "style" | "query" }[] = [];
@@ -233,25 +170,15 @@ function SearchPageInner() {
     return list;
   }, [filters, currentCategoryChips]);
 
-  const activeCategoryData =
-    filters.contentType === "clipart" && filters.category
-      ? categories.find((c) => c.slug === filters.category)
-      : null;
+  const activeCategoryData = filters.category
+    ? categories.find((c) => c.slug === filters.category)
+    : null;
 
-  const gridVariant =
-    filters.contentType === "coloring" ? "coloring" as const
-    : filters.contentType === "illustration" ? "illustration" as const
-    : filters.contentType === "animations" ? "animations" as const
-    : "clipart" as const;
+  const gridVariant = "clipart" as const;
 
   const handleSearch = useCallback((q: string) => setQuery(q), [setQuery]);
 
   const safeResults = results.filter((item) => item.id && (item.url || item.videoUrl));
-
-  const animationColumns = useMemo(
-    () => filters.contentType === "animations" ? distributeByHeight(safeResults, masonryCols) : [],
-    [safeResults, masonryCols, filters.contentType],
-  );
 
   return (
     <div className="overflow-x-hidden pb-8">
@@ -282,8 +209,11 @@ function SearchPageInner() {
 
               <div className="min-w-0 flex-1">
                 <div className="truncate font-futura text-[24px] font-black leading-tight tracking-tight text-white">
-                  Explore
+                  Explore Clip Art
                 </div>
+                <p className="truncate text-xs font-semibold text-white/45">
+                  Find free transparent PNGs faster.
+                </p>
               </div>
 
               <button
@@ -309,45 +239,6 @@ function SearchPageInner() {
               </button>
             </div>
 
-            <div className="relative mt-3 rounded-2xl bg-white/10 p-1 ring-1 ring-white/12 backdrop-blur">
-              <div
-                className="flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                role="tablist"
-                aria-label="Image type"
-              >
-                {CONTENT_TABS.map((tab) => {
-                  const isActive = filters.contentType === tab.key;
-                  return (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      onClick={() => setContentType(tab.key as ContentType)}
-                      className={`relative flex h-11 shrink-0 items-center rounded-xl px-4 text-[14px] font-bold transition-colors ${
-                        isActive ? "text-gray-950" : "text-white/70 hover:text-white"
-                      }`}
-                    >
-                      {isActive && (
-                        <motion.span
-                          layoutId="explore-type-pill"
-                          className="absolute inset-0 rounded-xl bg-white shadow-sm"
-                          transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                        />
-                      )}
-                      <span className="relative z-10">
-                        {tab.key === "coloring" ? "Coloring" : tab.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-y-1 right-1 w-10 rounded-r-2xl bg-gradient-to-l from-[#1c1c27] to-transparent"
-              />
-            </div>
-
             <AnimatePresence>
               {menuOpen && (
                 <ExploreMenuSheet onClose={() => setMenuOpen(false)} />
@@ -355,7 +246,7 @@ function SearchPageInner() {
             </AnimatePresence>
           </div>
 
-          <div className="pb-4 pt-1 md:py-5">
+          <div className="pb-4 pt-3 md:py-5">
           <div className="md:overflow-visible md:rounded-[2rem] md:border md:border-white/70 md:bg-white/85 md:p-4 md:shadow-xl md:shadow-gray-200/60 md:ring-1 md:ring-gray-200/60 md:backdrop-blur-xl">
             <div className="mb-3 hidden items-end justify-between gap-4 px-1 md:flex">
               <div>
@@ -363,26 +254,18 @@ function SearchPageInner() {
                   Discover
                 </p>
                 <h1 className="font-futura text-2xl font-black tracking-tight text-gray-950">
-                  Explore
+                  Explore Clip Art
                 </h1>
               </div>
               <p className="max-w-sm text-right text-xs font-medium leading-snug text-gray-400">
-                Search the catalog and refine results without leaving the gallery.
+                Search free transparent clip art by theme, style, or use case.
               </p>
             </div>
           <div className="relative overflow-visible rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70 md:bg-white md:shadow-md md:shadow-gray-200/60">
             <div className="hidden md:block">
               <SearchBar
                 onSearch={handleSearch}
-                placeholders={
-                  filters.contentType === "coloring"
-                    ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
-                    : filters.contentType === "illustration"
-                      ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
-                      : filters.contentType === "animations"
-                        ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
-                        : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
-                }
+                placeholders={["Birthday cake with candles...", "Teacher apple...", "Soccer ball...", "Christmas tree...", "Cute cat playing piano..."]}
                 defaultValue={filters.query || ""}
                 embedded
               />
@@ -391,29 +274,20 @@ function SearchPageInner() {
             {/* Filter row */}
             <div className="flex items-center justify-between gap-2 px-2 py-2 md:border-t md:border-gray-200/80">
               <div className="hidden min-w-0 flex-1 items-center gap-1.5 overflow-x-auto md:flex md:overflow-visible">
-                <ContentTypeTabs
-                  tabs={CONTENT_TABS}
-                  activeKey={filters.contentType}
-                  onSelect={(key) => setContentType(key as ContentType)}
+                <FilterPopover
+                  label="Category"
+                  items={currentCategoryChips}
+                  activeKey={filters.category}
+                  onSelect={setCategory}
+                  allLabel="All Categories"
                 />
-                {showCategoryRow && currentCategoryChips.length > 0 && (
-                  <FilterPopover
-                    label="Category"
-                    items={currentCategoryChips}
-                    activeKey={filters.category}
-                    onSelect={setCategory}
-                    allLabel="All Categories"
-                  />
-                )}
-                {showStyleRow && (
-                  <FilterPopover
-                    label="Style"
-                    items={currentStyleChips}
-                    activeKey={filters.style}
-                    onSelect={setStyle}
-                    allLabel="All Styles"
-                  />
-                )}
+                <FilterPopover
+                  label="Style"
+                  items={currentStyleChips}
+                  activeKey={filters.style}
+                  onSelect={setStyle}
+                  allLabel="All Styles"
+                />
               </div>
 
               <div className="flex w-full shrink-0 items-center gap-1.5 md:w-auto">
@@ -439,6 +313,31 @@ function SearchPageInner() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="pt-3">
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45 md:text-gray-400">
+                Popular
+              </span>
+              {popularClipartCategories.map((category) => {
+                const isActive = filters.category === category.slug;
+                return (
+                  <button
+                    key={category.slug}
+                    type="button"
+                    onClick={() => setCategory(category.slug)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      isActive
+                        ? "bg-gray-900 text-white"
+                        : "border border-white/10 bg-white/10 text-white/75 hover:bg-white/15 hover:text-white md:border-gray-200 md:bg-white/80 md:text-gray-500 md:hover:border-gray-300 md:hover:bg-white md:hover:text-gray-900"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -501,90 +400,27 @@ function SearchPageInner() {
               </ImageGrid>
             ) : safeResults.length > 0 ? (
               <>
-                {filters.contentType === "animations" ? (
-                  // Masonry mosaic — mirrors /animations page
-                  <div
-                    className="grid gap-2.5"
-                    style={{ gridTemplateColumns: `repeat(${masonryCols}, minmax(0, 1fr))` }}
-                  >
-                    {animationColumns.map((col, ci) => (
-                      <div key={ci} className="flex flex-col gap-2.5">
-                        {col.map((item) => {
-                          const ar = item.aspect_ratio?.replace(":", "/") || "1/1";
-                          return (
-                            <div
-                              key={item.id}
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => openDrawer(item, safeResults)}
-                              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(item, safeResults); }}
-                              className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/5 transition-all duration-200 hover:-translate-y-0.5 hover:ring-2 hover:ring-purple-400/40"
-                            >
-                              <div className="relative" style={{ aspectRatio: ar }}>
-                                <VideoPlayer
-                                  src={item.videoUrl || ""}
-                                  poster={item.url}
-                                  mode="preview"
-                                  className="absolute inset-0"
-                                />
-                              </div>
-                              <span className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                                <svg className="h-2 w-2" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v14l11-7-11-7z" /></svg>
-                                Animated
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                ) : filters.contentType === "illustration" ? (
-                  // Masonry mosaic — mirrors /illustrations page
-                  <IllustrationMosaicGrid
-                    items={safeResults.map((r) => ({
-                      slug: r.slug,
-                      title: r.title,
-                      url: r.url,
-                      category: r.category,
-                      aspect_ratio: r.aspect_ratio,
-                      transparent_url: r.transparent_url,
-                    }))}
-                    onItemClick={(mosaicItem) => {
-                      const original = safeResults.find((r) => r.slug === mosaicItem.slug);
-                      if (original) openDrawer(original, safeResults);
-                    }}
-                  />
-                ) : (
-                  <ImageGrid variant={gridVariant}>
-                    {safeResults.map((item: SearchResult) => {
-                      const ct = item.content_type || gridVariant;
-                      const cardVariant =
-                        ct === "illustration" ? "illustration" as const
-                        : ct === "coloring" ? "coloring" as const
-                        : "clipart" as const;
-                      return (
-                        <ImageCard
-                          key={item.id}
-                          variant={cardVariant}
-                          image={{
-                            id: item.id,
-                            slug: item.slug,
-                            title: item.title,
-                            url: item.url,
-                            transparent_url: item.transparent_url,
-                            has_transparency: item.has_transparency,
-                            category: item.category,
-                            style: item.style,
-                            content_type: item.content_type,
-                            aspect_ratio: item.aspect_ratio,
-                          }}
-                          onClick={() => openDrawer(item, safeResults)}
-                          animationPreviewUrl={item.previewUrl || undefined}
-                        />
-                      );
-                    })}
-                  </ImageGrid>
-                )}
+                <ImageGrid variant={gridVariant}>
+                  {safeResults.map((item: SearchResult) => (
+                    <ImageCard
+                      key={item.id}
+                      variant="clipart"
+                      image={{
+                        id: item.id,
+                        slug: item.slug,
+                        title: item.title,
+                        url: item.url,
+                        transparent_url: item.transparent_url,
+                        has_transparency: item.has_transparency,
+                        category: item.category,
+                        style: item.style,
+                        content_type: item.content_type,
+                        aspect_ratio: item.aspect_ratio,
+                      }}
+                      onClick={() => openDrawer(item, safeResults)}
+                    />
+                  ))}
+                </ImageGrid>
 
                 <div ref={sentinelRef} className="h-px" />
 
@@ -604,10 +440,10 @@ function SearchPageInner() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
                 <p className="mt-4 text-base font-medium text-gray-500">
-                  No {filters.contentType === "coloring" ? "coloring pages" : filters.contentType === "illustration" ? "illustrations" : filters.contentType === "animations" ? "animations" : "clip art"} found
+                  No clip art found
                 </p>
                 <p className="mt-1 text-sm text-gray-400">
-                  Try a different search term or adjust your filters.
+                  Try a different search term, category, or style.
                 </p>
                 {activeFilterCount > 0 && (
                   <button
@@ -638,17 +474,9 @@ function SearchPageInner() {
         onCategorySelect={setCategory}
         onStyleSelect={setStyle}
         onReset={() => { clearAll(); setDrawerOpen(false); }}
-        showStyles={showStyleRow}
+        showStyles
         searchDefaultValue={filters.query || ""}
-        searchPlaceholders={
-          filters.contentType === "coloring"
-            ? ["Dinosaur coloring page...", "Flowers to color...", "Princess castle..."]
-            : filters.contentType === "illustration"
-              ? ["Mountain landscape...", "Cozy coffee shop...", "Tropical sunset..."]
-              : filters.contentType === "animations"
-                ? ["Dancing cat...", "Flying rocket...", "Waving hello..."]
-                : ["A happy sun wearing sunglasses...", "Wedding couple...", "Cute cat playing piano...", "Birthday cake with candles..."]
-        }
+        searchPlaceholders={["Birthday cake with candles...", "Teacher apple...", "Soccer ball...", "Christmas tree...", "Cute cat playing piano..."]}
         onSearch={handleSearch}
         sortOptions={SORT_OPTIONS}
         sortValue={filters.sort}

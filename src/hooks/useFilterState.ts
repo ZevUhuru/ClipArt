@@ -37,6 +37,7 @@ interface UseFilterStateOptions {
   pageSize?: number;
   defaultSort?: SortOption;
   defaultContentType?: ContentType;
+  lockedContentType?: ContentType;
   syncUrl?: boolean;
 }
 
@@ -84,6 +85,7 @@ export function useFilterState(options: UseFilterStateOptions = {}) {
     pageSize = PAGE_SIZE_DEFAULT,
     defaultSort = "newest",
     defaultContentType = "clipart",
+    lockedContentType,
     syncUrl = true,
   } = options;
 
@@ -91,11 +93,11 @@ export function useFilterState(options: UseFilterStateOptions = {}) {
   const searchParams = useSearchParams();
 
   const rawType = searchParams.get("type");
-  const initialCt: ContentType =
-    rawType === "coloring" ? "coloring"
+  const initialCt: ContentType = lockedContentType ||
+    (rawType === "coloring" ? "coloring"
     : rawType === "illustration" ? "illustration"
     : rawType === "animations" ? "animations"
-    : defaultContentType;
+    : defaultContentType);
 
   const [filters, setFilters] = useState<FilterState>({
     contentType: initialCt,
@@ -196,13 +198,14 @@ export function useFilterState(options: UseFilterStateOptions = {}) {
 
   const updateFiltersAndFetch = useCallback(
     (next: FilterState) => {
-      setFilters(next);
-      fetchResults(next);
+      const resolvedNext = lockedContentType ? { ...next, contentType: lockedContentType } : next;
+      setFilters(resolvedNext);
+      fetchResults(resolvedNext);
       if (syncUrl && mode === "public") {
-        router.replace(filtersToUrl(next), { scroll: false });
+        router.replace(filtersToUrl(resolvedNext), { scroll: false });
       }
     },
-    [fetchResults, router, syncUrl, mode],
+    [fetchResults, router, syncUrl, mode, lockedContentType],
   );
 
   const setContentType = useCallback(
