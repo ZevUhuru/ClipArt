@@ -33,14 +33,14 @@ export function CreatePageLayout({
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <div className="sticky top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 sm:z-20 sm:border-0 sm:bg-transparent sm:shadow-none">
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 sm:sticky sm:inset-auto sm:top-0 sm:z-40 sm:border-0 sm:bg-transparent sm:shadow-none">
         <div className="mx-auto w-full max-w-5xl px-4">
           {/* Mobile: brand + content-type selector. Hidden on desktop. */}
           <div className="sm:hidden">
             <CreateMobileHeader />
           </div>
           {/* Mobile command bar row. */}
-          <div className="pb-4 pt-1 sm:hidden">
+          <div className="pb-6 pt-3 sm:hidden">
             <PromptInput
               value={prompt}
               onChange={onPromptChange}
@@ -78,6 +78,7 @@ export function CreatePageLayout({
           </div>
         </div>
       </div>
+      <div className="h-[18.25rem] sm:hidden" aria-hidden="true" />
 
       <div className="mx-auto w-full max-w-5xl px-4 py-6">
         {queueJobs.length > 0 && (

@@ -5,36 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface ContentType {
-  href: string;
-  label: string;
-  match: (pathname: string) => boolean;
-}
-
-const CONTENT_TYPES: ContentType[] = [
-  { href: "/create", label: "Clip Art", match: (p) => p === "/create" },
-  {
-    href: "/create/illustrations",
-    label: "Illustrations",
-    match: (p) => p.startsWith("/create/illustrations"),
-  },
-  {
-    href: "/create/coloring-pages",
-    label: "Coloring",
-    match: (p) => p.startsWith("/create/coloring-pages"),
-  },
-  {
-    href: "/create/worksheets",
-    label: "Worksheets",
-    match: (p) => p.startsWith("/create/worksheets"),
-  },
-  {
-    href: "/create/packs",
-    label: "Packs",
-    match: (p) => p.startsWith("/create/packs"),
-  },
-];
-
 interface SheetLinkData {
   href: string;
   label: string;
@@ -70,8 +40,8 @@ const SHEET_SECTIONS: SheetSection[] = [
  * Mobile header for /create routes.
  *
  * This is intentionally not the desktop toolbar squeezed down. Mobile gets a
- * branded "studio" surface: icon-only brand mark, clear Create context, one
- * large menu action, and roomy content-type tabs embedded in the header.
+ * branded "studio" surface: icon-only brand mark, clear Create context, and
+ * one large menu action.
  */
 export function CreateMobileHeader() {
   const pathname = usePathname() ?? "/create";
@@ -165,45 +135,6 @@ export function CreateMobileHeader() {
             </svg>
           )}
         </button>
-      </div>
-
-      {/* Row 2 — integrated content-type rail with large thumb targets. */}
-      <div className="relative mt-3 rounded-2xl bg-white/10 p-1 ring-1 ring-white/12 backdrop-blur">
-        <div
-          className="flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          role="tablist"
-          aria-label="Content type"
-        >
-          {CONTENT_TYPES.map((type) => {
-            const isActive = type.match(pathname);
-            return (
-              <Link
-                key={type.href}
-                href={type.href}
-                role="tab"
-                aria-selected={isActive}
-                className={`relative flex h-11 shrink-0 items-center rounded-xl px-4 text-[14px] font-bold transition-colors ${
-                  isActive ? "text-gray-950" : "text-white/70 hover:text-white"
-                }`}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="create-tab-pill"
-                    className="absolute inset-0 rounded-xl bg-white shadow-sm"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                  />
-                )}
-                <span className="relative z-10">
-                  {type.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-1 right-1 w-10 rounded-r-2xl bg-gradient-to-l from-[#1c1c27] to-transparent"
-        />
       </div>
 
       {/* Slide-up menu sheet */}

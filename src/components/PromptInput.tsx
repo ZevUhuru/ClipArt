@@ -47,11 +47,11 @@ export function PromptInput({
           fights for horizontal space. Desktop (sm+) collapses to a single row. */}
       <div
         className={`
-          relative flex w-full min-w-0 flex-col rounded-2xl sm:flex-1 sm:flex-row sm:items-center sm:rounded-xl
+          relative flex w-full min-w-0 flex-col rounded-[1.65rem] sm:flex-1 sm:flex-row sm:items-center sm:rounded-xl
           transition-all duration-200
           ${isFocused
-            ? "bg-white shadow-lg shadow-black/20 ring-1 ring-white/70 sm:shadow-gray-200/50 sm:ring-gray-200"
-            : "bg-white/95 shadow-lg shadow-black/15 ring-1 ring-white/60 hover:bg-white sm:bg-gray-100/80 sm:shadow-none sm:ring-0 sm:hover:bg-gray-200/60"
+            ? "bg-white shadow-2xl shadow-black/30 ring-2 ring-white/80 sm:shadow-gray-200/50 sm:ring-gray-200"
+            : "bg-white shadow-2xl shadow-black/25 ring-1 ring-white/75 hover:bg-white sm:bg-gray-100/80 sm:shadow-none sm:ring-0 sm:hover:bg-gray-200/60"
           }
         `}
       >
@@ -66,7 +66,7 @@ export function PromptInput({
           // min-h on mobile reserves room for a 2-line placeholder so it never
           // bleeds into the options row below; auto-resize still grows from
           // there via the resize() effect.
-          className="min-h-[4.25rem] w-full min-w-0 flex-1 resize-none bg-transparent px-4 pt-3.5 pb-1 text-[16px] leading-snug text-gray-950 placeholder:text-gray-500 outline-none transition-[height] duration-150 sm:min-h-0 sm:py-3.5 sm:pr-3 sm:text-[15px]"
+          className="min-h-[7.25rem] w-full min-w-0 flex-1 resize-none bg-transparent px-5 pt-5 pb-3 text-[17px] leading-snug text-gray-950 placeholder:text-gray-500 outline-none transition-[height] duration-150 sm:min-h-0 sm:px-4 sm:py-3.5 sm:pr-3 sm:text-[15px]"
           style={{ maxHeight: MAX_HEIGHT, overflowY: textareaRef.current && textareaRef.current.scrollHeight > MAX_HEIGHT ? "auto" : "hidden" }}
           maxLength={maxLength}
           onKeyDown={(e) => {
@@ -80,9 +80,9 @@ export function PromptInput({
         {/* Mobile bottom row — visually separated from the textarea by a soft
             divider so options don't appear to overlap with placeholder text.
             Options on the left (scrollable if they overflow), Create on right. */}
-        <div className="flex items-center justify-between gap-2 border-t border-gray-200/80 px-2 py-2 sm:hidden">
+        <div className="relative z-20 flex items-center justify-between gap-3 border-t border-gray-200/80 px-3 py-3 sm:hidden">
           {optionsSlot ? (
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-visible">
               {optionsSlot}
             </div>
           ) : (
@@ -91,7 +91,7 @@ export function PromptInput({
           <button
             onClick={onSubmit}
             disabled={disabled}
-            className="shrink-0 rounded-lg bg-brand-gradient px-4 py-1.5 text-[13px] font-bold text-white shadow-sm transition-all hover:shadow-md hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 rounded-2xl bg-brand-gradient px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition-all hover:shadow-md hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {buttonLabel}
           </button>
