@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreateMobileHeader } from "./CreateMobileHeader";
 import { PromptInput } from "./PromptInput";
@@ -30,10 +30,34 @@ export function CreatePageLayout({
   children,
 }: CreatePageLayoutProps) {
   const queueJobs = useGenerationQueue((s) => s.jobs);
+  const [compactDesktopBar, setCompactDesktopBar] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 640px)");
+
+    function updateCompactState() {
+      setCompactDesktopBar(media.matches && window.scrollY > 40);
+    }
+
+    updateCompactState();
+    window.addEventListener("scroll", updateCompactState, { passive: true });
+    media.addEventListener("change", updateCompactState);
+
+    return () => {
+      window.removeEventListener("scroll", updateCompactState);
+      media.removeEventListener("change", updateCompactState);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <div className="fixed inset-x-0 top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 sm:sticky sm:inset-auto sm:top-0 sm:z-40 sm:border-0 sm:bg-transparent sm:shadow-none">
+    <div className="min-h-screen overflow-x-hidden sm:overflow-x-visible">
+      <div
+        className={`fixed inset-x-0 top-0 z-50 border-b border-gray-900/10 bg-[#1c1c27] shadow-xl shadow-gray-900/10 transition-all duration-200 sm:sticky sm:inset-auto sm:top-0 sm:z-40 sm:border-0 sm:shadow-none ${
+          compactDesktopBar
+            ? "sm:bg-white/78 sm:backdrop-blur-xl sm:ring-1 sm:ring-gray-200/70"
+            : "sm:bg-transparent"
+        }`}
+      >
         <div className="mx-auto w-full max-w-5xl px-4">
           {/* Mobile: brand + content-type selector. Hidden on desktop. */}
           <div className="sm:hidden">
@@ -51,9 +75,15 @@ export function CreatePageLayout({
             />
           </div>
           {/* Desktop command surface. */}
-          <div className="hidden py-5 sm:block">
-            <div className="relative overflow-visible rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-xl shadow-gray-200/60 ring-1 ring-gray-200/60 backdrop-blur-xl">
-              <div className="mb-3 flex items-end justify-between gap-4 px-1">
+          <div className={`hidden transition-all duration-200 sm:block ${compactDesktopBar ? "py-2" : "py-5"}`}>
+            <div
+              className={`relative overflow-visible border border-white/70 bg-white/85 shadow-xl ring-1 ring-gray-200/60 backdrop-blur-xl transition-all duration-200 ${
+                compactDesktopBar
+                  ? "rounded-2xl p-2.5 shadow-gray-200/40"
+                  : "rounded-[2rem] p-4 shadow-gray-200/60"
+              }`}
+            >
+              <div className={`${compactDesktopBar ? "hidden" : "mb-3 flex"} items-end justify-between gap-4 px-1`}>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-pink-500/70">
                     Studio
