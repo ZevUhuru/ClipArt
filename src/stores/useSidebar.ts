@@ -28,6 +28,7 @@ interface SidebarState {
   hydrated: boolean;
   toggle: () => void;
   setCollapsed: (v: boolean) => void;
+  setCollapsedSilently: (v: boolean) => void;
   hydrate: (pathname: string) => void;
 }
 
@@ -44,6 +45,10 @@ export const useSidebar = create<SidebarState>((set, get) => ({
   setCollapsed: (v) => {
     set({ collapsed: v });
     writePreference(v);
+  },
+
+  setCollapsedSilently: (v) => {
+    set({ collapsed: v });
   },
 
   hydrate: (pathname) => {

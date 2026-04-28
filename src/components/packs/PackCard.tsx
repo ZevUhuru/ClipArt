@@ -28,19 +28,22 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 export function PackCard({ pack }: PackCardProps) {
   const categorySlug = pack.categories?.slug || "all";
   const href = `/design-bundles/${categorySlug}/${pack.slug}`;
+  const priceLabel = pack.is_free
+    ? "Free"
+    : `$${((pack.price_cents || 0) / 100).toFixed(2)}`;
 
   return (
     <Link
       href={href}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-sm ring-1 ring-gray-200/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-100/70"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_top_left,#fff7ed,transparent_40%),linear-gradient(135deg,#f8fafc,#fff)]">
         {pack.cover_image_url ? (
           <Image
             src={pack.cover_image_url}
             alt={pack.title}
             fill
-            className="object-cover transition-transform group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
@@ -51,54 +54,68 @@ export function PackCard({ pack }: PackCardProps) {
           </div>
         )}
 
-        <div className="absolute left-2 top-2">
-          {pack.is_free ? (
-            <span className="rounded-full bg-green-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-              Free
-            </span>
-          ) : (
-            <span className="rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-              ${((pack.price_cents || 0) / 100).toFixed(2)}
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3">
+          <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-lg shadow-black/10 ${
+            pack.is_free ? "bg-emerald-500" : "bg-gradient-to-r from-pink-500 to-orange-500"
+          }`}>
+            {priceLabel}
+          </span>
+          {pack.categories?.name && (
+            <span className="max-w-[9rem] truncate rounded-full bg-white/85 px-3 py-1 text-[10px] font-bold text-gray-600 shadow-sm ring-1 ring-white/70 backdrop-blur">
+              {pack.categories.name}
             </span>
           )}
         </div>
 
-        <div className="absolute bottom-2 right-2">
-          <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-            {pack.item_count} items
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-950/65 via-gray-950/15 to-transparent p-3 pt-12">
+          <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-[11px] font-black text-gray-900 shadow-sm backdrop-blur">
+            {pack.item_count} ready-to-use item{pack.item_count === 1 ? "" : "s"}
           </span>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-2 text-sm font-bold text-gray-800 group-hover:text-pink-600">
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="line-clamp-2 text-base font-black tracking-tight text-gray-950 transition-colors group-hover:text-pink-600">
           {pack.title}
         </h3>
 
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {pack.content_types.map((ct) => (
             <span
               key={ct}
-              className="rounded-full bg-gray-50 px-2 py-0.5 text-[10px] font-semibold text-gray-500"
+              className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-600"
             >
               {CONTENT_TYPE_LABELS[ct] || ct}
             </span>
           ))}
-          {pack.formats.map((f) => (
+          {pack.formats
+            .filter((f) => f.toLowerCase() !== "svg")
+            .map((f) => (
             <span
               key={f}
-              className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-500"
+              className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600"
             >
               {f.toUpperCase()}
             </span>
           ))}
+          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+            TRANSPARENT
+          </span>
         </div>
 
-        {pack.downloads > 0 && (
-          <p className="mt-2 text-[10px] tabular-nums text-gray-400">
-            {pack.downloads.toLocaleString()} downloads
-          </p>
-        )}
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+          <span className="text-[11px] font-semibold tabular-nums text-gray-400">
+            {pack.downloads > 0
+              ? `${pack.downloads.toLocaleString()} download${pack.downloads === 1 ? "" : "s"}`
+              : "New collection"}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-[0.14em] text-gray-900 transition-colors group-hover:text-pink-600">
+            Explore
+            <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            </svg>
+          </span>
+        </div>
       </div>
     </Link>
   );

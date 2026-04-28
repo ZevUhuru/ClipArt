@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppToolbar } from "./AppToolbar";
 
 /** Routes where the toolbar is already embedded by the page itself. */
-const HIDDEN_PREFIXES = ["/create"];
+const HIDDEN_PREFIXES = ["/create", "/design-bundles"];
 
 interface NavItem {
   href: string;

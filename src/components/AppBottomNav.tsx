@@ -41,7 +41,22 @@ const tabs: Tab[] = [
         <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" clipRule="evenodd" />
       </svg>
     ),
-    matchPrefixes: ["/search", "/templates", "/design-bundles"],
+    matchPrefixes: ["/search", "/templates"],
+  },
+  {
+    href: "/design-bundles",
+    label: "Packs",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+      </svg>
+    ),
+    activeIcon: (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+        <path fillRule="evenodd" d="M11.998 2.25a3.376 3.376 0 00-3.27 4.219H4.5A2.25 2.25 0 002.25 8.72v1.5c0 .73.35 1.379.891 1.79v6.74A2.25 2.25 0 005.391 21h13.218a2.25 2.25 0 002.25-2.25v-6.74a2.247 2.247 0 00.891-1.79v-1.5a2.25 2.25 0 00-2.25-2.25h-4.227a3.376 3.376 0 00-3.275-4.219zm-1.875 3.375a1.875 1.875 0 113.75 0v.844h-3.75v-.844zM3.75 8.72a.75.75 0 01.75-.75h6.75v2.25h-7.5v-1.5zm9 1.5v-2.25h6.75a.75.75 0 01.75.75v1.5h-7.5zm-8.109 1.5h6.609v7.78H5.391a.75.75 0 01-.75-.75v-7.03zm8.109 7.78v-7.78h6.609v7.03a.75.75 0 01-.75.75H12.75z" clipRule="evenodd" />
+      </svg>
+    ),
+    matchPrefixes: ["/design-bundles"],
   },
   {
     href: "/my-art",
@@ -87,7 +102,7 @@ export function AppBottomNav() {
               key={tab.href}
               href={tab.href}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex h-12 min-w-[5.25rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl transition-all ${
+              className={`relative flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-all ${
                 isActive
                   ? "text-gray-950"
                   : "text-white/55 hover:bg-white/5 hover:text-white active:bg-white/10"

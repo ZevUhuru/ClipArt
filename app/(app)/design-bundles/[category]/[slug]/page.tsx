@@ -146,7 +146,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const description =
     pack.description ||
-    `Download ${pack.title} — ${pack.item_count} free AI-generated ${itemLabel} in ${pack.formats.map((f) => f.toUpperCase()).join(" & ")} format. Free for personal and commercial use.`;
+    `Download ${pack.title} — ${pack.item_count} free AI-generated ${itemLabel} as transparent PNG assets. Free for personal and commercial use.`;
 
   const canonical = buildCanonical(`design-bundles/${pack.categories?.slug || "all"}/${pack.slug}`);
 
@@ -321,7 +321,9 @@ export default async function PackDetailPage({ params }: Props) {
                     {pack.item_count} items
                   </span>
 
-                  {pack.formats.map((f) => (
+                  {pack.formats
+                    .filter((f) => f.toLowerCase() !== "svg")
+                    .map((f) => (
                     <span
                       key={f}
                       className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600"
@@ -329,6 +331,9 @@ export default async function PackDetailPage({ params }: Props) {
                       {f.toUpperCase()}
                     </span>
                   ))}
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                    Transparent
+                  </span>
 
                   {pack.downloads > 0 && (
                     <span className="text-xs text-gray-400">
@@ -343,8 +348,7 @@ export default async function PackDetailPage({ params }: Props) {
                     What&apos;s included
                   </h3>
                   <p className="mt-1.5 text-sm text-gray-600">
-                    {contentSummary} — in{" "}
-                    {pack.formats.map((f) => f.toUpperCase()).join(", ")} format
+                    {contentSummary} — delivered as transparent PNG assets
                   </p>
                   <p className="mt-2 text-[11px] text-gray-400">
                     Free for personal and commercial use. No attribution required.

@@ -100,11 +100,17 @@ function NavItem({
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, credits, openAuthModal, openBuyCreditsModal, resetUserState } = useAppStore();
-  const { collapsed, toggle, hydrate } = useSidebar();
+  const { collapsed, toggle, hydrate, setCollapsedSilently } = useSidebar();
 
   useEffect(() => {
     hydrate(pathname);
   }, [pathname, hydrate]);
+
+  useEffect(() => {
+    if (pathname === "/design-bundles" || pathname.startsWith("/design-bundles/")) {
+      setCollapsedSilently(true);
+    }
+  }, [pathname, setCollapsedSilently]);
 
   async function handleSignOut() {
     const supabase = createBrowserClient();

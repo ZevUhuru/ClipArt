@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, SITE_NAME } from "@/lib/seo";
 import { buildPackListJsonLd } from "@/lib/seo-jsonld";
-import { ExploreTabs } from "@/components/ExploreTabs";
 
 export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Free Clip Art Bundles & Design Bundles | clip.art",
   description:
-    "Download free clip art bundles, coloring page bundles, and illustration collections. AI-generated themed design bundles in SVG and PNG — perfect for crafting, teaching, and creative projects.",
+    "Download free clip art bundles, coloring page bundles, and illustration collections. AI-generated themed design bundles as transparent PNG assets — perfect for crafting, teaching, and creative projects.",
   openGraph: {
     title: "Free Clip Art Bundles & Design Bundles | clip.art",
     description:
@@ -49,6 +49,16 @@ interface CategoryRow {
   id: string;
   slug: string;
   name: string;
+}
+
+const SHOP_PROMISES = [
+  "Curated by theme",
+  "Commercial-friendly downloads",
+  "Transparent PNG assets",
+];
+
+function formatStat(value: number) {
+  return new Intl.NumberFormat("en", { notation: "compact" }).format(value);
 }
 
 async function getPublishedPacks(): Promise<PackRow[]> {
@@ -91,6 +101,17 @@ export default async function PacksPage() {
   ]);
 
   const featured = packs.filter((p) => p.is_featured);
+  const heroSource = featured.length > 0 ? featured : packs;
+  const preferredHeroPack = heroSource.find((pack) =>
+    pack.title.toLowerCase().includes("whimsical spring woman"),
+  );
+  const heroPacks = [
+    ...(preferredHeroPack ? [preferredHeroPack] : []),
+    ...heroSource.filter((pack) => pack.id !== preferredHeroPack?.id),
+  ].slice(0, 3);
+  const leadPack = heroPacks[0] || packs[0];
+  const totalItems = packs.reduce((sum, pack) => sum + (pack.item_count || 0), 0);
+  const freeCount = packs.filter((pack) => pack.is_free).length;
 
   const jsonLd = buildPackListJsonLd(
     packs.map((p) => ({
@@ -107,68 +128,203 @@ export default async function PacksPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-[#f5f6f8]">
         {/* Hero */}
-        <section className="relative overflow-hidden border-b border-gray-100">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-white to-orange-50/60" />
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
+        <section className="relative overflow-hidden border-b border-white/80 bg-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(236,72,153,0.16),transparent_26%),radial-gradient(circle_at_86%_24%,rgba(251,146,60,0.18),transparent_28%),linear-gradient(135deg,#fff_0%,#fff7ed_48%,#fdf2f8_100%)]" />
+          <div className="absolute left-1/2 top-0 h-px w-[80rem] -translate-x-1/2 bg-gradient-to-r from-transparent via-pink-200 to-transparent" />
 
-          <div className="relative mx-auto max-w-4xl px-4 pb-6 pt-6 sm:pb-10 sm:pt-10">
-            <div className="mb-6 flex justify-center">
-              <ExploreTabs />
-            </div>
-            <div className="flex flex-col items-center text-center">
-              {packs.length > 0 && (
-                <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1 text-xs font-semibold text-pink-600 shadow-sm backdrop-blur-sm">
-                  <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
-                  {packs.length} bundle{packs.length !== 1 ? "s" : ""}
+          <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-8 sm:pb-14 lg:pt-12">
+            <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-pink-200/70 bg-white/75 px-3.5 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-pink-600 shadow-sm backdrop-blur">
+                  <span className="h-2 w-2 rounded-full bg-pink-500 shadow-[0_0_0_4px_rgba(236,72,153,0.12)]" />
+                  Theme Pack Marketplace
                 </span>
-              )}
 
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-                Design{" "}
-                <span className="gradient-text">Bundles</span>
-              </h1>
+                <h1 className="mt-5 max-w-3xl text-4xl font-black tracking-tight text-gray-950 sm:text-5xl lg:text-6xl">
+                  Shop ready-made{" "}
+                  <span className="bg-gradient-to-r from-pink-500 via-orange-400 to-amber-400 bg-clip-text text-transparent">
+                    creative bundles
+                  </span>
+                </h1>
 
-              <p className="mt-3 max-w-lg text-balance text-sm text-gray-500 sm:text-base">
-                Curated bundles of clip art, coloring pages, and illustrations.
-                Download themed collections in SVG and PNG.
-              </p>
+                <p className="mt-5 max-w-xl text-base leading-7 text-gray-600 sm:text-lg">
+                  Browse themed packs of clip art, coloring pages, and illustrations built for classrooms,
+                  craft shops, worksheets, invitations, social posts, and seasonal campaigns.
+                </p>
 
-              {/* Category pills */}
-              {categories.length > 0 && (
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                <div className="mt-7 flex">
                   <Link
-                    href="/design-bundles"
-                    className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white transition-all hover:bg-gray-800"
+                    href="#bundle-collection"
+                    className="inline-flex items-center justify-center rounded-2xl bg-gray-950 px-5 py-3 text-sm font-black text-white shadow-xl shadow-gray-950/15 transition-all hover:-translate-y-0.5 hover:bg-gray-800"
                   >
-                    All Bundles
+                    Browse bundles
                   </Link>
-                  {categories.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/design-bundles/${cat.slug}`}
-                      className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
-                    >
-                      {cat.name}
-                    </Link>
-                  ))}
                 </div>
-              )}
 
+                <div className="mt-7 grid max-w-xl grid-cols-3 gap-2 rounded-[1.5rem] border border-white/80 bg-white/70 p-2 shadow-sm ring-1 ring-gray-200/60 backdrop-blur">
+                  <div className="rounded-2xl bg-white px-3 py-3 text-center shadow-sm">
+                    <p className="text-lg font-black text-gray-950">{formatStat(packs.length)}</p>
+                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Bundles</p>
+                  </div>
+                  <div className="rounded-2xl bg-white px-3 py-3 text-center shadow-sm">
+                    <p className="text-lg font-black text-gray-950">{formatStat(totalItems)}</p>
+                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Assets</p>
+                  </div>
+                  <div className="rounded-2xl bg-white px-3 py-3 text-center shadow-sm">
+                    <p className="text-lg font-black text-gray-950">{formatStat(freeCount)}</p>
+                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Free</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -inset-5 rounded-[2.5rem] bg-gradient-to-br from-pink-200/50 via-white/20 to-orange-200/50 blur-2xl" />
+                <div className="relative overflow-hidden rounded-[2.25rem] border border-white/80 bg-gray-950 p-3 shadow-2xl shadow-pink-200/50">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(244,114,182,0.28),transparent_32%),radial-gradient(circle_at_86%_18%,rgba(251,146,60,0.22),transparent_28%)]" />
+                  <div className="relative rounded-[1.75rem] bg-white p-3">
+                    {leadPack?.cover_image_url ? (
+                      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] bg-gray-100">
+                        <Image
+                          src={leadPack.cover_image_url}
+                          alt={`${leadPack.title} bundle preview`}
+                          fill
+                          className="object-cover object-top"
+                          priority
+                          sizes="(max-width: 1024px) 100vw, 500px"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex aspect-[4/3] items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-pink-50 to-orange-50">
+                        <svg className="h-16 w-16 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.4}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21" />
+                        </svg>
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex items-start justify-between gap-4 px-1">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-pink-500">
+                          Featured drop
+                        </p>
+                        <h2 className="mt-1 line-clamp-2 text-xl font-black tracking-tight text-gray-950">
+                          {leadPack?.title || "Seasonal theme packs"}
+                        </h2>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-gray-950 px-3 py-1.5 text-xs font-black text-white">
+                        {leadPack?.item_count || 0} items
+                      </span>
+                    </div>
+
+                    {leadPack && (
+                      <div className="mt-4 rounded-2xl bg-gray-50 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
+                              Inside this pack
+                            </p>
+                            <p className="mt-1 text-xs font-bold text-gray-700">
+                              A focused collection of spring woman artwork, floral details, and matching creative assets.
+                            </p>
+                          </div>
+                          <Link
+                            href={`/design-bundles/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
+                            className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[11px] font-black text-gray-900 shadow-sm ring-1 ring-gray-200 transition-colors hover:text-pink-600"
+                          >
+                            View pack
+                          </Link>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {leadPack.content_types.map((type) => (
+                            <span
+                              key={type}
+                              className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-gray-600 ring-1 ring-gray-200/70"
+                            >
+                              {type}
+                            </span>
+                          ))}
+                          {leadPack.formats
+                            .filter((format) => format.toLowerCase() !== "svg")
+                            .map((format) => (
+                            <span
+                              key={format}
+                              className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600"
+                            >
+                              {format.toUpperCase()}
+                            </span>
+                          ))}
+                          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+                            TRANSPARENT
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-9 grid gap-3 sm:grid-cols-3">
+              {SHOP_PROMISES.map((promise) => (
+                <div key={promise} className="rounded-2xl border border-white/80 bg-white/65 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm backdrop-blur">
+                  {promise}
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Content */}
-        <div className="mx-auto max-w-5xl px-4 py-8">
-          {/* Featured */}
+        <div id="bundle-collection" className="mx-auto max-w-6xl px-4 py-10">
+          {categories.length > 0 && (
+            <section className="mb-8 overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-sm ring-1 ring-gray-200/60">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
+                    Shop by theme
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black tracking-tight text-gray-950">
+                    Find the right collection faster
+                  </h2>
+                </div>
+                <p className="max-w-md text-sm leading-6 text-gray-500">
+                  Jump into seasonal drops, classroom resources, wedding graphics, food sets, and more as inventory grows.
+                </p>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <Link
+                  href="/design-bundles"
+                  className="rounded-full bg-gray-950 px-4 py-2 text-xs font-black text-white shadow-sm transition-all hover:bg-gray-800"
+                >
+                  All Bundles
+                </Link>
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/design-bundles/${cat.slug}`}
+                    className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-black text-gray-600 transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:text-pink-600 hover:shadow-sm"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {featured.length > 0 && (
-            <section className="mb-10">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-gray-800">Featured</h2>
-                <p className="text-xs text-gray-400">
+            <section className="mb-12">
+              <div className="mb-5 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
+                    Editor's picks
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black tracking-tight text-gray-950">
+                    Featured bundles
+                  </h2>
+                </div>
+                <p className="text-xs font-bold text-gray-400">
                   {featured.length} bundle{featured.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -176,27 +332,29 @@ export default async function PacksPage() {
             </section>
           )}
 
-          {/* All bundles */}
           <section>
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex gap-2">
-                <span className="rounded-full bg-gray-900 px-4 py-2 text-xs font-semibold text-white">
-                  All Bundles
-                </span>
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
+                  Full collection
+                </p>
+                <h2 className="mt-1 text-2xl font-black tracking-tight text-gray-950">
+                  Browse all theme packs
+                </h2>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs font-bold text-gray-400">
                 {packs.length} bundle{packs.length !== 1 ? "s" : ""}
               </p>
             </div>
 
             {packs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-center">
+              <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50">
                   <svg className="h-8 w-8 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-bold text-gray-900">No bundles yet</h2>
+                <h2 className="text-base font-black text-gray-900">No bundles yet</h2>
                 <p className="mt-1 max-w-xs text-sm text-gray-400">
                   Be the first to create a themed bundle of clip art, coloring pages, and illustrations.
                 </p>
