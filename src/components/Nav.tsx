@@ -32,7 +32,7 @@ function CloseIcon() {
 }
 
 export function Nav() {
-  const { openAuthModal, user, resetUserState } = useAppStore();
+  const { openAuthModal, openBuyCreditsModal, user, credits, resetUserState } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -65,7 +65,13 @@ export function Nav() {
         <AnimatePresence>
           {menuOpen && (
             <MobileMenuSheet
+              user={user}
+              credits={credits}
               onClose={close}
+              onBuyCredits={() => openBuyCreditsModal()}
+              onSignIn={() => openAuthModal("signin")}
+              onSignUp={() => openAuthModal("signup")}
+              onSignOut={handleSignOut}
             />
           )}
         </AnimatePresence>,
@@ -158,9 +164,21 @@ export function Nav() {
 }
 
 function MobileMenuSheet({
+  user,
+  credits,
   onClose,
+  onBuyCredits,
+  onSignIn,
+  onSignUp,
+  onSignOut,
 }: {
+  user: unknown;
+  credits: number;
   onClose: () => void;
+  onBuyCredits: () => void;
+  onSignIn: () => void;
+  onSignUp: () => void;
+  onSignOut: () => void;
 }) {
   return (
     <div className="md:hidden">
@@ -199,11 +217,84 @@ function MobileMenuSheet({
         </div>
 
         <div className="flex flex-col px-4">
-          <div className="mt-3 space-y-1">
-            <MenuLink href="/create" onClick={onClose}>Create</MenuLink>
-            <MenuLink href="/search" onClick={onClose}>Browse</MenuLink>
-            <MenuLink href="/learn" onClick={onClose}>Learn</MenuLink>
-          </div>
+          {user ? (
+            <>
+              <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-white/[0.06] px-4 py-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400">
+                  <BoltIcon className="h-4 w-4 text-black" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {credits} credit{credits !== 1 ? "s" : ""}
+                  </p>
+                  <button
+                    onClick={() => {
+                      onBuyCredits();
+                      onClose();
+                    }}
+                    className="text-xs font-medium text-amber-400 transition-colors hover:text-amber-300"
+                  >
+                    Buy more
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <MenuLink href="/create" onClick={onClose}>Create Clip Art</MenuLink>
+                <MenuLink href="/create/coloring-pages" onClick={onClose}>Create Coloring Pages</MenuLink>
+                <MenuLink href="/animations" onClick={onClose}>Animations</MenuLink>
+                <MenuLink href="/my-art" onClick={onClose}>My Art</MenuLink>
+                <MenuLink href="/search" onClick={onClose}>Browse</MenuLink>
+                <MenuLink href="/learn" onClick={onClose}>Learn</MenuLink>
+              </div>
+
+              <div className="my-4 border-t border-white/10" />
+
+              <div className="space-y-1">
+                <MenuLink href="/settings" onClick={onClose}>Settings</MenuLink>
+              </div>
+
+              <div className="my-2 border-t border-white/10" />
+
+              <button
+                onClick={onSignOut}
+                className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  onSignUp();
+                  onClose();
+                }}
+                className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-3 text-sm font-bold uppercase tracking-wider text-black transition-all hover:bg-amber-300"
+              >
+                <BoltIcon className="h-4 w-4" />
+                Get Free Credits
+              </button>
+
+              <button
+                onClick={() => {
+                  onSignIn();
+                  onClose();
+                }}
+                className="mb-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/20"
+              >
+                Sign in
+              </button>
+
+              <div className="my-1 border-t border-white/10" />
+
+              <div className="mt-3 space-y-1">
+                <MenuLink href="/create" onClick={onClose}>Create</MenuLink>
+                <MenuLink href="/search" onClick={onClose}>Browse</MenuLink>
+                <MenuLink href="/learn" onClick={onClose}>Learn</MenuLink>
+              </div>
+            </>
+          )}
         </div>
       </motion.div>
     </div>
