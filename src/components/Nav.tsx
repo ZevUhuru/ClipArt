@@ -31,6 +31,12 @@ function CloseIcon() {
   );
 }
 
+const SIGNED_OUT_APP_LINKS = [
+  { href: "/create", label: "Create", description: "Start a new clip art image", marker: "C" },
+  { href: "/search", label: "Browse", description: "Explore public clip art", marker: "B" },
+  { href: "/learn", label: "Learn", description: "Read guides and ideas", marker: "L" },
+];
+
 export function Nav() {
   const { openAuthModal, openBuyCreditsModal, user, credits, resetUserState } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -288,10 +294,17 @@ function MobileMenuSheet({
 
               <div className="my-1 border-t border-white/10" />
 
-              <div className="mt-3 space-y-1">
-                <MenuLink href="/create" onClick={onClose}>Create</MenuLink>
-                <MenuLink href="/search" onClick={onClose}>Browse</MenuLink>
-                <MenuLink href="/learn" onClick={onClose}>Learn</MenuLink>
+              <div className="mt-3 flex flex-col gap-1.5">
+                {SIGNED_OUT_APP_LINKS.map((item) => (
+                  <AppMenuLink
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    description={item.description}
+                    marker={item.marker}
+                    onClick={onClose}
+                  />
+                ))}
               </div>
             </>
           )}
@@ -309,6 +322,41 @@ function MenuLink({ href, onClick, children }: { href: string; onClick: () => vo
       className="block rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
     >
       {children}
+    </Link>
+  );
+}
+
+function AppMenuLink({
+  href,
+  label,
+  description,
+  marker,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  description: string;
+  marker: string;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 py-3.5 transition-all hover:border-white/15 hover:bg-white/[0.07] active:bg-white/[0.1]"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] text-sm font-black text-white shadow-sm">
+        {marker}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-semibold leading-tight text-white">
+          {label}
+        </span>
+        <span className="mt-0.5 block text-[13px] leading-snug text-white/45">
+          {description}
+        </span>
+      </span>
+      <span className="h-2 w-2 shrink-0 rounded-full bg-white/15 transition-colors group-hover:bg-amber-400" />
     </Link>
   );
 }

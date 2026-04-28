@@ -31,6 +31,12 @@ function CloseIcon() {
   );
 }
 
+const SIGNED_OUT_APP_LINKS = [
+  { href: "/create", label: "Create", description: "Start a new clip art image", marker: "C" },
+  { href: "/search", label: "Browse", description: "Explore public clip art", marker: "B" },
+  { href: "/learn", label: "Learn", description: "Read guides and ideas", marker: "L" },
+];
+
 function MenuLink({ href, onClick, children }: { href: string; onClick: () => void; children: React.ReactNode }) {
   return (
     <Link
@@ -39,6 +45,41 @@ function MenuLink({ href, onClick, children }: { href: string; onClick: () => vo
       className="block rounded-xl px-6 py-3 text-lg font-bold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-950"
     >
       {children}
+    </Link>
+  );
+}
+
+function AppMenuLink({
+  href,
+  label,
+  description,
+  marker,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  description: string;
+  marker: string;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50/80 px-3.5 py-3.5 transition-all hover:border-gray-200 hover:bg-white hover:shadow-sm active:bg-gray-100"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-pink-500 shadow-sm">
+        {marker}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-bold leading-tight text-gray-950">
+          {label}
+        </span>
+        <span className="mt-0.5 block text-[13px] leading-snug text-gray-500">
+          {description}
+        </span>
+      </span>
+      <span className="h-2 w-2 shrink-0 rounded-full bg-gray-200 transition-colors group-hover:bg-pink-400" />
     </Link>
   );
 }
@@ -303,10 +344,17 @@ function MobileMenuSheet({
 
               <div className="my-1 border-t border-gray-100" />
 
-              <div className="mt-3 space-y-3">
-                <MenuLink href="/create" onClick={onClose}>Create</MenuLink>
-                <MenuLink href="/search" onClick={onClose}>Browse</MenuLink>
-                <MenuLink href="/learn" onClick={onClose}>Learn</MenuLink>
+              <div className="mt-3 flex flex-col gap-1.5">
+                {SIGNED_OUT_APP_LINKS.map((item) => (
+                  <AppMenuLink
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    description={item.description}
+                    marker={item.marker}
+                    onClick={onClose}
+                  />
+                ))}
               </div>
             </>
           )}
