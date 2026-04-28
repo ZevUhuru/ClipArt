@@ -52,7 +52,7 @@ export function CreatePageLayout({
           </div>
           {/* Desktop command surface. */}
           <div className="hidden py-5 sm:block">
-            <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-xl shadow-gray-200/60 ring-1 ring-gray-200/60 backdrop-blur-xl">
+            <div className="relative overflow-visible rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-xl shadow-gray-200/60 ring-1 ring-gray-200/60 backdrop-blur-xl">
               <div className="mb-3 flex items-end justify-between gap-4 px-1">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-pink-500/70">

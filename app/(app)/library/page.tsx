@@ -790,7 +790,7 @@ function CreationsGrid() {
           </div>
 
           <div className="pb-4 pt-1 md:pb-0 md:pt-0">
-            <div className="md:overflow-hidden md:rounded-[2rem] md:border md:border-white/70 md:bg-white/85 md:p-4 md:shadow-xl md:shadow-gray-200/60 md:ring-1 md:ring-gray-200/60 md:backdrop-blur-xl">
+            <div className="md:overflow-visible md:rounded-[2rem] md:border md:border-white/70 md:bg-white/85 md:p-4 md:shadow-xl md:shadow-gray-200/60 md:ring-1 md:ring-gray-200/60 md:backdrop-blur-xl">
               <div className="mb-3 hidden items-end justify-between gap-4 px-1 md:flex">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-pink-500/70">
@@ -804,7 +804,7 @@ function CreationsGrid() {
                   Search, sort, and organize everything you have generated or packaged.
                 </p>
               </div>
-            <div className="overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70 md:bg-white md:shadow-md md:shadow-gray-200/60">
+            <div className="relative overflow-visible rounded-2xl bg-white/95 shadow-lg shadow-black/10 ring-1 ring-gray-200/70 md:bg-white md:shadow-md md:shadow-gray-200/60">
               {/* Search bar — hidden on projects tab */}
               {showSearchAndSort && (
                 <div className="hidden md:block">
