@@ -28,7 +28,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
       categories!category_id(slug, name),
       pack_items(
         id, generation_id, is_exclusive, sort_order,
-        generations(id, title, slug, prompt, image_url, style, content_type, category)
+        generations(id, title, slug, prompt, image_url, transparent_image_url, has_transparency, style, content_type, category)
       )
     `)
     .eq("id", id)
@@ -69,12 +69,13 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
 
     for (const item of items) {
       const gen = item.generations;
-      if (!gen?.image_url) continue;
+      const sourceUrl = gen?.transparent_image_url || gen?.image_url;
+      if (!sourceUrl) continue;
 
       const name = gen.slug || gen.title?.toLowerCase().replace(/[^a-z0-9]+/g, "-") || gen.id;
 
       try {
-        const res = await fetch(gen.image_url);
+        const res = await fetch(sourceUrl);
         if (!res.ok) continue;
         const buffer = Buffer.from(await res.arrayBuffer());
 
@@ -128,7 +129,16 @@ Downloaded from https://clip.art/design-bundles/${pack.categories?.slug || "all"
       cacheControl: "public, max-age=3600",
     });
 
-    const coverUrl = pack.cover_image_url || items[0]?.generations?.image_url || null;
+    const selectedCoverItem = pack.cover_generation_id
+      ? items.find((item: { generation_id: string }) => item.generation_id === pack.cover_generation_id)
+      : null;
+    const fallbackCover = items[0]?.generations;
+    const coverGeneration = selectedCoverItem?.generations || fallbackCover;
+    const coverUrl =
+      pack.cover_image_url ||
+      coverGeneration?.transparent_image_url ||
+      coverGeneration?.image_url ||
+      null;
 
     await admin
       .from("packs")

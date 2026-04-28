@@ -31,12 +31,14 @@ All documentation for clip.art's ongoing migration to ESY's generation infrastru
 | Document | Description |
 |----------|-------------|
 | [Content Pipeline](strategy/CONTENT_PIPELINE.md) | Agent-driven pipeline for generating 100K-1M keyword-targeted clip art images/year — architecture, cost analysis, Google penalty risk, ramp-up schedule |
+| [Character Sheet Clip Art Packs](strategy/CHARACTER_SHEET_PACKS.md) | Strategic direction for premium character sheet bundles as reusable clip art for AI video, storyboards, games, and mascots |
 | [Pricing & Model Costs](strategy/PRICING_MODELS.md) | Cost analysis per model, revenue per credit, decision to keep 1 credit for all models |
 
 ## Strategy Sessions
 
 | Session | Date | Topics |
 |---------|------|--------|
+| [Clipart-first bundles and character sheets](sessions/2026-04-28/README.md) | 2026-04-28 | MRR targets, credits vs subscriptions, bundle strategy, character sheet packs |
 | [clip.art & ESY Strategy](esy/sessions/2026-03-21-strategy.md) | 2026-03-21 | Verticals, $10K-$100K MRR paths, ESY as infrastructure, site architecture |
 
 ## Fix Write-ups

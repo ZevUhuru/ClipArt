@@ -19,6 +19,8 @@ interface Generation {
   slug: string | null;
   prompt: string;
   image_url: string;
+  transparent_image_url?: string | null;
+  has_transparency?: boolean;
   style: string;
   content_type: string;
   category: string | null;
@@ -41,6 +43,7 @@ interface Pack {
   tags: string[];
   visibility: string;
   cover_image_url: string | null;
+  cover_generation_id?: string | null;
   is_published: boolean;
   zip_status: string;
   item_count: number;
@@ -48,7 +51,25 @@ interface Pack {
   categories?: { slug: string; name: string } | null;
 }
 
-type EditorView = "editor" | "browse" | "generate";
+type EditorView = "editor" | "library" | "browse" | "generate";
+
+const PACK_AUDIENCES = [
+  "Teachers and classrooms",
+  "Etsy and craft shops",
+  "Small business marketing",
+  "Parties and events",
+  "AI video creators",
+  "Sticker makers",
+];
+
+const PACK_GOALS = [
+  "Classroom decor",
+  "Sticker sheet",
+  "Invitation set",
+  "Seasonal campaign",
+  "Product mockup",
+  "Character sheet",
+];
 
 export default function CreatePacksPageWrapper() {
   return (
@@ -82,14 +103,21 @@ function CreatePacksPage() {
   const [categoryId, setCategoryId] = useState<string>("");
   const [tags, setTags] = useState("");
   const [visibility, setVisibility] = useState<"private" | "public">("public");
+  const [audience, setAudience] = useState(PACK_AUDIENCES[0]);
+  const [packGoal, setPackGoal] = useState(PACK_GOALS[0]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<PackItem[]>([]);
   const [coverItemId, setCoverItemId] = useState<string | null>(null);
 
   const [view, setView] = useState<EditorView>("editor");
+  const [libraryQuery, setLibraryQuery] = useState("");
+  const [libraryResults, setLibraryResults] = useState<Generation[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Generation[]>([]);
   const [searching, setSearching] = useState(false);
+  const [selectedCatalogIds, setSelectedCatalogIds] = useState<Set<string>>(new Set());
 
   const [genPrompt, setGenPrompt] = useState("");
   const [genCount, setGenCount] = useState(5);
@@ -137,6 +165,7 @@ function CreatePacksPage() {
         setCategoryId(loaded.category_id || "");
         setTags((loaded.tags || []).join(", "));
         setVisibility(loaded.visibility === "public" ? "public" : "private");
+        setCoverItemId(loaded.cover_generation_id || null);
         if (loaded.pack_items?.length) {
           const sorted = [...loaded.pack_items].sort(
             (a, b) => a.sort_order - b.sort_order,
@@ -145,7 +174,7 @@ function CreatePacksPage() {
         }
       })
       .catch(() => {
-        setError("Could not load that bundle. It may not exist or you don\u2019t have access.");
+        setError("Could not load that pack. It may not exist or you don\u2019t have access.");
       })
       .finally(() => setLoadingExisting(false));
   }, [searchParams, user, pack]);
@@ -172,10 +201,10 @@ function CreatePacksPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setPack(data.pack);
-      setSuccessMsg("Bundle created!");
+      setSuccessMsg("Pack created!");
       setTimeout(() => setSuccessMsg(null), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create bundle");
+      setError(err instanceof Error ? err.message : "Failed to create pack");
     } finally {
       setSaving(false);
     }
@@ -216,15 +245,47 @@ function CreatePacksPage() {
     };
   }, [title, description, categoryId, tags, visibility, autoSave]);
 
+  const loadLibrary = useCallback(async () => {
+    setLibraryLoading(true);
+    try {
+      const params = new URLSearchParams({
+        filter: "clipart",
+        limit: "60",
+        sort: "newest",
+      });
+      if (libraryQuery.trim()) params.set("q", libraryQuery.trim());
+      const res = await fetch(`/api/me/images?${params.toString()}`);
+      const data = await res.json();
+      setLibraryResults(data.images || []);
+    } catch {
+      setLibraryResults([]);
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, [libraryQuery]);
+
+  useEffect(() => {
+    if (view === "library" && libraryResults.length === 0) {
+      loadLibrary();
+    }
+  }, [view, libraryResults.length, loadLibrary]);
+
   const searchAssets = useCallback(async () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
       const res = await fetch(
-        `/api/search?q=${encodeURIComponent(searchQuery.trim())}&limit=40`,
+        `/api/search?q=${encodeURIComponent(searchQuery.trim())}&content_type=clipart&limit=40`,
       );
       const data = await res.json();
-      setSearchResults(data.results || data.images || []);
+      const results = (data.results || data.images || []).map(
+        (result: Generation & { url?: string; transparent_url?: string }) => ({
+          ...result,
+          image_url: result.image_url || result.url || "",
+          transparent_image_url: result.transparent_image_url || result.transparent_url || null,
+        }),
+      );
+      setSearchResults(results.filter((result: Generation) => result.image_url));
     } catch {
       setSearchResults([]);
     } finally {
@@ -238,11 +299,28 @@ function CreatePacksPage() {
     setGenProgress(`Generating ${genCount} items...`);
     setError(null);
     try {
+      const ideaList = genPrompt
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .join(", ");
+      const packContext = [
+        `Create transparent PNG clip art for a cohesive pack titled "${title.trim() || pack.title}"`,
+        description.trim() ? `Pack description: ${description.trim()}` : null,
+        `Audience: ${audience}`,
+        `Use case: ${packGoal}`,
+        tags.trim() ? `Theme tags: ${tags.trim()}` : null,
+        `Asset ideas: ${ideaList}`,
+        "Keep the assets visually consistent, reusable, isolated on a transparent or white-safe background, and suitable for a commercial clip art bundle.",
+      ]
+        .filter(Boolean)
+        .join(". ");
+
       const res = await fetch("/api/generate/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: genPrompt.trim(),
+          prompt: packContext,
           style: genStyle,
           count: genCount,
           contentType: "clipart",
@@ -273,7 +351,9 @@ function CreatePacksPage() {
       setGenerating(false);
       setGenProgress("");
     }
-  }, [pack, genPrompt, genStyle, genCount]);
+  }, [pack, genPrompt, genStyle, genCount, title, description, audience, packGoal, tags]);
+
+  const itemGenerationIds = new Set(items.map((i) => i.generation_id));
 
   const addItems = useCallback(
     async (generationIds: string[]) => {
@@ -298,6 +378,72 @@ function CreatePacksPage() {
         setTimeout(() => setSuccessMsg(null), 2000);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to add items");
+      }
+    },
+    [pack],
+  );
+
+  const toggleSelectedLibrary = useCallback((id: string) => {
+    setSelectedLibraryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectedCatalog = useCallback((id: string) => {
+    setSelectedCatalogIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const addSelectedLibraryItems = useCallback(async () => {
+    const ids = Array.from(selectedLibraryIds).filter((id) => !itemGenerationIds.has(id));
+    if (ids.length === 0) return;
+    await addItems(ids);
+    setSelectedLibraryIds(new Set());
+  }, [addItems, selectedLibraryIds, itemGenerationIds]);
+
+  const addSelectedCatalogItems = useCallback(async () => {
+    const ids = Array.from(selectedCatalogIds).filter((id) => !itemGenerationIds.has(id));
+    if (ids.length === 0) return;
+    await addItems(ids);
+    setSelectedCatalogIds(new Set());
+  }, [addItems, selectedCatalogIds, itemGenerationIds]);
+
+  const setPackCover = useCallback(
+    async (item: PackItem) => {
+      if (!pack) return;
+      setCoverItemId(item.generation_id);
+      try {
+        const coverUrl = item.generations.transparent_image_url || item.generations.image_url;
+        const res = await fetch(`/api/packs/${pack.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cover_generation_id: item.generation_id,
+            cover_image_url: coverUrl,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setPack((prev) =>
+          prev
+            ? {
+                ...prev,
+                cover_generation_id: item.generation_id,
+                cover_image_url: coverUrl,
+              }
+            : null,
+        );
+        setSuccessMsg("Cover saved");
+        setTimeout(() => setSuccessMsg(null), 1800);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save cover");
       }
     },
     [pack],
@@ -340,7 +486,7 @@ function CreatePacksPage() {
             }
           : null,
       );
-      setSuccessMsg("Bundle published! ZIP is ready.");
+      setSuccessMsg("Pack published! ZIP is ready.");
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Publish failed");
@@ -382,9 +528,9 @@ function CreatePacksPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Create a Bundle</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Create a Clipart Pack</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Sign up to create themed bundles of clip art, coloring pages, and illustrations
+            Sign up to create themed packs of reusable transparent clip art.
           </p>
           <button
             onClick={() => openAuthModal("signup")}
@@ -397,8 +543,6 @@ function CreatePacksPage() {
     );
   }
 
-  const itemGenerationIds = new Set(items.map((i) => i.generation_id));
-
   if (loadingExisting) {
     return (
       <div className="min-h-screen">
@@ -409,26 +553,62 @@ function CreatePacksPage() {
         </div>
         <div className="flex items-center justify-center py-24">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-pink-500" />
-          <span className="ml-3 text-sm text-gray-500">Loading bundle...</span>
+          <span className="ml-3 text-sm text-gray-500">Loading pack...</span>
         </div>
       </div>
     );
   }
 
+  const coverItem =
+    items.find((item) => item.generation_id === coverItemId) || items[0] || null;
+  const currentCoverUrl =
+    pack?.cover_image_url ||
+    coverItem?.generations.transparent_image_url ||
+    coverItem?.generations.image_url ||
+    null;
+  const transparentCount = items.filter(
+    (item) => item.generations.has_transparency || item.generations.transparent_image_url,
+  ).length;
+  const checklist = [
+    { label: "Title", complete: Boolean(title.trim()) },
+    { label: "Description", complete: description.trim().length >= 40 },
+    { label: "Category", complete: Boolean(categoryId) },
+    { label: "Tags", complete: tags.split(",").map((t) => t.trim()).filter(Boolean).length >= 3 },
+    { label: "Cover", complete: Boolean(coverItemId || pack?.cover_generation_id || items.length > 0) },
+    { label: "At least 8 assets", complete: items.length >= 8 },
+    { label: "Clipart only", complete: items.every((item) => item.generations.content_type === "clipart") },
+    {
+      label: "Transparent-ready assets",
+      complete: items.length > 0 && transparentCount >= Math.ceil(items.length * 0.8),
+    },
+  ];
+  const completeChecklistCount = checklist.filter((item) => item.complete).length;
+  const canPublish = Boolean(pack && items.length > 0 && title.trim());
+
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,rgba(236,72,153,0.10),transparent_30%),linear-gradient(180deg,#fff_0%,#fafafa_55%,#fff_100%)] pb-32">
       {/* Top bar */}
-      <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-5xl px-4 py-4">
+      <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/85 backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-4 py-4">
           <CreateModeToggle />
           {!pack && (
-            <div className="mt-3">
+            <div className="mt-5 rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-xl shadow-gray-100/70">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-pink-500">
+                Clipart Pack Studio
+              </p>
+              <h1 className="mt-2 text-2xl font-black tracking-tight text-gray-950">
+                Start a reusable theme pack.
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                Build cohesive transparent clip art bundles for classrooms, shops, stickers,
+                seasonal campaigns, and character sheets.
+              </p>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Name your bundle... (e.g. Spring Garden Clip Art Bundle)"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-base font-medium text-gray-900 placeholder:text-gray-400 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                placeholder="Name your pack... (e.g. Spring Garden Clip Art Pack)"
+                className="mt-4 w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-base font-semibold text-gray-900 placeholder:text-gray-400 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && title.trim()) createPack();
                 }}
@@ -437,16 +617,34 @@ function CreatePacksPage() {
                 <button
                   onClick={createPack}
                   disabled={!title.trim() || saving}
-                  className="rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+                  className="rounded-full bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
                 >
-                  {saving ? "Creating..." : "Create Bundle"}
+                  {saving ? "Creating..." : "Create Pack"}
                 </button>
               </div>
             </div>
           )}
           {pack && (
-            <div className="mt-2 flex items-center gap-3">
-              <h2 className="flex-1 truncate text-lg font-bold text-gray-900">{pack.title}</h2>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="hidden h-11 w-11 overflow-hidden rounded-2xl bg-gray-100 sm:block">
+                {currentCoverUrl ? (
+                  <Image
+                    src={currentCoverUrl}
+                    alt={`${title || pack.title} pack cover`}
+                    width={44}
+                    height={44}
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-pink-500">
+                  Clipart Pack Studio
+                </p>
+                <h1 className="truncate text-lg font-black tracking-tight text-gray-950">
+                  {pack.title}
+                </h1>
+              </div>
               <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
                 {items.length} items
               </span>
@@ -460,7 +658,7 @@ function CreatePacksPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="mx-auto max-w-7xl px-4 py-6">
         <AnimatePresence>
           {error && (
             <motion.p
@@ -486,13 +684,110 @@ function CreatePacksPage() {
 
         {pack && (
           <>
+            <div className="grid gap-6 lg:grid-cols-[360px_1fr] lg:items-start">
+              <aside className="space-y-5 lg:sticky lg:top-28">
+                <div className="overflow-hidden rounded-[1.75rem] border border-gray-100 bg-white shadow-xl shadow-gray-100/70">
+                  <div className="relative aspect-[4/3] bg-[radial-gradient(circle_at_30%_15%,rgba(236,72,153,0.16),transparent_32%),#f8fafc]">
+                    {currentCoverUrl ? (
+                      <Image
+                        src={currentCoverUrl}
+                        alt={`${title || pack.title} pack cover preview`}
+                        fill
+                        className="object-cover"
+                        sizes="360px"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center px-8 text-center text-sm font-semibold text-gray-400">
+                        Choose a cover from your pack canvas.
+                      </div>
+                    )}
+                    <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-700 shadow-sm">
+                      Cover
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-500">
+                      Product Brief
+                    </p>
+                    <h2 className="mt-2 text-xl font-black tracking-tight text-gray-950">
+                      {title || "Untitled Clipart Pack"}
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                      {description ||
+                        "Describe who this pack is for and what a buyer can make with it."}
+                    </p>
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-2xl bg-gray-50 p-3">
+                        <p className="font-bold text-gray-900">{items.length}</p>
+                        <p className="mt-0.5 text-gray-500">Assets</p>
+                      </div>
+                      <div className="rounded-2xl bg-gray-50 p-3">
+                        <p className="font-bold text-gray-900">{transparentCount}</p>
+                        <p className="mt-0.5 text-gray-500">Transparent</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.75rem] border border-gray-100 bg-white p-5 shadow-xl shadow-gray-100/70">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">
+                        Publish Readiness
+                      </p>
+                      <h3 className="mt-1 text-lg font-black text-gray-950">
+                        {completeChecklistCount}/{checklist.length} ready
+                      </h3>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${
+                        pack.zip_status === "ready"
+                          ? "bg-green-50 text-green-700"
+                          : pack.zip_status === "building"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {pack.zip_status === "ready"
+                        ? "ZIP ready"
+                        : pack.zip_status === "building"
+                          ? "Building"
+                          : "Draft"}
+                    </span>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {checklist.map((item) => (
+                      <div key={item.label} className="flex items-center gap-2 text-sm">
+                        <span
+                          className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+                            item.complete
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {item.complete ? "✓" : "•"}
+                        </span>
+                        <span className={item.complete ? "text-gray-700" : "text-gray-400"}>
+                          {item.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-xs leading-relaxed text-gray-400">
+                    You can publish with fewer than eight assets, but strong packs usually feel
+                    more valuable when they include a complete reusable set.
+                  </p>
+                </div>
+              </aside>
+
+              <section className="min-w-0">
             {/* Metadata section */}
             <div className="mb-6 rounded-2xl border border-gray-100 bg-white">
               <button
                 onClick={() => setShowMetadata((v) => !v)}
                 className="flex w-full items-center justify-between px-5 py-4 text-left"
               >
-                <span className="text-sm font-semibold text-gray-700">Bundle Details</span>
+                <span className="text-sm font-semibold text-gray-700">Pack Brief</span>
                 <svg
                   className={`h-4 w-4 text-gray-400 transition-transform ${showMetadata ? "rotate-180" : ""}`}
                   fill="none"
@@ -536,7 +831,7 @@ function CreatePacksPage() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={3}
-                      placeholder="Describe what's in this bundle..."
+                      placeholder="Describe what's in this pack and what customers can make with it..."
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-100"
                     />
                   </div>
@@ -578,13 +873,45 @@ function CreatePacksPage() {
                         </button>
                       </div>
                     </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                        Audience
+                      </label>
+                      <select
+                        value={audience}
+                        onChange={(e) => setAudience(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-100"
+                      >
+                        {PACK_AUDIENCES.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                        Pack Goal
+                      </label>
+                      <select
+                        value={packGoal}
+                        onChange={(e) => setPackGoal(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-100"
+                      >
+                        {PACK_GOALS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* View toggle */}
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setView("editor")}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -593,7 +920,17 @@ function CreatePacksPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                Bundle Items ({items.length})
+                Pack Canvas ({items.length})
+              </button>
+              <button
+                onClick={() => setView("library")}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  view === "library"
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Import Library
               </button>
               <button
                 onClick={() => setView("browse")}
@@ -603,7 +940,7 @@ function CreatePacksPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                + Browse
+                Search Catalog
               </button>
               <button
                 onClick={() => setView("generate")}
@@ -613,7 +950,7 @@ function CreatePacksPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                + Generate
+                Generate Into Pack
               </button>
             </div>
 
@@ -627,16 +964,25 @@ function CreatePacksPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-700">Add assets to your bundle</h3>
+                    <h3 className="text-sm font-semibold text-gray-700">Build your pack canvas</h3>
                     <p className="mx-auto mt-1 max-w-sm text-xs text-gray-400">
-                      Search and add existing clip art, coloring pages, or illustrations.
+                      Generate cohesive transparent clip art for this pack, or import existing
+                      clipart from your library.
                     </p>
-                    <button
-                      onClick={() => setView("browse")}
-                      className="mt-4 rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm hover:shadow-md"
-                    >
-                      Browse Assets
-                    </button>
+                    <div className="mt-4 flex justify-center gap-2">
+                      <button
+                        onClick={() => setView("generate")}
+                        className="rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm hover:shadow-md"
+                      >
+                        Generate Assets
+                      </button>
+                      <button
+                        onClick={() => setView("library")}
+                        className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
+                      >
+                        Import Library
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -651,10 +997,10 @@ function CreatePacksPage() {
                       >
                         <div className="relative aspect-square">
                           <Image
-                            src={item.generations.image_url}
+                            src={item.generations.transparent_image_url || item.generations.image_url}
                             alt={item.generations.title || item.generations.prompt}
                             fill
-                            className="object-cover"
+                            className="object-contain p-2"
                             sizes="(max-width: 640px) 50vw, 20vw"
                           />
 
@@ -701,10 +1047,15 @@ function CreatePacksPage() {
                               </span>
                             </div>
                           )}
+                          {(item.generations.has_transparency || item.generations.transparent_image_url) && (
+                            <div className="absolute left-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gray-700 shadow-sm">
+                              PNG
+                            </div>
+                          )}
                         </div>
 
                         <button
-                          onClick={() => setCoverItemId(item.generation_id)}
+                          onClick={() => setPackCover(item)}
                           className="w-full truncate border-t border-gray-50 px-2 py-1.5 text-left text-[11px] text-gray-500 hover:bg-gray-50"
                           title="Set as cover"
                         >
@@ -717,15 +1068,122 @@ function CreatePacksPage() {
               </>
             )}
 
+            {/* Library view — import the creator's clipart */}
+            {view === "library" && (
+              <div className="rounded-2xl border border-gray-100 bg-white p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">
+                      Import From Your Library
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Pull prior clipart generations into this pack. V1 is locked to clipart.
+                    </p>
+                  </div>
+                  <button
+                    onClick={addSelectedLibraryItems}
+                    disabled={selectedLibraryIds.size === 0}
+                    className="rounded-xl bg-brand-gradient px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+                  >
+                    Add Selected ({selectedLibraryIds.size})
+                  </button>
+                </div>
+
+                <div className="mt-4 flex gap-2">
+                  <input
+                    type="text"
+                    value={libraryQuery}
+                    onChange={(e) => setLibraryQuery(e.target.value)}
+                    placeholder="Search your clipart library..."
+                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") loadLibrary();
+                    }}
+                  />
+                  <button
+                    onClick={loadLibrary}
+                    disabled={libraryLoading}
+                    className="shrink-0 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {libraryLoading ? "Loading..." : "Search"}
+                  </button>
+                </div>
+
+                {libraryResults.length === 0 && !libraryLoading && (
+                  <div className="py-12 text-center">
+                    <p className="text-sm text-gray-400">
+                      Your clipart library will appear here after you generate images.
+                    </p>
+                  </div>
+                )}
+
+                {libraryResults.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+                    {libraryResults.map((gen) => {
+                      const isAdded = itemGenerationIds.has(gen.id);
+                      const isSelected = selectedLibraryIds.has(gen.id);
+                      return (
+                        <button
+                          key={gen.id}
+                          onClick={() => {
+                            if (!isAdded) toggleSelectedLibrary(gen.id);
+                          }}
+                          disabled={isAdded}
+                          className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                            isAdded
+                              ? "border-green-200 bg-green-50 opacity-60"
+                              : isSelected
+                                ? "border-pink-300 bg-pink-50 ring-2 ring-pink-100"
+                                : "border-gray-100 bg-white hover:border-pink-200 hover:shadow-md"
+                          }`}
+                        >
+                          <div className="relative aspect-square bg-gray-50">
+                            <Image
+                              src={gen.transparent_image_url || gen.image_url}
+                              alt={gen.title || gen.prompt}
+                              fill
+                              className="object-contain p-2"
+                              sizes="(max-width: 640px) 50vw, 20vw"
+                            />
+                            <div className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-gray-700 shadow-sm">
+                              {isAdded ? "Added" : isSelected ? "Selected" : "Pick"}
+                            </div>
+                          </div>
+                          <p className="truncate px-2 py-1.5 text-[11px] text-gray-500">
+                            {gen.title || gen.prompt.slice(0, 40)}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Browse view — search and add assets */}
             {view === "browse" && (
-              <div>
+              <div className="rounded-2xl border border-gray-100 bg-white p-5">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">Search Public Catalog</h3>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Add approved public clipart to this pack when it fits the theme.
+                    </p>
+                  </div>
+                  <button
+                    onClick={addSelectedCatalogItems}
+                    disabled={selectedCatalogIds.size === 0}
+                    className="rounded-xl bg-brand-gradient px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+                  >
+                    Add Selected ({selectedCatalogIds.size})
+                  </button>
+                </div>
                 <div className="mb-4 flex gap-2">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search clip art, coloring pages, illustrations..."
+                    placeholder="Search public clipart catalog..."
                     className="flex-1 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") searchAssets();
@@ -743,7 +1201,7 @@ function CreatePacksPage() {
                 {searchResults.length === 0 && !searching && (
                   <div className="py-12 text-center">
                     <p className="text-sm text-gray-400">
-                      Search for assets to add to your bundle
+                      Search for clipart to add to your pack
                     </p>
                   </div>
                 )}
@@ -752,25 +1210,28 @@ function CreatePacksPage() {
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {searchResults.map((gen) => {
                       const isAdded = itemGenerationIds.has(gen.id);
+                      const isSelected = selectedCatalogIds.has(gen.id);
                       return (
                         <button
                           key={gen.id}
                           onClick={() => {
-                            if (!isAdded) addItems([gen.id]);
+                            if (!isAdded) toggleSelectedCatalog(gen.id);
                           }}
                           disabled={isAdded}
                           className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
                             isAdded
                               ? "border-green-200 bg-green-50 opacity-60"
-                              : "border-gray-100 bg-white hover:border-pink-200 hover:shadow-md"
+                              : isSelected
+                                ? "border-pink-300 bg-pink-50 ring-2 ring-pink-100"
+                                : "border-gray-100 bg-white hover:border-pink-200 hover:shadow-md"
                           }`}
                         >
-                          <div className="relative aspect-square">
+                          <div className="relative aspect-square bg-gray-50">
                             <Image
-                              src={gen.image_url}
+                              src={gen.transparent_image_url || gen.image_url}
                               alt={gen.title || gen.prompt}
                               fill
-                              className="object-cover"
+                              className="object-contain p-2"
                               sizes="(max-width: 640px) 50vw, 20vw"
                             />
                             {isAdded && (
@@ -783,7 +1244,7 @@ function CreatePacksPage() {
                             {!isAdded && (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
                                 <span className="rounded-lg bg-white/90 px-3 py-1 text-xs font-semibold text-gray-900 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                                  + Add
+                                  {isSelected ? "Selected" : "Select"}
                                 </span>
                               </div>
                             )}
@@ -802,22 +1263,20 @@ function CreatePacksPage() {
             {view === "generate" && (
               <div className="rounded-2xl border border-gray-100 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  Generate Themed Assets
+                  Generate Into This Pack
                 </h3>
                 <p className="mt-1 text-xs text-gray-400">
-                  Describe a theme and we&apos;ll generate multiple variations. Each generation uses 1 credit.
+                  Add one asset idea per line. We wrap each request with the pack brief,
+                  audience, use case, and transparent clipart requirements.
                 </p>
 
                 <div className="mt-4 space-y-3">
-                  <input
-                    type="text"
+                  <textarea
                     value={genPrompt}
                     onChange={(e) => setGenPrompt(e.target.value)}
-                    placeholder="Describe your theme... (e.g. spring garden flowers)"
+                    rows={5}
+                    placeholder={"pink rose bouquet\nfloral corner border\nsunflower sticker\nwatering can with flowers"}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && genPrompt.trim() && !generating) batchGenerate();
-                    }}
                   />
 
                   <div className="flex flex-wrap items-end gap-4">
@@ -866,6 +1325,8 @@ function CreatePacksPage() {
                 </div>
               </div>
             )}
+              </section>
+            </div>
           </>
         )}
       </div>
@@ -873,9 +1334,12 @@ function CreatePacksPage() {
       {/* Sticky bottom publish bar */}
       {pack && (
         <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-100 bg-white/90 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3 text-sm text-gray-500">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3 text-sm text-gray-500">
               <span>{items.length} items</span>
+              <span className="hidden sm:inline">
+                {completeChecklistCount}/{checklist.length} checklist
+              </span>
               {pack.zip_status === "ready" && (
                 <span className="text-green-600">ZIP ready</span>
               )}
@@ -891,12 +1355,12 @@ function CreatePacksPage() {
                   }
                   className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  View Bundle
+                  View Pack
                 </button>
               )}
               <button
                 onClick={publishPack}
-                disabled={publishing || items.length === 0}
+                disabled={publishing || !canPublish}
                 className="rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
               >
                 {publishing
@@ -904,7 +1368,7 @@ function CreatePacksPage() {
                   : pack.is_published
                     ? "Republish"
                     : visibility === "public"
-                      ? "Publish Bundle"
+                      ? "Publish Pack"
                       : "Save Private"}
               </button>
             </div>

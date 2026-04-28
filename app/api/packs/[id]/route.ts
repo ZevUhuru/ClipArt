@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       categories!category_id(slug, name),
       pack_items(
         id, generation_id, is_exclusive, sort_order, created_at,
-        generations(id, title, slug, prompt, image_url, style, content_type, category)
+        generations(id, title, slug, prompt, image_url, transparent_image_url, has_transparency, style, content_type, category)
       )
     `)
     .eq("id", id)
@@ -85,6 +85,30 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (body.tags !== undefined) updates.tags = body.tags;
   if (body.visibility !== undefined) updates.visibility = body.visibility === "public" ? "public" : "private";
   if (body.cover_image_url !== undefined) updates.cover_image_url = body.cover_image_url;
+
+  if (body.cover_generation_id !== undefined) {
+    if (body.cover_generation_id === null || body.cover_generation_id === "") {
+      updates.cover_generation_id = null;
+    } else {
+      const { data: coverItem } = await admin
+        .from("pack_items")
+        .select("generation_id, generations(image_url, transparent_image_url)")
+        .eq("pack_id", id)
+        .eq("generation_id", body.cover_generation_id)
+        .single();
+
+      if (!coverItem) {
+        return NextResponse.json({ error: "Cover image must be in this pack" }, { status: 400 });
+      }
+
+      const generation = Array.isArray(coverItem.generations)
+        ? coverItem.generations[0]
+        : coverItem.generations;
+
+      updates.cover_generation_id = body.cover_generation_id;
+      updates.cover_image_url = generation?.transparent_image_url || generation?.image_url || null;
+    }
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });

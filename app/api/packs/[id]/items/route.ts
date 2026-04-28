@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     .upsert(rows, { onConflict: "pack_id,generation_id", ignoreDuplicates: true })
     .select(`
       id, generation_id, is_exclusive, sort_order, created_at,
-      generations(id, title, slug, prompt, image_url, style, content_type, category)
+      generations(id, title, slug, prompt, image_url, transparent_image_url, has_transparency, style, content_type, category)
     `);
 
   if (error) {
