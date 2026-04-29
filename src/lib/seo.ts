@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://clip.art";
 export const SITE_NAME = "clip.art";
 export const DEFAULT_SOCIAL_IMAGE = {
-  url: `${SITE_URL}/social-card/homepage-ramen.png`,
+  url: `${SITE_URL}/social-card/homepage-kawaii-ramen.png`,
   width: 1200,
   height: 630,
-  alt: "Extra spicy ramen character clip art generated on clip.art",
+  alt: "Kawaii ramen panda and cute Japanese food clip art generated on clip.art",
 };
 
 export type ContentType = "clipart" | "coloring" | "illustration" | "pack" | "worksheet";
