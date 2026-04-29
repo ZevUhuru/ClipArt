@@ -18,6 +18,7 @@ All documentation for clip.art's ongoing migration to ESY's generation infrastru
 | [AUTO_CLASSIFICATION.md](AUTO_CLASSIFICATION.md) | Gemini-powered auto-classification of titles, categories, and SEO metadata |
 | [DYNAMIC_CATEGORIES.md](DYNAMIC_CATEGORIES.md) | DB-driven categories replacing hardcoded config, scaling to 100+ |
 | [APP_SHELL.md](APP_SHELL.md) | App shell overhaul — white sidebar, `/create` `/search` `/my-art`, cross-linking with SEO pages, URL migration from `/generator` |
+| [BRAND_THEME.md](BRAND_THEME.md) | Visual brand theme — image-led public pages, calm app workspaces, colors, typography, layout, and copy rules |
 
 ## Features
 

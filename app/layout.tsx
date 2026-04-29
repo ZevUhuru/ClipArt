@@ -26,14 +26,14 @@ export const metadata: Metadata = {
     template: "%s | clip.art",
   },
   description:
-    "Generate beautiful clip art, illustrations, and coloring pages in seconds. Describe what you want, pick a style, and download instantly. No license needed.",
+    "Generate reusable transparent clip art in seconds. Describe what you need, choose a style, and download assets for classrooms, shops, crafts, and design.",
   alternates: {
     canonical: "https://clip.art",
   },
   openGraph: {
-    title: "Clip Art — AI Clip Art Generator",
+    title: "clip.art — AI Clip Art Generator",
     description:
-      "Generate beautiful clip art in seconds. Describe what you want, pick a style, and download instantly.",
+      "Generate reusable transparent clip art for classrooms, shops, crafts, and everyday design.",
     url: "https://clip.art",
     siteName: "clip.art",
     type: "website",
@@ -41,6 +41,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@clipart",
+    title: "clip.art — AI Clip Art Generator",
+    description:
+      "Generate reusable transparent clip art for classrooms, shops, crafts, and everyday design.",
   },
 };
 
