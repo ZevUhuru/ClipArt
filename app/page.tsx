@@ -621,7 +621,7 @@ export default async function Home() {
                     <Link
                       key={`${img.key}-quality-${index}`}
                       href={imageHref(img)}
-                      className={`group relative overflow-hidden rounded-2xl bg-[linear-gradient(45deg,#f8fafc_25%,transparent_25%),linear-gradient(-45deg,#f8fafc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f8fafc_75%),linear-gradient(-45deg,transparent_75%,#f8fafc_75%)] bg-[length:18px_18px] bg-[position:0_0,0_9px,9px_-9px,-9px_0] ring-1 ring-gray-100 transition hover:ring-orange-200 ${
+                      className={`group relative overflow-hidden rounded-2xl bg-transparency-grid ring-1 ring-gray-100 transition hover:ring-orange-200 ${
                         index === 0 || index === 5 ? "col-span-2 row-span-2" : ""
                       }`}
                     >

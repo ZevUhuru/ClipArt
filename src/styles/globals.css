@@ -38,6 +38,36 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  .bg-transparency-grid {
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+      linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+      linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+    background-size: 18px 18px;
+    background-position:
+      0 0,
+      0 9px,
+      9px -9px,
+      -9px 0;
+  }
+
+  .bg-transparency-grid-sm {
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #f1f5f9 25%, transparent 25%),
+      linear-gradient(-45deg, #f1f5f9 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f1f5f9 75%),
+      linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+    background-size: 10px 10px;
+    background-position:
+      0 0,
+      0 5px,
+      5px -5px,
+      -5px 0;
+  }
 }
 
 @layer base {

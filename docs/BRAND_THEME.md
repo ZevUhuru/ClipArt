@@ -136,6 +136,21 @@ Preferred structure:
 - One or two larger anchor tiles using `col-span-2 row-span-2`.
 - Clipart images use `object-contain` with `p-2` or `p-3`.
 
+### Transparency Preview Backgrounds
+
+Transparent clip art should use the checkerboard preview background as the default display surface. This is the standard visual cue that the image has no baked-in background and prevents users from mistaking a dark or colored preview surface for part of the asset.
+
+Use:
+
+- `bg-transparency-grid` for clipart cards, mosaics, and detail-page image previews.
+- `bg-transparency-grid-sm` for small swatches in preview controls.
+- White preview only as an alternate inspection mode, especially when users want to see how the asset reads on a printable or document-like surface.
+
+Avoid:
+
+- Dark backgrounds as the default "transparent" state.
+- Prompting models to render checkerboards. The checkerboard is a UI preview surface only, never part of generated artwork.
+
 ### Category Tiles
 
 Category tiles should show representative artwork before text.

@@ -303,7 +303,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
   const [localHasTransparency, setLocalHasTransparency] = useState(!!image.has_transparency);
   // Prefer the stored transparent version when available
   const [displayUrl, setDisplayUrl] = useState(image.transparent_url ?? image.url);
-  // Preview background: checkerboard shows true transparency; white shows as-printed look
+  // Preview background: checkerboard shows true transparency; white shows as-printed look.
   const [bgPreview, setBgPreview] = useState<"transparent" | "white">("transparent");
 
   const openDrawer = useImageDrawer((s) => s.open);
@@ -410,7 +410,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
           onClick={() => retouchState !== "loading" && setLightboxOpen(true)}
           className={`group relative w-full overflow-hidden rounded-2xl border border-gray-100 transition-all hover:border-gray-200 hover:shadow-md ${
             localHasTransparency
-              ? bgPreview === "white" ? "bg-white" : "bg-gray-50"
+              ? bgPreview === "white" ? "bg-white" : "bg-transparency-grid"
               : "bg-gray-50"
           }`}
         >
@@ -461,6 +461,7 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               <button
                 type="button"
                 title="White background"
+                aria-label="Preview on white background"
                 onClick={() => setBgPreview("white")}
                 className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
                   bgPreview === "white" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-200 hover:border-gray-300"
@@ -471,12 +472,13 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
               <button
                 type="button"
                 title="Show transparent (no background)"
+                aria-label="Preview transparent checkerboard"
                 onClick={() => setBgPreview("transparent")}
                 className={`flex h-7 w-7 items-center justify-center rounded-md border shadow-sm transition-all ${
                   bgPreview === "transparent" ? "border-blue-400 ring-1 ring-blue-400" : "border-gray-200 hover:border-gray-300"
-                } bg-gray-50`}
+                } bg-transparency-grid-sm`}
               >
-                <span className="block h-3.5 w-3.5 rounded-sm bg-gray-100 border border-gray-300" />
+                <span className="block h-3.5 w-3.5 rounded-sm bg-transparency-grid-sm border border-gray-300" />
               </button>
             </div>
           )}

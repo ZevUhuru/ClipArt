@@ -70,7 +70,7 @@ export function ImageDetailPage({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   // True when the image has a transparent version — either explicit flag or a transparent_url exists
   const hasTransparentVersion = !!(image.has_transparency || image.transparent_url);
-  // Background preview toggle for transparent images
+  // Checkerboard is the standard preview for transparent assets.
   const [heroBg, setHeroBg] = useState<"transparent" | "white">("transparent");
 
   const variant: ContentVariant = contentTypeProp || (isColoringPage ? "coloring" : "clipart");
@@ -172,17 +172,15 @@ export function ImageDetailPage({
         <div className="grid min-w-0 items-start gap-6 min-[960px]:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] min-[1120px]:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(340px,420px)_minmax(0,1fr)] xl:gap-8">
           {/* Left: image frame */}
           <div className="mx-auto flex w-full min-w-0 max-w-[min(100%,320px)] flex-col items-center gap-3 sm:max-w-[380px] min-[960px]:sticky min-[960px]:top-24 min-[960px]:max-w-[320px] min-[960px]:self-start min-[1120px]:max-w-[360px] xl:max-w-[420px]">
-            <div className={`w-full max-w-full overflow-hidden border border-white/80 shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70 ${
-              isIllustration
-                ? "rounded-[2rem] bg-white"
-                : "rounded-[2rem] bg-[#171720]"
-            }`}>
+            <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-white/80 bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
               <div className={isIllustration ? "p-2" : "p-3"}>
                 <button
                   type="button"
                   onClick={() => setLightboxOpen(true)}
                   className={`group relative block w-full max-w-full cursor-zoom-in overflow-hidden ${
-                    isIllustration ? "rounded-[1.5rem]" : `rounded-[1.5rem] ${hasTransparentVersion && heroBg === "white" ? "bg-white" : ""}`
+                    isIllustration
+                      ? "rounded-[1.5rem]"
+                      : `rounded-[1.5rem] ${hasTransparentVersion && heroBg === "transparent" ? "bg-transparency-grid" : "bg-white"}`
                   }`}
                 >
                   {/* Printable badge for coloring pages */}
@@ -219,26 +217,26 @@ export function ImageDetailPage({
 
             {/* Bg preview toggle — below the frame, outside the tap target */}
             {hasTransparentVersion && (
-              <div className="flex items-center rounded-full border border-white/10 bg-[#171720] p-1 shadow-xl shadow-gray-200/70">
+              <div className="flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-xl shadow-gray-200/70">
                 <button
                   type="button"
                   onClick={() => setHeroBg("transparent")}
                   className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
                     heroBg === "transparent"
-                      ? "bg-white/10 text-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-300"
+                      ? "bg-pink-50 text-pink-700 shadow-sm ring-1 ring-pink-100"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  <span className="block h-3 w-3 shrink-0 rounded-sm bg-[#1c1c27] ring-1 ring-white/25" />
-                  No Background
+                  <span className="block h-3 w-3 shrink-0 rounded-sm bg-transparency-grid-sm ring-1 ring-gray-200" />
+                  Transparent Preview
                 </button>
                 <button
                   type="button"
                   onClick={() => setHeroBg("white")}
                   className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
                     heroBg === "white"
-                      ? "bg-white text-gray-800 shadow-sm"
-                      : "text-gray-500 hover:text-gray-300"
+                      ? "bg-pink-50 text-pink-700 shadow-sm ring-1 ring-pink-100"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   <span className="block h-3 w-3 shrink-0 rounded-sm bg-white ring-1 ring-black/10" />

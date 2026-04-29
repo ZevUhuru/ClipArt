@@ -80,7 +80,7 @@ export function ImageCard({
   const hasTransparency = Boolean(image.transparent_url || image.has_transparency);
   const bgClass = isColoring ? "bg-white"
     : isIllustration ? "bg-gray-900/5"
-    : hasTransparency ? "bg-gray-900/5"
+    : hasTransparency ? "bg-transparency-grid"
     : "bg-gray-50/80";
 
   const defaultSizes = isColoring
