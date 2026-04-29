@@ -65,6 +65,13 @@ export async function POST(request: NextRequest) {
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
   const admin = createSupabaseAdmin();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+  const canSetPaid = profile?.is_admin === true;
+
   const { data, error } = await admin
     .from("packs")
     .insert({
@@ -81,11 +88,11 @@ export async function POST(request: NextRequest) {
       whats_included: whats_included?.trim() || null,
       use_cases: use_cases?.trim() || null,
       license_summary: license_summary?.trim() || null,
-      is_free: is_free !== false,
-      price_cents: is_free === false ? Number(price_cents) || null : null,
-      compare_at_price_cents: Number(compare_at_price_cents) || null,
-      launch_price_cents: Number(launch_price_cents) || null,
-      launch_ends_at: launch_ends_at || null,
+      is_free: canSetPaid ? is_free !== false : true,
+      price_cents: canSetPaid && is_free === false ? Number(price_cents) || null : null,
+      compare_at_price_cents: canSetPaid ? Number(compare_at_price_cents) || null : null,
+      launch_price_cents: canSetPaid ? Number(launch_price_cents) || null : null,
+      launch_ends_at: canSetPaid ? launch_ends_at || null : null,
     })
     .select("*, categories!category_id(slug, name)")
     .single();

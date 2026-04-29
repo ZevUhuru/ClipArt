@@ -13,16 +13,16 @@ export async function GET() {
     const admin = createSupabaseAdmin();
     const { data: profile, error } = await admin
       .from("profiles")
-      .select("credits")
+      .select("credits, is_admin")
       .eq("id", user.id)
       .single();
 
     if (error || !profile) {
-      return NextResponse.json({ credits: 0 });
+      return NextResponse.json({ credits: 0, is_admin: false });
     }
 
-    return NextResponse.json({ credits: profile.credits });
+    return NextResponse.json({ credits: profile.credits, is_admin: profile.is_admin === true });
   } catch {
-    return NextResponse.json({ credits: 0 }, { status: 500 });
+    return NextResponse.json({ credits: 0, is_admin: false }, { status: 500 });
   }
 }

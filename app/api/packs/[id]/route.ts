@@ -76,6 +76,13 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+  const canSetPaid = profile?.is_admin === true;
+
   const body = await request.json();
   const updates: Record<string, unknown> = {};
 
@@ -90,15 +97,17 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (body.whats_included !== undefined) updates.whats_included = body.whats_included?.trim() || null;
   if (body.use_cases !== undefined) updates.use_cases = body.use_cases?.trim() || null;
   if (body.license_summary !== undefined) updates.license_summary = body.license_summary?.trim() || null;
-  if (body.is_free !== undefined) updates.is_free = body.is_free !== false;
-  if (body.price_cents !== undefined) updates.price_cents = Number(body.price_cents) || null;
-  if (body.compare_at_price_cents !== undefined) {
-    updates.compare_at_price_cents = Number(body.compare_at_price_cents) || null;
+  if (canSetPaid) {
+    if (body.is_free !== undefined) updates.is_free = body.is_free !== false;
+    if (body.price_cents !== undefined) updates.price_cents = Number(body.price_cents) || null;
+    if (body.compare_at_price_cents !== undefined) {
+      updates.compare_at_price_cents = Number(body.compare_at_price_cents) || null;
+    }
+    if (body.launch_price_cents !== undefined) {
+      updates.launch_price_cents = Number(body.launch_price_cents) || null;
+    }
+    if (body.launch_ends_at !== undefined) updates.launch_ends_at = body.launch_ends_at || null;
   }
-  if (body.launch_price_cents !== undefined) {
-    updates.launch_price_cents = Number(body.launch_price_cents) || null;
-  }
-  if (body.launch_ends_at !== undefined) updates.launch_ends_at = body.launch_ends_at || null;
   if (body.cover_image_url !== undefined) updates.cover_image_url = body.cover_image_url;
 
   if (body.cover_generation_id !== undefined) {

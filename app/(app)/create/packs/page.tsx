@@ -139,6 +139,42 @@ function centsToDollars(value?: number | null): string {
   return (value / 100).toFixed(value % 100 === 0 ? 0 : 2);
 }
 
+function InfoTooltip({ text }: { text: string }) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onFocus={() => setShow(true)}
+        onBlur={() => setShow(false)}
+        className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-200 text-[9px] font-bold text-gray-500 transition-colors hover:bg-gray-300 hover:text-gray-700"
+        aria-label="More information"
+        title={text}
+      >
+        i
+      </button>
+      {show && (
+        <span className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-600 shadow-lg">
+          <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-gray-200 bg-white" />
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function FieldLabel({ children, info }: { children: string; info: string }) {
+  return (
+    <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+      {children}
+      <InfoTooltip text={info} />
+    </div>
+  );
+}
+
 const STARTER_PACKS = [
   {
     title: "Spring Garden Clip Art Pack",
@@ -215,7 +251,7 @@ export default function CreatePacksPageWrapper() {
 function CreatePacksPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, openAuthModal } = useAppStore();
+  const { user, isAdmin, openAuthModal } = useAppStore();
 
   const [pack, setPack] = useState<Pack | null>(null);
   const [title, setTitle] = useState("");
@@ -355,11 +391,21 @@ function CreatePacksPage() {
           whats_included: whatsIncluded.trim() || null,
           use_cases: useCases.trim() || null,
           license_summary: licenseSummary.trim() || null,
-          is_free: isFree,
-          price_cents: isFree ? null : dollarsToCents(priceDollars),
-          compare_at_price_cents: dollarsToCents(compareAtDollars),
-          launch_price_cents: dollarsToCents(launchPriceDollars),
-          launch_ends_at: launchEndsAt || null,
+          ...(isAdmin
+            ? {
+                is_free: isFree,
+                price_cents: isFree ? null : dollarsToCents(priceDollars),
+                compare_at_price_cents: dollarsToCents(compareAtDollars),
+                launch_price_cents: dollarsToCents(launchPriceDollars),
+                launch_ends_at: launchEndsAt || null,
+              }
+            : {
+                is_free: true,
+                price_cents: null,
+                compare_at_price_cents: null,
+                launch_price_cents: null,
+                launch_ends_at: null,
+              }),
         }),
       });
       const data = await res.json();
@@ -390,6 +436,7 @@ function CreatePacksPage() {
     compareAtDollars,
     launchPriceDollars,
     launchEndsAt,
+    isAdmin,
     router,
   ]);
 
@@ -422,11 +469,15 @@ function CreatePacksPage() {
           whats_included: whatsIncluded.trim() || null,
           use_cases: useCases.trim() || null,
           license_summary: licenseSummary.trim() || null,
-          is_free: isFree,
-          price_cents: isFree ? null : dollarsToCents(priceDollars),
-          compare_at_price_cents: dollarsToCents(compareAtDollars),
-          launch_price_cents: dollarsToCents(launchPriceDollars),
-          launch_ends_at: launchEndsAt || null,
+          ...(isAdmin
+            ? {
+                is_free: isFree,
+                price_cents: isFree ? null : dollarsToCents(priceDollars),
+                compare_at_price_cents: dollarsToCents(compareAtDollars),
+                launch_price_cents: dollarsToCents(launchPriceDollars),
+                launch_ends_at: launchEndsAt || null,
+              }
+            : {}),
         }),
       });
     } catch {
@@ -450,6 +501,7 @@ function CreatePacksPage() {
     compareAtDollars,
     launchPriceDollars,
     launchEndsAt,
+    isAdmin,
   ]);
 
   const autoSave = useCallback(() => {
@@ -480,6 +532,7 @@ function CreatePacksPage() {
     compareAtDollars,
     launchPriceDollars,
     launchEndsAt,
+    isAdmin,
     autoSave,
   ]);
 
@@ -1126,6 +1179,7 @@ function CreatePacksPage() {
   const activePromptCount = promptRows.filter((row) => row.prompt.trim()).length;
   const generationCount = Math.min(activePromptCount * variationsPerIdea, 20);
   const exclusiveCount = items.filter((item) => item.is_exclusive).length;
+  const displayPriceLabel = isAdmin && !isFree ? `$${priceDollars || "0"}` : "Free";
   const checklist = [
     { label: "Title", complete: Boolean(title.trim()) },
     { label: "Short description", complete: description.trim().length >= 40 },
@@ -1133,7 +1187,7 @@ function CreatePacksPage() {
     { label: "Category", complete: Boolean(categoryId) },
     { label: "Tags", complete: tags.split(",").map((t) => t.trim()).filter(Boolean).length >= 3 },
     { label: "Cover", complete: Boolean(coverItemId || pack?.cover_generation_id || items.length > 0) },
-    { label: "Price ready", complete: isFree || Boolean(dollarsToCents(priceDollars)) },
+    { label: "Price ready", complete: !isAdmin || isFree || Boolean(dollarsToCents(priceDollars)) },
     { label: "At least 12 assets", complete: items.length >= 12 },
     { label: "20 assets recommended", complete: items.length >= 20 },
     { label: "Clipart only", complete: items.every((item) => item.generations.content_type === "clipart") },
@@ -1312,7 +1366,7 @@ function CreatePacksPage() {
                       </div>
                       <div className="rounded-2xl bg-gray-50 p-3">
                         <p className="font-semibold text-gray-700">
-                          {isFree ? "Free" : `$${priceDollars || "0"}`}
+                          {displayPriceLabel}
                         </p>
                         <p className="mt-0.5 text-gray-500">Price</p>
                       </div>
@@ -1468,72 +1522,105 @@ function CreatePacksPage() {
                   <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">Pricing</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-gray-800">Pricing</p>
+                          <InfoTooltip text="Choose Free for lead magnets or public catalog packs. Choose Paid only when the bundle is ready to sell and has enough cohesive, commercially useful assets." />
+                        </div>
                         <p className="mt-1 text-xs text-gray-400">
-                          Start with a $9 launch / $12 regular test for polished 50-item packs.
+                          {isAdmin
+                            ? "Use launch pricing for an intro offer, then fall back to the regular price."
+                            : "Paid packs are limited to admins while checkout is being finalized."}
                         </p>
                       </div>
-                      <div className="flex rounded-xl bg-white p-1 ring-1 ring-gray-200">
-                        <button
-                          type="button"
-                          onClick={() => setIsFree(true)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
-                            isFree ? "bg-green-50 text-green-700" : "text-gray-400"
-                          }`}
-                        >
-                          Free
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsFree(false)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
-                            !isFree ? "bg-pink-50 text-pink-700" : "text-gray-400"
-                          }`}
-                        >
-                          Paid
-                        </button>
-                      </div>
+                      {isAdmin ? (
+                        <div className="flex rounded-xl bg-white p-1 ring-1 ring-gray-200">
+                          <button
+                            type="button"
+                            onClick={() => setIsFree(true)}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
+                              isFree ? "bg-green-50 text-green-700" : "text-gray-400"
+                            }`}
+                          >
+                            Free
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsFree(false)}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
+                              !isFree ? "bg-pink-50 text-pink-700" : "text-gray-400"
+                            }`}
+                          >
+                            Paid
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="rounded-full bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700">
+                          Free only
+                        </span>
+                      )}
                     </div>
-                    {!isFree && (
+                    {isAdmin && !isFree && (
                       <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                        <input
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          value={priceDollars}
-                          onChange={(e) => setPriceDollars(e.target.value)}
-                          placeholder="Regular $"
-                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
-                        />
-                        <input
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          value={launchPriceDollars}
-                          onChange={(e) => setLaunchPriceDollars(e.target.value)}
-                          placeholder="Launch $"
-                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
-                        />
-                        <input
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          value={compareAtDollars}
-                          onChange={(e) => setCompareAtDollars(e.target.value)}
-                          placeholder="Compare at $"
-                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
-                        />
-                        <input
-                          type="date"
-                          value={launchEndsAt}
-                          onChange={(e) => setLaunchEndsAt(e.target.value)}
-                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
-                        />
+                        <div>
+                          <FieldLabel info="The normal price after any intro sale ends. This is the price buyers should expect long term.">
+                            Regular price
+                          </FieldLabel>
+                          <input
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            value={priceDollars}
+                            onChange={(e) => setPriceDollars(e.target.value)}
+                            placeholder="12.00"
+                            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel info="Optional temporary intro price. Use this when launching a new pack, for example $9 now before it returns to $12 later.">
+                            Launch price
+                          </FieldLabel>
+                          <input
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            value={launchPriceDollars}
+                            onChange={(e) => setLaunchPriceDollars(e.target.value)}
+                            placeholder="9.00"
+                            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel info="Optional anchor price shown as the higher reference value. Use only if the pack genuinely has that perceived value.">
+                            Compare-at price
+                          </FieldLabel>
+                          <input
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            value={compareAtDollars}
+                            onChange={(e) => setCompareAtDollars(e.target.value)}
+                            placeholder="18.00"
+                            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel info="Optional end date for the launch offer. After this date, buyers should see the regular price instead.">
+                            Launch ends
+                          </FieldLabel>
+                          <input
+                            type="date"
+                            value={launchEndsAt}
+                            onChange={(e) => setLaunchEndsAt(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
                   <div className="mt-4">
-                    <label className="mb-1 block text-xs font-medium text-gray-500">License summary</label>
+                    <FieldLabel info="Plain-English license copy that appears on the bundle page and in the ZIP download. Keep it clear about commercial use and resale limits.">
+                      License summary
+                    </FieldLabel>
                     <textarea
                       value={licenseSummary}
                       onChange={(e) => setLicenseSummary(e.target.value)}
@@ -1543,9 +1630,9 @@ function CreatePacksPage() {
                   </div>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                      <FieldLabel info="Tags help search, recommendations, and future storefront filters. Use buyer language like teacher, sticker, cricut, spring, classroom.">
                         Tags (comma-separated)
-                      </label>
+                      </FieldLabel>
                       <input
                         type="text"
                         value={tags}
@@ -1555,7 +1642,9 @@ function CreatePacksPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Visibility</label>
+                      <FieldLabel info="Public packs can appear on the storefront after publishing. Private packs stay in your workspace and are useful for drafts or customer-specific bundles.">
+                        Visibility
+                      </FieldLabel>
                       <div className="flex gap-2 pt-1">
                         <button
                           onClick={() => setVisibility("public")}
@@ -1580,9 +1669,9 @@ function CreatePacksPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                      <FieldLabel info="The intended buyer. This guides generation context and helps the public page speak to the right use case.">
                         Audience
-                      </label>
+                      </FieldLabel>
                       <select
                         value={audience}
                         onChange={(e) => setAudience(e.target.value)}
@@ -1596,9 +1685,9 @@ function CreatePacksPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
+                      <FieldLabel info="The job this bundle is meant to do. A clear goal keeps the pack cohesive and easier for buyers to understand.">
                         Pack Goal
-                      </label>
+                      </FieldLabel>
                       <select
                         value={packGoal}
                         onChange={(e) => setPackGoal(e.target.value)}
@@ -1800,6 +1889,7 @@ function CreatePacksPage() {
                             <button
                               onClick={() => setPackCover(item)}
                               className="flex-1 rounded-lg bg-pink-50 px-2 py-1 text-[10px] font-bold text-pink-600 hover:bg-pink-100"
+                              title="Use this image as the public preview and ZIP cover for the pack."
                             >
                               Set cover
                             </button>
@@ -1810,6 +1900,7 @@ function CreatePacksPage() {
                                   ? "bg-gray-900 text-white"
                                   : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                               }`}
+                              title="Exclusive means this asset is intended for this pack. Reusable means it can be used in other packs too."
                             >
                               {item.is_exclusive ? "Exclusive" : "Reusable"}
                             </button>
@@ -2018,9 +2109,12 @@ function CreatePacksPage() {
               <div className="rounded-2xl border border-gray-100 bg-white p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-800">
-                      Generate assets for this pack
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-800">
+                        Generate assets for this pack
+                      </h3>
+                      <InfoTooltip text="Use this when you need new images made specifically for this bundle. Existing library or catalog assets can still be imported from the other tabs." />
+                    </div>
                     <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-400">
                       Add one idea per row. We use the pack brief, audience, goal, style,
                       and settings to keep the generated assets cohesive.
@@ -2092,7 +2186,9 @@ function CreatePacksPage() {
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">Style</label>
+                    <FieldLabel info="The visual treatment applied to every generated idea in this run. Use one style per batch when you want the pack to feel cohesive.">
+                      Style
+                    </FieldLabel>
                     <select
                       value={genStyle}
                       onChange={(e) => setGenStyle(e.target.value as StyleKey)}
@@ -2107,7 +2203,9 @@ function CreatePacksPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-500">Asset availability</label>
+                    <FieldLabel info="Pack-exclusive keeps generated images reserved for this bundle. Reusable puts them in your library for future bundles too.">
+                      Asset availability
+                    </FieldLabel>
                     <select
                       value={assetAvailability}
                       onChange={(e) => setAssetAvailability(e.target.value as "exclusive" | "reusable")}
@@ -2131,7 +2229,9 @@ function CreatePacksPage() {
                 {showAdvancedGeneration && (
                   <div className="mt-3 grid gap-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Model</label>
+                      <FieldLabel info="Recommended uses the app's current best model for the chosen style. Override only when you want to test quality, speed, or transparency behavior.">
+                        Model
+                      </FieldLabel>
                       <select
                         value={genModel}
                         onChange={(e) => setGenModel(e.target.value as "recommended" | ModelKey)}
@@ -2148,7 +2248,9 @@ function CreatePacksPage() {
                       </p>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Variations per idea</label>
+                      <FieldLabel info="Creates multiple options for each idea row. More variations cost more credits but give you more chances to pick the best asset.">
+                        Variations per idea
+                      </FieldLabel>
                       <select
                         value={variationsPerIdea}
                         onChange={(e) => setVariationsPerIdea(Number(e.target.value))}
@@ -2162,7 +2264,9 @@ function CreatePacksPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Shared style notes</label>
+                      <FieldLabel info="Extra direction added to every idea in this batch, such as line weight, palette, pose style, age range, or character consistency.">
+                        Shared style notes
+                      </FieldLabel>
                       <textarea
                         value={sharedStyleNotes}
                         onChange={(e) => setSharedStyleNotes(e.target.value)}
@@ -2172,7 +2276,9 @@ function CreatePacksPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Avoid</label>
+                      <FieldLabel info="Negative instructions applied to the whole batch. Useful for avoiding text, watermarks, messy backgrounds, duplicate poses, or off-theme details.">
+                        Avoid
+                      </FieldLabel>
                       <textarea
                         value={avoidList}
                         onChange={(e) => setAvoidList(e.target.value)}
@@ -2189,6 +2295,7 @@ function CreatePacksPage() {
                         className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
                       />
                       Keep all generated images visually cohesive
+                      <InfoTooltip text="When on, Pack Studio adds stronger shared context so the batch feels like one coordinated bundle instead of unrelated one-off images." />
                     </label>
                   </div>
                 )}

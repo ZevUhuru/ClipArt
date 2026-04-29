@@ -21,6 +21,7 @@ export interface Generation {
 interface AppState {
   user: { id: string; email: string } | null;
   credits: number;
+  isAdmin: boolean;
   authModalMode: AuthModalMode;
   isBuyCreditsOpen: boolean;
   generations: Generation[];
@@ -30,6 +31,7 @@ interface AppState {
 
   setUser: (user: { id: string; email: string } | null) => void;
   setCredits: (credits: number) => void;
+  setIsAdmin: (isAdmin: boolean) => void;
   decrementCredits: () => void;
   setGenerations: (generations: Generation[]) => void;
   prependGeneration: (generation: Generation) => void;
@@ -44,6 +46,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   user: null,
   credits: 0,
+  isAdmin: false,
   authModalMode: null,
   isBuyCreditsOpen: false,
   generations: [],
@@ -52,12 +55,13 @@ export const useAppStore = create<AppState>((set) => ({
 
   setUser: (user) => set({ user }),
   setCredits: (credits) => set({ credits }),
+  setIsAdmin: (isAdmin) => set({ isAdmin }),
   decrementCredits: () => set((s) => ({ credits: Math.max(0, s.credits - 1) })),
   setGenerations: (generations) => set({ generations, generationsLoaded: true }),
   prependGeneration: (generation) =>
     set((s) => ({ generations: [generation, ...s.generations] })),
   resetUserState: () =>
-    set({ user: null, credits: 0, generations: [], generationsLoaded: false }),
+    set({ user: null, credits: 0, isAdmin: false, generations: [], generationsLoaded: false }),
   openAuthModal: (mode) => set({ authModalMode: mode }),
   closeAuthModal: () => set({ authModalMode: null }),
   openBuyCreditsModal: () => set({ isBuyCreditsOpen: true }),

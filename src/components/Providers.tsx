@@ -12,7 +12,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 const useSlotModal = process.env.NEXT_PUBLIC_CREDITS_MODAL_VARIANT === "slot";
 
 export function Providers({ children }: { children: ReactNode }) {
-  const { setUser, setCredits, resetUserState } = useAppStore();
+  const { setUser, setCredits, setIsAdmin, resetUserState } = useAppStore();
   const loadPending = useAnimationQueue((s) => s.loadPending);
   const stopPolling = useAnimationQueue((s) => s.stopPolling);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -23,9 +23,10 @@ export function Providers({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         if (typeof data.credits === "number") setCredits(data.credits);
+        setIsAdmin(data.is_admin === true);
       }
     } catch { /* ignore */ }
-  }, [setCredits]);
+  }, [setCredits, setIsAdmin]);
 
   const fetchPendingAnimations = useCallback(async () => {
     try {
