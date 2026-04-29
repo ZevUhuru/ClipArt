@@ -11,7 +11,11 @@ alter table public.packs
   add column if not exists license_summary text,
   add column if not exists compare_at_price_cents integer,
   add column if not exists launch_price_cents integer,
-  add column if not exists launch_ends_at timestamptz;
+  add column if not exists launch_ends_at timestamptz,
+  add column if not exists cover_generation_id uuid references public.generations(id) on delete set null;
+
+create index if not exists idx_packs_cover_generation_id
+  on public.packs(cover_generation_id);
 
 do $$
 begin
@@ -39,3 +43,6 @@ begin
       check (launch_price_cents is null or launch_price_cents >= 0);
   end if;
 end $$;
+
+-- Force Supabase/PostgREST to refresh its schema cache after adding columns.
+notify pgrst, 'reload schema';
