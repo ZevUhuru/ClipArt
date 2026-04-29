@@ -75,6 +75,20 @@ interface PromptRow {
   prompt: string;
 }
 
+interface GenerationQueueItem {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
+interface PersistedGenerationQueue {
+  packId: string;
+  startedAt: number;
+  initialItemCount: number;
+  expectedCount: number;
+  queue: GenerationQueueItem[];
+}
+
 const PACK_AUDIENCES = [
   "Teachers and classrooms",
   "Homeschool families",
@@ -116,6 +130,17 @@ const MODEL_OPTIONS: { value: "recommended" | ModelKey; label: string; descripti
   { value: "gpt-image-2", label: "GPT Image 2", description: "High quality, may need background removal" },
   { value: "gpt-image-1", label: "GPT Image 1", description: "Legacy OpenAI image model" },
 ];
+
+const PACK_GENERATION_STAGES = [
+  "Preparing pack context",
+  "Sending ideas to the model",
+  "Generating cohesive clip art",
+  "Saving assets to your pack",
+  "Refreshing the canvas",
+];
+
+const PACK_STUDIO_PENDING_GENERATION_KEY = "pack-studio:pending-generation";
+const PACK_GENERATION_RECOVERY_MS = 8 * 60 * 1000;
 
 const DEFAULT_LICENSE_SUMMARY =
   "Commercial use is included. Buyers may use the finished designs in personal projects, classroom materials, printables, physical products, and small business designs. They may not resell or redistribute the original image files as standalone clip art.";
@@ -301,7 +326,12 @@ function CreatePacksPage() {
   const [keepCohesive, setKeepCohesive] = useState(true);
   const [showAdvancedGeneration, setShowAdvancedGeneration] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [genProgress, setGenProgress] = useState("");
+  const [generationQueue, setGenerationQueue] = useState<GenerationQueueItem[]>([]);
+  const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  const [generationTick, setGenerationTick] = useState(0);
+  const [recoveringGeneration, setRecoveringGeneration] = useState(false);
+  const [generationInitialItemCount, setGenerationInitialItemCount] = useState(0);
+  const [generationExpectedCount, setGenerationExpectedCount] = useState(0);
 
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -324,6 +354,16 @@ function CreatePacksPage() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!generating && !recoveringGeneration) return;
+
+    const interval = window.setInterval(() => {
+      setGenerationTick(Date.now());
+    }, 500);
+
+    return () => window.clearInterval(interval);
+  }, [generating, recoveringGeneration]);
 
   useEffect(() => {
     const packId = searchParams.get("id");
@@ -360,6 +400,8 @@ function CreatePacksPage() {
             (a, b) => a.sort_order - b.sort_order,
           );
           setItems(sorted);
+        } else {
+          setItems([]);
         }
       })
       .catch(() => {
@@ -609,14 +651,166 @@ function CreatePacksPage() {
     if (rows.length > 0) setPromptRows(rows);
   }, []);
 
+  const clearPersistedGeneration = useCallback(() => {
+    try {
+      localStorage.removeItem(PACK_STUDIO_PENDING_GENERATION_KEY);
+    } catch {
+      // localStorage can be unavailable in private or restricted contexts.
+    }
+  }, []);
+
+  const refreshPack = useCallback(async () => {
+    if (!pack?.id) return null;
+
+    const res = await fetch(`/api/packs/${pack.id}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+    const packData = await res.json();
+    if (!res.ok || !packData.pack) return null;
+
+    const refreshed = packData.pack as Pack;
+    setPack(refreshed);
+    if (refreshed.pack_items) {
+      const sortedItems = refreshed.pack_items.sort(
+        (a: PackItem, b: PackItem) => a.sort_order - b.sort_order,
+      );
+      setItems(sortedItems);
+      return sortedItems.length;
+    }
+
+    setItems([]);
+    return 0;
+  }, [pack?.id]);
+
+  useEffect(() => {
+    if (!pack || generating || recoveringGeneration || generationQueue.length > 0) return;
+
+    try {
+      const raw = localStorage.getItem(PACK_STUDIO_PENDING_GENERATION_KEY);
+      if (!raw) return;
+
+      const pending = JSON.parse(raw) as PersistedGenerationQueue;
+      if (pending.packId !== pack.id) return;
+
+      const age = Date.now() - pending.startedAt;
+      if (age > PACK_GENERATION_RECOVERY_MS) {
+        clearPersistedGeneration();
+        return;
+      }
+
+      if (items.length > pending.initialItemCount) {
+        clearPersistedGeneration();
+        return;
+      }
+
+      setView("generate");
+      setGenerationQueue(pending.queue);
+      setGenerationStartedAt(pending.startedAt);
+      setGenerationTick(Date.now());
+      setGenerationInitialItemCount(pending.initialItemCount);
+      setGenerationExpectedCount(pending.expectedCount);
+      setRecoveringGeneration(true);
+      setSuccessMsg("Checking for generated pack assets after refresh...");
+      setTimeout(() => setSuccessMsg(null), 3500);
+    } catch {
+      clearPersistedGeneration();
+    }
+  }, [
+    pack,
+    generating,
+    recoveringGeneration,
+    generationQueue.length,
+    items.length,
+    clearPersistedGeneration,
+  ]);
+
+  useEffect(() => {
+    if (!pack || !recoveringGeneration || !generationStartedAt) return;
+
+    let cancelled = false;
+
+    const checkForRecoveredItems = async () => {
+      const count = await refreshPack();
+      if (cancelled) return;
+
+      if (count !== null && count > generationInitialItemCount) {
+        setRecoveringGeneration(false);
+        setGenerationStartedAt(null);
+        setGenerationTick(0);
+        clearPersistedGeneration();
+        setSuccessMsg("Recovered generated assets and refreshed the pack.");
+        setTimeout(() => setSuccessMsg(null), 3500);
+        window.setTimeout(() => setGenerationQueue([]), 900);
+        return;
+      }
+
+      if (Date.now() - generationStartedAt > PACK_GENERATION_RECOVERY_MS) {
+        setRecoveringGeneration(false);
+        setGenerationStartedAt(null);
+        setGenerationTick(0);
+        clearPersistedGeneration();
+        setError("Could not confirm whether that batch finished. Check this pack and your library for any completed images.");
+        window.setTimeout(() => setGenerationQueue([]), 900);
+      }
+    };
+
+    checkForRecoveredItems();
+    const interval = window.setInterval(checkForRecoveredItems, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [
+    pack,
+    recoveringGeneration,
+    generationStartedAt,
+    generationInitialItemCount,
+    refreshPack,
+    clearPersistedGeneration,
+  ]);
+
   const batchGenerate = useCallback(async () => {
     const activeRows = promptRows
       .map((row) => ({ ...row, prompt: row.prompt.trim(), title: row.title.trim() }))
       .filter((row) => row.prompt);
     if (!pack || activeRows.length === 0) return;
     setGenerating(true);
-    const totalCount = Math.min(activeRows.length * variationsPerIdea, 20);
-    setGenProgress(`Generating ${totalCount} item${totalCount !== 1 ? "s" : ""}...`);
+    const startedAt = Date.now();
+    const queue = activeRows
+      .flatMap((row) =>
+        Array.from({ length: variationsPerIdea }, (_, index) => ({
+          id: `${row.id}-${index}`,
+          label:
+            variationsPerIdea > 1
+              ? `${row.title || row.prompt} · v${index + 1}`
+              : row.title || row.prompt,
+          prompt: row.prompt,
+        })),
+      )
+      .slice(0, 20);
+    const expectedCount = queue.length;
+    const initialItemCount = items.length;
+    setGenerationStartedAt(startedAt);
+    setGenerationTick(startedAt);
+    setGenerationQueue(queue);
+    setGenerationInitialItemCount(initialItemCount);
+    setGenerationExpectedCount(expectedCount);
+    setRecoveringGeneration(false);
+    try {
+      localStorage.setItem(
+        PACK_STUDIO_PENDING_GENERATION_KEY,
+        JSON.stringify({
+          packId: pack.id,
+          startedAt,
+          initialItemCount,
+          expectedCount,
+          queue,
+        } satisfies PersistedGenerationQueue),
+      );
+    } catch {
+      // Generation still works if storage is unavailable; it just cannot recover after refresh.
+    }
     setError(null);
     try {
       const prompts = activeRows.map((row) => {
@@ -659,30 +853,27 @@ function CreatePacksPage() {
       if (!res.ok) throw new Error(data.error);
 
       if (data.results?.length > 0) {
-        const res2 = await fetch(`/api/packs/${pack.id}`, {
-          headers: { "Content-Type": "application/json" },
-        });
-        const packData = await res2.json();
-        if (packData.pack?.pack_items) {
-          const sortedItems = packData.pack.pack_items.sort(
-            (a: PackItem, b: PackItem) => a.sort_order - b.sort_order,
-          );
-          setItems(sortedItems);
-        }
+        await refreshPack();
         setSuccessMsg(`Generated ${data.results.length} items (${data.credits_used} credits used)`);
         setTimeout(() => setSuccessMsg(null), 3000);
       }
       setPromptRows([createPromptRow()]);
+      clearPersistedGeneration();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Batch generation failed");
+      clearPersistedGeneration();
     } finally {
       setGenerating(false);
-      setGenProgress("");
+      setGenerationStartedAt(null);
+      setGenerationTick(0);
+      setRecoveringGeneration(false);
+      window.setTimeout(() => setGenerationQueue([]), 900);
     }
   }, [
     pack,
     promptRows,
     variationsPerIdea,
+    items.length,
     title,
     description,
     longDescription,
@@ -695,6 +886,8 @@ function CreatePacksPage() {
     genStyle,
     genModel,
     assetAvailability,
+    refreshPack,
+    clearPersistedGeneration,
   ]);
 
   const itemGenerationIds = new Set(items.map((i) => i.generation_id));
@@ -1178,6 +1371,21 @@ function CreatePacksPage() {
   ).length;
   const activePromptCount = promptRows.filter((row) => row.prompt.trim()).length;
   const generationCount = Math.min(activePromptCount * variationsPerIdea, 20);
+  const showGenerationQueue = generating || recoveringGeneration;
+  const generationElapsed = generationStartedAt
+    ? Math.max(0, (generationTick - generationStartedAt) / 1000)
+    : 0;
+  const queueTotal = generationQueue.length || generationExpectedCount || generationCount;
+  const generationProgressPercent = generating
+    ? Math.min(96, Math.max(8, Math.round((1 - Math.exp(-generationElapsed / Math.max(8, queueTotal * 4.5))) * 100)))
+    : 0;
+  const generationStageIndex = Math.min(
+    PACK_GENERATION_STAGES.length - 1,
+    Math.floor((generationProgressPercent / 100) * PACK_GENERATION_STAGES.length),
+  );
+  const activeQueueIndex = queueTotal
+    ? Math.min(queueTotal - 1, Math.floor((generationProgressPercent / 100) * queueTotal))
+    : 0;
   const exclusiveCount = items.filter((item) => item.is_exclusive).length;
   const displayPriceLabel = isAdmin && !isFree ? `$${priceDollars || "0"}` : "Free";
   const checklist = [
@@ -2300,13 +2508,119 @@ function CreatePacksPage() {
                   </div>
                 )}
 
+                <AnimatePresence>
+                  {showGenerationQueue && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="mt-5 overflow-hidden rounded-[1.5rem] border border-pink-100 bg-white shadow-xl shadow-pink-100/40"
+                    >
+                      <div className="relative overflow-hidden bg-[radial-gradient(circle_at_12%_20%,rgba(236,72,153,0.16),transparent_28%),radial-gradient(circle_at_90%_15%,rgba(251,146,60,0.14),transparent_26%),#fff] p-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gradient shadow-lg shadow-pink-200/70">
+                              <span className="absolute inset-0 animate-ping rounded-2xl bg-pink-300/25" />
+                              <svg className="relative h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18 3.75l.42 1.54a2.25 2.25 0 0 0 1.59 1.59L21.55 7.3l-1.54.42a2.25 2.25 0 0 0-1.59 1.59L18 10.85l-.42-1.54a2.25 2.25 0 0 0-1.59-1.59l-1.54-.42 1.54-.42a2.25 2.25 0 0 0 1.59-1.59Z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">
+                                {recoveringGeneration ? "Recovering your pack queue" : "Building your pack queue"}
+                              </p>
+                              <p className="mt-0.5 text-xs text-gray-500">
+                                {recoveringGeneration
+                                  ? "Checking the pack for completed assets"
+                                  : PACK_GENERATION_STAGES[generationStageIndex]} · {queueTotal} asset{queueTotal !== 1 ? "s" : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="rounded-2xl bg-white/80 px-3 py-2 text-right ring-1 ring-gray-100">
+                            <p className="text-lg font-black tabular-nums text-gray-900">
+                              {generationProgressPercent}%
+                            </p>
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                              {recoveringGeneration ? "Recovering" : "In progress"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80 ring-1 ring-gray-100">
+                          <motion.div
+                            className="h-full rounded-full bg-brand-gradient"
+                            initial={{ width: "8%" }}
+                            animate={{ width: `${generationProgressPercent}%` }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2 p-3 sm:grid-cols-2">
+                        {generationQueue.slice(0, 8).map((item, index) => {
+                          const isActive = index === activeQueueIndex;
+                          const isPrepared = index < activeQueueIndex;
+                          return (
+                            <div
+                              key={item.id}
+                              className={`rounded-2xl border px-3 py-2 transition-colors ${
+                                isActive
+                                  ? "border-pink-200 bg-pink-50"
+                                  : isPrepared
+                                    ? "border-green-100 bg-green-50/70"
+                                    : "border-gray-100 bg-gray-50/70"
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span
+                                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${
+                                    isActive
+                                      ? "bg-pink-500 text-white"
+                                      : isPrepared
+                                        ? "bg-green-500 text-white"
+                                        : "bg-white text-gray-400 ring-1 ring-gray-200"
+                                  }`}
+                                >
+                                  {isPrepared ? "✓" : index + 1}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="truncate text-xs font-bold text-gray-800">
+                                    {item.label}
+                                  </p>
+                                  <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                    {recoveringGeneration
+                                      ? isPrepared
+                                        ? "Already checked"
+                                        : isActive
+                                          ? "Checking now"
+                                          : "Waiting to check"
+                                      : isActive ? "Generating now" : isPrepared ? "Prepared" : "Queued"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {generationQueue.length > 8 && (
+                          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-2 text-xs font-bold text-gray-400">
+                            + {generationQueue.length - 8} more asset{generationQueue.length - 8 !== 1 ? "s" : ""} queued
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <button
                   onClick={batchGenerate}
-                  disabled={generationCount === 0 || generating}
+                  disabled={generationCount === 0 || generating || recoveringGeneration}
                   className="mt-5 rounded-xl bg-brand-gradient px-5 py-3 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
                 >
-                  {generating
-                    ? genProgress || "Generating..."
+                  {showGenerationQueue
+                    ? recoveringGeneration
+                      ? "Recovering queue..."
+                      : "Generating queue..."
                     : `Generate ${generationCount} item${generationCount !== 1 ? "s" : ""}`}
                 </button>
               </div>
