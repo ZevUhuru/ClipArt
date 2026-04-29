@@ -7,6 +7,7 @@ import { checkPromptSafety } from "@/lib/promptSafety";
 import {
   type StyleKey,
   type ContentType,
+  type ModelKey,
   STYLE_DESCRIPTORS,
   CONTENT_TYPE_ASPECT,
   isValidStyleForContentType,
@@ -16,6 +17,12 @@ import sharp from "sharp";
 export const maxDuration = 120;
 
 const VALID_CONTENT_TYPES: ContentType[] = ["clipart", "illustration", "coloring"];
+const VALID_MODELS: ModelKey[] = ["gemini", "gemini-pro", "gpt-image-1", "gpt-image-1.5", "gpt-image-2"];
+
+interface BatchPromptRow {
+  prompt: string;
+  title?: string;
+}
 
 const VARIATION_TEMPLATES = [
   (base: string) => base,
@@ -50,14 +57,37 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const { prompt, style, count: rawCount, pack_id } = body;
+  const promptRows: BatchPromptRow[] = Array.isArray(body.prompts)
+    ? body.prompts
+        .map((row: unknown) => {
+          if (typeof row === "string") return { prompt: row };
+          if (row && typeof row === "object" && "prompt" in row) {
+            const r = row as { prompt?: unknown; title?: unknown };
+            return {
+              prompt: typeof r.prompt === "string" ? r.prompt : "",
+              title: typeof r.title === "string" ? r.title : undefined,
+            };
+          }
+          return { prompt: "" };
+        })
+        .map((row: BatchPromptRow) => ({ ...row, prompt: row.prompt.trim(), title: row.title?.trim() }))
+        .filter((row: BatchPromptRow) => row.prompt)
+    : [];
+  const variationsPerIdea = Math.min(Math.max(1, parseInt(body.variationsPerIdea) || 1), 3);
+  const requestedModel = VALID_MODELS.includes(body.model) ? (body.model as ModelKey) : undefined;
+  const packExclusive = body.assetAvailability !== "reusable";
   const contentType: ContentType = VALID_CONTENT_TYPES.includes(body.contentType)
     ? body.contentType
     : style === "coloring"
       ? "coloring"
       : "clipart";
 
-  if (!prompt || typeof prompt !== "string" || prompt.length > 2000) {
+  if (promptRows.length === 0 && (!prompt || typeof prompt !== "string" || prompt.length > 2000)) {
     return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
+  }
+
+  if (promptRows.some((row) => row.prompt.length > 2000)) {
+    return NextResponse.json({ error: "Each prompt must be under 2000 characters" }, { status: 400 });
   }
 
   if (!style || !(style in STYLE_DESCRIPTORS)) {
@@ -69,12 +99,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Style not available for this content type" }, { status: 400 });
   }
 
-  const safety = checkPromptSafety(prompt);
-  if (!safety.safe) {
-    return NextResponse.json({ error: safety.reason }, { status: 400 });
+  const promptsToCheck = promptRows.length > 0 ? promptRows.map((row) => row.prompt) : [prompt];
+  for (const promptToCheck of promptsToCheck) {
+    const safety = checkPromptSafety(promptToCheck);
+    if (!safety.safe) {
+      return NextResponse.json({ error: safety.reason }, { status: 400 });
+    }
   }
 
-  const count = Math.min(Math.max(1, parseInt(rawCount) || 5), 20);
+  const plannedPrompts: BatchPromptRow[] = promptRows.length > 0
+    ? promptRows.flatMap((row) =>
+        Array.from({ length: variationsPerIdea }, (_, variationIndex) => ({
+          prompt: variationIndex === 0
+            ? row.prompt
+            : VARIATION_TEMPLATES[variationIndex % VARIATION_TEMPLATES.length](row.prompt),
+          title: row.title,
+        })),
+      )
+    : Array.from({ length: Math.min(Math.max(1, parseInt(rawCount) || 5), 20) }, (_, i) => {
+        const variationFn = VARIATION_TEMPLATES[i % VARIATION_TEMPLATES.length];
+        return {
+          prompt: i === 0 ? prompt : variationFn(prompt),
+        };
+      });
+
+  const count = Math.min(plannedPrompts.length, 20);
 
   const admin = createSupabaseAdmin();
   const { data: profile } = await admin
@@ -104,11 +153,17 @@ export async function POST(request: NextRequest) {
   let creditsUsed = 0;
 
   for (let i = 0; i < count; i++) {
-    const variationFn = VARIATION_TEMPLATES[i % VARIATION_TEMPLATES.length];
-    const variedPrompt = i === 0 ? prompt : variationFn(prompt);
+    const promptRow = plannedPrompts[i];
+    const variedPrompt = promptRow.prompt;
 
     try {
-      const { buffer: rawBuffer, model: imageModel } = await generateImage(variedPrompt, styleKey, contentType);
+      const { buffer: rawBuffer, model: imageModel } = await generateImage(
+        variedPrompt,
+        styleKey,
+        contentType,
+        undefined,
+        requestedModel,
+      );
       const webpBuffer = await sharp(rawBuffer)
         .webp({ quality: 85, effort: 4 })
         .toBuffer();
@@ -132,8 +187,8 @@ export async function POST(request: NextRequest) {
           content_type: contentType,
           image_url: imageUrl,
           category: cat,
-          is_public: true,
-          title: classification.title,
+          is_public: !packExclusive,
+          title: promptRow.title || classification.title,
           slug: uniqueSlug,
           description: classification.description,
           aspect_ratio: aspectRatio,
@@ -171,6 +226,7 @@ export async function POST(request: NextRequest) {
     const rows = results.map((gen) => ({
       pack_id,
       generation_id: gen.id,
+      is_exclusive: packExclusive,
       sort_order: nextOrder++,
     }));
 

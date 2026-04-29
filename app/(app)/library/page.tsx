@@ -111,6 +111,7 @@ const SORT_OPTIONS = [
 
 const LIBRARY_MENU_LINKS = [
   { href: "/create", label: "Create", description: "Generate new artwork" },
+  { href: "/create/packs", label: "Pack Studio", description: "Create and manage bundles" },
   { href: "/search", label: "Explore", description: "Discover community creations" },
   { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections" },
   { href: "/animate", label: "Animate", description: "Bring your art to life" },

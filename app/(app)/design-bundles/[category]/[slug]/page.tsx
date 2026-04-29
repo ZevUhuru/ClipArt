@@ -20,6 +20,15 @@ interface PackDetail {
   title: string;
   slug: string;
   description: string | null;
+  audience: string | null;
+  pack_goal: string | null;
+  long_description: string | null;
+  whats_included: string | null;
+  use_cases: string | null;
+  license_summary: string | null;
+  compare_at_price_cents: number | null;
+  launch_price_cents: number | null;
+  launch_ends_at: string | null;
   cover_image_url: string | null;
   item_count: number;
   content_types: string[];
@@ -72,7 +81,9 @@ async function getPack(slug: string): Promise<PackDetail | null> {
     const { data } = await admin
       .from("packs")
       .select(`
-        id, title, slug, description, cover_image_url, item_count, content_types, formats, tags,
+        id, title, slug, description, audience, pack_goal, long_description, whats_included,
+        use_cases, license_summary, compare_at_price_cents, launch_price_cents, launch_ends_at,
+        cover_image_url, item_count, content_types, formats, tags,
         is_free, price_cents, downloads, zip_url, zip_status, visibility, is_published, created_at,
         categories!category_id(slug, name),
         pack_items(
@@ -349,10 +360,10 @@ export default async function PackDetailPage({ params }: Props) {
                     What&apos;s included
                   </h3>
                   <p className="mt-1.5 text-sm text-gray-600">
-                    {contentSummary} — delivered as transparent PNG assets
+                    {pack.whats_included || `${contentSummary} — delivered as transparent PNG assets`}
                   </p>
                   <p className="mt-2 text-[11px] text-gray-400">
-                    Free for personal and commercial use. No attribution required.
+                    {pack.license_summary || "Free for personal and commercial use. No attribution required."}
                   </p>
                 </div>
 
@@ -369,6 +380,50 @@ export default async function PackDetailPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        {(pack.long_description || pack.use_cases || pack.audience || pack.pack_goal) && (
+          <section className="border-b border-gray-100 bg-white">
+            <div className="mx-auto grid max-w-5xl gap-5 px-4 py-8 lg:grid-cols-[1.35fr_0.65fr]">
+              {pack.long_description && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-500">
+                    About this bundle
+                  </p>
+                  <div className="mt-3 space-y-4 text-sm leading-7 text-gray-600">
+                    {pack.long_description.split("\n").filter(Boolean).map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-4">
+                {(pack.audience || pack.pack_goal) && (
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <h2 className="text-sm font-bold text-gray-900">Best for</h2>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {pack.audience && (
+                        <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600">
+                          {pack.audience}
+                        </span>
+                      )}
+                      {pack.pack_goal && (
+                        <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-600">
+                          {pack.pack_goal}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {pack.use_cases && (
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <h2 className="text-sm font-bold text-gray-900">Use cases</h2>
+                    <p className="mt-2 text-sm leading-6 text-gray-600">{pack.use_cases}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Item preview grid */}
         <div className="mx-auto max-w-5xl px-4 py-8">

@@ -84,7 +84,7 @@ const MENU_GROUPS: MenuGroup[] = [
       { href: "/create/illustrations", label: "Illustrations", description: "Full-scene artwork with backgrounds", icon: <IllustrationIcon /> },
       { href: "/create/coloring-pages", label: "Coloring Pages", description: "Printable line art for any theme", icon: <ColoringIcon /> },
       { href: "/create/worksheets", label: "Worksheets", description: "Educational printables by grade", icon: <WorksheetIcon /> },
-      { href: "/create/packs", label: "Theme Packs", description: "Curate a themed collection", icon: <BundleIcon /> },
+      { href: "/create/packs", label: "Pack Studio", description: "Create and publish bundles", icon: <BundleIcon /> },
     ],
   },
   {

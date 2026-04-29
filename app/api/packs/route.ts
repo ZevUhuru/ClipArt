@@ -38,7 +38,24 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { title, description, category_id, tags, visibility } = body;
+  const {
+    title,
+    description,
+    category_id,
+    tags,
+    visibility,
+    audience,
+    pack_goal,
+    long_description,
+    whats_included,
+    use_cases,
+    license_summary,
+    is_free,
+    price_cents,
+    compare_at_price_cents,
+    launch_price_cents,
+    launch_ends_at,
+  } = body;
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -58,6 +75,17 @@ export async function POST(request: NextRequest) {
       category_id: category_id || null,
       tags: tags || [],
       visibility: visibility === "public" ? "public" : "private",
+      audience: audience?.trim() || null,
+      pack_goal: pack_goal?.trim() || null,
+      long_description: long_description?.trim() || null,
+      whats_included: whats_included?.trim() || null,
+      use_cases: use_cases?.trim() || null,
+      license_summary: license_summary?.trim() || null,
+      is_free: is_free !== false,
+      price_cents: is_free === false ? Number(price_cents) || null : null,
+      compare_at_price_cents: Number(compare_at_price_cents) || null,
+      launch_price_cents: Number(launch_price_cents) || null,
+      launch_ends_at: launch_ends_at || null,
     })
     .select("*, categories!category_id(slug, name)")
     .single();

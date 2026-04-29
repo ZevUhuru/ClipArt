@@ -84,6 +84,21 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (body.category_id !== undefined) updates.category_id = body.category_id || null;
   if (body.tags !== undefined) updates.tags = body.tags;
   if (body.visibility !== undefined) updates.visibility = body.visibility === "public" ? "public" : "private";
+  if (body.audience !== undefined) updates.audience = body.audience?.trim() || null;
+  if (body.pack_goal !== undefined) updates.pack_goal = body.pack_goal?.trim() || null;
+  if (body.long_description !== undefined) updates.long_description = body.long_description?.trim() || null;
+  if (body.whats_included !== undefined) updates.whats_included = body.whats_included?.trim() || null;
+  if (body.use_cases !== undefined) updates.use_cases = body.use_cases?.trim() || null;
+  if (body.license_summary !== undefined) updates.license_summary = body.license_summary?.trim() || null;
+  if (body.is_free !== undefined) updates.is_free = body.is_free !== false;
+  if (body.price_cents !== undefined) updates.price_cents = Number(body.price_cents) || null;
+  if (body.compare_at_price_cents !== undefined) {
+    updates.compare_at_price_cents = Number(body.compare_at_price_cents) || null;
+  }
+  if (body.launch_price_cents !== undefined) {
+    updates.launch_price_cents = Number(body.launch_price_cents) || null;
+  }
+  if (body.launch_ends_at !== undefined) updates.launch_ends_at = body.launch_ends_at || null;
   if (body.cover_image_url !== undefined) updates.cover_image_url = body.cover_image_url;
 
   if (body.cover_generation_id !== undefined) {

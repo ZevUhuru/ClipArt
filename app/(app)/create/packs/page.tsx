@@ -5,6 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAppStore } from "@/stores/useAppStore";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  type ModelKey,
+  type StyleKey,
+  STYLE_LABELS,
+  VALID_STYLES,
+} from "@/lib/styles";
 
 interface Category {
   id: string;
@@ -38,9 +44,20 @@ interface Pack {
   title: string;
   slug: string;
   description: string | null;
+  audience?: string | null;
+  pack_goal?: string | null;
+  long_description?: string | null;
+  whats_included?: string | null;
+  use_cases?: string | null;
+  license_summary?: string | null;
   category_id: string | null;
   tags: string[];
   visibility: string;
+  is_free?: boolean;
+  price_cents?: number | null;
+  compare_at_price_cents?: number | null;
+  launch_price_cents?: number | null;
+  launch_ends_at?: string | null;
   cover_image_url: string | null;
   cover_generation_id?: string | null;
   is_published: boolean;
@@ -51,6 +68,12 @@ interface Pack {
 }
 
 type EditorView = "editor" | "library" | "browse" | "generate";
+
+interface PromptRow {
+  id: string;
+  title: string;
+  prompt: string;
+}
 
 const PACK_AUDIENCES = [
   "Teachers and classrooms",
@@ -84,6 +107,37 @@ const PACK_GOALS = [
   "Character sheet",
   "Kids activity pack",
 ];
+
+const MODEL_OPTIONS: { value: "recommended" | ModelKey; label: string; description: string }[] = [
+  { value: "recommended", label: "Recommended", description: "Use the current best model for this style" },
+  { value: "gemini", label: "Gemini Flash Image", description: "Fast general clip art generation" },
+  { value: "gemini-pro", label: "Gemini Pro Image", description: "Premium detail for hero assets" },
+  { value: "gpt-image-1.5", label: "GPT Image 1.5", description: "OpenAI image model with transparent background support" },
+  { value: "gpt-image-2", label: "GPT Image 2", description: "High quality, may need background removal" },
+  { value: "gpt-image-1", label: "GPT Image 1", description: "Legacy OpenAI image model" },
+];
+
+const DEFAULT_LICENSE_SUMMARY =
+  "Commercial use is included. Buyers may use the finished designs in personal projects, classroom materials, printables, physical products, and small business designs. They may not resell or redistribute the original image files as standalone clip art.";
+
+function createPromptRow(prompt = "", title = ""): PromptRow {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title,
+    prompt,
+  };
+}
+
+function dollarsToCents(value: string): number | null {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return Math.round(parsed * 100);
+}
+
+function centsToDollars(value?: number | null): string {
+  if (!value || value <= 0) return "";
+  return (value / 100).toFixed(value % 100 === 0 ? 0 : 2);
+}
 
 const STARTER_PACKS = [
   {
@@ -171,6 +225,15 @@ function CreatePacksPage() {
   const [visibility, setVisibility] = useState<"private" | "public">("public");
   const [audience, setAudience] = useState(PACK_AUDIENCES[0]);
   const [packGoal, setPackGoal] = useState(PACK_GOALS[0]);
+  const [longDescription, setLongDescription] = useState("");
+  const [whatsIncluded, setWhatsIncluded] = useState("");
+  const [useCases, setUseCases] = useState("");
+  const [licenseSummary, setLicenseSummary] = useState(DEFAULT_LICENSE_SUMMARY);
+  const [isFree, setIsFree] = useState(true);
+  const [priceDollars, setPriceDollars] = useState("");
+  const [compareAtDollars, setCompareAtDollars] = useState("");
+  const [launchPriceDollars, setLaunchPriceDollars] = useState("");
+  const [launchEndsAt, setLaunchEndsAt] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentPacks, setRecentPacks] = useState<Pack[]>([]);
   const [items, setItems] = useState<PackItem[]>([]);
@@ -186,9 +249,21 @@ function CreatePacksPage() {
   const [searching, setSearching] = useState(false);
   const [selectedCatalogIds, setSelectedCatalogIds] = useState<Set<string>>(new Set());
 
-  const [genPrompt, setGenPrompt] = useState("");
-  const [genCount, setGenCount] = useState(5);
-  const [genStyle, setGenStyle] = useState("flat");
+  const [promptRows, setPromptRows] = useState<PromptRow[]>([
+    createPromptRow("pink rose bouquet"),
+    createPromptRow("floral corner border"),
+    createPromptRow("sunflower sticker"),
+    createPromptRow("watering can with flowers"),
+    createPromptRow("garden seed packet"),
+  ]);
+  const [genStyle, setGenStyle] = useState<StyleKey>("flat");
+  const [genModel, setGenModel] = useState<"recommended" | ModelKey>("recommended");
+  const [variationsPerIdea, setVariationsPerIdea] = useState(1);
+  const [assetAvailability, setAssetAvailability] = useState<"exclusive" | "reusable">("exclusive");
+  const [sharedStyleNotes, setSharedStyleNotes] = useState("");
+  const [avoidList, setAvoidList] = useState("");
+  const [keepCohesive, setKeepCohesive] = useState(true);
+  const [showAdvancedGeneration, setShowAdvancedGeneration] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState("");
 
@@ -232,6 +307,17 @@ function CreatePacksPage() {
         setCategoryId(loaded.category_id || "");
         setTags((loaded.tags || []).join(", "));
         setVisibility(loaded.visibility === "public" ? "public" : "private");
+        setAudience(loaded.audience || PACK_AUDIENCES[0]);
+        setPackGoal(loaded.pack_goal || PACK_GOALS[0]);
+        setLongDescription(loaded.long_description || "");
+        setWhatsIncluded(loaded.whats_included || "");
+        setUseCases(loaded.use_cases || "");
+        setLicenseSummary(loaded.license_summary || DEFAULT_LICENSE_SUMMARY);
+        setIsFree(loaded.is_free !== false);
+        setPriceDollars(centsToDollars(loaded.price_cents));
+        setCompareAtDollars(centsToDollars(loaded.compare_at_price_cents));
+        setLaunchPriceDollars(centsToDollars(loaded.launch_price_cents));
+        setLaunchEndsAt(loaded.launch_ends_at ? loaded.launch_ends_at.slice(0, 10) : "");
         setCoverItemId(loaded.cover_generation_id || null);
         if (loaded.pack_items?.length) {
           const sorted = [...loaded.pack_items].sort(
@@ -263,6 +349,17 @@ function CreatePacksPage() {
             .map((t) => t.trim())
             .filter(Boolean),
           visibility,
+          audience,
+          pack_goal: packGoal,
+          long_description: longDescription.trim() || null,
+          whats_included: whatsIncluded.trim() || null,
+          use_cases: useCases.trim() || null,
+          license_summary: licenseSummary.trim() || null,
+          is_free: isFree,
+          price_cents: isFree ? null : dollarsToCents(priceDollars),
+          compare_at_price_cents: dollarsToCents(compareAtDollars),
+          launch_price_cents: dollarsToCents(launchPriceDollars),
+          launch_ends_at: launchEndsAt || null,
         }),
       });
       const data = await res.json();
@@ -276,7 +373,25 @@ function CreatePacksPage() {
     } finally {
       setSaving(false);
     }
-  }, [title, description, categoryId, tags, visibility, router]);
+  }, [
+    title,
+    description,
+    categoryId,
+    tags,
+    visibility,
+    audience,
+    packGoal,
+    longDescription,
+    whatsIncluded,
+    useCases,
+    licenseSummary,
+    isFree,
+    priceDollars,
+    compareAtDollars,
+    launchPriceDollars,
+    launchEndsAt,
+    router,
+  ]);
 
   useEffect(() => {
     if (!user || searchParams.get("id")) return;
@@ -301,12 +416,41 @@ function CreatePacksPage() {
             .map((t) => t.trim())
             .filter(Boolean),
           visibility,
+          audience,
+          pack_goal: packGoal,
+          long_description: longDescription.trim() || null,
+          whats_included: whatsIncluded.trim() || null,
+          use_cases: useCases.trim() || null,
+          license_summary: licenseSummary.trim() || null,
+          is_free: isFree,
+          price_cents: isFree ? null : dollarsToCents(priceDollars),
+          compare_at_price_cents: dollarsToCents(compareAtDollars),
+          launch_price_cents: dollarsToCents(launchPriceDollars),
+          launch_ends_at: launchEndsAt || null,
         }),
       });
     } catch {
       // silent auto-save failure
     }
-  }, [pack, title, description, categoryId, tags, visibility]);
+  }, [
+    pack,
+    title,
+    description,
+    categoryId,
+    tags,
+    visibility,
+    audience,
+    packGoal,
+    longDescription,
+    whatsIncluded,
+    useCases,
+    licenseSummary,
+    isFree,
+    priceDollars,
+    compareAtDollars,
+    launchPriceDollars,
+    launchEndsAt,
+  ]);
 
   const autoSave = useCallback(() => {
     if (!pack) return;
@@ -319,7 +463,25 @@ function CreatePacksPage() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [title, description, categoryId, tags, visibility, autoSave]);
+  }, [
+    title,
+    description,
+    categoryId,
+    tags,
+    visibility,
+    audience,
+    packGoal,
+    longDescription,
+    whatsIncluded,
+    useCases,
+    licenseSummary,
+    isFree,
+    priceDollars,
+    compareAtDollars,
+    launchPriceDollars,
+    launchEndsAt,
+    autoSave,
+  ]);
 
   const loadLibrary = useCallback(async () => {
     setLibraryLoading(true);
@@ -369,36 +531,73 @@ function CreatePacksPage() {
     }
   }, [searchQuery]);
 
+  const addPromptRow = useCallback(() => {
+    setPromptRows((prev) => [...prev, createPromptRow()]);
+  }, []);
+
+  const updatePromptRow = useCallback((id: string, field: "title" | "prompt", value: string) => {
+    setPromptRows((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+    );
+  }, []);
+
+  const removePromptRow = useCallback((id: string) => {
+    setPromptRows((prev) => (prev.length > 1 ? prev.filter((row) => row.id !== id) : prev));
+  }, []);
+
+  const pastePromptList = useCallback(async () => {
+    const pasted = window.prompt("Paste one asset idea per line:");
+    if (!pasted) return;
+    const rows = pasted
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => createPromptRow(line));
+    if (rows.length > 0) setPromptRows(rows);
+  }, []);
+
   const batchGenerate = useCallback(async () => {
-    if (!pack || !genPrompt.trim()) return;
+    const activeRows = promptRows
+      .map((row) => ({ ...row, prompt: row.prompt.trim(), title: row.title.trim() }))
+      .filter((row) => row.prompt);
+    if (!pack || activeRows.length === 0) return;
     setGenerating(true);
-    setGenProgress(`Generating ${genCount} items...`);
+    const totalCount = Math.min(activeRows.length * variationsPerIdea, 20);
+    setGenProgress(`Generating ${totalCount} item${totalCount !== 1 ? "s" : ""}...`);
     setError(null);
     try {
-      const ideaList = genPrompt
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .join(", ");
-      const packContext = [
-        `Create transparent PNG clip art for a cohesive pack titled "${title.trim() || pack.title}"`,
-        description.trim() ? `Pack description: ${description.trim()}` : null,
-        `Audience: ${audience}`,
-        `Use case: ${packGoal}`,
-        tags.trim() ? `Theme tags: ${tags.trim()}` : null,
-        `Asset ideas: ${ideaList}`,
-        "Keep the assets visually consistent, reusable, isolated on a transparent or white-safe background, and suitable for a commercial clip art bundle.",
-      ]
-        .filter(Boolean)
-        .join(". ");
+      const prompts = activeRows.map((row) => {
+        const promptParts = [
+          `Create one transparent PNG clip art asset for a cohesive pack titled "${title.trim() || pack.title}"`,
+          row.title ? `Asset title: ${row.title}` : null,
+          `Asset idea: ${row.prompt}`,
+          description.trim() ? `Short pack summary: ${description.trim()}` : null,
+          longDescription.trim() ? `Detailed pack direction: ${longDescription.trim()}` : null,
+          `Audience: ${audience}`,
+          `Use case: ${packGoal}`,
+          tags.trim() ? `Theme tags: ${tags.trim()}` : null,
+          sharedStyleNotes.trim() ? `Shared style notes: ${sharedStyleNotes.trim()}` : null,
+          avoidList.trim() ? `Avoid: ${avoidList.trim()}` : null,
+          keepCohesive
+            ? "Keep this visually cohesive with the rest of the bundle."
+            : null,
+          "Isolated on a transparent or white-safe background, suitable for a commercial clip art bundle.",
+        ];
+        return {
+          title: row.title || undefined,
+          prompt: promptParts.filter(Boolean).join(". "),
+        };
+      });
 
       const res = await fetch("/api/generate/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: packContext,
+          prompts,
           style: genStyle,
-          count: genCount,
+          variationsPerIdea,
+          model: genModel === "recommended" ? undefined : genModel,
+          assetAvailability,
           contentType: "clipart",
           pack_id: pack.id,
         }),
@@ -420,25 +619,41 @@ function CreatePacksPage() {
         setSuccessMsg(`Generated ${data.results.length} items (${data.credits_used} credits used)`);
         setTimeout(() => setSuccessMsg(null), 3000);
       }
-      setGenPrompt("");
+      setPromptRows([createPromptRow()]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Batch generation failed");
     } finally {
       setGenerating(false);
       setGenProgress("");
     }
-  }, [pack, genPrompt, genStyle, genCount, title, description, audience, packGoal, tags]);
+  }, [
+    pack,
+    promptRows,
+    variationsPerIdea,
+    title,
+    description,
+    longDescription,
+    audience,
+    packGoal,
+    tags,
+    sharedStyleNotes,
+    avoidList,
+    keepCohesive,
+    genStyle,
+    genModel,
+    assetAvailability,
+  ]);
 
   const itemGenerationIds = new Set(items.map((i) => i.generation_id));
 
   const addItems = useCallback(
-    async (generationIds: string[]) => {
+    async (generationIds: string[], isExclusive = false) => {
       if (!pack) return;
       try {
         const res = await fetch(`/api/packs/${pack.id}/items`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ generation_ids: generationIds }),
+          body: JSON.stringify({ generation_ids: generationIds, is_exclusive: isExclusive }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
@@ -480,14 +695,14 @@ function CreatePacksPage() {
   const addSelectedLibraryItems = useCallback(async () => {
     const ids = Array.from(selectedLibraryIds).filter((id) => !itemGenerationIds.has(id));
     if (ids.length === 0) return;
-    await addItems(ids);
+    await addItems(ids, false);
     setSelectedLibraryIds(new Set());
   }, [addItems, selectedLibraryIds, itemGenerationIds]);
 
   const addSelectedCatalogItems = useCallback(async () => {
     const ids = Array.from(selectedCatalogIds).filter((id) => !itemGenerationIds.has(id));
     if (ids.length === 0) return;
-    await addItems(ids);
+    await addItems(ids, false);
     setSelectedCatalogIds(new Set());
   }, [addItems, selectedCatalogIds, itemGenerationIds]);
 
@@ -524,6 +739,65 @@ function CreatePacksPage() {
     },
     [pack],
   );
+
+  const toggleItemExclusive = useCallback(
+    async (item: PackItem) => {
+      if (!pack) return;
+      const nextValue = !item.is_exclusive;
+      setItems((prev) =>
+        prev.map((candidate) =>
+          candidate.id === item.id ? { ...candidate, is_exclusive: nextValue } : candidate,
+        ),
+      );
+      try {
+        const res = await fetch(`/api/packs/${pack.id}/items`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ item_ids: [item.id], is_exclusive: nextValue }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+      } catch (err) {
+        setItems((prev) =>
+          prev.map((candidate) =>
+            candidate.id === item.id ? { ...candidate, is_exclusive: item.is_exclusive } : candidate,
+          ),
+        );
+        setError(err instanceof Error ? err.message : "Failed to update item availability");
+      }
+    },
+    [pack],
+  );
+
+  const clearPackCover = useCallback(async () => {
+    if (!pack) return;
+    setCoverItemId(null);
+    try {
+      const res = await fetch(`/api/packs/${pack.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cover_generation_id: null,
+          cover_image_url: null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPack((prev) =>
+        prev
+          ? {
+              ...prev,
+              cover_generation_id: null,
+              cover_image_url: null,
+            }
+          : null,
+      );
+      setSuccessMsg("Cover reset to automatic");
+      setTimeout(() => setSuccessMsg(null), 1800);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear cover");
+    }
+  }, [pack]);
 
   const removeItem = useCallback(
     async (itemId: string) => {
@@ -849,13 +1123,19 @@ function CreatePacksPage() {
   const transparentCount = items.filter(
     (item) => item.generations.has_transparency || item.generations.transparent_image_url,
   ).length;
+  const activePromptCount = promptRows.filter((row) => row.prompt.trim()).length;
+  const generationCount = Math.min(activePromptCount * variationsPerIdea, 20);
+  const exclusiveCount = items.filter((item) => item.is_exclusive).length;
   const checklist = [
     { label: "Title", complete: Boolean(title.trim()) },
-    { label: "Description", complete: description.trim().length >= 40 },
+    { label: "Short description", complete: description.trim().length >= 40 },
+    { label: "Long description", complete: visibility === "private" || longDescription.trim().length >= 140 },
     { label: "Category", complete: Boolean(categoryId) },
     { label: "Tags", complete: tags.split(",").map((t) => t.trim()).filter(Boolean).length >= 3 },
     { label: "Cover", complete: Boolean(coverItemId || pack?.cover_generation_id || items.length > 0) },
-    { label: "At least 8 assets", complete: items.length >= 8 },
+    { label: "Price ready", complete: isFree || Boolean(dollarsToCents(priceDollars)) },
+    { label: "At least 12 assets", complete: items.length >= 12 },
+    { label: "20 assets recommended", complete: items.length >= 20 },
     { label: "Clipart only", complete: items.every((item) => item.generations.content_type === "clipart") },
     {
       label: "Transparent-ready assets",
@@ -984,8 +1264,18 @@ function CreatePacksPage() {
                         </div>
                       </div>
                     )}
-                    <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-700 shadow-sm">
-                      Cover
+                    <div className="absolute left-3 top-3 flex items-center gap-2">
+                      <span className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-700 shadow-sm">
+                        Cover
+                      </span>
+                      {(coverItemId || pack.cover_generation_id) && (
+                        <button
+                          onClick={clearPackCover}
+                          className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-gray-500 shadow-sm transition hover:text-pink-600"
+                        >
+                          Auto
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="p-5">
@@ -1015,6 +1305,16 @@ function CreatePacksPage() {
                       <div className="rounded-2xl bg-gray-50 p-3">
                         <p className="font-semibold text-gray-700">{transparentCount}</p>
                         <p className="mt-0.5 text-gray-500">Transparent</p>
+                      </div>
+                      <div className="rounded-2xl bg-gray-50 p-3">
+                        <p className="font-semibold text-gray-700">{exclusiveCount}</p>
+                        <p className="mt-0.5 text-gray-500">Exclusive</p>
+                      </div>
+                      <div className="rounded-2xl bg-gray-50 p-3">
+                        <p className="font-semibold text-gray-700">
+                          {isFree ? "Free" : `$${priceDollars || "0"}`}
+                        </p>
+                        <p className="mt-0.5 text-gray-500">Price</p>
                       </div>
                     </div>
                   </div>
@@ -1122,12 +1422,122 @@ function CreatePacksPage() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <label className="mb-1 block text-xs font-medium text-gray-500">Description</label>
+                    <label className="mb-1 block text-xs font-medium text-gray-500">Short description</label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={3}
                       placeholder="Describe what's in this pack and what customers can make with it..."
+                      className="w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm leading-relaxed focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                    />
+                  </div>
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Long SEO description</label>
+                      <textarea
+                        value={longDescription}
+                        onChange={(e) => setLongDescription(e.target.value)}
+                        rows={5}
+                        placeholder="Go deeper on the theme, style, buyer use cases, and why this bundle is useful..."
+                        className="w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm leading-relaxed focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                      />
+                    </div>
+                    <div className="grid gap-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-500">What&apos;s included</label>
+                        <textarea
+                          value={whatsIncluded}
+                          onChange={(e) => setWhatsIncluded(e.target.value)}
+                          rows={2}
+                          placeholder="50 transparent PNGs, 300 DPI, matching chibi ramen characters..."
+                          className="w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm leading-relaxed focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-500">Use cases</label>
+                        <textarea
+                          value={useCases}
+                          onChange={(e) => setUseCases(e.target.value)}
+                          rows={2}
+                          placeholder="Sticker sheets, menu tags, food truck graphics, Etsy listings, classroom rewards..."
+                          className="w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm leading-relaxed focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">Pricing</p>
+                        <p className="mt-1 text-xs text-gray-400">
+                          Start with a $9 launch / $12 regular test for polished 50-item packs.
+                        </p>
+                      </div>
+                      <div className="flex rounded-xl bg-white p-1 ring-1 ring-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => setIsFree(true)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
+                            isFree ? "bg-green-50 text-green-700" : "text-gray-400"
+                          }`}
+                        >
+                          Free
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsFree(false)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
+                            !isFree ? "bg-pink-50 text-pink-700" : "text-gray-400"
+                          }`}
+                        >
+                          Paid
+                        </button>
+                      </div>
+                    </div>
+                    {!isFree && (
+                      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                        <input
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={priceDollars}
+                          onChange={(e) => setPriceDollars(e.target.value)}
+                          placeholder="Regular $"
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={launchPriceDollars}
+                          onChange={(e) => setLaunchPriceDollars(e.target.value)}
+                          placeholder="Launch $"
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={compareAtDollars}
+                          onChange={(e) => setCompareAtDollars(e.target.value)}
+                          placeholder="Compare at $"
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                        <input
+                          type="date"
+                          value={launchEndsAt}
+                          onChange={(e) => setLaunchEndsAt(e.target.value)}
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <label className="mb-1 block text-xs font-medium text-gray-500">License summary</label>
+                    <textarea
+                      value={licenseSummary}
+                      onChange={(e) => setLicenseSummary(e.target.value)}
+                      rows={3}
                       className="w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm leading-relaxed focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
                     />
                   </div>
@@ -1251,7 +1661,7 @@ function CreatePacksPage() {
                 }`}
               >
                 Generate
-                <span className="mt-0.5 block text-xs font-medium opacity-60">Pack-aware</span>
+                <span className="mt-0.5 block text-xs font-medium opacity-60">New assets</span>
               </button>
               </div>
             </div>
@@ -1375,15 +1785,36 @@ function CreatePacksPage() {
                               PNG
                             </div>
                           )}
+                          {item.is_exclusive && (
+                            <div className="absolute left-1 top-6 rounded-md bg-gray-950/85 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white shadow-sm">
+                              Exclusive
+                            </div>
+                          )}
                         </div>
 
-                        <button
-                          onClick={() => setPackCover(item)}
-                          className="w-full truncate border-t border-gray-50 px-2 py-1.5 text-left text-[11px] text-gray-500 hover:bg-gray-50"
-                          title="Set as cover"
-                        >
-                          {item.generations.title || item.generations.prompt.slice(0, 40)}
-                        </button>
+                        <div className="border-t border-gray-50 p-2">
+                          <p className="truncate text-[11px] text-gray-500">
+                            {item.generations.title || item.generations.prompt.slice(0, 40)}
+                          </p>
+                          <div className="mt-2 flex gap-1">
+                            <button
+                              onClick={() => setPackCover(item)}
+                              className="flex-1 rounded-lg bg-pink-50 px-2 py-1 text-[10px] font-bold text-pink-600 hover:bg-pink-100"
+                            >
+                              Set cover
+                            </button>
+                            <button
+                              onClick={() => toggleItemExclusive(item)}
+                              className={`flex-1 rounded-lg px-2 py-1 text-[10px] font-bold ${
+                                item.is_exclusive
+                                  ? "bg-gray-900 text-white"
+                                  : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                              }`}
+                            >
+                              {item.is_exclusive ? "Exclusive" : "Reusable"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1585,67 +2016,192 @@ function CreatePacksPage() {
             {/* Generate view — batch generate new assets */}
             {view === "generate" && (
               <div className="rounded-2xl border border-gray-100 bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-700">
-                  Generate Into This Pack
-                </h3>
-                <p className="mt-1 text-xs text-gray-400">
-                  Add one asset idea per line. We wrap each request with the pack brief,
-                  audience, use case, and transparent clipart requirements.
-                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">
+                      Generate assets for this pack
+                    </h3>
+                    <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-400">
+                      Add one idea per row. We use the pack brief, audience, goal, style,
+                      and settings to keep the generated assets cohesive.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-pink-50 px-3 py-2 text-xs font-semibold text-pink-700">
+                    {generationCount} credit{generationCount !== 1 ? "s" : ""} planned
+                  </div>
+                </div>
 
-                <div className="mt-4 space-y-3">
-                  <textarea
-                    value={genPrompt}
-                    onChange={(e) => setGenPrompt(e.target.value)}
-                    rows={5}
-                    placeholder={"pink rose bouquet\nfloral corner border\nsunflower sticker\nwatering can with flowers"}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
-                  />
+                <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50/50 p-3 text-xs leading-relaxed text-amber-800">
+                  <span className="font-bold">How context works:</span> each row is one asset idea.
+                  Pack Studio adds your pack title, short description, long direction, audience,
+                  goal, tags, and selected style so the outputs belong together.
+                </div>
 
-                  <div className="flex flex-wrap items-end gap-4">
+                <div className="mt-5 space-y-3">
+                  {promptRows.map((row, index) => (
+                    <div key={row.id} className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                          Idea {index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removePromptRow(row.id)}
+                          disabled={promptRows.length === 1}
+                          className="text-xs font-bold text-gray-400 transition hover:text-red-500 disabled:opacity-30"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div className="grid gap-2 md:grid-cols-[0.75fr_1.5fr]">
+                        <input
+                          type="text"
+                          value={row.title}
+                          onChange={(e) => updatePromptRow(row.id, "title", e.target.value)}
+                          placeholder="Optional title"
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                        <input
+                          type="text"
+                          value={row.prompt}
+                          onChange={(e) => updatePromptRow(row.id, "prompt", e.target.value)}
+                          placeholder="e.g. chibi panda eating ramen"
+                          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={addPromptRow}
+                    className="rounded-full border border-pink-100 bg-pink-50 px-4 py-2 text-sm font-bold text-pink-700 transition hover:bg-pink-100"
+                  >
+                    + Add idea
+                  </button>
+                  <button
+                    type="button"
+                    onClick={pastePromptList}
+                    className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+                  >
+                    Paste list
+                  </button>
+                </div>
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500">Style</label>
+                    <select
+                      value={genStyle}
+                      onChange={(e) => setGenStyle(e.target.value as StyleKey)}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                    >
+                      {VALID_STYLES.clipart.map((style) => (
+                        <option key={style} value={style}>
+                          {STYLE_LABELS[style] || style}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500">Asset availability</label>
+                    <select
+                      value={assetAvailability}
+                      onChange={(e) => setAssetAvailability(e.target.value as "exclusive" | "reusable")}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                    >
+                      <option value="exclusive">Pack-exclusive by default</option>
+                      <option value="reusable">Reusable in my library</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedGeneration((value) => !value)}
+                  className="mt-4 flex w-full items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-left text-sm font-bold text-gray-700"
+                >
+                  Advanced generation settings
+                  <span className="text-xs text-gray-400">{showAdvancedGeneration ? "Hide" : "Show"}</span>
+                </button>
+
+                {showAdvancedGeneration && (
+                  <div className="mt-3 grid gap-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
-                        Count
-                      </label>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Model</label>
                       <select
-                        value={genCount}
-                        onChange={(e) => setGenCount(Number(e.target.value))}
-                        className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        value={genModel}
+                        onChange={(e) => setGenModel(e.target.value as "recommended" | ModelKey)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
                       >
-                        {[3, 5, 10, 15, 20].map((n) => (
-                          <option key={n} value={n}>
-                            {n} items ({n} credits)
+                        {MODEL_OPTIONS.map((model) => (
+                          <option key={model.value} value={model.value}>
+                            {model.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-400">
+                        {MODEL_OPTIONS.find((model) => model.value === genModel)?.description}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Variations per idea</label>
+                      <select
+                        value={variationsPerIdea}
+                        onChange={(e) => setVariationsPerIdea(Number(e.target.value))}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                      >
+                        {[1, 2, 3].map((value) => (
+                          <option key={value} value={value}>
+                            {value} variation{value !== 1 ? "s" : ""} per idea
                           </option>
                         ))}
                       </select>
                     </div>
-
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">
-                        Style
-                      </label>
-                      <select
-                        value={genStyle}
-                        onChange={(e) => setGenStyle(e.target.value)}
-                        className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                      >
-                        <option value="flat">Flat</option>
-                        <option value="cartoon">Cartoon</option>
-                        <option value="sticker">Sticker</option>
-                        <option value="vintage">Vintage</option>
-                        <option value="watercolor">Watercolor</option>
-                      </select>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Shared style notes</label>
+                      <textarea
+                        value={sharedStyleNotes}
+                        onChange={(e) => setSharedStyleNotes(e.target.value)}
+                        rows={3}
+                        placeholder="Same line weight, cute rounded bodies, warm ramen-shop palette..."
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                      />
                     </div>
-
-                    <button
-                      onClick={batchGenerate}
-                      disabled={!genPrompt.trim() || generating}
-                      className="rounded-xl bg-brand-gradient px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
-                    >
-                      {generating ? genProgress || "Generating..." : `Generate ${genCount} Items`}
-                    </button>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Avoid</label>
+                      <textarea
+                        value={avoidList}
+                        onChange={(e) => setAvoidList(e.target.value)}
+                        rows={3}
+                        placeholder="No text, no watermarks, no busy backgrounds, no duplicate poses..."
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-gray-700 ring-1 ring-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={keepCohesive}
+                        onChange={(e) => setKeepCohesive(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                      />
+                      Keep all generated images visually cohesive
+                    </label>
                   </div>
-                </div>
+                )}
+
+                <button
+                  onClick={batchGenerate}
+                  disabled={generationCount === 0 || generating}
+                  className="mt-5 rounded-xl bg-brand-gradient px-5 py-3 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+                >
+                  {generating
+                    ? genProgress || "Generating..."
+                    : `Generate ${generationCount} item${generationCount !== 1 ? "s" : ""}`}
+                </button>
               </div>
             )}
               </section>

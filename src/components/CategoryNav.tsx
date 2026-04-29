@@ -293,7 +293,7 @@ function MobileMenuSheet({
                 <MenuLink href="/create" onClick={onClose}>Create Clip Art</MenuLink>
                 <MenuLink href="/create/coloring-pages" onClick={onClose}>Create Coloring Pages</MenuLink>
                 <MenuLink href="/create/worksheets" onClick={onClose}>Create Worksheets</MenuLink>
-                <MenuLink href="/design-bundles" onClick={onClose}>Theme Packs</MenuLink>
+                <MenuLink href="/create/packs" onClick={onClose}>Pack Studio</MenuLink>
                 <MenuLink href="/my-art" onClick={onClose}>My Art</MenuLink>
               </div>
 

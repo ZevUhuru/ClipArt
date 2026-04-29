@@ -93,3 +93,38 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
   return NextResponse.json({ success: true });
 }
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  const auth = await verifyPackOwner(id);
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { item_ids, is_exclusive } = body;
+
+  if (!Array.isArray(item_ids) || item_ids.length === 0) {
+    return NextResponse.json({ error: "item_ids array is required" }, { status: 400 });
+  }
+
+  if (typeof is_exclusive !== "boolean") {
+    return NextResponse.json({ error: "is_exclusive boolean is required" }, { status: 400 });
+  }
+
+  const { data, error } = await auth.admin
+    .from("pack_items")
+    .update({ is_exclusive })
+    .eq("pack_id", id)
+    .in("id", item_ids)
+    .select(`
+      id, generation_id, is_exclusive, sort_order, created_at,
+      generations(id, title, slug, prompt, image_url, transparent_image_url, has_transparency, style, content_type, category)
+    `);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ items: data || [] });
+}

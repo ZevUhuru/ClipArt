@@ -127,8 +127,10 @@ export async function generateImage(
   style: StyleKey,
   contentType: ContentType = "clipart",
   aspectRatioOverride?: string,
+  modelOverride?: ModelKey,
 ): Promise<GenerateImageResult> {
-  const [model, quality] = await Promise.all([resolveModel(style, contentType), resolveQuality(style)]);
+  const [resolvedModel, quality] = await Promise.all([resolveModel(style, contentType), resolveQuality(style)]);
+  const model = modelOverride && VALID_MODELS.has(modelOverride) ? modelOverride : resolvedModel;
   const prompt = buildPrompt(userPrompt, style, contentType);
   const aspectRatio = aspectRatioOverride || CONTENT_TYPE_ASPECT[contentType] || "1:1";
 
