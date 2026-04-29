@@ -166,6 +166,73 @@ Notes:
 
 Longer, higher-quality animations have better margins. Fast/Standard at short durations are loss leaders by design (consistent with our volume-first philosophy).
 
+## Premium Bundle Pricing Strategy (2026-04)
+
+### Positioning
+
+Premium bundles are not competing with giant Etsy ZIP dumps that advertise 30,000-40,000 mixed assets. Those bundles sell volume and bargain psychology. clip.art should sell focused, matching, reusable project packs that save time and can be expanded later in a user's library.
+
+Core message:
+
+> Not thousands of random files. The exact matching bundle you need.
+
+### Bundle Size Standards
+
+| Bundle Type | Item Count | Use Case |
+|-------------|------------|----------|
+| Mini/free sample | 6-10 | Lead magnets, previews, newsletter freebies |
+| Minimum publishable bundle | 12 | Small focused packs only |
+| Standard bundle | 20 | Default operating standard for most bundles |
+| Premium bundle | 30-50 | Stronger paid packs, seasonal sets, creator packs |
+| Mega/hero bundle | 75-150+ | Flagship seasonal or SEO lead magnet packs |
+
+Operating rule: most bundles should ship with **20 items**. Do not make 50 items the default; reserve 50+ for hero packs where the theme has enough breadth to stay cohesive.
+
+### One-Off Bundle Pricing
+
+| Bundle Type | Recommended Price | Notes |
+|-------------|-------------------|-------|
+| Mini bundle, 8-12 items | Free-$3 | Best as a sample or lead magnet |
+| Standard bundle, 20 items | $7-$9 | Default one-off purchase range |
+| Premium bundle, 30-50 items | $12-$19 | Main premium bundle range |
+| Mega seasonal bundle, 75-150 items | $29-$49 | Only when previews and breadth justify it |
+
+Default premium bundle price: **$12**.
+
+Hero/seasonal bundle price: **$19-$29**.
+
+Mega pack price: **$39+** only when the pack truly feels large, polished, and commercially useful.
+
+### Subscription Anchor
+
+One-off bundle pricing should make the subscription feel obvious:
+
+| Offer | Price Anchor |
+|-------|--------------|
+| Single 20-item bundle | $9 |
+| Premium 50-item bundle | $19 |
+| Monthly plan | $19-$29/mo |
+
+The subscription should read as: for the price of 1-2 bundles, users can create, save, organize, and download matching assets all month.
+
+### Weekly Bundle Cadence
+
+All-in operating standard: **5 bundles/week**, with **20 items minimum** each.
+
+Recommended weekly mix:
+
+1. Teacher/classroom bundle
+2. Coloring page bundle
+3. Seasonal/holiday bundle
+4. Etsy/creator bundle
+5. Animal or evergreen SEO bundle
+
+The newsletter should feature the best 5 bundles each week, even if the backend publishes more. Keep the email curated instead of exhaustive.
+
+### Strategic Notes
+
+The long-term advantage is the user's library: generate once, save it forever, return later, organize into collections, and expand the matching set. Etsy mega bundles create chaos after download; clip.art should create a searchable, reusable, expandable asset library.
+
 ## Recommendation
 
 **Optimize for volume and habit formation, not margin per transaction.** The goal is to make generating feel like pulling a slot machine — cheap, fast, addictive. Users who generate frequently become advocates and repeat buyers.

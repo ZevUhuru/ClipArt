@@ -54,20 +54,35 @@ type EditorView = "editor" | "library" | "browse" | "generate";
 
 const PACK_AUDIENCES = [
   "Teachers and classrooms",
+  "Homeschool families",
+  "Parents and kids",
   "Etsy and craft shops",
+  "Printable creators",
+  "Party planners",
+  "Event hosts",
   "Small business marketing",
-  "Parties and events",
+  "Casual creators",
   "AI video creators",
   "Sticker makers",
+  "Church and community groups",
 ];
 
 const PACK_GOALS = [
   "Classroom decor",
+  "Worksheet graphics",
+  "Flashcards",
+  "Coloring page pack",
   "Sticker sheet",
   "Invitation set",
+  "Party printable set",
+  "Event signage",
+  "Seasonal bundle",
   "Seasonal campaign",
+  "Etsy listing bundle",
+  "Social media graphics",
   "Product mockup",
   "Character sheet",
+  "Kids activity pack",
 ];
 
 const STARTER_PACKS = [
@@ -94,6 +109,22 @@ const STARTER_PACKS = [
     tags: "character, poses, expressions, ai video, mascot",
     audience: "AI video creators",
     goal: "Character sheet",
+  },
+  {
+    title: "Birthday Party Printable Pack",
+    description:
+      "A cheerful party-ready bundle with matching invitations, cupcake toppers, favor tags, signs, and cute decorative clip art for a themed kids birthday event.",
+    tags: "birthday, party, invitation, printable, kids",
+    audience: "Party planners",
+    goal: "Party printable set",
+  },
+  {
+    title: "Homeschool Animal Flashcards Pack",
+    description:
+      "A kid-friendly animal learning bundle with matching flashcard illustrations, worksheet accents, labels, and simple activity graphics for homeschool lessons.",
+    tags: "homeschool, animals, flashcards, worksheet, kids",
+    audience: "Homeschool families",
+    goal: "Flashcards",
   },
 ];
 

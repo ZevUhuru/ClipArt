@@ -156,12 +156,18 @@ export default async function PacksPage() {
                   craft shops, worksheets, invitations, social posts, and seasonal campaigns.
                 </p>
 
-                <div className="mt-7 flex">
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                   <Link
                     href="#bundle-collection"
                     className="inline-flex items-center justify-center rounded-2xl bg-gray-950 px-5 py-3 text-sm font-black text-white shadow-xl shadow-gray-950/15 transition-all hover:-translate-y-0.5 hover:bg-gray-800"
                   >
                     Browse bundles
+                  </Link>
+                  <Link
+                    href="/create/packs"
+                    className="inline-flex items-center justify-center rounded-2xl border border-pink-200 bg-white/85 px-5 py-3 text-sm font-black text-pink-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-pink-300 hover:bg-white"
+                  >
+                    Create Bundle
                   </Link>
                 </div>
 
@@ -335,7 +341,7 @@ export default async function PacksPage() {
           )}
 
           <section>
-            <div className="mb-5 flex items-end justify-between gap-4">
+            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
                   Full collection
@@ -344,9 +350,17 @@ export default async function PacksPage() {
                   Browse all theme packs
                 </h2>
               </div>
-              <p className="text-xs font-bold text-gray-400">
-                {packs.length} bundle{packs.length !== 1 ? "s" : ""}
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-xs font-bold text-gray-400">
+                  {packs.length} bundle{packs.length !== 1 ? "s" : ""}
+                </p>
+                <Link
+                  href="/create/packs"
+                  className="rounded-full bg-brand-gradient px-4 py-2 text-xs font-black text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110"
+                >
+                  Create Bundle
+                </Link>
+              </div>
             </div>
 
             {packs.length === 0 ? (
