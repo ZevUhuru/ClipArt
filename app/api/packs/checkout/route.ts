@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 
+function isValidEmail(value: unknown): value is string {
+  return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function resolvePackPrice(pack: {
+  price_cents: number | null;
+  launch_price_cents: number | null;
+  launch_ends_at: string | null;
+}) {
+  if (pack.launch_price_cents && pack.launch_price_cents > 0) {
+    if (!pack.launch_ends_at || new Date(pack.launch_ends_at).getTime() > Date.now()) {
+      return pack.launch_price_cents;
+    }
+  }
+
+  return pack.price_cents || 0;
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -11,21 +29,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { pack_id } = await request.json();
+    const { pack_id, buyer_email } = await request.json();
     if (!pack_id) {
       return NextResponse.json({ error: "pack_id is required" }, { status: 400 });
     }
 
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    if (!user && buyer_email !== undefined && !isValidEmail(buyer_email)) {
+      return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
     }
 
     const admin = createSupabaseAdmin();
     const { data: pack } = await admin
       .from("packs")
-      .select("id, title, slug, price_cents, stripe_price_id, is_free, is_published, visibility, categories!category_id(slug)")
+      .select("id, title, slug, price_cents, launch_price_cents, launch_ends_at, stripe_price_id, is_free, is_published, visibility, categories!category_id(slug)")
       .eq("id", pack_id)
       .single();
 
@@ -37,7 +55,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "This pack is free" }, { status: 400 });
     }
 
-    if (!pack.price_cents || pack.price_cents <= 0) {
+    const effectivePriceCents = resolvePackPrice(pack);
+    if (effectivePriceCents <= 0) {
       return NextResponse.json({ error: "Pack has no price set" }, { status: 400 });
     }
 
@@ -49,13 +68,18 @@ export async function POST(request: NextRequest) {
       mode: "payment",
       payment_method_types: ["card"],
       metadata: {
-        userId: user.id,
+        ...(user ? { userId: user.id } : {}),
         packId: pack.id,
         type: "pack_purchase",
       },
-      success_url: `${packUrl}?purchased=true`,
+      success_url: `${packUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: packUrl,
     };
+
+    const checkoutEmail = user?.email || buyer_email;
+    if (checkoutEmail) {
+      sessionConfig.customer_email = checkoutEmail;
+    }
 
     if (pack.stripe_price_id) {
       sessionConfig.line_items = [{ price: pack.stripe_price_id, quantity: 1 }];
@@ -65,7 +89,7 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: { name: pack.title },
-            unit_amount: pack.price_cents,
+            unit_amount: effectivePriceCents,
           },
           quantity: 1,
         },

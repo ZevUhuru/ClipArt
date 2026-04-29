@@ -145,6 +145,16 @@ function getItemLink(gen: { content_type: string; category: string | null; slug:
   }
 }
 
+function getActivePackPrice(pack: Pick<PackDetail, "price_cents" | "launch_price_cents" | "launch_ends_at">) {
+  if (pack.launch_price_cents && pack.launch_price_cents > 0) {
+    if (!pack.launch_ends_at || new Date(pack.launch_ends_at).getTime() > Date.now()) {
+      return pack.launch_price_cents;
+    }
+  }
+
+  return pack.price_cents;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const pack = await getPack(slug);
@@ -199,6 +209,7 @@ export default async function PackDetailPage({ params }: Props) {
   const items = [...(pack.pack_items || [])].sort((a, b) => a.sort_order - b.sort_order);
   const previewCount = pack.is_free ? items.length : Math.min(6, items.length);
   const hiddenCount = items.length - previewCount;
+  const activePriceCents = getActivePackPrice(pack);
 
   let categoryIdForRelated: string | undefined;
   if (pack.categories) {
@@ -306,7 +317,7 @@ export default async function PackDetailPage({ params }: Props) {
                     </span>
                   ) : (
                     <span className="rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                      ${((pack.price_cents || 0) / 100).toFixed(2)}
+                      ${((activePriceCents || 0) / 100).toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -372,7 +383,7 @@ export default async function PackDetailPage({ params }: Props) {
                   <PackDownloadButton
                     packId={pack.id}
                     isFree={pack.is_free}
-                    priceCents={pack.price_cents}
+                    priceCents={activePriceCents}
                     zipReady={pack.zip_status === "ready"}
                   />
                 </div>

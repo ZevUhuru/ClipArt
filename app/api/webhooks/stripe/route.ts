@@ -31,17 +31,29 @@ export async function POST(request: NextRequest) {
 
     if (purchaseType === "pack_purchase") {
       const packId = session.metadata?.packId;
-      if (!userId || !packId) {
+      if (!packId) {
         console.error("Missing metadata in pack purchase session");
         return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
       }
 
-      await admin.from("purchases").insert({
-        user_id: userId,
-        stripe_session_id: `pack_${packId}`,
-        credits_added: 0,
-        amount_cents: session.amount_total || 0,
-      });
+      const paymentIntent =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id || null;
+
+      await admin.from("pack_purchases").upsert(
+        {
+          pack_id: packId,
+          user_id: userId || null,
+          buyer_email: session.customer_details?.email || session.customer_email || null,
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: paymentIntent,
+          amount_cents: session.amount_total || 0,
+          currency: session.currency || "usd",
+          status: "paid",
+        },
+        { onConflict: "stripe_session_id" },
+      );
     } else {
       const credits = parseInt(session.metadata?.credits || "0", 10);
 

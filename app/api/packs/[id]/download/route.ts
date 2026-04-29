@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
+import { getStripe } from "@/lib/stripe";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(_request: NextRequest, { params }: RouteContext) {
+async function readBody(request: NextRequest) {
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
+}
+
+export async function POST(request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
+  const body = await readBody(request);
+  const sessionId = typeof body.session_id === "string" ? body.session_id : null;
 
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: "Sign up for free to download packs" },
-      { status: 401 },
-    );
-  }
 
   const admin = createSupabaseAdmin();
   const { data: pack } = await admin
@@ -28,7 +33,9 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (pack.visibility === "private" && pack.user_id !== user.id) {
+  const isOwner = Boolean(user && pack.user_id === user.id);
+
+  if (pack.visibility === "private" && !isOwner) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -36,17 +43,96 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Pack is not available for download" }, { status: 400 });
   }
 
-  if (!pack.is_free) {
-    const { data: purchase } = await admin
-      .from("purchases")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("stripe_session_id", `pack_${pack.id}`)
-      .single();
+  if (pack.is_free && !user) {
+    return NextResponse.json(
+      { error: "Sign up for free to download packs" },
+      { status: 401 },
+    );
+  }
 
-    if (!purchase && pack.user_id !== user.id) {
+  let purchaseId: string | null = null;
+  let purchaseDownloadCount = 0;
+
+  if (!pack.is_free && !isOwner) {
+    let hasPurchase = false;
+
+    if (user) {
+      const { data: purchase } = await admin
+        .from("pack_purchases")
+        .select("id, download_count")
+        .eq("pack_id", pack.id)
+        .eq("user_id", user.id)
+        .eq("status", "paid")
+        .maybeSingle();
+
+      if (purchase?.id) {
+        hasPurchase = true;
+        purchaseId = purchase.id;
+        purchaseDownloadCount = purchase.download_count || 0;
+      }
+    }
+
+    if (!hasPurchase && sessionId) {
+      const { data: purchase } = await admin
+        .from("pack_purchases")
+        .select("id, download_count")
+        .eq("pack_id", pack.id)
+        .eq("stripe_session_id", sessionId)
+        .eq("status", "paid")
+        .maybeSingle();
+
+      if (purchase?.id) {
+        hasPurchase = true;
+        purchaseId = purchase.id;
+        purchaseDownloadCount = purchase.download_count || 0;
+      } else if (process.env.STRIPE_SECRET_KEY) {
+        const session = await getStripe().checkout.sessions.retrieve(sessionId);
+        if (
+          session.payment_status === "paid" &&
+          session.metadata?.type === "pack_purchase" &&
+          session.metadata?.packId === pack.id
+        ) {
+          const paymentIntent =
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent?.id || null;
+          const { data: fulfilled } = await admin
+            .from("pack_purchases")
+            .upsert(
+              {
+                pack_id: pack.id,
+                user_id: user?.id || session.metadata?.userId || null,
+                buyer_email: session.customer_details?.email || session.customer_email || null,
+                stripe_session_id: session.id,
+                stripe_payment_intent_id: paymentIntent,
+                amount_cents: session.amount_total || 0,
+                currency: session.currency || "usd",
+                status: "paid",
+              },
+              { onConflict: "stripe_session_id" },
+            )
+            .select("id, download_count")
+            .single();
+
+          hasPurchase = true;
+          purchaseId = fulfilled?.id || null;
+          purchaseDownloadCount = fulfilled?.download_count || 0;
+        }
+      }
+    }
+
+    if (!hasPurchase) {
       return NextResponse.json({ error: "Purchase required" }, { status: 402 });
     }
+  }
+
+  if (purchaseId) {
+    admin
+      .from("pack_purchases")
+      .update({ download_count: purchaseDownloadCount + 1 })
+      .eq("id", purchaseId)
+      .then(() => {})
+      .catch(() => {});
   }
 
   admin
