@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://clip.art";
 export const SITE_NAME = "clip.art";
 export const DEFAULT_SOCIAL_IMAGE = {
-  url: `${SITE_URL}/social-card/hot-ramen.png`,
+  url: `${SITE_URL}/social-card/homepage-ramen.png`,
   width: 1200,
   height: 630,
   alt: "Extra spicy ramen character clip art generated on clip.art",
