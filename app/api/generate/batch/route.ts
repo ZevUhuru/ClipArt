@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import { generateImage } from "@/lib/imageGen";
+import { generateImage, getBgRemovalConfig } from "@/lib/imageGen";
+import { removeBackground } from "@/lib/bgRemoval";
 import { uploadToR2 } from "@/lib/r2";
 import { classifyPrompt } from "@/lib/classify";
 import { checkPromptSafety } from "@/lib/promptSafety";
@@ -36,6 +37,16 @@ const VARIATION_TEMPLATES = [
   (base: string) => `${base}, elegant version`,
   (base: string) => `${base}, minimalist design`,
 ];
+
+function removeTransparencyTerms(value: string): string {
+  return value
+    .replace(/\btransparent\s+(background|bg)\b/gi, "plain white background")
+    .replace(/\bchecker(?:ed|board)\s+(background|pattern)\b/gi, "plain white background")
+    .replace(/\btransparent\s+/gi, "")
+    .replace(/\btransparency\b/gi, "background removal")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
 function resolveR2Key(contentType: ContentType, cat: string, uniqueSlug: string): string {
   switch (contentType) {
@@ -143,6 +154,7 @@ export async function POST(request: NextRequest) {
   }
 
   const aspectRatio = CONTENT_TYPE_ASPECT[contentType] || "1:1";
+  const bgRemovalConfig = await getBgRemovalConfig();
   const results: Array<{
     id: string;
     image_url: string;
@@ -150,21 +162,47 @@ export async function POST(request: NextRequest) {
     slug: string;
     prompt: string;
   }> = [];
+  const failures: Array<{
+    prompt: string;
+    title?: string;
+    error: string;
+  }> = [];
   let creditsUsed = 0;
 
   for (let i = 0; i < count; i++) {
     const promptRow = plannedPrompts[i];
-    const variedPrompt = promptRow.prompt;
+    const variedPrompt = removeTransparencyTerms(promptRow.prompt);
 
     try {
-      const { buffer: rawBuffer, model: imageModel } = await generateImage(
+      const {
+        buffer: rawBuffer,
+        model: imageModel,
+        hasTransparency: nativeTransparency,
+      } = await generateImage(
         variedPrompt,
         styleKey,
         contentType,
         undefined,
         requestedModel,
       );
-      const webpBuffer = await sharp(rawBuffer)
+
+      let processedBuffer = rawBuffer;
+      let hasTransparency = nativeTransparency;
+      const shouldRemoveBackground =
+        contentType === "clipart" &&
+        !nativeTransparency &&
+        bgRemovalConfig.enabled;
+
+      if (shouldRemoveBackground) {
+        try {
+          processedBuffer = await removeBackground(rawBuffer, bgRemovalConfig.modelId);
+          hasTransparency = true;
+        } catch (bgErr) {
+          console.error("Batch background removal failed, using original:", bgErr);
+        }
+      }
+
+      const webpBuffer = await sharp(processedBuffer)
         .webp({ quality: 85, effort: 4 })
         .toBuffer();
 
@@ -193,6 +231,7 @@ export async function POST(request: NextRequest) {
           description: classification.description,
           aspect_ratio: aspectRatio,
           model: imageModel,
+          has_transparency: hasTransparency,
         })
         .select("id, image_url, title, slug, prompt")
         .single();
@@ -203,6 +242,11 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       console.error(`Batch generation ${i + 1}/${count} failed:`, err);
+      failures.push({
+        prompt: promptRow.prompt,
+        title: promptRow.title,
+        error: err instanceof Error ? err.message : "Generation failed",
+      });
     }
   }
 
@@ -237,6 +281,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     results,
+    failures,
     credits_used: creditsUsed,
     credits_remaining: profile.credits - creditsUsed,
   });

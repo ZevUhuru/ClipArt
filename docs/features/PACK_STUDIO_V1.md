@@ -135,6 +135,58 @@ Advanced controls should include:
 
 Model IDs must remain explicit and must not use floating aliases such as `latest`, `auto`, or generic marketing aliases.
 
+### Current Generation State Recovery
+
+Pack Studio currently uses the synchronous batch generation API at `app/api/generate/batch/route.ts`. The request does not expose per-image server-side progress while it runs, so the workspace cannot yet show true completed/failed status for each asset in real time.
+
+The current fix in `app/(app)/create/packs/page.tsx` improves the user experience around that limitation:
+
+- When a pack batch is submitted, the client persists a pending queue record in `localStorage`.
+- The record includes the pack id, start time, expected item count, initial pack item count, and queued prompt labels.
+- If the user refreshes mid-generation, Pack Studio reopens the Generate tab and restores the queue as a recovery state.
+- During recovery, the page polls the pack and refreshes the canvas when newly attached assets appear.
+- If the recovery window expires, the UI tells the user it could not confirm completion and prompts them to check the pack or library.
+
+This is a recovery layer around the current synchronous API. It is intentionally lightweight and avoids introducing a new database/job system before the ESY migration is complete.
+
+### Future Server-Side Generation Queue
+
+The bulletproof version should be a real server-side pack generation job system.
+
+Add a `pack_generation_jobs` table, or the ESY equivalent once generation moves behind `api.esy.com`, with per-image state:
+
+- `id`
+- `pack_id`
+- `user_id`
+- `status` (`queued`, `running`, `completed`, `partial`, `failed`, `cancelled`)
+- `total_count`
+- `completed_count`
+- `failed_count`
+- `credits_reserved`
+- `credits_used`
+- `settings` JSONB for model, style, variations, asset availability, shared notes, avoid list, and cohesion
+- `created_at`, `started_at`, `completed_at`
+
+Add child job rows, or a JSONB `items` payload, for each requested asset:
+
+- source prompt row id
+- prompt/title
+- status
+- generation id after success
+- error message after failure
+- timestamps
+
+The Pack Studio UI should then poll or subscribe to the job id instead of simulating progress locally. That unlocks:
+
+- Accurate per-image progress.
+- Refresh-proof state without relying on `localStorage`.
+- Resume/cancel/retry controls.
+- Partial success display.
+- Correct credit accounting for failed images.
+- A durable audit trail for support and future seller workflow analytics.
+
+This should likely land as part of the ESY generation migration rather than a deep refactor inside clip.art's transitional provider pipeline.
+
 ### Quality and Readiness
 
 V1 readiness checks should be deterministic:

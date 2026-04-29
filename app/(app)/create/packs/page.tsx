@@ -164,6 +164,60 @@ function centsToDollars(value?: number | null): string {
   return (value / 100).toFixed(value % 100 === 0 ? 0 : 2);
 }
 
+function compactTagList(value: string, limit = 8): string {
+  return value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .slice(0, limit)
+    .join(", ");
+}
+
+function removeTransparencyTerms(value: string): string {
+  return value
+    .replace(/\btransparent\s+(background|bg)\b/gi, "plain white background")
+    .replace(/\bchecker(?:ed|board)\s+(background|pattern)\b/gi, "plain white background")
+    .replace(/\btransparent\s+/gi, "")
+    .replace(/\btransparency\b/gi, "background removal")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function buildPackGenerationPrompt({
+  packTitle,
+  row,
+  tags,
+  packGoal,
+  sharedStyleNotes,
+  avoidList,
+  keepCohesive,
+}: {
+  packTitle: string;
+  row: Pick<PromptRow, "title" | "prompt">;
+  tags: string;
+  packGoal: string;
+  sharedStyleNotes: string;
+  avoidList: string;
+  keepCohesive: boolean;
+}) {
+  const compactTags = compactTagList(tags);
+  const promptParts = [
+    `Create one clip art asset for "${removeTransparencyTerms(packTitle)}"`,
+    row.title ? `Asset title: ${removeTransparencyTerms(row.title)}` : null,
+    `Asset idea: ${removeTransparencyTerms(row.prompt)}`,
+    compactTags ? `Theme tags: ${removeTransparencyTerms(compactTags)}` : null,
+    packGoal ? `Pack goal: ${removeTransparencyTerms(packGoal)}` : null,
+    sharedStyleNotes.trim() ? `Shared style notes: ${removeTransparencyTerms(sharedStyleNotes)}` : null,
+    avoidList.trim() ? `Avoid: ${removeTransparencyTerms(avoidList)}` : null,
+    keepCohesive
+      ? "Match the same visual style, palette, and line quality as the rest of the bundle."
+      : null,
+    "No text unless explicitly requested. Isolated subject on a plain white background.",
+  ];
+
+  return promptParts.filter(Boolean).join(". ");
+}
+
 function InfoTooltip({ text }: { text: string }) {
   const [show, setShow] = useState(false);
 
@@ -325,6 +379,7 @@ function CreatePacksPage() {
   const [avoidList, setAvoidList] = useState("");
   const [keepCohesive, setKeepCohesive] = useState(true);
   const [showAdvancedGeneration, setShowAdvancedGeneration] = useState(false);
+  const [showPromptPreview, setShowPromptPreview] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generationQueue, setGenerationQueue] = useState<GenerationQueueItem[]>([]);
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
@@ -814,25 +869,17 @@ function CreatePacksPage() {
     setError(null);
     try {
       const prompts = activeRows.map((row) => {
-        const promptParts = [
-          `Create one transparent PNG clip art asset for a cohesive pack titled "${title.trim() || pack.title}"`,
-          row.title ? `Asset title: ${row.title}` : null,
-          `Asset idea: ${row.prompt}`,
-          description.trim() ? `Short pack summary: ${description.trim()}` : null,
-          longDescription.trim() ? `Detailed pack direction: ${longDescription.trim()}` : null,
-          `Audience: ${audience}`,
-          `Use case: ${packGoal}`,
-          tags.trim() ? `Theme tags: ${tags.trim()}` : null,
-          sharedStyleNotes.trim() ? `Shared style notes: ${sharedStyleNotes.trim()}` : null,
-          avoidList.trim() ? `Avoid: ${avoidList.trim()}` : null,
-          keepCohesive
-            ? "Keep this visually cohesive with the rest of the bundle."
-            : null,
-          "Isolated on a transparent or white-safe background, suitable for a commercial clip art bundle.",
-        ];
         return {
           title: row.title || undefined,
-          prompt: promptParts.filter(Boolean).join(". "),
+          prompt: buildPackGenerationPrompt({
+            packTitle: title.trim() || pack.title,
+            row,
+            tags,
+            packGoal,
+            sharedStyleNotes,
+            avoidList,
+            keepCohesive,
+          }),
         };
       });
 
@@ -854,8 +901,16 @@ function CreatePacksPage() {
 
       if (data.results?.length > 0) {
         await refreshPack();
-        setSuccessMsg(`Generated ${data.results.length} items (${data.credits_used} credits used)`);
+        const failureCount = Array.isArray(data.failures) ? data.failures.length : 0;
+        setSuccessMsg(
+          failureCount > 0
+            ? `Generated ${data.results.length} item${data.results.length !== 1 ? "s" : ""}; ${failureCount} failed.`
+            : `Generated ${data.results.length} items (${data.credits_used} credits used)`,
+        );
         setTimeout(() => setSuccessMsg(null), 3000);
+      }
+      if ((!data.results || data.results.length === 0) && data.failures?.length > 0) {
+        throw new Error(`All ${data.failures.length} generation attempts failed. Try fewer ideas or a different model.`);
       }
       setPromptRows([createPromptRow()]);
       clearPersistedGeneration();
@@ -875,9 +930,6 @@ function CreatePacksPage() {
     variationsPerIdea,
     items.length,
     title,
-    description,
-    longDescription,
-    audience,
     packGoal,
     tags,
     sharedStyleNotes,
@@ -1371,6 +1423,23 @@ function CreatePacksPage() {
   ).length;
   const activePromptCount = promptRows.filter((row) => row.prompt.trim()).length;
   const generationCount = Math.min(activePromptCount * variationsPerIdea, 20);
+  const previewPrompts = promptRows
+    .map((row) => ({ ...row, prompt: row.prompt.trim(), title: row.title.trim() }))
+    .filter((row) => row.prompt)
+    .slice(0, 20)
+    .map((row) => ({
+      id: row.id,
+      label: row.title || row.prompt,
+      prompt: buildPackGenerationPrompt({
+        packTitle: title.trim() || pack?.title || "Untitled pack",
+        row,
+        tags,
+        packGoal,
+        sharedStyleNotes,
+        avoidList,
+        keepCohesive,
+      }),
+    }));
   const showGenerationQueue = generating || recoveringGeneration;
   const generationElapsed = generationStartedAt
     ? Math.max(0, (generationTick - generationStartedAt) / 1000)
@@ -2335,8 +2404,11 @@ function CreatePacksPage() {
 
                 <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50/50 p-3 text-xs leading-relaxed text-amber-800">
                   <span className="font-bold">How context works:</span> each row is one asset idea.
-                  Pack Studio adds your pack title, short description, long direction, audience,
-                  goal, tags, and selected style so the outputs belong together.
+                  Pack Studio adds compact pack context, tags, goal, style notes, and avoid rules so the outputs belong together.
+                </div>
+                <div className="mt-3 rounded-2xl border border-green-100 bg-green-50/60 p-3 text-xs leading-relaxed text-green-800">
+                  <span className="font-bold">Transparency:</span> clip art is processed for transparent output by default.
+                  Avoid writing “transparent” in prompts; Pack Studio removes those terms and uses background removal after generation.
                 </div>
 
                 <div className="mt-5 space-y-3">
@@ -2390,7 +2462,50 @@ function CreatePacksPage() {
                   >
                     Paste list
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPromptPreview((value) => !value)}
+                    className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+                  >
+                    {showPromptPreview ? "Hide final prompts" : "Inspect final prompts"}
+                  </button>
                 </div>
+
+                {showPromptPreview && (
+                  <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                          Final prompt preview
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                          This is the sanitized prompt sent to the image model. Marketing copy and transparency wording are intentionally removed.
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-gray-400 ring-1 ring-gray-200">
+                        {previewPrompts.length} prompt{previewPrompts.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="mt-3 max-h-80 space-y-3 overflow-auto pr-1">
+                      {previewPrompts.length > 0 ? (
+                        previewPrompts.map((item, index) => (
+                          <div key={item.id} className="rounded-xl bg-white p-3 ring-1 ring-gray-100">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-pink-500">
+                              Prompt {index + 1}: {item.label}
+                            </p>
+                            <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-gray-600">
+                              {item.prompt}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="rounded-xl bg-white p-3 text-xs text-gray-400 ring-1 ring-gray-100">
+                          Add at least one asset idea to preview the final prompt.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <div>

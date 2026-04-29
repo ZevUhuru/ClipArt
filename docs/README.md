@@ -49,6 +49,7 @@ All documentation for clip.art's ongoing migration to ESY's generation infrastru
 |-----|------|--------|
 | [State management & WebP migration](fixes/2026-03-16_state-management-webp-migration.md) | 2026-03-16 | Centralized state, WebP pipeline |
 | [Duplicate slug generation failure](fixes/2026-03-22-duplicate-slug-generation-failure.md) | 2026-03-22 | Silent generation loss on repeated prompts, SEO duplicate content concern |
+| [Pack Studio prompt bloat and transparency artifacts](fixes/2026-04-29-pack-studio-generation-prompt-transparency.md) | 2026-04-29 | Prompt inspection, transparency-term sanitization, batch background removal, partial failure reporting |
 
 ## Structure
 
