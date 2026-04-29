@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { CreatePageLayout } from "@/components/CreatePageLayout";
 import { FilterPopover, type ChipItem } from "@/components/filters";
 import { StyleIndicator } from "@/data/styleIndicators";
@@ -9,79 +9,20 @@ import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { VALID_STYLES, STYLE_LABELS, type StyleKey } from "@/lib/styles";
 import { PromptLibrary } from "@/components/PromptLibrary";
 
-const ANON_RESULT_KEY = "clip_art_anon_result";
-
 const CLIPART_STYLE_CHIPS: ChipItem[] = VALID_STYLES.clipart.map((key) => ({
   key,
   label: STYLE_LABELS[key] || key,
   indicator: <StyleIndicator styleKey={key} />,
 }));
 
-interface AnonResult {
-  imageUrl: string;
-  prompt: string;
-  style: string;
-}
-
-function AnonResultBanner({ result, onSignup }: { result: AnonResult; onSignup: () => void }) {
-  return (
-    <div className="mb-6 overflow-hidden rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-orange-50">
-      <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:p-6">
-        <div className="w-full shrink-0 sm:w-48">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={result.imageUrl}
-            alt={result.prompt}
-            className="w-full rounded-xl shadow-md"
-          />
-        </div>
-        <div className="flex-1 text-center sm:text-left">
-          <p className="text-xs font-bold uppercase tracking-widest text-pink-500">
-            Your free generation
-          </p>
-          <h3 className="mt-1 text-lg font-bold text-gray-900">
-            Looking great!
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            &ldquo;{result.prompt}&rdquo;
-          </p>
-          <p className="mt-3 text-sm text-gray-600">
-            Sign up to <span className="font-semibold">save this image</span> and get <span className="font-semibold text-pink-600">10 free credits</span> to create more.
-          </p>
-          <button
-            onClick={onSignup}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-            </svg>
-            Sign up &mdash; it&apos;s free
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<StyleKey>("flat");
   const [isPublic, setIsPublic] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [anonResult, setAnonResult] = useState<AnonResult | null>(null);
 
   const { openAuthModal, user } = useAppStore();
   const addJob = useGenerationQueue((s) => s.addJob);
-
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(ANON_RESULT_KEY);
-      if (raw) {
-        setAnonResult(JSON.parse(raw));
-        sessionStorage.removeItem(ANON_RESULT_KEY);
-      }
-    } catch { /* ignore parse errors */ }
-  }, []);
 
   const handleGenerate = useCallback(() => {
     if (!prompt.trim()) return;
@@ -135,13 +76,6 @@ export default function CreatePage() {
         </>
       }
     >
-      {anonResult && !user && (
-        <AnonResultBanner
-          result={anonResult}
-          onSignup={() => openAuthModal("signup")}
-        />
-      )}
-
       <PromptLibrary onSelect={handleLibrarySelect} />
     </CreatePageLayout>
   );

@@ -13,6 +13,8 @@ The biggest drop-off in any freemium funnel is the signup wall before the user h
 
 ## User Flow
 
+### Current queue-based flow
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Anonymous user lands on homepage                           │
@@ -32,18 +34,23 @@ The biggest drop-off in any freemium funnel is the signup wall before the user h
 │  │  6. Return { imageUrl, title, category, slug }     │    │
 │  └────────────────────────────────────────────────────┘    │
 │  ↓                                                         │
-│  Client receives result:                                   │
-│  1. Sets localStorage("clip_art_free_gen", "1")            │
-│  2. Stores result in sessionStorage("clip_art_anon_result")│
-│  3. Redirects to /create                                   │
+│  Client queues the job and redirects to /create            │
 │  ↓                                                         │
-│  /create page reads sessionStorage, displays result        │
-│  with CTA: "Sign up to save this + get 10 free credits"   │
+│  /create shows the active job in the generation queue      │
+│  ↓                                                         │
+│  Client receives result, marks free generation as used,    │
+│  and the completed queue card opens the downloadable image │
 │  ↓                                                         │
 │  User tries to generate again → auth modal opens           │
 │  "Sign up for 10 free credits"                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Previous homepage-wait flow
+
+Before the queue handoff, the homepage submitted the anonymous generation directly and kept the visitor on the hero form while the inline `GenerationProgress` component showed "Creating..." / generation progress. After the API returned, the client stored `{ imageUrl, prompt, style }` in `sessionStorage("clip_art_anon_result")`, marked `localStorage("clip_art_free_gen")`, and redirected to `/create`.
+
+On `/create`, a separate anonymous result banner read and cleared the sessionStorage payload. The banner showed the finished image and asked the visitor to sign up to save it and receive 10 credits, but it did not expose the normal queue/drawer download path. That meant the homepage promised "generate, download" while the post-generation state mainly pushed account creation.
 
 ## State Management
 
@@ -61,23 +68,18 @@ When this key does NOT exist and the user is not signed in:
 - The Generate button shows "Generate Now"
 - Clicking Generate sends the request with `freeGen: true`
 
-### Result handoff (sessionStorage)
+### Result handoff (generation queue)
 
-| Key | Value | Purpose |
-|-----|-------|---------|
-| `clip_art_anon_result` | JSON `{ imageUrl, prompt, style }` | Passes the anonymous generation result from homepage to /create |
+The homepage adds the anonymous job to the persisted generation queue before routing to `/create`. This lets visitors watch progress in the app shell instead of waiting on the homepage.
 
-sessionStorage is used (not localStorage) because:
-- The result should only display once, on the immediate redirect
-- It's cleared after /create reads it
-- It doesn't persist across tabs or sessions
+The completed queue card opens the normal image drawer, where the image can be downloaded. Anonymous generations are still ephemeral: they have an R2 URL, but no `generations` row.
 
 ## Button States (Homepage Generator)
 
 | User state | Free gen used? | Button text | On click |
 |------------|----------------|-------------|----------|
 | Signed in | — | "Generate" | Normal generation (uses 1 credit) |
-| Anonymous | No | "Generate Now" | Anonymous generation, redirect to /create |
+| Anonymous | No | "Generate Now" | Queue anonymous generation, redirect to /create |
 | Anonymous | Yes | "Generate" | Opens auth modal (signup) |
 
 ## API Changes (`/api/generate`)
@@ -156,13 +158,12 @@ If anonymous generation abuse becomes a cost concern:
 
 ## Create Page Changes (`/create`)
 
-On mount, the create page checks for `sessionStorage("clip_art_anon_result")`:
+The create page uses `GenerationQueue` as the anonymous result surface:
 
-- If present: parse the JSON, display the result as a prominent banner/card above the normal content
-- Show CTA: "Sign up to save this and get 10 free credits"
-- Clear sessionStorage after reading (prevents stale data on refresh)
-- The image is **not downloadable** without signing up (soft gate — the URL exists on R2, but we don't surface the download button for anonymous users)
-- Clicking "Sign up" opens the auth modal; after signup, the user has 10 credits and can re-generate
+- The homepage queues the first free anonymous generation and redirects immediately to `/create`
+- The user sees progress in the queue area while the app shell is visible
+- Once complete, clicking the queue thumbnail opens the image drawer with the normal download action
+- Creating additional images still requires signup; after signup, the user has 10 credits and can continue
 
 ## Files Changed
 
@@ -170,8 +171,9 @@ On mount, the create page checks for `sessionStorage("clip_art_anon_result")`:
 |------|--------|
 | `src/lib/promptSafety.ts` | **New** — blocklist utility |
 | `app/api/generate/route.ts` | Support `freeGen` flag, add safety check |
-| `src/components/Generator.tsx` | localStorage tracking, button text, sessionStorage + redirect |
-| `app/(app)/create/page.tsx` | Read sessionStorage, display anonymous result with signup CTA |
+| `src/components/Generator.tsx` | localStorage tracking, button text, queue job + redirect |
+| `src/stores/useGenerationQueue.ts` | Support anonymous free generation jobs and completed queue downloads |
+| `app/(app)/create/page.tsx` | Create surface relies on the queue instead of a separate anonymous result banner |
 
 ## Metrics to Watch
 

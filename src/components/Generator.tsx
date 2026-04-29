@@ -1,16 +1,14 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { StylePicker } from "./StylePicker";
-import { GenerationResult } from "./GenerationResult";
-import { GenerationProgress } from "./GenerationProgress";
 import { useAppStore } from "@/stores/useAppStore";
+import { useGenerationQueue } from "@/stores/useGenerationQueue";
 import { type StyleKey, VALID_STYLES as ALL_VALID_STYLES, STYLE_ASPECT_MAP } from "@/lib/styles";
 
 const CLIPART_STYLES = ALL_VALID_STYLES.clipart;
 const FREE_GEN_KEY = "clip_art_free_gen";
-const ANON_RESULT_KEY = "clip_art_anon_result";
 
 export function Generator() {
   const router = useRouter();
@@ -19,6 +17,7 @@ export function Generator() {
   const [style, setStyle] = useState<StyleKey>("flat");
   const [hydrated, setHydrated] = useState(false);
   const [freeGenUsed, setFreeGenUsed] = useState(true);
+  const addJob = useGenerationQueue((s) => s.addJob);
 
   useEffect(() => {
     if (hydrated) return;
@@ -33,15 +32,11 @@ export function Generator() {
     setFreeGenUsed(localStorage.getItem(FREE_GEN_KEY) === "1");
     setHydrated(true);
   }, [searchParams, hydrated]);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [resultAspectRatio, setResultAspectRatio] = useState<string>("1:1");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const resultRef = useRef<HTMLDivElement>(null);
 
   const {
-    openAuthModal, openBuyCreditsModal, setCredits, prependGeneration, user,
-    lastPromptLibraryUseId, setLastPromptLibraryUseId,
+    openAuthModal, user,
   } = useAppStore();
 
   const canFreeGen = !user && !freeGenUsed;
@@ -56,71 +51,12 @@ export function Generator() {
 
     setError(null);
     setIsGenerating(true);
-    setImageUrl(null);
-
-    try {
-      const payload: Record<string, unknown> = { prompt: prompt.trim(), style };
-      if (canFreeGen) payload.freeGen = true;
-      if (lastPromptLibraryUseId) {
-        payload.source = "prompt_library";
-        payload.promptLibraryUseId = lastPromptLibraryUseId;
-      }
-
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 401 && data.requiresAuth) {
-        openAuthModal("signup");
-        return;
-      }
-
-      if (res.status === 402 && data.requiresCredits) {
-        openBuyCreditsModal();
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error(data.error || "Generation failed");
-      }
-
-      if (data.freeGen) {
-        localStorage.setItem(FREE_GEN_KEY, "1");
-        setFreeGenUsed(true);
-        sessionStorage.setItem(
-          ANON_RESULT_KEY,
-          JSON.stringify({ imageUrl: data.imageUrl, prompt: prompt.trim(), style })
-        );
-        router.push("/create");
-        return;
-      }
-
-      setImageUrl(data.imageUrl);
-      setResultAspectRatio(STYLE_ASPECT_MAP[style] || "1:1");
-
-      if (typeof data.credits === "number") {
-        setCredits(data.credits);
-      }
-
-      if (data.generation) {
-        prependGeneration(data.generation);
-      }
-
-      // Clear prompt library attribution after a successful generation
-      setLastPromptLibraryUseId(null);
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setIsGenerating(false);
-    }
+    addJob(prompt.trim(), style, true, {
+      aspectRatio: STYLE_ASPECT_MAP[style] || "1:1",
+      contentType: "clipart",
+      freeGen: canFreeGen,
+    });
+    router.push("/create");
   }
 
   const buttonLabel = isGenerating
@@ -188,11 +124,6 @@ export function Generator() {
           {error}
         </p>
       )}
-
-      <div ref={resultRef}>
-        <GenerationProgress isGenerating={isGenerating} />
-        {imageUrl && <GenerationResult imageUrl={imageUrl} prompt={prompt} aspectRatio={resultAspectRatio} />}
-      </div>
     </div>
   );
 }

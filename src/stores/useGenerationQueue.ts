@@ -23,6 +23,7 @@ interface AddJobOptions {
   grade?: string;
   subject?: string;
   topic?: string;
+  freeGen?: boolean;
 }
 
 interface GenerationQueueState {
@@ -62,6 +63,7 @@ export const useGenerationQueue = create<GenerationQueueState>()(
     if (options?.grade) body.grade = options.grade;
     if (options?.subject) body.subject = options.subject;
     if (options?.topic) body.topic = options.topic;
+    if (options?.freeGen) body.freeGen = true;
     if (promptLibraryUseId) {
       body.source = "prompt_library";
       body.promptLibraryUseId = promptLibraryUseId;
@@ -81,6 +83,12 @@ export const useGenerationQueue = create<GenerationQueueState>()(
           return;
         }
 
+        if (res.status === 401 && data.requiresAuth) {
+          get().updateJob(id, { status: "failed", error: "Sign up required" });
+          useAppStore.getState().openAuthModal("signup");
+          return;
+        }
+
         if (!res.ok) {
           throw new Error(data.error || "Generation failed");
         }
@@ -93,13 +101,17 @@ export const useGenerationQueue = create<GenerationQueueState>()(
           useAppStore.getState().prependGeneration(data.generation);
         }
 
+        if (data.freeGen && typeof window !== "undefined") {
+          localStorage.setItem("clip_art_free_gen", "1");
+        }
+
         get().updateJob(id, {
           status: "completed",
           imageUrl: data.imageUrl || data.generation?.image_url,
           generationId: data.generation?.id,
-          title: data.generation?.title,
+          title: data.generation?.title || data.title || prompt,
           model: data.generation?.model || undefined,
-          contentType: data.generation?.content_type || options?.contentType,
+          contentType: data.generation?.content_type || options?.contentType || "clipart",
           hasTransparency: data.generation?.has_transparency ?? false,
         });
       })
