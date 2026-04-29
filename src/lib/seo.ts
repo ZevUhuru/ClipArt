@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://clip.art";
 export const SITE_NAME = "clip.art";
 export const DEFAULT_SOCIAL_IMAGE = {
-  url: `${SITE_URL}/social-card/homepage.png`,
+  url: `${SITE_URL}/social-card/hot-ramen.png`,
   width: 1200,
   height: 630,
-  alt: "clip.art AI Clip Art Generator",
+  alt: "Extra spicy ramen character clip art generated on clip.art",
 };
 
 export type ContentType = "clipart" | "coloring" | "illustration" | "pack" | "worksheet";
