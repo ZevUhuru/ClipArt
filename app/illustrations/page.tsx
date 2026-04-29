@@ -5,6 +5,7 @@ import { CategoryNav } from "@/components/CategoryNav";
 import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -19,12 +20,14 @@ export const metadata: Metadata = {
     url: "https://clip.art/illustrations",
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Free AI Illustrations — AI Illustration Generator",
     description:
       "Create custom AI illustrations with detailed backgrounds and scenes. Free to download.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   alternates: {
     canonical: "https://clip.art/illustrations",

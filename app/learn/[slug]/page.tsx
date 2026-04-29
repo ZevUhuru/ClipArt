@@ -9,6 +9,7 @@ import { TranscriptToggle } from "@/components/learn/TranscriptToggle";
 import { PromptCard } from "@/components/learn/PromptCard";
 import { RelatedVideos } from "@/components/learn/RelatedVideos";
 import { SignUpCTA } from "@/components/learn/SignUpCTA";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 import styles from "@/components/learn/article.module.css";
 
 export async function generateStaticParams() {
@@ -25,6 +26,9 @@ export async function generateMetadata({
 
   const { meta } = post;
   const url = `https://clip.art/learn/${meta.slug}`;
+  const socialImage = meta.thumbnailUrl
+    ? { url: meta.thumbnailUrl, alt: meta.title }
+    : DEFAULT_SOCIAL_IMAGE;
 
   return {
     title: `${meta.title} — clip.art Learn`,
@@ -35,12 +39,13 @@ export async function generateMetadata({
       url,
       siteName: "clip.art",
       type: "article",
-      images: meta.thumbnailUrl ? [{ url: meta.thumbnailUrl }] : [],
+      images: [socialImage],
     },
     twitter: {
       card: "summary_large_image",
       title: meta.title,
       description: meta.description,
+      images: [socialImage.url],
     },
     alternates: { canonical: url },
   };

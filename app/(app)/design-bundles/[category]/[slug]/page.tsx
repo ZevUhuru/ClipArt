@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { buildCanonical, SITE_NAME } from "@/lib/seo";
+import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackJsonLd, buildPackBreadcrumb } from "@/lib/seo-jsonld";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { PackDownloadButton } from "@/components/packs/PackDownloadButton";
@@ -149,6 +149,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     `Download ${pack.title} — ${pack.item_count} free AI-generated ${itemLabel} as transparent PNG assets. Free for personal and commercial use.`;
 
   const canonical = buildCanonical(`design-bundles/${pack.categories?.slug || "all"}/${pack.slug}`);
+  const socialImage = pack.cover_image_url
+    ? { url: pack.cover_image_url, alt: pack.title }
+    : DEFAULT_SOCIAL_IMAGE;
 
   return {
     title: `${title} | clip.art`,
@@ -160,15 +163,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonical,
       siteName: SITE_NAME,
       type: "article",
-      ...(pack.cover_image_url
-        ? { images: [{ url: pack.cover_image_url, alt: pack.title }] }
-        : {}),
+      images: [socialImage],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(pack.cover_image_url ? { images: [pack.cover_image_url] } : {}),
+      images: [socialImage.url],
     },
     robots: { index: true, follow: true },
   };

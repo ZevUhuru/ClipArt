@@ -6,6 +6,7 @@ import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -20,12 +21,14 @@ export const metadata: Metadata = {
     url: "https://clip.art/coloring-pages",
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Free Coloring Pages — AI Coloring Page Generator",
     description:
       "Create custom printable coloring pages with AI. Free to download and print.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   alternates: {
     canonical: "https://clip.art/coloring-pages",

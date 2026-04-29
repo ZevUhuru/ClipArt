@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { SITE_URL } from "@/lib/seo";
+import { DEFAULT_SOCIAL_IMAGE, SITE_URL } from "@/lib/seo";
 import { buildVideoJsonLd } from "@/lib/seo-jsonld";
 import { CategoryNav } from "@/components/CategoryNav";
 import { MarketingFooter } from "@/components/MarketingFooter";
@@ -133,6 +133,9 @@ export async function generateMetadata({
   const path = `animations/${anim.slug || anim.id}`;
   const posterUrl =
     anim.source?.image_url || anim.thumbnail_url || undefined;
+  const socialImage = posterUrl
+    ? { url: posterUrl, alt: animTitle }
+    : DEFAULT_SOCIAL_IMAGE;
 
   return {
     title,
@@ -144,16 +147,14 @@ export async function generateMetadata({
       url: `${SITE_URL}/${path}`,
       siteName: "clip.art",
       type: "article",
-      ...(posterUrl && {
-        images: [{ url: posterUrl, alt: animTitle }],
-      }),
+      images: [socialImage],
       videos: [{ url: anim.video_url, type: "video/mp4" }],
     },
     twitter: {
       card: "player",
       title,
       description,
-      ...(posterUrl && { images: [posterUrl] }),
+      images: [socialImage.url],
     },
   };
 }

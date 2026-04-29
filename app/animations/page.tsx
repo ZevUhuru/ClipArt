@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 import { AnimationGrid } from "./AnimationGrid";
 
 export const revalidate = 60;
@@ -21,12 +22,14 @@ export const metadata: Metadata = {
     url: "https://clip.art/animations",
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "Free Animated Clip Art — Bring Your Images to Life",
     description:
       "Browse and download free animated clip art. Perfect for teachers, presentations, and creative projects.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
 };
 

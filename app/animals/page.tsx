@@ -5,6 +5,7 @@ import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -19,12 +20,14 @@ export const metadata: Metadata = {
     url: "https://clip.art/animals",
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Animal Clip Art — Free A-Z Animal Images | clip.art",
     description:
       "Free animal clip art from A to Z. AI-generated animal illustrations for any project.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   alternates: {
     canonical: "https://clip.art/animals",

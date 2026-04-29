@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { PackGrid } from "@/components/packs/PackGrid";
-import { buildCanonical, SITE_NAME } from "@/lib/seo";
+import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildBreadcrumbJsonLd, buildPackListJsonLd } from "@/lib/seo-jsonld";
 
 export const revalidate = 60;
@@ -109,8 +109,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonical,
       siteName: SITE_NAME,
       type: "website",
+      images: [DEFAULT_SOCIAL_IMAGE],
     },
-    twitter: { card: "summary", title, description },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [DEFAULT_SOCIAL_IMAGE.url],
+    },
     robots: { index: true, follow: true },
   };
 }

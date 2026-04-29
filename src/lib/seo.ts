@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 
 export const SITE_URL = "https://clip.art";
 export const SITE_NAME = "clip.art";
+export const DEFAULT_SOCIAL_IMAGE = {
+  url: `${SITE_URL}/social-card/homepage.png`,
+  width: 1200,
+  height: 630,
+  alt: "clip.art AI Clip Art Generator",
+};
 
 export type ContentType = "clipart" | "coloring" | "illustration" | "pack" | "worksheet";
 
@@ -158,6 +164,9 @@ export function buildPageMetadata(opts: PageMetadataOpts): Metadata {
   const title = buildTitle(subject, { categoryName, contentType });
   const description = buildDescription(rawDesc, contentType);
   const canonical = buildCanonical(path);
+  const socialImage = image
+    ? { url: image.url, alt: image.alt, width: 1200, height: 630 }
+    : DEFAULT_SOCIAL_IMAGE;
 
   return {
     title,
@@ -169,13 +178,13 @@ export function buildPageMetadata(opts: PageMetadataOpts): Metadata {
       url: canonical,
       siteName: SITE_NAME,
       type,
-      ...(image ? { images: [{ url: image.url, alt: image.alt }] } : {}),
+      images: [socialImage],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(image ? { images: [image.url] } : {}),
+      images: [socialImage.url],
     },
     ...overrides,
   };
@@ -207,11 +216,13 @@ export function buildListingMetadata(opts: {
       url: canonical,
       siteName: SITE_NAME,
       type: "website",
+      images: [DEFAULT_SOCIAL_IMAGE],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
+      images: [DEFAULT_SOCIAL_IMAGE.url],
     },
   };
 }

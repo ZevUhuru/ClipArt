@@ -4,6 +4,7 @@ import { ArrowRight, Play, Clock } from "lucide-react";
 import { getAllPosts, getAllTopics, formatDuration } from "@/lib/learn";
 import { VideoCard } from "@/components/learn/VideoCard";
 import { SignUpCTA } from "@/components/learn/SignUpCTA";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Learn — AI Clip Art Tutorials, Prompts & Guides",
@@ -16,6 +17,14 @@ export const metadata: Metadata = {
     url: "https://clip.art/learn",
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learn — AI Clip Art Tutorials, Prompts & Guides",
+    description:
+      "Watch tutorials, discover AI art prompts, and learn how to create stunning clip art and coloring pages.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   alternates: { canonical: "https://clip.art/learn" },
 };

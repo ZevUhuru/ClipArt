@@ -7,7 +7,7 @@ import { ImageGrid } from "@/components/ImageGrid";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-jsonld";
-import { SITE_URL } from "@/lib/seo";
+import { DEFAULT_SOCIAL_IMAGE, SITE_URL } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -22,12 +22,14 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/worksheets`,
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Free Printable Worksheets for Kids — AI Worksheet Generator",
     description:
       "Free printable worksheets for preschool through 5th grade. Create your own with AI.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   alternates: {
     canonical: `${SITE_URL}/worksheets`,

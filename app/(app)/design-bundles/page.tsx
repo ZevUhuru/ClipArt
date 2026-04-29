@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { PackGrid } from "@/components/packs/PackGrid";
-import { buildCanonical, SITE_NAME } from "@/lib/seo";
+import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackListJsonLd } from "@/lib/seo-jsonld";
 
 export const revalidate = 60;
@@ -19,12 +19,14 @@ export const metadata: Metadata = {
     url: buildCanonical("design-bundles"),
     siteName: SITE_NAME,
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Free Clip Art Bundles & Design Bundles | clip.art",
     description:
       "Download free AI-generated clip art bundles and design bundles.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   alternates: { canonical: buildCanonical("design-bundles") },
   robots: { index: true, follow: true },

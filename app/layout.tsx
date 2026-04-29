@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "@/styles/globals.css";
 import { Providers } from "@/components/Providers";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/seo";
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
     url: "https://clip.art",
     siteName: "clip.art",
     type: "website",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
@@ -44,6 +46,7 @@ export const metadata: Metadata = {
     title: "clip.art — AI Clip Art Generator",
     description:
       "Generate reusable transparent clip art for classrooms, shops, crafts, and everyday design.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
 };
 
