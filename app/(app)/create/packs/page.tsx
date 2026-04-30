@@ -131,6 +131,49 @@ const MODEL_OPTIONS: { value: "recommended" | ModelKey; label: string; descripti
   { value: "gpt-image-1", label: "GPT Image 1", description: "Legacy OpenAI image model" },
 ];
 
+const CHARACTER_SHEET_GOAL = "Character sheet";
+const CHARACTER_REFERENCE_MODEL: ModelKey = "gpt-image-2";
+const CHARACTER_REFERENCE_STYLE: StyleKey = "cartoon";
+const CHARACTER_REFERENCE_PROMPT_ROWS: ReadonlyArray<Pick<PromptRow, "title" | "prompt">> = [
+  {
+    title: "Full reference board",
+    prompt:
+      "complete character reference sheet board with front, side, back, and three-quarter views, expression grid, color palette, outfit details, hand gestures, and close-up head studies",
+  },
+  {
+    title: "Front view",
+    prompt: "clean front-facing full body pose for the same character, neutral expression, readable silhouette",
+  },
+  {
+    title: "Side view",
+    prompt: "clean side-view full body pose for the same character, matching outfit and proportions",
+  },
+  {
+    title: "Back view",
+    prompt: "clean back-view full body pose for the same character, showing hairstyle, outfit back details, and silhouette",
+  },
+  {
+    title: "Three-quarter view",
+    prompt: "three-quarter full body pose for the same character, confident neutral stance, matching identity",
+  },
+  {
+    title: "Expression grid",
+    prompt: "six expression headshots for the same character: neutral, happy, surprised, worried, determined, and amused",
+  },
+  {
+    title: "Action pose set",
+    prompt: "four small action poses for the same character: waving, pointing, walking, and presenting",
+  },
+  {
+    title: "Detail sheet",
+    prompt: "character detail sheet with close-ups of hairstyle, outfit pattern, shoes, accessories, and color palette",
+  },
+];
+const CHARACTER_REFERENCE_STYLE_NOTES =
+  "One consistent character identity across every asset: same face shape, hairstyle, outfit, proportions, palette, line quality, and rendering style. Use clean reference-sheet composition with readable silhouettes.";
+const CHARACTER_REFERENCE_AVOID =
+  "No random extra characters, no identity drift, no duplicate poses, no unreadable tiny labels, no watermarks, no logos, no busy scenic background.";
+
 const PACK_GENERATION_STAGES = [
   "Preparing pack context",
   "Sending ideas to the model",
@@ -141,6 +184,7 @@ const PACK_GENERATION_STAGES = [
 
 const PACK_STUDIO_PENDING_GENERATION_KEY = "pack-studio:pending-generation";
 const PACK_GENERATION_RECOVERY_MS = 8 * 60 * 1000;
+const PACK_GENERATION_TARGET_CHUNK_SIZE = 3;
 
 const DEFAULT_LICENSE_SUMMARY =
   "Commercial use is included. Buyers may use the finished designs in personal projects, classroom materials, printables, physical products, and small business designs. They may not resell or redistribute the original image files as standalone clip art.";
@@ -183,6 +227,10 @@ function removeTransparencyTerms(value: string): string {
     .trim();
 }
 
+function isCharacterSheetGoal(value: string): boolean {
+  return value.trim().toLowerCase() === CHARACTER_SHEET_GOAL.toLowerCase();
+}
+
 function buildPackGenerationPrompt({
   packTitle,
   row,
@@ -201,18 +249,29 @@ function buildPackGenerationPrompt({
   keepCohesive: boolean;
 }) {
   const compactTags = compactTagList(tags);
+  const isCharacterSheet = isCharacterSheetGoal(packGoal);
   const promptParts = [
-    `Create one clip art asset for "${removeTransparencyTerms(packTitle)}"`,
+    isCharacterSheet
+      ? `Create one character reference sheet pack asset for "${removeTransparencyTerms(packTitle)}"`
+      : `Create one clip art asset for "${removeTransparencyTerms(packTitle)}"`,
     row.title ? `Asset title: ${removeTransparencyTerms(row.title)}` : null,
     `Asset idea: ${removeTransparencyTerms(row.prompt)}`,
     compactTags ? `Theme tags: ${removeTransparencyTerms(compactTags)}` : null,
     packGoal ? `Pack goal: ${removeTransparencyTerms(packGoal)}` : null,
     sharedStyleNotes.trim() ? `Shared style notes: ${removeTransparencyTerms(sharedStyleNotes)}` : null,
     avoidList.trim() ? `Avoid: ${removeTransparencyTerms(avoidList)}` : null,
+    isCharacterSheet
+      ? "Preserve one consistent character identity across angles, expressions, poses, outfit details, palette, proportions, and line quality."
+      : null,
+    isCharacterSheet
+      ? "If the asset is a board or grid, use a clean white reference-sheet layout with clear section labels, not a story scene."
+      : null,
     keepCohesive
       ? "Match the same visual style, palette, and line quality as the rest of the bundle."
       : null,
-    "No text unless explicitly requested. Isolated subject on a plain white background.",
+    isCharacterSheet
+      ? "Only include concise functional labels when they help explain a reference board. Keep the layout clean and commercially usable."
+      : "No text unless explicitly requested. Isolated subject on a plain white background.",
   ];
 
   return promptParts.filter(Boolean).join(". ");
@@ -387,6 +446,8 @@ function CreatePacksPage() {
   const [recoveringGeneration, setRecoveringGeneration] = useState(false);
   const [generationInitialItemCount, setGenerationInitialItemCount] = useState(0);
   const [generationExpectedCount, setGenerationExpectedCount] = useState(0);
+  const [generationCompletedCount, setGenerationCompletedCount] = useState(0);
+  const [generationFailedCount, setGenerationFailedCount] = useState(0);
 
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -397,6 +458,22 @@ function CreatePacksPage() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [loadingExisting, setLoadingExisting] = useState(false);
+
+  const applyCharacterReferenceSetup = useCallback((showMessage = true) => {
+    setPromptRows(CHARACTER_REFERENCE_PROMPT_ROWS.map((row) => createPromptRow(row.prompt, row.title)));
+    setGenStyle(CHARACTER_REFERENCE_STYLE);
+    setGenModel(CHARACTER_REFERENCE_MODEL);
+    setVariationsPerIdea(1);
+    setAssetAvailability("exclusive");
+    setSharedStyleNotes(CHARACTER_REFERENCE_STYLE_NOTES);
+    setAvoidList(CHARACTER_REFERENCE_AVOID);
+    setKeepCohesive(true);
+    setShowAdvancedGeneration(true);
+    if (showMessage) {
+      setSuccessMsg("Character reference sheet setup applied.");
+      window.setTimeout(() => setSuccessMsg(null), 3000);
+    }
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/categories")
@@ -764,6 +841,8 @@ function CreatePacksPage() {
       setGenerationTick(Date.now());
       setGenerationInitialItemCount(pending.initialItemCount);
       setGenerationExpectedCount(pending.expectedCount);
+      setGenerationCompletedCount(Math.max(0, items.length - pending.initialItemCount));
+      setGenerationFailedCount(0);
       setRecoveringGeneration(true);
       setSuccessMsg("Checking for generated pack assets after refresh...");
       setTimeout(() => setSuccessMsg(null), 3500);
@@ -832,6 +911,7 @@ function CreatePacksPage() {
     if (!pack || activeRows.length === 0) return;
     setGenerating(true);
     const startedAt = Date.now();
+    const chunkSize = Math.max(1, Math.floor(PACK_GENERATION_TARGET_CHUNK_SIZE / variationsPerIdea));
     const queue = activeRows
       .flatMap((row) =>
         Array.from({ length: variationsPerIdea }, (_, index) => ({
@@ -851,6 +931,8 @@ function CreatePacksPage() {
     setGenerationQueue(queue);
     setGenerationInitialItemCount(initialItemCount);
     setGenerationExpectedCount(expectedCount);
+    setGenerationCompletedCount(0);
+    setGenerationFailedCount(0);
     setRecoveringGeneration(false);
     try {
       localStorage.setItem(
@@ -883,34 +965,55 @@ function CreatePacksPage() {
         };
       });
 
-      const res = await fetch("/api/generate/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompts,
-          style: genStyle,
-          variationsPerIdea,
-          model: genModel === "recommended" ? undefined : genModel,
-          assetAvailability,
-          contentType: "clipart",
-          pack_id: pack.id,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const requestedModel =
+        genModel === "recommended"
+          ? isCharacterSheetGoal(packGoal)
+            ? CHARACTER_REFERENCE_MODEL
+            : undefined
+          : genModel;
+      let totalGenerated = 0;
+      let totalFailed = 0;
 
-      if (data.results?.length > 0) {
-        await refreshPack();
+      for (let index = 0; index < prompts.length; index += chunkSize) {
+        const promptChunk = prompts.slice(index, index + chunkSize);
+        const res = await fetch("/api/generate/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompts: promptChunk,
+            style: genStyle,
+            variationsPerIdea,
+            model: requestedModel,
+            assetAvailability,
+            contentType: "clipart",
+            pack_id: pack.id,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        const generatedCount = Array.isArray(data.results) ? data.results.length : 0;
         const failureCount = Array.isArray(data.failures) ? data.failures.length : 0;
+        totalGenerated += generatedCount;
+        totalFailed += failureCount;
+        setGenerationCompletedCount(totalGenerated);
+        setGenerationFailedCount(totalFailed);
+
+        if (generatedCount > 0) {
+          await refreshPack();
+        }
+      }
+
+      if (totalGenerated > 0) {
         setSuccessMsg(
-          failureCount > 0
-            ? `Generated ${data.results.length} item${data.results.length !== 1 ? "s" : ""}; ${failureCount} failed.`
-            : `Generated ${data.results.length} items (${data.credits_used} credits used)`,
+          totalFailed > 0
+            ? `Generated ${totalGenerated} item${totalGenerated !== 1 ? "s" : ""}; ${totalFailed} failed.`
+            : `Generated ${totalGenerated} item${totalGenerated !== 1 ? "s" : ""}.`,
         );
         setTimeout(() => setSuccessMsg(null), 3000);
       }
-      if ((!data.results || data.results.length === 0) && data.failures?.length > 0) {
-        throw new Error(`All ${data.failures.length} generation attempts failed. Try fewer ideas or a different model.`);
+      if (totalGenerated === 0 && totalFailed > 0) {
+        throw new Error(`All ${totalFailed} generation attempts failed. Try fewer ideas or a different model.`);
       }
       setPromptRows([createPromptRow()]);
       clearPersistedGeneration();
@@ -1387,6 +1490,9 @@ function CreatePacksPage() {
                           setTags(starter.tags);
                           setAudience(starter.audience);
                           setPackGoal(starter.goal);
+                          if (isCharacterSheetGoal(starter.goal)) {
+                            applyCharacterReferenceSetup(false);
+                          }
                         }}
                         className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-sm ring-1 ring-pink-100 transition hover:bg-pink-100 hover:text-pink-700"
                       >
@@ -1423,6 +1529,11 @@ function CreatePacksPage() {
   ).length;
   const activePromptCount = promptRows.filter((row) => row.prompt.trim()).length;
   const generationCount = Math.min(activePromptCount * variationsPerIdea, 20);
+  const isCharacterSheetPack = isCharacterSheetGoal(packGoal);
+  const generationModelDescription =
+    genModel === "recommended" && isCharacterSheetPack
+      ? "Character sheet packs use GPT Image 2 for reference-board quality"
+      : MODEL_OPTIONS.find((model) => model.value === genModel)?.description;
   const previewPrompts = promptRows
     .map((row) => ({ ...row, prompt: row.prompt.trim(), title: row.title.trim() }))
     .filter((row) => row.prompt)
@@ -1441,19 +1552,19 @@ function CreatePacksPage() {
       }),
     }));
   const showGenerationQueue = generating || recoveringGeneration;
-  const generationElapsed = generationStartedAt
-    ? Math.max(0, (generationTick - generationStartedAt) / 1000)
-    : 0;
   const queueTotal = generationQueue.length || generationExpectedCount || generationCount;
+  const processedQueueCount = Math.min(queueTotal, generationCompletedCount + generationFailedCount);
   const generationProgressPercent = generating
-    ? Math.min(96, Math.max(8, Math.round((1 - Math.exp(-generationElapsed / Math.max(8, queueTotal * 4.5))) * 100)))
+    ? Math.min(96, Math.round((processedQueueCount / Math.max(1, queueTotal)) * 100))
+    : recoveringGeneration
+      ? Math.min(96, Math.round((generationCompletedCount / Math.max(1, queueTotal)) * 100))
     : 0;
   const generationStageIndex = Math.min(
     PACK_GENERATION_STAGES.length - 1,
     Math.floor((generationProgressPercent / 100) * PACK_GENERATION_STAGES.length),
   );
   const activeQueueIndex = queueTotal
-    ? Math.min(queueTotal - 1, Math.floor((generationProgressPercent / 100) * queueTotal))
+    ? Math.min(queueTotal - 1, processedQueueCount)
     : 0;
   const exclusiveCount = items.filter((item) => item.is_exclusive).length;
   const displayPriceLabel = isAdmin && !isFree ? `$${priceDollars || "0"}` : "Free";
@@ -2410,6 +2521,23 @@ function CreatePacksPage() {
                   <span className="font-bold">Transparency:</span> clip art is processed for transparent output by default.
                   Avoid writing “transparent” in prompts; Pack Studio removes those terms and uses background removal after generation.
                 </div>
+                {isCharacterSheetPack && (
+                  <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-3 text-xs leading-relaxed text-indigo-800">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p>
+                        <span className="font-bold">Character reference mode:</span> use GPT Image 2 for
+                        reference-board layouts, turnarounds, expressions, pose grids, palettes, and detail callouts.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => applyCharacterReferenceSetup()}
+                        className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100"
+                      >
+                        Apply setup
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-5 space-y-3">
                   {promptRows.map((row, index) => (
@@ -2567,7 +2695,7 @@ function CreatePacksPage() {
                         ))}
                       </select>
                       <p className="mt-1 text-xs text-gray-400">
-                        {MODEL_OPTIONS.find((model) => model.value === genModel)?.description}
+                        {generationModelDescription}
                       </p>
                     </div>
                     <div>
@@ -2654,10 +2782,10 @@ function CreatePacksPage() {
                           </div>
                           <div className="rounded-2xl bg-white/80 px-3 py-2 text-right ring-1 ring-gray-100">
                             <p className="text-lg font-black tabular-nums text-gray-900">
-                              {generationProgressPercent}%
+                              {processedQueueCount}/{queueTotal}
                             </p>
                             <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-                              {recoveringGeneration ? "Recovering" : "In progress"}
+                              {recoveringGeneration ? "Recovering" : "Returned"}
                             </p>
                           </div>
                         </div>
@@ -2675,15 +2803,20 @@ function CreatePacksPage() {
                       <div className="grid gap-2 p-3 sm:grid-cols-2">
                         {generationQueue.slice(0, 8).map((item, index) => {
                           const isActive = index === activeQueueIndex;
-                          const isPrepared = index < activeQueueIndex;
+                          const isComplete = index < generationCompletedCount;
+                          const isFailed =
+                            index >= generationCompletedCount &&
+                            index < generationCompletedCount + generationFailedCount;
                           return (
                             <div
                               key={item.id}
                               className={`rounded-2xl border px-3 py-2 transition-colors ${
                                 isActive
                                   ? "border-pink-200 bg-pink-50"
-                                  : isPrepared
+                                  : isComplete
                                     ? "border-green-100 bg-green-50/70"
+                                    : isFailed
+                                      ? "border-red-100 bg-red-50/70"
                                     : "border-gray-100 bg-gray-50/70"
                               }`}
                             >
@@ -2692,12 +2825,14 @@ function CreatePacksPage() {
                                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${
                                     isActive
                                       ? "bg-pink-500 text-white"
-                                      : isPrepared
+                                      : isComplete
                                         ? "bg-green-500 text-white"
+                                        : isFailed
+                                          ? "bg-red-500 text-white"
                                         : "bg-white text-gray-400 ring-1 ring-gray-200"
                                   }`}
                                 >
-                                  {isPrepared ? "✓" : index + 1}
+                                  {isComplete ? "✓" : isFailed ? "!" : index + 1}
                                 </span>
                                 <div className="min-w-0">
                                   <p className="truncate text-xs font-bold text-gray-800">
@@ -2705,12 +2840,12 @@ function CreatePacksPage() {
                                   </p>
                                   <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                     {recoveringGeneration
-                                      ? isPrepared
-                                        ? "Already checked"
+                                      ? isComplete
+                                        ? "Recovered"
                                         : isActive
                                           ? "Checking now"
                                           : "Waiting to check"
-                                      : isActive ? "Generating now" : isPrepared ? "Prepared" : "Queued"}
+                                      : isComplete ? "Generated" : isFailed ? "Failed" : isActive ? "Generating now" : "Queued"}
                                   </p>
                                 </div>
                               </div>

@@ -27,6 +27,7 @@ All documentation for clip.art's ongoing migration to ESY's generation infrastru
 | [Public/Private Toggle](features/PUBLIC_PRIVATE_TOGGLE.md) | User-facing toggle to control whether generations are shared with the community or kept private |
 | [Multi-Model Generation](features/MULTI_MODEL.md) | Unified model router (Gemini, GPT Image 1, GPT Image 2) with admin-configurable style-to-model mapping |
 | [Pack Studio V1](features/PACK_STUDIO_V1.md) | Seller-grade bundle creation workspace — pricing, pack-exclusive assets, generation UX, SEO copy, and publish readiness |
+| [Pack Studio Character Reference Sheets](features/PACK_STUDIO_CHARACTER_REFERENCE_SHEETS.md) | First-class character reference sheet workflow using GPT Image 2, preset rows, and reference-board prompt guidance |
 
 ## Strategy
 

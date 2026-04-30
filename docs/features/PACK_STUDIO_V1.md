@@ -135,6 +135,18 @@ Advanced controls should include:
 
 Model IDs must remain explicit and must not use floating aliases such as `latest`, `auto`, or generic marketing aliases.
 
+### Character Reference Sheet Workflow
+
+Character sheet packs should behave like a first-class Pack Studio workflow. See `docs/features/PACK_STUDIO_CHARACTER_REFERENCE_SHEETS.md` for the full plan.
+
+V1 should keep the implementation scoped to Pack Studio:
+
+- The `Consistent Character Sheet Pack` starter preloads editable reference-sheet rows.
+- Character sheet packs route `Recommended` generation to `gpt-image-2`.
+- The prompt builder adds reference-board guidance for consistent identity, turnarounds, expressions, poses, and detail callouts.
+- The Generate tab exposes a setup callout so existing character sheet packs can apply the preset without recreating the pack.
+- This should not change the global style router because normal clip art packs still optimize for volume generation.
+
 ### Current Generation State Recovery
 
 Pack Studio currently uses the synchronous batch generation API at `app/api/generate/batch/route.ts`. The request does not expose per-image server-side progress while it runs, so the workspace cannot yet show true completed/failed status for each asset in real time.
