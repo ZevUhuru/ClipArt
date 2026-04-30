@@ -173,18 +173,29 @@ const CHARACTER_REFERENCE_STYLE_NOTES =
   "One consistent character identity across every asset: same face shape, hairstyle, outfit, proportions, palette, line quality, and rendering style. Use clean reference-sheet composition with readable silhouettes.";
 const CHARACTER_REFERENCE_AVOID =
   "No random extra characters, no identity drift, no duplicate poses, no unreadable tiny labels, no watermarks, no logos, no busy scenic background.";
+const PACK_VARIATION_DIRECTIONS = [
+  "",
+  "different angle",
+  "variation with unique details",
+  "alternative design",
+  "creative interpretation",
+  "simplified version",
+  "detailed version",
+  "playful style",
+  "elegant version",
+  "minimalist design",
+];
 
-const PACK_GENERATION_STAGES = [
-  "Preparing pack context",
-  "Sending ideas to the model",
-  "Generating cohesive clip art",
-  "Saving assets to your pack",
-  "Refreshing the canvas",
+const PACK_ACTIVE_GENERATION_STAGES = [
+  { at: 0, label: "Preparing request" },
+  { at: 15, label: "Generating image" },
+  { at: 50, label: "Processing output" },
+  { at: 80, label: "Saving to pack" },
+  { at: 100, label: "Complete" },
 ];
 
 const PACK_STUDIO_PENDING_GENERATION_KEY = "pack-studio:pending-generation";
 const PACK_GENERATION_RECOVERY_MS = 8 * 60 * 1000;
-const PACK_GENERATION_TARGET_CHUNK_SIZE = 3;
 
 const DEFAULT_LICENSE_SUMMARY =
   "Commercial use is included. Buyers may use the finished designs in personal projects, classroom materials, printables, physical products, and small business designs. They may not resell or redistribute the original image files as standalone clip art.";
@@ -229,6 +240,23 @@ function removeTransparencyTerms(value: string): string {
 
 function isCharacterSheetGoal(value: string): boolean {
   return value.trim().toLowerCase() === CHARACTER_SHEET_GOAL.toLowerCase();
+}
+
+function estimatePackGenerationProgress(startedAt: number | null, tick: number): number {
+  if (!startedAt || !tick) return 0;
+  const elapsed = Math.max(0, (tick - startedAt) / 1000);
+  if (elapsed < 1) return 15 * elapsed;
+  if (elapsed < 4) return 15 + 35 * ((elapsed - 1) / 3);
+  if (elapsed < 8) return 50 + 30 * ((elapsed - 4) / 4);
+  if (elapsed < 15) return 80 + 15 * ((elapsed - 8) / 7);
+  return 95 + 4 * (1 - Math.exp(-(elapsed - 15) / 10));
+}
+
+function packGenerationStage(progress: number): string {
+  return PACK_ACTIVE_GENERATION_STAGES.reduce(
+    (label, stage) => (progress >= stage.at ? stage.label : label),
+    PACK_ACTIVE_GENERATION_STAGES[0].label,
+  );
 }
 
 function buildPackGenerationPrompt({
@@ -442,6 +470,7 @@ function CreatePacksPage() {
   const [generating, setGenerating] = useState(false);
   const [generationQueue, setGenerationQueue] = useState<GenerationQueueItem[]>([]);
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  const [generationActiveStartedAt, setGenerationActiveStartedAt] = useState<number | null>(null);
   const [generationTick, setGenerationTick] = useState(0);
   const [recoveringGeneration, setRecoveringGeneration] = useState(false);
   const [generationInitialItemCount, setGenerationInitialItemCount] = useState(0);
@@ -838,6 +867,7 @@ function CreatePacksPage() {
       setView("generate");
       setGenerationQueue(pending.queue);
       setGenerationStartedAt(pending.startedAt);
+      setGenerationActiveStartedAt(pending.startedAt);
       setGenerationTick(Date.now());
       setGenerationInitialItemCount(pending.initialItemCount);
       setGenerationExpectedCount(pending.expectedCount);
@@ -870,6 +900,7 @@ function CreatePacksPage() {
       if (count !== null && count > generationInitialItemCount) {
         setRecoveringGeneration(false);
         setGenerationStartedAt(null);
+        setGenerationActiveStartedAt(null);
         setGenerationTick(0);
         clearPersistedGeneration();
         setSuccessMsg("Recovered generated assets and refreshed the pack.");
@@ -911,22 +942,54 @@ function CreatePacksPage() {
     if (!pack || activeRows.length === 0) return;
     setGenerating(true);
     const startedAt = Date.now();
-    const chunkSize = Math.max(1, Math.floor(PACK_GENERATION_TARGET_CHUNK_SIZE / variationsPerIdea));
-    const queue = activeRows
+    const requestedModel =
+      genModel === "recommended"
+        ? isCharacterSheetGoal(packGoal)
+          ? CHARACTER_REFERENCE_MODEL
+          : undefined
+        : genModel;
+    const generationJobs = activeRows
       .flatMap((row) =>
-        Array.from({ length: variationsPerIdea }, (_, index) => ({
-          id: `${row.id}-${index}`,
-          label:
-            variationsPerIdea > 1
-              ? `${row.title || row.prompt} · v${index + 1}`
-              : row.title || row.prompt,
-          prompt: row.prompt,
-        })),
+        Array.from({ length: variationsPerIdea }, (_, index) => {
+          const variationDirection = PACK_VARIATION_DIRECTIONS[index % PACK_VARIATION_DIRECTIONS.length];
+          const variationRow =
+            index === 0
+              ? row
+              : {
+                  ...row,
+                  title: row.title ? `${row.title} v${index + 1}` : "",
+                  prompt: `${row.prompt}, ${variationDirection}`,
+                };
+
+          return {
+            id: `${row.id}-${index}`,
+            label:
+              variationsPerIdea > 1
+                ? `${row.title || row.prompt} · v${index + 1}`
+                : row.title || row.prompt,
+            title: variationRow.title || undefined,
+            prompt: buildPackGenerationPrompt({
+              packTitle: title.trim() || pack.title,
+              row: variationRow,
+              tags,
+              packGoal,
+              sharedStyleNotes,
+              avoidList,
+              keepCohesive,
+            }),
+          };
+        }),
       )
       .slice(0, 20);
+    const queue = generationJobs.map((job) => ({
+      id: job.id,
+      label: job.label,
+      prompt: job.prompt,
+    }));
     const expectedCount = queue.length;
     const initialItemCount = items.length;
     setGenerationStartedAt(startedAt);
+    setGenerationActiveStartedAt(startedAt);
     setGenerationTick(startedAt);
     setGenerationQueue(queue);
     setGenerationInitialItemCount(initialItemCount);
@@ -950,57 +1013,55 @@ function CreatePacksPage() {
     }
     setError(null);
     try {
-      const prompts = activeRows.map((row) => {
-        return {
-          title: row.title || undefined,
-          prompt: buildPackGenerationPrompt({
-            packTitle: title.trim() || pack.title,
-            row,
-            tags,
-            packGoal,
-            sharedStyleNotes,
-            avoidList,
-            keepCohesive,
-          }),
-        };
-      });
-
-      const requestedModel =
-        genModel === "recommended"
-          ? isCharacterSheetGoal(packGoal)
-            ? CHARACTER_REFERENCE_MODEL
-            : undefined
-          : genModel;
       let totalGenerated = 0;
       let totalFailed = 0;
+      let fatalError: string | null = null;
 
-      for (let index = 0; index < prompts.length; index += chunkSize) {
-        const promptChunk = prompts.slice(index, index + chunkSize);
-        const res = await fetch("/api/generate/batch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompts: promptChunk,
-            style: genStyle,
-            variationsPerIdea,
-            model: requestedModel,
-            assetAvailability,
-            contentType: "clipart",
-            pack_id: pack.id,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+      for (const job of generationJobs) {
+        try {
+          const activeStartedAt = Date.now();
+          setGenerationActiveStartedAt(activeStartedAt);
+          setGenerationTick(activeStartedAt);
+          const res = await fetch("/api/generate/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompts: [{ title: job.title, prompt: job.prompt }],
+              style: genStyle,
+              variationsPerIdea: 1,
+              model: requestedModel,
+              assetAvailability,
+              contentType: "clipart",
+              pack_id: pack.id,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || "Generation failed");
+          }
 
-        const generatedCount = Array.isArray(data.results) ? data.results.length : 0;
-        const failureCount = Array.isArray(data.failures) ? data.failures.length : 0;
-        totalGenerated += generatedCount;
-        totalFailed += failureCount;
-        setGenerationCompletedCount(totalGenerated);
-        setGenerationFailedCount(totalFailed);
+          const generatedCount = Array.isArray(data.results) ? data.results.length : 0;
+          let failureCount = Array.isArray(data.failures) ? data.failures.length : 0;
+          if (generatedCount === 0 && failureCount === 0) {
+            failureCount = 1;
+          }
+          totalGenerated += generatedCount;
+          totalFailed += failureCount;
 
-        if (generatedCount > 0) {
-          await refreshPack();
+          if (generatedCount > 0) {
+            await refreshPack();
+          }
+        } catch (jobErr) {
+          totalFailed += 1;
+          const message = jobErr instanceof Error ? jobErr.message : "Generation failed";
+          if (/insufficient credits|unauthorized/i.test(message)) {
+            fatalError = message;
+            totalFailed += generationJobs.length - totalGenerated - totalFailed;
+            break;
+          }
+        } finally {
+          setGenerationCompletedCount(totalGenerated);
+          setGenerationFailedCount(totalFailed);
         }
       }
 
@@ -1013,7 +1074,10 @@ function CreatePacksPage() {
         setTimeout(() => setSuccessMsg(null), 3000);
       }
       if (totalGenerated === 0 && totalFailed > 0) {
-        throw new Error(`All ${totalFailed} generation attempts failed. Try fewer ideas or a different model.`);
+        throw new Error(fatalError || `All ${totalFailed} generation attempts failed. Try fewer ideas or a different model.`);
+      }
+      if (fatalError) {
+        setError(fatalError);
       }
       setPromptRows([createPromptRow()]);
       clearPersistedGeneration();
@@ -1023,6 +1087,7 @@ function CreatePacksPage() {
     } finally {
       setGenerating(false);
       setGenerationStartedAt(null);
+      setGenerationActiveStartedAt(null);
       setGenerationTick(0);
       setRecoveringGeneration(false);
       window.setTimeout(() => setGenerationQueue([]), 900);
@@ -1554,15 +1619,19 @@ function CreatePacksPage() {
   const showGenerationQueue = generating || recoveringGeneration;
   const queueTotal = generationQueue.length || generationExpectedCount || generationCount;
   const processedQueueCount = Math.min(queueTotal, generationCompletedCount + generationFailedCount);
+  const activeGenerationProgress = generating
+    ? Math.round(estimatePackGenerationProgress(generationActiveStartedAt || generationStartedAt, generationTick))
+    : 0;
+  const displayedProgressUnits =
+    generating && processedQueueCount < queueTotal
+      ? processedQueueCount + activeGenerationProgress / 100
+      : processedQueueCount;
   const generationProgressPercent = generating
-    ? Math.min(96, Math.round((processedQueueCount / Math.max(1, queueTotal)) * 100))
+    ? Math.min(99, Math.round((displayedProgressUnits / Math.max(1, queueTotal)) * 100))
     : recoveringGeneration
       ? Math.min(96, Math.round((generationCompletedCount / Math.max(1, queueTotal)) * 100))
     : 0;
-  const generationStageIndex = Math.min(
-    PACK_GENERATION_STAGES.length - 1,
-    Math.floor((generationProgressPercent / 100) * PACK_GENERATION_STAGES.length),
-  );
+  const activeGenerationStage = packGenerationStage(activeGenerationProgress);
   const activeQueueIndex = queueTotal
     ? Math.min(queueTotal - 1, processedQueueCount)
     : 0;
@@ -2776,16 +2845,16 @@ function CreatePacksPage() {
                               <p className="mt-0.5 text-xs text-gray-500">
                                 {recoveringGeneration
                                   ? "Checking the pack for completed assets"
-                                  : PACK_GENERATION_STAGES[generationStageIndex]} · {queueTotal} asset{queueTotal !== 1 ? "s" : ""}
+                                  : activeGenerationStage} · {queueTotal} asset{queueTotal !== 1 ? "s" : ""}
                               </p>
                             </div>
                           </div>
                           <div className="rounded-2xl bg-white/80 px-3 py-2 text-right ring-1 ring-gray-100">
                             <p className="text-lg font-black tabular-nums text-gray-900">
-                              {processedQueueCount}/{queueTotal}
+                              {generationProgressPercent}%
                             </p>
                             <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-                              {recoveringGeneration ? "Recovering" : "Returned"}
+                              {processedQueueCount}/{queueTotal} {recoveringGeneration ? "checked" : "done"}
                             </p>
                           </div>
                         </div>
@@ -2845,8 +2914,24 @@ function CreatePacksPage() {
                                         : isActive
                                           ? "Checking now"
                                           : "Waiting to check"
-                                      : isComplete ? "Generated" : isFailed ? "Failed" : isActive ? "Generating now" : "Queued"}
+                                      : isComplete
+                                        ? "Generated"
+                                        : isFailed
+                                          ? "Failed"
+                                          : isActive
+                                            ? `${activeGenerationStage} · ${activeGenerationProgress}%`
+                                            : "Queued"}
                                   </p>
+                                  {isActive && !recoveringGeneration && (
+                                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white ring-1 ring-pink-100">
+                                      <motion.div
+                                        className="h-full rounded-full bg-brand-gradient"
+                                        initial={{ width: "8%" }}
+                                        animate={{ width: `${Math.max(8, activeGenerationProgress)}%` }}
+                                        transition={{ duration: 0.35, ease: "easeOut" }}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>

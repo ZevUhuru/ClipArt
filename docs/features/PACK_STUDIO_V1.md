@@ -155,11 +155,12 @@ The current fix in `app/(app)/create/packs/page.tsx` improves the user experienc
 
 - When a pack batch is submitted, the client persists a pending queue record in `localStorage`.
 - The record includes the pack id, start time, expected item count, initial pack item count, and queued prompt labels.
+- Pack Studio submits one queued asset per request to `/api/generate/batch`, with `variationsPerIdea: 1`, so slow models such as `gpt-image-2` do not spend a whole multi-image batch inside one server request.
 - If the user refreshes mid-generation, Pack Studio reopens the Generate tab and restores the queue as a recovery state.
 - During recovery, the page polls the pack and refreshes the canvas when newly attached assets appear.
 - If the recovery window expires, the UI tells the user it could not confirm completion and prompts them to check the pack or library.
 
-This is a recovery layer around the current synchronous API. It is intentionally lightweight and avoids introducing a new database/job system before the ESY migration is complete.
+This follows the same browser-owned queue pattern as `/create`, but keeps a Pack Studio-specific queue because each result must attach to a pack and honor pack-exclusive settings. It is intentionally lightweight and avoids introducing a new database/job system before the ESY migration is complete.
 
 ### Future Server-Side Generation Queue
 
