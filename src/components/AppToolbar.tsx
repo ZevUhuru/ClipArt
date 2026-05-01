@@ -4,12 +4,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAppStore } from "@/stores/useAppStore";
 
 interface MenuItem {
   href: string;
   label: string;
   description: string;
   icon: React.ReactNode;
+  adminOnly?: boolean;
 }
 
 interface MenuGroup {
@@ -84,17 +86,17 @@ const MENU_GROUPS: MenuGroup[] = [
       { href: "/create/illustrations", label: "Illustrations", description: "Full-scene artwork with backgrounds", icon: <IllustrationIcon /> },
       { href: "/create/coloring-pages", label: "Coloring Pages", description: "Printable line art for any theme", icon: <ColoringIcon /> },
       { href: "/create/worksheets", label: "Worksheets", description: "Educational printables by grade", icon: <WorksheetIcon /> },
-      { href: "/create/packs", label: "Pack Studio", description: "Create and publish bundles", icon: <BundleIcon /> },
+      { href: "/create/packs", label: "Pack Studio", description: "Create and publish bundles", icon: <BundleIcon />, adminOnly: true },
     ],
   },
   {
     key: "browse",
     label: "Browse",
-    isActive: (p) => ["/search", "/library", "/design-bundles"].some((prefix) => p === prefix || p.startsWith(prefix + "/")),
+    isActive: (p) => ["/search", "/library", "/packs"].some((prefix) => p === prefix || p.startsWith(prefix + "/")),
     items: [
       { href: "/search", label: "Explore", description: "Discover community creations", icon: <ExploreIcon /> },
       { href: "/library", label: "Library", description: "Your saved and generated art", icon: <LibraryIcon /> },
-      { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections", icon: <BundleIcon /> },
+      { href: "/packs", label: "Packs", description: "Download themed collections", icon: <BundleIcon /> },
     ],
   },
   {
@@ -110,12 +112,14 @@ const MENU_GROUPS: MenuGroup[] = [
 
 function DropdownMenu({
   group,
+  items,
   isOpen,
   onToggle,
   onClose,
   pathname,
 }: {
   group: MenuGroup;
+  items: MenuItem[];
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
@@ -171,7 +175,7 @@ function DropdownMenu({
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute left-0 top-full z-50 mt-1.5 w-64 overflow-hidden rounded-2xl border border-gray-100 bg-white p-1.5 shadow-xl shadow-gray-200/60 ring-1 ring-gray-200/40"
           >
-            {group.items.map((item) => {
+            {items.map((item) => {
               const isItemActive =
                 item.href === "/create"
                   ? pathname === "/create"
@@ -214,6 +218,7 @@ function DropdownMenu({
 
 export function AppToolbar() {
   const pathname = usePathname();
+  const isAdmin = useAppStore((state) => state.isAdmin);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const toggle = useCallback((key: string) => {
@@ -233,6 +238,7 @@ export function AppToolbar() {
         <DropdownMenu
           key={group.key}
           group={group}
+          items={group.items.filter((item) => !item.adminOnly || isAdmin)}
           isOpen={openMenu === group.key}
           onToggle={() => toggle(group.key)}
           onClose={close}

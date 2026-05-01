@@ -29,7 +29,7 @@ const SORT_OPTIONS = [
 const EXPLORE_MENU_LINKS = [
   { href: "/create", label: "Create", description: "Generate new clip art" },
   { href: "/my-art", label: "My Art", description: "Your personal gallery" },
-  { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections" },
+  { href: "/packs", label: "Packs", description: "Download themed collections" },
   { href: "/animate", label: "Animate", description: "Bring your art to life" },
   { href: "/settings", label: "Settings", description: "Account and preferences" },
 ];

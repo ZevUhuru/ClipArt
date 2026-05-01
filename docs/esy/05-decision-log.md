@@ -4,6 +4,29 @@ Dated architectural decisions about the ESY migration. Newest first. Each entry 
 
 ---
 
+## 2026-04-30 · Social sharing and marketplace publishing stay in clip.art
+
+**Decision:** Sharing bundles and generations to X, Instagram, Facebook, and Pinterest belongs in clip.art. Etsy publishing also belongs in clip.art, starting with an "Export to Etsy draft" workflow from Pack Studio. ESY must not integrate directly with social platforms or marketplaces.
+
+**Rationale:** These workflows happen after artifact delivery and depend on consumer-facing product context: public URLs, canonical metadata, visibility rules, pack pricing, ZIP state, license copy, checkout CTAs, seller review state, marketplace taxonomy, OAuth tokens, shop ids, listing ids, UTM parameters, and downstream conversion tracking. ESY's responsibility ends at generating, processing, scoring, storing, and returning approved artifacts with metadata.
+
+**Expected clip.art ownership:**
+- Social share UI and share metadata for public bundles and generations.
+- Public/unlisted share pages and visibility gates.
+- Etsy OAuth connection, draft listing creation, listing image upload, ZIP upload, price/tags/taxonomy mapping, and export status.
+- Future marketplace adapters and downstream distribution analytics if added.
+
+**Expected ESY ownership:**
+- Stable media URLs and artifact metadata that clip.art can use in social pages and marketplace listings.
+- Optional derivative preview assets when requested by a consumer.
+- No marketplace credentials, social share links, public route construction, shop/listing state, or downstream performance tracking.
+
+**Full documentation:** [../features/DISTRIBUTION_AND_SHARING.md](../features/DISTRIBUTION_AND_SHARING.md).
+
+**Status:** Active.
+
+---
+
 ## 2026-04-26 · Post-processing background removal via fal.ai BiRefNet v2
 
 **Decision:** Add inline background removal for `gpt-image-2` clipart generations using fal.ai's BiRefNet v2 (`fal-ai/birefnet/v2`), "General Use (Light)" variant. Runs synchronously inside `/api/generate` after the image model returns, before the sharp WebP conversion.

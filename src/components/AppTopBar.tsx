@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppToolbar } from "./AppToolbar";
 
 /** Routes where the toolbar is already embedded by the page itself. */
-const HIDDEN_PREFIXES = ["/create", "/design-bundles"];
+const HIDDEN_PREFIXES = ["/create", "/design-bundles", "/packs"];
 
 interface NavItem {
   href: string;
@@ -68,10 +68,10 @@ const MENU_SECTIONS: { label: string; items: NavItem[] }[] = [
         match: (p) => p === "/my-art" || p.startsWith("/my-art/"),
       },
       {
-        href: "/design-bundles",
-        label: "Theme Packs",
+        href: "/packs",
+        label: "Packs",
         description: "Download themed collections",
-        match: (p) => p === "/design-bundles" || p.startsWith("/design-bundles/"),
+        match: (p) => p === "/packs" || p.startsWith("/packs/"),
       },
     ],
   },
@@ -117,7 +117,8 @@ function pageMeta(pathname: string) {
   }
   if (pathname.startsWith("/library")) return { eyebrow: "Saved", title: "Library" };
   if (pathname.startsWith("/my-art")) return { eyebrow: "Saved", title: "My Art" };
-  if (pathname.startsWith("/design-bundles")) return { eyebrow: "Collections", title: "Theme Packs" };
+  if (pathname.startsWith("/packs")) return { eyebrow: "Collections", title: "Packs" };
+  if (pathname.startsWith("/design-bundles")) return { eyebrow: "Growth", title: "Design Bundles" };
   if (pathname.startsWith("/animate")) return { eyebrow: "Tools", title: "Animate" };
   if (pathname.startsWith("/storyboard")) return { eyebrow: "Tools", title: "Storyboard" };
   if (pathname.startsWith("/shorts")) return { eyebrow: "Tools", title: "Shorts" };

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AdminOnly } from "@/components/AdminOnly";
 import { PackCard } from "./PackCard";
 
 interface Pack {
@@ -31,20 +32,22 @@ export function PackGrid({ packs, emptyMessage = "No packs found" }: PackGridPro
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
           </svg>
         </div>
-        <h2 className="text-base font-bold text-gray-900">No bundles yet</h2>
+        <h2 className="text-base font-bold text-gray-900">No packs yet</h2>
         <p className="mt-1 max-w-xs text-sm text-gray-400">{emptyMessage}</p>
-        <Link
-          href="/create/packs"
-          className="mt-4 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
-        >
-          Create a Bundle
-        </Link>
+        <AdminOnly>
+          <Link
+            href="/create/packs"
+            className="mt-4 rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:brightness-110"
+          >
+            Create a pack
+          </Link>
+        </AdminOnly>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {packs.map((pack) => (
         <PackCard key={pack.id} pack={pack} />
       ))}

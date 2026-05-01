@@ -27,7 +27,7 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 
 export function PackCard({ pack }: PackCardProps) {
   const categorySlug = pack.categories?.slug || "all";
-  const href = `/design-bundles/${categorySlug}/${pack.slug}`;
+  const href = `/packs/${categorySlug}/${pack.slug}`;
   const priceLabel = pack.is_free
     ? "Free"
     : `$${((pack.price_cents || 0) / 100).toFixed(2)}`;

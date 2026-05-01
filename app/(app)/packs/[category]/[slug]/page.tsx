@@ -75,6 +75,12 @@ interface RelatedPack {
   categories: { slug: string; name: string } | null;
 }
 
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  clipart: "clip art",
+  coloring: "coloring pages",
+  illustration: "illustrations",
+};
+
 async function getPack(slug: string): Promise<PackDetail | null> {
   try {
     const admin = createSupabaseAdmin();
@@ -126,12 +132,6 @@ async function getRelatedPacks(
   }
 }
 
-const CONTENT_TYPE_LABELS: Record<string, string> = {
-  clipart: "clip art",
-  coloring: "coloring pages",
-  illustration: "illustrations",
-};
-
 function getItemLink(gen: { content_type: string; category: string | null; slug: string | null; id: string }) {
   const s = gen.slug || gen.id;
   const cat = gen.category || "free";
@@ -162,14 +162,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const categoryName = pack.categories?.name || "Design";
   const itemLabel = pack.content_types.map((ct) => CONTENT_TYPE_LABELS[ct] || ct).join(", ");
-  const titleStr = `${pack.title} — ${pack.item_count} Free ${categoryName} ${itemLabel.includes(",") ? "Assets" : itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1)}`;
+  const titleStr = `${pack.title} - ${pack.item_count} Free ${categoryName} ${itemLabel.includes(",") ? "Assets" : itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1)}`;
   const title = titleStr.length > 60 ? `${titleStr.slice(0, 57)}...` : titleStr;
-
   const description =
     pack.description ||
-    `Download ${pack.title} — ${pack.item_count} free AI-generated ${itemLabel} as transparent PNG assets. Free for personal and commercial use.`;
-
-  const canonical = buildCanonical(`design-bundles/${pack.categories?.slug || "all"}/${pack.slug}`);
+    `Download ${pack.title} - ${pack.item_count} free AI-generated ${itemLabel} as transparent PNG assets. Free for personal and commercial use.`;
+  const canonical = buildCanonical(`packs/${pack.categories?.slug || "all"}/${pack.slug}`);
   const socialImage = pack.cover_image_url
     ? { url: pack.cover_image_url, alt: pack.title }
     : DEFAULT_SOCIAL_IMAGE;
@@ -202,10 +200,6 @@ export default async function PackDetailPage({ params }: Props) {
   if (!pack) notFound();
 
   const catSlug = pack.categories?.slug || "all";
-  if (catSlug !== categorySlug && categorySlug !== "all") {
-    // wrong category URL — still show it, Next.js will handle canonical
-  }
-
   const items = [...(pack.pack_items || [])].sort((a, b) => a.sort_order - b.sort_order);
   const previewCount = pack.is_free ? items.length : Math.min(6, items.length);
   const hiddenCount = items.length - previewCount;
@@ -226,7 +220,6 @@ export default async function PackDetailPage({ params }: Props) {
   }
 
   const relatedPacks = await getRelatedPacks(categoryIdForRelated, pack.id);
-
   const packJsonLd = buildPackJsonLd({
     title: pack.title,
     description: pack.description || "",
@@ -239,14 +232,12 @@ export default async function PackDetailPage({ params }: Props) {
     tags: pack.tags,
     downloads: pack.downloads,
   });
-
   const breadcrumbJsonLd = buildPackBreadcrumb({
     categorySlug: catSlug,
     categoryName: pack.categories?.name || "All",
     packTitle: pack.title,
     packSlug: pack.slug,
   });
-
   const contentSummary = pack.content_types
     .map((ct) => {
       const count = items.filter((i) => i.generations.content_type === ct).length;
@@ -264,23 +255,21 @@ export default async function PackDetailPage({ params }: Props) {
       />
 
       <div className="min-h-screen">
-        {/* Hero */}
         <section className="relative overflow-hidden border-b border-gray-100">
           <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-white to-orange-50/60" />
           <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
           <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
 
           <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-6 sm:pb-10 sm:pt-10">
-            {/* Breadcrumb */}
             <nav className="mb-6 flex items-center gap-1.5 text-xs text-gray-400">
               <Link href="/" className="transition-colors hover:text-gray-600">Home</Link>
               <span className="text-gray-300">/</span>
-              <Link href="/design-bundles" className="transition-colors hover:text-gray-600">Bundles</Link>
+              <Link href="/packs" className="transition-colors hover:text-gray-600">Packs</Link>
               {pack.categories && (
                 <>
                   <span className="text-gray-300">/</span>
                   <Link
-                    href={`/design-bundles/${pack.categories.slug}`}
+                    href={`/packs/${pack.categories.slug}`}
                     className="transition-colors hover:text-gray-600"
                   >
                     {pack.categories.name}
@@ -290,7 +279,6 @@ export default async function PackDetailPage({ params }: Props) {
             </nav>
 
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-              {/* Cover image */}
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-lg lg:w-[440px] lg:shrink-0">
                 {pack.cover_image_url ? (
                   <Image
@@ -309,7 +297,6 @@ export default async function PackDetailPage({ params }: Props) {
                   </div>
                 )}
 
-                {/* Price badge */}
                 <div className="absolute left-3 top-3">
                   {pack.is_free ? (
                     <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
@@ -323,11 +310,16 @@ export default async function PackDetailPage({ params }: Props) {
                 </div>
               </div>
 
-              {/* Info */}
               <div className="flex-1">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
                   {pack.title}
                 </h1>
+
+                {catSlug !== categorySlug && categorySlug !== "all" && (
+                  <p className="mt-2 text-xs text-gray-400">
+                    This pack now lives in <Link href={`/packs/${catSlug}/${pack.slug}`} className="font-semibold text-pink-600">/{catSlug}</Link>.
+                  </p>
+                )}
 
                 {pack.description && (
                   <p className="mt-3 text-sm leading-relaxed text-gray-500 sm:text-base">
@@ -335,29 +327,20 @@ export default async function PackDetailPage({ params }: Props) {
                   </p>
                 )}
 
-                {/* Metadata badges */}
                 <div className="mt-5 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-600">
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
                     {pack.item_count} items
                   </span>
-
                   {pack.formats
                     .filter((f) => f.toLowerCase() !== "svg")
                     .map((f) => (
-                    <span
-                      key={f}
-                      className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600"
-                    >
-                      {f.toUpperCase()}
-                    </span>
-                  ))}
+                      <span key={f} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
+                        {f.toUpperCase()}
+                      </span>
+                    ))}
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
                     Transparent
                   </span>
-
                   {pack.downloads > 0 && (
                     <span className="text-xs text-gray-400">
                       {pack.downloads.toLocaleString()} downloads
@@ -365,20 +348,18 @@ export default async function PackDetailPage({ params }: Props) {
                   )}
                 </div>
 
-                {/* What's included */}
                 <div className="mt-5 rounded-xl border border-gray-100 bg-white/80 p-4 backdrop-blur-sm">
-                  <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500">
+                  <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500">
                     What&apos;s included
-                  </h3>
+                  </h2>
                   <p className="mt-1.5 text-sm text-gray-600">
-                    {pack.whats_included || `${contentSummary} — delivered as transparent PNG assets`}
+                    {pack.whats_included || `${contentSummary} - delivered as transparent PNG assets`}
                   </p>
                   <p className="mt-2 text-[11px] text-gray-400">
                     {pack.license_summary || "Free for personal and commercial use. No attribution required."}
                   </p>
                 </div>
 
-                {/* Download CTA */}
                 <div className="mt-6">
                   <PackDownloadButton
                     packId={pack.id}
@@ -398,7 +379,7 @@ export default async function PackDetailPage({ params }: Props) {
               {pack.long_description && (
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-500">
-                    About this bundle
+                    About this pack
                   </p>
                   <div className="mt-3 space-y-4 text-sm leading-7 text-gray-600">
                     {pack.long_description.split("\n").filter(Boolean).map((paragraph) => (
@@ -436,12 +417,9 @@ export default async function PackDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* Item preview grid */}
         <div className="mx-auto max-w-5xl px-4 py-8">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-gray-800">
-              Items in this bundle
-            </h2>
+            <h2 className="text-sm font-bold text-gray-800">Items in this pack</h2>
             <p className="text-xs text-gray-400">
               {items.length} item{items.length !== 1 ? "s" : ""}
             </p>
@@ -451,7 +429,6 @@ export default async function PackDetailPage({ params }: Props) {
             {items.slice(0, previewCount).map((item) => {
               const gen = item.generations;
               const isLinkable = !item.is_exclusive && gen.slug;
-
               const card = (
                 <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 transition-all group-hover:shadow-md">
                   <Image
@@ -466,11 +443,7 @@ export default async function PackDetailPage({ params }: Props) {
 
               if (isLinkable) {
                 return (
-                  <Link
-                    key={item.id}
-                    href={getItemLink(gen)}
-                    className="group block"
-                  >
+                  <Link key={item.id} href={getItemLink(gen)} className="group block">
                     {card}
                     <p className="mt-1.5 truncate text-xs text-gray-500 transition-colors group-hover:text-pink-600">
                       {gen.title || gen.prompt.slice(0, 40)}
@@ -492,9 +465,7 @@ export default async function PackDetailPage({ params }: Props) {
             {hiddenCount > 0 && (
               <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-200 bg-gray-50">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-300">
-                    +{hiddenCount}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-300">+{hiddenCount}</p>
                   <p className="mt-1 text-[10px] font-semibold text-gray-400">more items</p>
                 </div>
               </div>
@@ -502,7 +473,6 @@ export default async function PackDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Tags */}
         {pack.tags.length > 0 && (
           <div className="mx-auto max-w-5xl px-4 pb-8">
             <div className="flex flex-wrap gap-2">
@@ -519,13 +489,10 @@ export default async function PackDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Related packs */}
         {relatedPacks.length > 0 && (
           <div className="border-t border-gray-100">
             <div className="mx-auto max-w-5xl px-4 py-8">
-              <h2 className="mb-6 text-sm font-bold text-gray-800">
-                You might also like
-              </h2>
+              <h2 className="mb-6 text-sm font-bold text-gray-800">You might also like</h2>
               <PackGrid packs={relatedPacks} />
             </div>
           </div>
@@ -534,3 +501,4 @@ export default async function PackDetailPage({ params }: Props) {
     </>
   );
 }
+

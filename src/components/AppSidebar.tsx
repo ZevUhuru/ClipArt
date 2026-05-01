@@ -21,6 +21,7 @@ const toolItems = [
   {
     href: "/create/packs",
     label: "Pack Studio",
+    adminOnly: true,
     matchFn: (pathname: string) =>
       pathname === "/create/packs" || pathname.startsWith("/create/packs?"),
     icon: (
@@ -46,10 +47,10 @@ const browseItems = [
     ),
   },
   {
-    href: "/design-bundles",
-    label: "Theme Packs",
+    href: "/packs",
+    label: "Packs",
     matchFn: (pathname: string) =>
-      pathname === "/design-bundles" || pathname.startsWith("/design-bundles/"),
+      pathname === "/packs" || pathname.startsWith("/packs/"),
     icon: (
       <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
@@ -111,7 +112,7 @@ function NavItem({
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, credits, openAuthModal, openBuyCreditsModal, resetUserState } = useAppStore();
+  const { user, credits, isAdmin, openAuthModal, openBuyCreditsModal, resetUserState } = useAppStore();
   const { collapsed, toggle, hydrate, setCollapsedSilently } = useSidebar();
 
   useEffect(() => {
@@ -121,7 +122,8 @@ export function AppSidebar() {
   useEffect(() => {
     if (
       pathname === "/design-bundles" ||
-      pathname.startsWith("/design-bundles/") ||
+      pathname === "/packs" ||
+      pathname.startsWith("/packs/") ||
       pathname === "/create/packs"
     ) {
       setCollapsedSilently(true);
@@ -193,7 +195,7 @@ export function AppSidebar() {
             Tools
           </p>
         )}
-        {toolItems.map((item) => {
+        {toolItems.filter((item) => !item.adminOnly || isAdmin).map((item) => {
           const matchFn = (item as { matchFn?: (p: string) => boolean }).matchFn;
           const isActive = matchFn
             ? matchFn(pathname)

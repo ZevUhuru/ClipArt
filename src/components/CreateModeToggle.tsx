@@ -3,21 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAppStore } from "@/stores/useAppStore";
 
 const modes = [
   { href: "/create", label: "Clip Art", key: "clipart" },
   { href: "/create/illustrations", label: "Illustrations", key: "illustrations" },
   { href: "/create/coloring-pages", label: "Coloring Pages", key: "coloring" },
   { href: "/create/worksheets", label: "Worksheets", key: "worksheets" },
-  { href: "/create/packs", label: "Bundles", key: "packs" },
+  { href: "/create/packs", label: "Bundles", key: "packs", adminOnly: true },
 ];
 
 export function CreateModeToggle() {
   const pathname = usePathname();
+  const isAdmin = useAppStore((state) => state.isAdmin);
 
   return (
     <div className="mb-4 inline-flex items-center gap-1 rounded-xl bg-gray-100/80 p-1">
-      {modes.map((mode) => {
+      {modes.filter((mode) => !mode.adminOnly || isAdmin).map((mode) => {
         const isActive =
           mode.href === "/create"
             ? pathname === "/create"

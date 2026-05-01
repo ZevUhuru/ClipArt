@@ -19,10 +19,14 @@ It owns the full lifecycle of every AI-generated artifact:
 
 - Track artifact performance after delivery (sales, clicks, conversions)
 - Integrate with marketplaces (Etsy, Shopify, Amazon)
+- Integrate with social platforms (X, Instagram, Facebook, Pinterest)
+- Create share URLs, public route URLs, or marketplace listings
 - Display, monetize, or route user traffic
 - Provide analytics about downstream usage
 
 ESY's job ends at "quality-approved artifact delivered." Everything beyond that is the consumer's domain.
+
+For the clip.art-specific distribution boundary, see [../features/DISTRIBUTION_AND_SHARING.md](../features/DISTRIBUTION_AND_SHARING.md).
 
 ## What clip.art becomes
 

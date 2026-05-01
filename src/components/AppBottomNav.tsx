@@ -44,7 +44,7 @@ const tabs: Tab[] = [
     matchPrefixes: ["/search", "/templates"],
   },
   {
-    href: "/design-bundles",
+    href: "/packs",
     label: "Packs",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -56,7 +56,7 @@ const tabs: Tab[] = [
         <path fillRule="evenodd" d="M11.998 2.25a3.376 3.376 0 00-3.27 4.219H4.5A2.25 2.25 0 002.25 8.72v1.5c0 .73.35 1.379.891 1.79v6.74A2.25 2.25 0 005.391 21h13.218a2.25 2.25 0 002.25-2.25v-6.74a2.247 2.247 0 00.891-1.79v-1.5a2.25 2.25 0 00-2.25-2.25h-4.227a3.376 3.376 0 00-3.275-4.219zm-1.875 3.375a1.875 1.875 0 113.75 0v.844h-3.75v-.844zM3.75 8.72a.75.75 0 01.75-.75h6.75v2.25h-7.5v-1.5zm9 1.5v-2.25h6.75a.75.75 0 01.75.75v1.5h-7.5zm-8.109 1.5h6.609v7.78H5.391a.75.75 0 01-.75-.75v-7.03zm8.109 7.78v-7.78h6.609v7.03a.75.75 0 01-.75.75H12.75z" clipRule="evenodd" />
       </svg>
     ),
-    matchPrefixes: ["/design-bundles"],
+    matchPrefixes: ["/packs"],
   },
   {
     href: "/my-art",

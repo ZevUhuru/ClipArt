@@ -15,16 +15,6 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: "/packs",
-        destination: "/design-bundles",
-        permanent: true,
-      },
-      {
-        source: "/packs/:path*",
-        destination: "/design-bundles/:path*",
-        permanent: true,
-      },
-      {
         source: "/my-art",
         destination: "/library",
         permanent: true,

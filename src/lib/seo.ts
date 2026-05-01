@@ -98,7 +98,7 @@ export function contentTypePath(
     case "illustration":
       return `illustrations/${category}/${slug}`;
     case "pack":
-      return `design-bundles/${category}/${slug}`;
+      return `packs/${category}/${slug}`;
     case "worksheet":
       // Worksheets have a 4-level path; `category` here is expected to be the
       // composite "grade/subject/topic" string. Callers that can't build that
@@ -128,7 +128,7 @@ export function categoryPath(
     case "illustration":
       return `illustrations/${categorySlug}`;
     case "pack":
-      return `design-bundles/${categorySlug}`;
+      return `packs/${categorySlug}`;
     case "worksheet":
       // `categorySlug` for worksheets is the composite "grade" or "grade/subject"
       // or "grade/subject/topic" — caller decides which hub level to link to.

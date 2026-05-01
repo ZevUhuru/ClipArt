@@ -8,7 +8,9 @@ The product promise:
 
 > Create a cohesive, commercially useful clip art bundle from brief to ZIP.
 
-Theme Packs remain the storefront and browse/download surface. Pack Studio is the creator surface.
+Distribution strategy lives in `docs/features/DISTRIBUTION_AND_SHARING.md`. Pack Studio owns downstream bundle publishing and sharing workflows, including Etsy draft export. ESY remains the artifact generation layer and should not integrate with social platforms or marketplaces.
+
+`/packs` is the storefront and browse/download surface. `/design-bundles` is the higher-level marketing landing page for the bundle creation and distribution product. Pack Studio is the creator surface.
 
 ```mermaid
 flowchart LR
@@ -16,7 +18,7 @@ flowchart LR
   PackStudio --> Generate["Generate Pack Assets"]
   PackStudio --> Canvas["Organize, Cover, Quality"]
   Canvas --> Publish["Publish ZIP"]
-  Publish --> Storefront["Theme Packs Storefront"]
+  Publish --> Storefront["Packs Storefront"]
   Storefront --> Checkout["Checkout and Download"]
 ```
 
@@ -230,12 +232,26 @@ The design bundle detail page should render the selling copy:
 - License summary.
 - Item count, transparent PNG, and commercial-use trust badges.
 
+### Distribution and Sharing
+
+Pack Studio should become the launch point for bundle distribution after a pack is ready:
+
+- Share public bundle pages to X, Facebook, Pinterest, and Instagram-compatible mobile share flows.
+- Provide copy-link, copy-caption, and download-image fallbacks for Instagram.
+- Export publish-ready packs to Etsy as draft digital download listings.
+- Track marketplace export status on the pack, including Etsy listing id and last export result.
+
+This is deliberately clip.art-owned. Social channels and Etsy need public URLs, pack visibility, pricing, license copy, ZIP state, marketplace taxonomy, and seller review state. Those are downstream commerce and distribution concerns, not generation infrastructure.
+
+ESY can help by returning clean artifact metadata and stable media URLs, but it should not call marketplace APIs, hold shop credentials, create social share links, or track downstream performance.
+
 ### Navigation
 
 Separate creation from browsing:
 
 - `/create/packs` should be labeled `Pack Studio`.
-- `/design-bundles` should remain `Theme Packs` or `Design Bundles`.
+- `/packs` should be the browse/download storefront for ready-made packs.
+- `/design-bundles` should be the marketing landing page for bundle creation, sharing, and marketplace export.
 - The signed-in create navigation should point to Pack Studio, not the browse page.
 - Library should expose Pack Studio because users manage assets and bundles together.
 
@@ -249,6 +265,9 @@ Separate creation from browsing:
 - AI quality scoring.
 - Custom cover designer.
 - Generated cover collage builder.
+- Automated marketplace publishing without creator review.
+- Marketplace integrations outside Etsy.
+- Social scheduling or account-level social posting.
 
 ## Implementation Order
 
@@ -259,4 +278,6 @@ Separate creation from browsing:
 5. Add deterministic readiness checks.
 6. Render long-form selling copy on public bundle detail pages.
 7. Clarify navigation labels and routes.
-8. Run lint checks and focused manual flow checks.
+8. Add share controls for public bundle pages.
+9. Add Etsy draft export after pack readiness checks and ZIP generation are stable.
+10. Run lint checks and focused manual flow checks.

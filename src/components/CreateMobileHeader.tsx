@@ -24,7 +24,7 @@ const SHEET_SECTIONS: SheetSection[] = [
     items: [
       { href: "/search", label: "Explore", description: "Discover community creations" },
       { href: "/library", label: "Library", description: "Your saved and generated art" },
-      { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections" },
+      { href: "/packs", label: "Packs", description: "Download themed collections" },
     ],
   },
   {

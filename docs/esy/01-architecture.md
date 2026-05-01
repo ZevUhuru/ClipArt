@@ -7,10 +7,11 @@
 │                    clip.art (Next.js)                │
 │                                                      │
 │  User-facing app: browse, search, download, create   │
-│  SEO pages, detail pages, galleries, animations      │
+│  SEO pages, detail pages, galleries, sharing, sales  │
 │                                                      │
 │  Owns: UI, routing, auth, credits, SEO, display,     │
-│         domain data (animal_entries, categories)     │
+│         sharing, marketplace exports, domain data    │
+│         (animal_entries, categories, packs)          │
 │  Does NOT own: generation, provider calls,           │
 │                 image processing, storage            │
 │                                                      │
@@ -88,6 +89,9 @@ See [02-api-contract.md](02-api-contract.md) for the full endpoint reference.
 | UI / routing / SEO / sitemaps | clip.art |
 | Categories, animal encyclopedia, packs | clip.art (domain data) |
 | `generations` table (for display) | clip.art |
+| Social sharing to X, Instagram, Facebook, Pinterest | clip.art |
+| Marketplace publishing to Etsy and future stores | clip.art |
+| Marketplace OAuth tokens, shop ids, listing ids | clip.art |
 | Model selection per style | Migrates to ESY (clip.art currently owns via `site_settings.model_config`) |
 | Quality tier selection per style | Migrates to ESY (clip.art owns it today — added today, see tracker) |
 | Prompt safety filtering | ESY |
@@ -102,6 +106,8 @@ See [02-api-contract.md](02-api-contract.md) for the full endpoint reference.
 | Cost tracking | ESY |
 | Provenance (`batch_id`, `run_id`) | ESY |
 | Backlinks / attribution on clip.art | clip.art (see [backlinks.md](backlinks.md)) |
+
+Social sharing and marketplace export are downstream distribution concerns. They are documented in [../features/DISTRIBUTION_AND_SHARING.md](../features/DISTRIBUTION_AND_SHARING.md) and should not be implemented in ESY.
 
 ## Environment variables
 

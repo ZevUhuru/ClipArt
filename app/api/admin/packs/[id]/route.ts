@@ -58,8 +58,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 
   if (data?.categories?.slug) {
-    revalidatePath(`/design-bundles/${data.categories.slug}`);
+    revalidatePath(`/packs/${data.categories.slug}`);
   }
+  revalidatePath("/packs");
   revalidatePath("/design-bundles");
 
   return NextResponse.json({ pack: data });
@@ -79,6 +80,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidatePath("/packs");
   revalidatePath("/design-bundles");
   return NextResponse.json({ success: true });
 }

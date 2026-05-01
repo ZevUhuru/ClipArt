@@ -119,7 +119,7 @@ Pack Goal: ${pack.pack_goal || "Creative bundle"}
 What's Included: ${pack.whats_included || (contentTypesSet.size ? Array.from(contentTypesSet).join(", ") : "Clip art assets")}
 Use Cases: ${pack.use_cases || "Printables, classroom materials, craft projects, and creative designs."}
 
-Downloaded from https://clip.art/design-bundles/${pack.categories?.slug || "all"}/${pack.slug}
+Downloaded from https://clip.art/packs/${pack.categories?.slug || "all"}/${pack.slug}
 `;
 
     zip.file("LICENSE.txt", licenseText);

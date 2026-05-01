@@ -186,7 +186,7 @@ export default async function AnimalsHubPage() {
             Animal Illustrations
           </Link>
           <Link
-            href="/design-bundles/animals"
+            href="/packs/animals"
             className="rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-pink-300 hover:bg-pink-50 hover:text-pink-700 hover:shadow-md"
           >
             Animal Design Packs

@@ -6,6 +6,7 @@ import { Nav } from "@/components/Nav";
 import { Generator } from "@/components/Generator";
 import { MosaicBackground, type MosaicAnimation } from "@/components/MosaicBackground";
 import { MarketingFooter } from "@/components/MarketingFooter";
+import { AdminOnly } from "@/components/AdminOnly";
 import { getAllCategories, type DbCategory } from "@/lib/categories";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { sampleImages, type SampleImage } from "@/data/sampleGallery";
@@ -722,12 +723,14 @@ export default async function Home() {
                   ))}
                 </div>
                 <div className="mt-7 flex flex-wrap gap-3">
-                  <Link href="/design-bundles" className="btn-primary px-6 text-sm">
-                    Browse Theme Packs
+                  <Link href="/packs" className="btn-primary px-6 text-sm">
+                    Browse Packs
                   </Link>
-                  <Link href="/create/packs" className="btn-secondary px-6 text-sm">
-                    Create a Pack
-                  </Link>
+                  <AdminOnly>
+                    <Link href="/create/packs" className="btn-secondary px-6 text-sm">
+                      Create a Pack
+                    </Link>
+                  </AdminOnly>
                 </div>
               </div>
 
@@ -735,7 +738,7 @@ export default async function Home() {
                 <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
                   {leadPack?.cover_image_url ? (
                     <Link
-                      href={`/design-bundles/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
+                      href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
                       className="group block overflow-hidden rounded-[1.6rem] bg-gray-100"
                     >
                       <div className="relative aspect-[4/5] bg-gray-100 sm:aspect-[4/3] lg:aspect-[4/5]">
@@ -809,7 +812,7 @@ export default async function Home() {
                     {homepagePacks.slice(1, 4).map((pack) => (
                       <Link
                         key={pack.id}
-                        href={`/design-bundles/${pack.categories?.slug || "all"}/${pack.slug}`}
+                        href={`/packs/${pack.categories?.slug || "all"}/${pack.slug}`}
                         className="rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-lg"
                       >
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">

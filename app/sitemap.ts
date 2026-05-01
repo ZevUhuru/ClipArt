@@ -138,10 +138,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const packsLanding: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/design-bundles`,
+      url: `${baseUrl}/packs`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/design-bundles`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
   ];
 
@@ -156,7 +162,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .eq("is_active", true);
 
     packCategoryPages = (packCats || []).map((cat: { slug: string }) => ({
-      url: `${baseUrl}/design-bundles/${cat.slug}`,
+      url: `${baseUrl}/packs/${cat.slug}`,
       lastModified: now,
       changeFrequency: "daily" as const,
       priority: 0.9,
@@ -172,7 +178,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     packDetailPages = (packs || []).map(
       (p: { slug: string; updated_at: string; categories?: { slug: string } | null }) => ({
-        url: `${baseUrl}/design-bundles/${p.categories?.slug || "all"}/${p.slug}`,
+        url: `${baseUrl}/packs/${p.categories?.slug || "all"}/${p.slug}`,
         lastModified: new Date(p.updated_at),
         changeFrequency: "weekly" as const,
         priority: 0.8,

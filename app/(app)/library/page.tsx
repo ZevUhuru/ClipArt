@@ -101,7 +101,7 @@ const CONTENT_TABS: TabItem[] = [
   { key: "illustrations", label: "Illustrations" },
   { key: "coloring", label: "Coloring" },
   { key: "animations", label: "Animations" },
-  { key: "packs", label: "Bundles" },
+  { key: "packs", label: "Bundles", adminOnly: true } as TabItem & { adminOnly: boolean },
 ];
 
 const SORT_OPTIONS = [
@@ -111,9 +111,9 @@ const SORT_OPTIONS = [
 
 const LIBRARY_MENU_LINKS = [
   { href: "/create", label: "Create", description: "Generate new artwork" },
-  { href: "/create/packs", label: "Pack Studio", description: "Create and manage bundles" },
+  { href: "/create/packs", label: "Pack Studio", description: "Create and manage bundles", adminOnly: true },
   { href: "/search", label: "Explore", description: "Discover community creations" },
-  { href: "/design-bundles", label: "Theme Packs", description: "Download themed collections" },
+  { href: "/packs", label: "Packs", description: "Download themed collections" },
   { href: "/animate", label: "Animate", description: "Bring your art to life" },
   { href: "/settings", label: "Settings", description: "Account and preferences" },
 ];
@@ -392,7 +392,7 @@ function ProjectsView() {
 // ─── Main creations grid ──────────────────────────────────────────────────────
 
 function CreationsGrid() {
-  const { user } = useAppStore();
+  const { user, isAdmin } = useAppStore();
   const openDrawer = useImageDrawer((s) => s.open);
 
   const [items, setItems] = useState<Generation[]>([]);
@@ -415,6 +415,10 @@ function CreationsGrid() {
   const [sharedLoading, setSharedLoading] = useState(false);
   const [packs, setPacks] = useState<PackItem[]>([]);
   const [packsLoading, setPacksLoading] = useState(false);
+  const visibleContentTabs = useMemo(
+    () => CONTENT_TABS.filter((tab) => !("adminOnly" in tab) || isAdmin),
+    [isAdmin],
+  );
 
   const buildParams = useCallback(
     (contentFilter: ContentFilter, offset: number, q?: string, style?: string | null, sortOpt?: string) => {
@@ -593,6 +597,12 @@ function CreationsGrid() {
     [loadInitial],
   );
 
+  useEffect(() => {
+    if (filter === "packs" && !isAdmin) {
+      handleFilterChange("all");
+    }
+  }, [filter, isAdmin, handleFilterChange]);
+
   const handleSearch = useCallback(
     (q: string) => {
       setSearchQuery(q);
@@ -752,7 +762,7 @@ function CreationsGrid() {
                 role="tablist"
                 aria-label="Library type"
               >
-                {CONTENT_TABS.map((tab) => {
+                {visibleContentTabs.map((tab) => {
                   const isActive = filter === tab.key;
                   return (
                     <button
@@ -823,7 +833,7 @@ function CreationsGrid() {
               <div className="flex items-center justify-between gap-2 px-2 py-2 md:border-t md:border-gray-200/80">
                 <div className="hidden min-w-0 flex-1 items-center gap-1.5 overflow-x-auto md:flex md:overflow-visible">
                   <ContentTypeTabs
-                    tabs={CONTENT_TABS}
+                    tabs={visibleContentTabs}
                     activeKey={filter}
                     onSelect={(key) => handleFilterChange(key as ContentFilter)}
                     layoutId="library-tab"
@@ -1225,6 +1235,8 @@ function CreationsGrid() {
 }
 
 function LibraryMenuSheet({ onClose }: { onClose: () => void }) {
+  const isAdmin = useAppStore((state) => state.isAdmin);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -1284,7 +1296,7 @@ function LibraryMenuSheet({ onClose }: { onClose: () => void }) {
             App
           </h2>
           <div className="mt-2 flex flex-col gap-1">
-            {LIBRARY_MENU_LINKS.map((item) => (
+            {LIBRARY_MENU_LINKS.filter((item) => !item.adminOnly || isAdmin).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
