@@ -1,6 +1,11 @@
 # clip.art robots.txt
 
+# Content signals:
+# - search=yes: allow search indexing and result snippets.
+# - ai-input=yes: allow retrieval/grounding for AI answers and citations.
+# - ai-train=no: reserve rights against model training/fine-tuning.
 User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=no
 Allow: /
 
 # Sitemap
