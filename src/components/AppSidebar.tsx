@@ -78,6 +78,9 @@ function NavItem({
   isActive,
   collapsed,
   showRelease,
+  releaseTitle,
+  releaseBadge,
+  releaseHref,
   onClick,
 }: {
   href: string;
@@ -86,11 +89,14 @@ function NavItem({
   isActive: boolean;
   collapsed: boolean;
   showRelease?: boolean;
+  releaseTitle?: string;
+  releaseBadge?: string;
+  releaseHref?: string;
   onClick?: () => void;
 }) {
   return (
     <Link
-      href={href}
+      href={releaseHref || href}
       title={collapsed ? label : undefined}
       onClick={onClick}
       className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-semibold transition-all ${
@@ -110,7 +116,7 @@ function NavItem({
       </span>
       {showRelease && !collapsed && (
         <span className="absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-xl shadow-pink-950/25 ring-1 ring-white/20">
-          New drop
+          {releaseBadge || "New drop"}
         </span>
       )}
       {showRelease && collapsed && (
@@ -122,10 +128,10 @@ function NavItem({
         <span className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-2xl border border-orange-200/30 bg-[#fff7ed] px-3 py-2 text-left shadow-2xl shadow-orange-950/20 ring-1 ring-white/80 group-hover:block">
           <span className="absolute -left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b border-l border-orange-200/30 bg-[#fff7ed]" />
           <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
-            New character pack
+            {releaseBadge || "New pack"}
           </span>
           <span className="mt-0.5 block text-xs font-black text-gray-950">
-            Orion Foxwell is live
+            {releaseTitle || "A new pack is live"}
           </span>
         </span>
       )}
@@ -149,7 +155,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user, credits, isAdmin, openAuthModal, openBuyCreditsModal, resetUserState } = useAppStore();
   const { collapsed, toggle, hydrate, setCollapsedSilently } = useSidebar();
-  const { showPackRelease, dismissPackRelease } = usePackReleaseNotification();
+  const { release, showPackRelease, dismissPackRelease } = usePackReleaseNotification();
 
   useEffect(() => {
     hydrate(pathname);
@@ -245,6 +251,9 @@ export function AppSidebar() {
               isActive={isActive}
               collapsed={collapsed}
               showRelease={item.href === "/packs" && showPackRelease}
+              releaseTitle={release?.title}
+              releaseBadge={release?.badge_label}
+              releaseHref={item.href === "/packs" && showPackRelease ? release?.target_path : undefined}
               onClick={item.href === "/packs" ? dismissPackRelease : undefined}
             />
           );
@@ -271,6 +280,9 @@ export function AppSidebar() {
               isActive={isActive}
               collapsed={collapsed}
               showRelease={item.href === "/packs" && showPackRelease}
+              releaseTitle={release?.title}
+              releaseBadge={release?.badge_label}
+              releaseHref={item.href === "/packs" && showPackRelease ? release?.target_path : undefined}
               onClick={item.href === "/packs" ? dismissPackRelease : undefined}
             />
           );

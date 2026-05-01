@@ -78,7 +78,7 @@ const tabs: Tab[] = [
 
 export function AppBottomNav() {
   const pathname = usePathname();
-  const { showPackRelease, dismissPackRelease } = usePackReleaseNotification();
+  const { release, showPackRelease, dismissPackRelease } = usePackReleaseNotification();
 
   return (
     <nav
@@ -99,10 +99,13 @@ export function AppBottomNav() {
           const isActive = tab.matchPrefixes
             ? tab.matchPrefixes.some((p) => pathname.startsWith(p))
             : pathname === tab.href;
+          const href = tab.href === "/packs" && showPackRelease && release
+            ? release.target_path
+            : tab.href;
           return (
             <Link
               key={tab.href}
-              href={tab.href}
+              href={href}
               onClick={tab.href === "/packs" ? dismissPackRelease : undefined}
               aria-current={isActive ? "page" : undefined}
               className={`relative flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-all ${
@@ -119,7 +122,7 @@ export function AppBottomNav() {
                   aria-hidden
                   className="absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-xl shadow-pink-950/25 ring-1 ring-white/25"
                 >
-                  New drop
+                  {release?.badge_label || "New drop"}
                   <span className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-orange-400" />
                 </span>
               )}

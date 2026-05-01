@@ -22,6 +22,26 @@ interface Pack {
   categories: { slug: string; name: string } | null;
 }
 
+interface PackRelease {
+  id: string;
+  release_key: string;
+  pack_id: string | null;
+  title: string;
+  badge_label: string;
+  description: string | null;
+  target_path: string;
+  launch_mode: "manual" | "auto";
+  is_active: boolean;
+  starts_at: string;
+  ends_at: string | null;
+  packs: {
+    title: string;
+    slug: string;
+    cover_image_url: string | null;
+    categories: { slug: string; name: string } | null;
+  } | null;
+}
+
 export default function AdminPacksPage() {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [total, setTotal] = useState(0);
@@ -33,6 +53,18 @@ export default function AdminPacksPage() {
   const [loading, setLoading] = useState(true);
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [priceInput, setPriceInput] = useState("");
+  const [releases, setReleases] = useState<PackRelease[]>([]);
+  const [releasesLoading, setReleasesLoading] = useState(true);
+  const [autoLaunchOnPublish, setAutoLaunchOnPublish] = useState(false);
+  const [launchingPackId, setLaunchingPackId] = useState<string | null>(null);
+
+  const fetchReleases = useCallback(async () => {
+    setReleasesLoading(true);
+    const res = await fetch("/api/admin/packs/releases");
+    const data = await res.json();
+    setReleases(data.releases || []);
+    setReleasesLoading(false);
+  }, []);
 
   const fetchPacks = useCallback(async () => {
     setLoading(true);
@@ -53,6 +85,10 @@ export default function AdminPacksPage() {
     fetchPacks();
   }, [fetchPacks]);
 
+  useEffect(() => {
+    fetchReleases();
+  }, [fetchReleases]);
+
   async function toggleFeatured(id: string, currentValue: boolean) {
     await fetch(`/api/admin/packs/${id}`, {
       method: "PATCH",
@@ -68,11 +104,46 @@ export default function AdminPacksPage() {
     await fetch(`/api/admin/packs/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_published: !currentValue }),
+      body: JSON.stringify({
+        is_published: !currentValue,
+        auto_launch_release: !currentValue && autoLaunchOnPublish,
+      }),
     });
     setPacks((prev) =>
       prev.map((p) => (p.id === id ? { ...p, is_published: !currentValue } : p)),
     );
+    if (!currentValue && autoLaunchOnPublish) fetchReleases();
+  }
+
+  async function launchPackRelease(pack: Pack, launchMode: "manual" | "auto" = "manual") {
+    setLaunchingPackId(pack.id);
+    const targetPath = pack.categories?.slug
+      ? `/packs/${pack.categories.slug}/${pack.slug}`
+      : `/packs/all/${pack.slug}`;
+    const res = await fetch("/api/admin/packs/releases", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pack_id: pack.id,
+        title: `${pack.title} is live`,
+        badge_label: "New drop",
+        description: `New pack released: ${pack.title}`,
+        target_path: targetPath,
+        launch_mode: launchMode,
+        is_active: true,
+      }),
+    });
+    setLaunchingPackId(null);
+    if (res.ok) fetchReleases();
+  }
+
+  async function setReleaseActive(release: PackRelease, isActive: boolean) {
+    await fetch("/api/admin/packs/releases", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: release.id, is_active: isActive }),
+    });
+    fetchReleases();
   }
 
   async function setPrice(id: string) {
@@ -108,7 +179,100 @@ export default function AdminPacksPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Packs Management</h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Packs Management</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage pack publishing, pricing, featured status, and package drop notifications.
+          </p>
+        </div>
+        <label className="flex w-fit items-center gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-700">
+          <input
+            type="checkbox"
+            checked={autoLaunchOnPublish}
+            onChange={(e) => setAutoLaunchOnPublish(e.target.checked)}
+            className="h-4 w-4 rounded border-orange-200 text-orange-500"
+          />
+          Auto-launch notification when publishing
+        </label>
+      </div>
+
+      <section className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 bg-gradient-to-r from-pink-50 via-orange-50 to-amber-50 px-5 py-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-500">
+                Package drop notification
+              </p>
+              <h2 className="mt-1 text-lg font-bold text-gray-950">
+                Active launch for all users
+              </h2>
+            </div>
+            <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-bold text-gray-500 shadow-sm">
+              Dismissed per user/browser
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5">
+          {releasesLoading ? (
+            <p className="text-sm text-gray-400">Loading releases...</p>
+          ) : releases.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              No pack release notifications yet. Use “Launch drop” on a published pack below.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {releases.slice(0, 5).map((release) => (
+                <div
+                  key={release.id}
+                  className={`flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${
+                    release.is_active ? "border-orange-200 bg-orange-50/70" : "border-gray-100 bg-gray-50"
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                        release.is_active ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-500"
+                      }`}>
+                        {release.is_active ? "Active" : "Inactive"}
+                      </span>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        {release.launch_mode}
+                      </span>
+                      <span className="text-xs text-gray-400">{release.release_key}</span>
+                    </div>
+                    <p className="mt-1 font-semibold text-gray-950">{release.title}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {release.badge_label} {"->"} {release.target_path}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={release.target_path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      View
+                    </a>
+                    <button
+                      onClick={() => setReleaseActive(release, !release.is_active)}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
+                        release.is_active
+                          ? "bg-gray-900 text-white hover:bg-gray-800"
+                          : "bg-orange-500 text-white hover:bg-orange-600"
+                      }`}
+                    >
+                      {release.is_active ? "Deactivate" : "Activate"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       <div className="mb-4 flex flex-wrap gap-2">
         <input
@@ -268,6 +432,15 @@ export default function AdminPacksPage() {
                         >
                           View
                         </a>
+                      )}
+                      {pack.is_published && (
+                        <button
+                          onClick={() => launchPackRelease(pack)}
+                          disabled={launchingPackId === pack.id}
+                          className="text-xs font-medium text-orange-500 hover:text-orange-700 disabled:opacity-50"
+                        >
+                          {launchingPackId === pack.id ? "Launching..." : "Launch drop"}
+                        </button>
                       )}
                       <button
                         onClick={() => deletePack(pack.id)}

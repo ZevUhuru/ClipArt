@@ -35,6 +35,7 @@ flowchart LR
 - Standalone detail pages should stay alive for SEO and individual downloads, but they should cross-link back to parent packs.
 - Pack pages should include enough item previews to prove quality before download.
 - Category and homepage surfaces should emphasize coordinated sets, not isolated assets, once pack inventory is deep enough.
+- New pack releases should be announced through pack release notifications so users notice important drops even before the homepage becomes bundle-first.
 
 ## Homepage Threshold
 
@@ -147,6 +148,17 @@ As pack inventory grows, category pages should lead with pack modules:
 - A featured pack or pack row near the top.
 - Category-specific pack collections before or alongside individual asset grids.
 - Individual assets still support long-tail SEO and browsing depth.
+
+## Release Notification Direction
+
+Pack launches should become part of the bundle-first browsing loop. See `docs/features/PACK_RELEASE_NOTIFICATIONS.md`.
+
+V1 behavior:
+
+- Admins can manually launch a pack release notification from `/admin/packs`.
+- Admins can enable auto-launch when publishing a pack from `/admin/packs`.
+- Users see the active release on the Packs gift icon until they click it.
+- Dismissal is keyed by release, so future drops can still be announced.
 
 ## Operating Principle
 

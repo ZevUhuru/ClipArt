@@ -29,6 +29,7 @@ All documentation for clip.art's ongoing migration to ESY's generation infrastru
 | [Bundle-First Strategy](features/BUNDLE_FIRST_STRATEGY.md) | Long-term pack-first content model, 100-pack homepage threshold, character hubs, and asset-to-pack linking |
 | [Pack Studio V1](features/PACK_STUDIO_V1.md) | Seller-grade bundle creation workspace — pricing, pack-exclusive assets, generation UX, SEO copy, and publish readiness |
 | [Pack Studio Character Reference Sheets](features/PACK_STUDIO_CHARACTER_REFERENCE_SHEETS.md) | First-class character reference sheet workflow using GPT Image 2, preset rows, and reference-board prompt guidance |
+| [Pack Release Notifications](features/PACK_RELEASE_NOTIFICATIONS.md) | Admin-controlled and auto-launchable app notifications for newly published pack drops |
 
 ## Strategy
 
@@ -42,6 +43,7 @@ All documentation for clip.art's ongoing migration to ESY's generation infrastru
 
 | Session | Date | Topics |
 |---------|------|--------|
+| [Bundle-first packs and Orion launch](sessions/2026-04-30/README.md) | 2026-04-30 | Bundle-first strategy, character hubs, Orion Foxwell, pack release notifications |
 | [Clipart-first bundles and character sheets](sessions/2026-04-28/README.md) | 2026-04-28 | MRR targets, credits vs subscriptions, bundle strategy, character sheet packs |
 | [clip.art & ESY Strategy](esy/sessions/2026-03-21-strategy.md) | 2026-03-21 | Verticals, $10K-$100K MRR paths, ESY as infrastructure, site architecture |
 

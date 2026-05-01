@@ -246,6 +246,7 @@ When a pack belongs to a named character, the detail page should reserve space f
 
 Pack Studio should become the launch point for bundle distribution after a pack is ready:
 
+- Announce newly released packs through app navigation using `docs/features/PACK_RELEASE_NOTIFICATIONS.md`.
 - Share public bundle pages to X, Facebook, Pinterest, and Instagram-compatible mobile share flows.
 - Provide copy-link, copy-caption, and download-image fallbacks for Instagram.
 - Export publish-ready packs to Etsy as draft digital download listings.
@@ -266,6 +267,8 @@ Separate creation from browsing:
 - Library should expose Pack Studio because users manage assets and bundles together.
 
 At the 100+ published pack threshold, homepage and category navigation should treat packs as the main discovery unit. Pack Studio remains the creation workspace; `/packs` remains the storefront.
+
+Admin pack operations live at `/admin/packs`. That surface now also manages pack release notifications: manual launch, activate/deactivate, and optional auto-launch when publishing a pack from admin.
 
 ## Not In V1
 
@@ -291,6 +294,7 @@ At the 100+ published pack threshold, homepage and category navigation should tr
 6. Render long-form selling copy on public bundle detail pages.
 7. Clarify navigation labels and routes.
 8. Add character-aware pack detail modules for reference sheets and canonical character links.
-9. Add share controls for public bundle pages.
-10. Add Etsy draft export after pack readiness checks and ZIP generation are stable.
-11. Run lint checks and focused manual flow checks.
+9. Add pack release notifications for newly published drops.
+10. Add share controls for public bundle pages.
+11. Add Etsy draft export after pack readiness checks and ZIP generation are stable.
+12. Run lint checks and focused manual flow checks.

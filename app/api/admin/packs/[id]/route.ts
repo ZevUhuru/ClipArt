@@ -21,6 +21,14 @@ async function verifyAdmin() {
   return profile?.is_admin === true;
 }
 
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
 
@@ -55,6 +63,27 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (body.auto_launch_release === true && data?.is_published && data?.visibility === "public") {
+    await admin
+      .from("pack_release_notifications")
+      .update({ is_active: false })
+      .eq("is_active", true);
+
+    await admin
+      .from("pack_release_notifications")
+      .insert({
+        release_key: `${slugify(data.title)}-${Date.now().toString(36)}`,
+        pack_id: data.id,
+        title: `${data.title} is live`,
+        badge_label: "New drop",
+        description: `New pack released: ${data.title}`,
+        target_path: `/packs/${data.categories?.slug || "all"}/${data.slug}`,
+        launch_mode: "auto",
+        is_active: true,
+        starts_at: new Date().toISOString(),
+      });
   }
 
   if (data?.categories?.slug) {
