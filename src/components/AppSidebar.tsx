@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useAppStore } from "@/stores/useAppStore";
 import { useSidebar } from "@/stores/useSidebar";
 import { createBrowserClient } from "@/lib/supabase/client";
-import { usePackReleaseNotification } from "@/hooks/usePackReleaseNotification";
+import { packReleaseLandingPath, usePackReleaseNotification } from "@/hooks/usePackReleaseNotification";
 
 const toolItems = [
   {
@@ -253,7 +253,7 @@ export function AppSidebar() {
               showRelease={item.href === "/packs" && showPackRelease}
               releaseTitle={release?.title}
               releaseBadge={release?.badge_label}
-              releaseHref={item.href === "/packs" && showPackRelease ? release?.target_path : undefined}
+              releaseHref={item.href === "/packs" && showPackRelease && release ? packReleaseLandingPath(release) : undefined}
               onClick={item.href === "/packs" ? dismissPackRelease : undefined}
             />
           );
@@ -282,7 +282,7 @@ export function AppSidebar() {
               showRelease={item.href === "/packs" && showPackRelease}
               releaseTitle={release?.title}
               releaseBadge={release?.badge_label}
-              releaseHref={item.href === "/packs" && showPackRelease ? release?.target_path : undefined}
+              releaseHref={item.href === "/packs" && showPackRelease && release ? packReleaseLandingPath(release) : undefined}
               onClick={item.href === "/packs" ? dismissPackRelease : undefined}
             />
           );

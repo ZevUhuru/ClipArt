@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
-import { usePackReleaseNotification } from "@/hooks/usePackReleaseNotification";
+import { packReleaseLandingPath, usePackReleaseNotification } from "@/hooks/usePackReleaseNotification";
 
 interface Tab {
   href: string;
@@ -100,7 +100,7 @@ export function AppBottomNav() {
             ? tab.matchPrefixes.some((p) => pathname.startsWith(p))
             : pathname === tab.href;
           const href = tab.href === "/packs" && showPackRelease && release
-            ? release.target_path
+            ? packReleaseLandingPath(release)
             : tab.href;
           return (
             <Link

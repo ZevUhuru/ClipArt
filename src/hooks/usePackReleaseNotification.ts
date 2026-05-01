@@ -12,6 +12,10 @@ export interface ActivePackRelease {
   pack_id: string | null;
 }
 
+export function packReleaseLandingPath(release: ActivePackRelease) {
+  return `/packs?drop=${encodeURIComponent(release.release_key)}`;
+}
+
 export function usePackReleaseNotification() {
   const [release, setRelease] = useState<ActivePackRelease | null>(null);
   const [showPackRelease, setShowPackRelease] = useState(false);

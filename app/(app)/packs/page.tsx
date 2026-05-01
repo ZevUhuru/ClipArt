@@ -53,6 +53,15 @@ interface CategoryRow {
   name: string;
 }
 
+interface PackRelease {
+  release_key: string;
+  title: string;
+  badge_label: string;
+  description: string | null;
+  target_path: string;
+  pack_id: string | null;
+}
+
 const SHOP_PROMISES = [
   "Curated by theme",
   "Commercial-friendly downloads",
@@ -102,18 +111,74 @@ async function getPackCategories(): Promise<CategoryRow[]> {
   }
 }
 
-export default async function PacksPage() {
-  const [packs, categories] = await Promise.all([
+async function getPackRelease(releaseKey: string | undefined): Promise<PackRelease | null> {
+  if (!releaseKey) return null;
+
+  try {
+    const admin = createSupabaseAdmin();
+    const now = new Date().toISOString();
+    const { data } = await admin
+      .from("pack_release_notifications")
+      .select("release_key, title, badge_label, description, target_path, pack_id")
+      .eq("release_key", releaseKey)
+      .eq("is_active", true)
+      .lte("starts_at", now)
+      .or(`ends_at.is.null,ends_at.gt.${now}`)
+      .maybeSingle();
+
+    if (data) return data as PackRelease;
+
+    if (releaseKey.startsWith("featured-")) {
+      const packId = releaseKey.replace("featured-", "");
+      const { data: pack } = await admin
+        .from("packs")
+        .select("id, title, slug, categories!category_id(slug, name)")
+        .eq("id", packId)
+        .eq("is_published", true)
+        .eq("visibility", "public")
+        .eq("is_featured", true)
+        .maybeSingle();
+
+      if (!pack) return null;
+
+      return {
+        release_key: releaseKey,
+        title: `${pack.title} is featured`,
+        badge_label: "New drop",
+        description: `Featured pack drop: ${pack.title}`,
+        target_path: `/packs/${pack.categories?.slug || "all"}/${pack.slug}`,
+        pack_id: pack.id,
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+interface PacksPageProps {
+  searchParams?: Promise<{ drop?: string }>;
+}
+
+export default async function PacksPage({ searchParams }: PacksPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const [packs, categories, activeDrop] = await Promise.all([
     getPublishedPacks(),
     getPackCategories(),
+    getPackRelease(resolvedSearchParams?.drop),
   ]);
   const visibleCategories = categories.some((cat) => cat.slug === STATIC_CHARACTER_CATEGORY.slug)
     ? categories
     : [...categories, STATIC_CHARACTER_CATEGORY];
 
   const featured = packs.filter((p) => p.is_featured);
+  const dropPack = activeDrop?.pack_id
+    ? packs.find((pack) => pack.id === activeDrop.pack_id)
+    : null;
   const heroSource = featured.length > 0 ? featured : packs;
-  const leadPack = heroSource[0] || packs[0];
+  const leadPack = dropPack || heroSource[0] || packs[0];
+  const isDropLanding = Boolean(activeDrop && dropPack && leadPack?.id === dropPack.id);
   const totalItems = packs.reduce((sum, pack) => sum + (pack.item_count || 0), 0);
   const freeCount = packs.filter((pack) => pack.is_free).length;
 
@@ -189,8 +254,21 @@ export default async function PacksPage() {
               </div>
 
               <div className="relative">
-                <div className="absolute -inset-5 rounded-[2.5rem] bg-gradient-to-br from-pink-200/50 via-white/20 to-orange-200/50 blur-2xl" />
-                <div className="relative overflow-hidden rounded-[2.25rem] border border-white/80 bg-gray-950 p-3 shadow-2xl shadow-pink-200/50">
+                <div className={`absolute -inset-5 rounded-[2.5rem] blur-2xl ${
+                  isDropLanding
+                    ? "bg-gradient-to-br from-pink-300/70 via-orange-300/50 to-amber-300/60"
+                    : "bg-gradient-to-br from-pink-200/50 via-white/20 to-orange-200/50"
+                }`} />
+                <div className={`relative overflow-hidden rounded-[2.25rem] border p-3 shadow-2xl ${
+                  isDropLanding
+                    ? "border-orange-200/80 bg-gradient-to-br from-gray-950 via-[#25130b] to-gray-950 shadow-orange-200/70"
+                    : "border-white/80 bg-gray-950 shadow-pink-200/50"
+                }`}>
+                  {isDropLanding && (
+                    <div className="absolute inset-x-0 top-0 z-10 bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300 px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-orange-950/20">
+                      You found the new drop
+                    </div>
+                  )}
                   <div className="relative rounded-[1.75rem] bg-white p-3">
                     {leadPack?.cover_image_url ? (
                       <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] bg-gray-100">
@@ -213,8 +291,10 @@ export default async function PacksPage() {
 
                     <div className="mt-4 flex items-start justify-between gap-4 px-1">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-pink-500">
-                          Featured drop
+                        <p className={`text-[11px] font-black uppercase tracking-[0.18em] ${
+                          isDropLanding ? "text-orange-500" : "text-pink-500"
+                        }`}>
+                          {isDropLanding ? activeDrop?.badge_label || "New drop" : "Featured drop"}
                         </p>
                         <h2 className="mt-1 line-clamp-2 text-xl font-black tracking-tight text-gray-950">
                           {leadPack?.title || "Seasonal creative packs"}
@@ -229,7 +309,9 @@ export default async function PacksPage() {
                       <div className="mt-4 rounded-2xl bg-gray-50 p-3">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-xs font-bold text-gray-700">
-                            A focused collection of matching artwork, transparent assets, and ready-to-use creative pieces.
+                            {isDropLanding && activeDrop?.description
+                              ? activeDrop.description
+                              : "A focused collection of matching artwork, transparent assets, and ready-to-use creative pieces."}
                           </p>
                           <Link
                             href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
