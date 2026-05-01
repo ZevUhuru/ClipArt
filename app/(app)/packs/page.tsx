@@ -336,7 +336,7 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
 
             <div className="mt-9 grid gap-3 sm:grid-cols-3">
               {SHOP_PROMISES.map((promise) => (
-                <div key={promise} className="rounded-2xl border border-gray-200 bg-white/58 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm backdrop-blur">
+                <div key={promise} className="rounded-2xl border border-white bg-white px-4 py-3 text-sm font-bold text-gray-700 shadow-sm ring-1 ring-gray-200/60">
                   {promise}
                 </div>
               ))}
@@ -344,8 +344,9 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
           </div>
         </section>
 
-        <div id="pack-collection" className="mx-auto max-w-6xl px-4 py-10">
-          {visibleCategories.length > 0 && (
+        <div className="bg-[#f5f6f8]">
+          <div id="pack-collection" className="mx-auto max-w-6xl px-4 py-10">
+            {visibleCategories.length > 0 && (
             <section className="mb-8 overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-sm ring-1 ring-gray-200/60">
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -379,9 +380,9 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
                 ))}
               </div>
             </section>
-          )}
+            )}
 
-          {featured.length > 0 && (
+            {featured.length > 0 && (
             <section className="mb-12">
               <div className="mb-5 flex items-end justify-between gap-4">
                 <div>
@@ -398,9 +399,9 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
               </div>
               <PackGrid packs={featured} />
             </section>
-          )}
+            )}
 
-          <section>
+            <section>
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
@@ -443,7 +444,8 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
             ) : (
               <PackGrid packs={packs} />
             )}
-          </section>
+            </section>
+          </div>
         </div>
       </div>
     </>

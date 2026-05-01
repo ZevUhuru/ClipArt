@@ -1135,7 +1135,6 @@ function CreationsGrid() {
                 {safeItems.map((gen) => {
                   const ct = gen.content_type || (gen.style === "coloring" ? "coloring" : "clipart");
                   const variant = ct === "illustration" ? "illustration" as const : ct === "coloring" ? "coloring" as const : "clipart" as const;
-                  const cardVariant = useMasonry ? "illustration" as const : variant;
 
                   return (
                     <ImageCard
@@ -1152,7 +1151,7 @@ function CreationsGrid() {
                         content_type: gen.content_type,
                         aspect_ratio: gen.aspect_ratio,
                       }}
-                      variant={cardVariant}
+                      variant={variant}
                       onClick={() => {
                         const img = {
                           id: gen.id,
