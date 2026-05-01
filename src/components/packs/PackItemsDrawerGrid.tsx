@@ -56,6 +56,16 @@ export function PackItemsDrawerGrid({ items, hiddenCount }: PackItemsDrawerGridP
       {items.map((item, index) => {
         const gen = item.generations;
         const title = gen.title || gen.prompt.slice(0, 40);
+        const isIllustration = gen.content_type === "illustration";
+        const hasTransparency = Boolean(gen.transparent_image_url || gen.has_transparency);
+        const previewBgClass = gen.content_type === "coloring"
+          ? "bg-white"
+          : isIllustration
+            ? "bg-gray-900/5"
+            : hasTransparency
+              ? "bg-transparency-grid"
+              : "bg-gray-50";
+        const imageFitClass = isIllustration ? "object-cover" : "object-contain p-2";
 
         return (
           <button
@@ -66,12 +76,12 @@ export function PackItemsDrawerGrid({ items, hiddenCount }: PackItemsDrawerGridP
             aria-label={`Open ${title}`}
             title={`Open ${title}`}
           >
-            <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 transition-all group-hover:shadow-md">
+            <div className={`relative aspect-square overflow-hidden rounded-xl transition-all group-hover:shadow-md ${previewBgClass}`}>
               <Image
                 src={gen.transparent_image_url || gen.image_url}
                 alt={title}
                 fill
-                className="object-cover transition-transform group-hover:scale-105"
+                className={`transition-transform group-hover:scale-105 ${imageFitClass}`}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
               />
             </div>
