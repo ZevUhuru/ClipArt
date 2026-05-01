@@ -19,6 +19,7 @@ import type { ContentType } from "@/lib/seo";
 import { ImageCard } from "@/components/ImageCard";
 import { ImageGrid } from "@/components/ImageGrid";
 import { IllustrationMosaicGrid } from "@/components/IllustrationMosaicGrid";
+import type { ParentPackContext } from "@/lib/packContext";
 
 interface RelatedImage {
   title: string;
@@ -48,6 +49,7 @@ interface ImageDetailPageProps {
   categorySeoContent?: string[];
   categoryName?: string;
   imageId?: string;
+  parentPacks?: ParentPackContext[];
 }
 
 function humanizeTag(tag: string): string {
@@ -66,6 +68,7 @@ export function ImageDetailPage({
   categorySeoContent,
   categoryName: categoryNameProp,
   imageId,
+  parentPacks = [],
 }: ImageDetailPageProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   // True when the image has a transparent version — either explicit flag or a transparent_url exists
@@ -109,6 +112,8 @@ export function ImageDetailPage({
             .slice(0, 8));
 
   const downloadUrl = image.transparent_url ?? image.url;
+  const primaryParentPack = parentPacks[0];
+  const additionalParentPacks = parentPacks.slice(1, 3);
 
   function handleDownload() {
     if (isColoringPage) {
@@ -316,6 +321,75 @@ export function ImageDetailPage({
                 </>
               )}
             </div>
+
+            {primaryParentPack && (
+              <div className="mt-5 overflow-hidden rounded-2xl border border-pink-100 bg-gradient-to-br from-white to-pink-50/45 p-4">
+                <div className="flex gap-4">
+                  {primaryParentPack.cover_image_url && (
+                    <Link
+                      href={`/packs/${primaryParentPack.categorySlug}/${primaryParentPack.slug}`}
+                      className="relative h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100"
+                      aria-label={`View ${primaryParentPack.title} pack`}
+                      title={`View ${primaryParentPack.title} pack`}
+                    >
+                      <Image
+                        src={primaryParentPack.cover_image_url}
+                        alt={`${primaryParentPack.title} pack cover`}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                    </Link>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-pink-500">
+                      {parentPacks.length === 1 ? "Part of this pack" : "Also included in"}
+                    </p>
+                    <Link
+                      href={`/packs/${primaryParentPack.categorySlug}/${primaryParentPack.slug}`}
+                      className="mt-1 block text-base font-black leading-snug text-gray-950 transition-colors hover:text-pink-600"
+                    >
+                      {primaryParentPack.title}
+                    </Link>
+                    <p className="mt-1 text-xs font-semibold text-gray-500">
+                      {primaryParentPack.item_count} item{primaryParentPack.item_count === 1 ? "" : "s"} in the full set
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/packs/${primaryParentPack.categorySlug}/${primaryParentPack.slug}`}
+                        className="inline-flex rounded-full bg-gray-950 px-3 py-1.5 text-[11px] font-black text-white transition-colors hover:bg-gray-800"
+                      >
+                        Build the full set
+                      </Link>
+                      {primaryParentPack.characterSlug && (
+                        <Link
+                          href={`/characters/${primaryParentPack.characterSlug}`}
+                          className="inline-flex rounded-full border border-pink-100 bg-white px-3 py-1.5 text-[11px] font-black text-pink-600 transition-colors hover:border-pink-200 hover:bg-pink-50"
+                        >
+                          More from {primaryParentPack.characterName}
+                        </Link>
+                      )}
+                    </div>
+                    {additionalParentPacks.length > 0 && (
+                      <p className="mt-3 text-[11px] font-semibold text-gray-400">
+                        Also in{" "}
+                        {additionalParentPacks.map((pack, index) => (
+                          <span key={pack.id}>
+                            <Link
+                              href={`/packs/${pack.categorySlug}/${pack.slug}`}
+                              className="text-gray-600 underline decoration-gray-300 underline-offset-2 hover:text-pink-600"
+                            >
+                              {pack.title}
+                            </Link>
+                            {index < additionalParentPacks.length - 1 ? ", " : ""}
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Download CTA with shimmer */}
             <div className="mt-8 flex flex-col items-center gap-2">

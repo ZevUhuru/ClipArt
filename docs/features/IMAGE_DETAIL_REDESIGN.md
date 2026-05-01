@@ -49,6 +49,8 @@ Use existing `pack_items` relationships before adding new fields:
 
 If an asset has multiple parent packs, rank published packs first, then prefer the most category-relevant pack, then the pack with the strongest item count or performance signal.
 
+Character awareness is V1 config-based through `src/data/characters.ts`. When Characters become database-backed, replace those registry heuristics with DB relationships (`characters`, `character_assets`, `character_packs`, or ESY-provided `character_id`) so detail pages can dynamically know which character and character hub an asset belongs to.
+
 ### Conversion Polish
 
 - Download button shimmer highlight animation (CSS-only `@keyframes shimmer`)

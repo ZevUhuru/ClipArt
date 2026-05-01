@@ -5,6 +5,20 @@ export interface CharacterReferenceSheet {
   description: string;
 }
 
+export interface CharacterPackConcept {
+  title: string;
+  subtitle: string;
+  color: "copper" | "crimson" | "emerald" | "violet" | "steel";
+  contents: string;
+}
+
+export interface CharacterPackArtwork {
+  title: string;
+  imageUrl: string;
+  alt: string;
+  description: string;
+}
+
 export interface ClipArtCharacter {
   slug: string;
   name: string;
@@ -18,6 +32,8 @@ export interface ClipArtCharacter {
   storyHooks: string[];
   signatureItems: string[];
   designNotes: string[];
+  packConcepts: CharacterPackConcept[];
+  packArtwork?: CharacterPackArtwork;
   primaryCategorySlug: string;
   referenceSheets: CharacterReferenceSheet[];
   packSlugs: string[];
@@ -68,6 +84,45 @@ export const characters: ClipArtCharacter[] = [
       "Expressions should stay calm, observant, skeptical, amused, or quietly serious.",
       "Scenes work best around trains, rainy platforms, lanterns, luggage, and old station interiors.",
     ],
+    packConcepts: [
+      {
+        title: "Shadows of the Tracks",
+        subtitle: "Character poses, detective portraits, and station clues",
+        color: "copper",
+        contents: "12 noir clip art cards",
+      },
+      {
+        title: "Midnight Express",
+        subtitle: "Locomotives, route maps, smoke, lamps, and platform scenes",
+        color: "crimson",
+        contents: "10 railway scene cards",
+      },
+      {
+        title: "Secrets in First Class",
+        subtitle: "Dining-car props, suspicious passengers, letters, and locked rooms",
+        color: "emerald",
+        contents: "14 mystery asset cards",
+      },
+      {
+        title: "Smuggler's Passage",
+        subtitle: "Trunks, keys, tickets, disguises, and contraband clues",
+        color: "violet",
+        contents: "12 clue and prop cards",
+      },
+      {
+        title: "Betrayal at the Station",
+        subtitle: "Rainy platforms, silhouettes, station clocks, and final reveals",
+        color: "steel",
+        contents: "10 dramatic scene cards",
+      },
+    ],
+    packArtwork: {
+      title: "Orion Foxwell Vintage Collection",
+      imageUrl: "/assets/characters/orion-vintage-pack-transparent.png",
+      alt: "Orion Foxwell Vintage Collection sealed foil character pack with noir fox detective artwork",
+      description:
+        "A finished sealed-pack direction for Orion Foxwell: dark foil wrapper, brass typography, collectible card language, format badges, and vintage detective illustration.",
+    },
     primaryCategorySlug: "characters",
     referenceSheets: [
       {
@@ -121,5 +176,14 @@ export function getCharacterForPack(pack: {
       );
     }) || null
   );
+}
+
+export function getCharacterPackArtworkForPack(pack: {
+  slug: string;
+  title: string;
+  tags?: string[] | null;
+  categories?: { slug: string } | null;
+}) {
+  return getCharacterForPack(pack)?.packArtwork || null;
 }
 

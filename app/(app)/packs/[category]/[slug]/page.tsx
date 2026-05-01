@@ -7,7 +7,8 @@ import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackJsonLd, buildPackBreadcrumb } from "@/lib/seo-jsonld";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { PackDownloadButton } from "@/components/packs/PackDownloadButton";
-import { getCharacterForPack } from "@/data/characters";
+import { PackItemsDrawerGrid } from "@/components/packs/PackItemsDrawerGrid";
+import { getCharacterForPack, getCharacterPackArtworkForPack } from "@/data/characters";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -55,9 +56,13 @@ interface PackDetail {
       slug: string | null;
       prompt: string;
       image_url: string;
+      transparent_image_url: string | null;
+      has_transparency: boolean | null;
       style: string;
       content_type: string;
       category: string | null;
+      aspect_ratio: string | null;
+      model: string | null;
     };
   }[];
 }
@@ -95,7 +100,7 @@ async function getPack(slug: string): Promise<PackDetail | null> {
         categories!category_id(slug, name),
         pack_items(
           id, generation_id, is_exclusive, sort_order,
-          generations(id, title, slug, prompt, image_url, style, content_type, category)
+          generations(id, title, slug, prompt, image_url, transparent_image_url, has_transparency, style, content_type, category, aspect_ratio, model)
         )
       `)
       .eq("slug", slug)
@@ -130,19 +135,6 @@ async function getRelatedPacks(
     return (data || []) as RelatedPack[];
   } catch {
     return [];
-  }
-}
-
-function getItemLink(gen: { content_type: string; category: string | null; slug: string | null; id: string }) {
-  const s = gen.slug || gen.id;
-  const cat = gen.category || "free";
-  switch (gen.content_type) {
-    case "coloring":
-      return `/coloring-pages/${cat}/${s}`;
-    case "illustration":
-      return `/illustrations/${cat}/${s}`;
-    default:
-      return `/${cat}/${s}`;
   }
 }
 
@@ -263,6 +255,8 @@ export default async function PackDetailPage({ params }: Props) {
       return `${count} ${CONTENT_TYPE_LABELS[ct] || ct}`;
     })
     .join(", ");
+  const packArtwork = getCharacterPackArtworkForPack(pack);
+  const heroImageUrl = packArtwork?.imageUrl || pack.cover_image_url;
 
   return (
     <>
@@ -275,9 +269,7 @@ export default async function PackDetailPage({ params }: Props) {
 
       <div className="min-h-screen">
         <section className="relative overflow-hidden border-b border-gray-100">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-50/80 via-white to-orange-50/60" />
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-pink-200/20 blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-orange-200/20 blur-3xl" />
+          <div className="absolute inset-0 bg-white" />
 
           <div className="relative mx-auto max-w-5xl px-4 pb-8 pt-6 sm:pb-10 sm:pt-10">
             <nav className="mb-6 flex items-center gap-1.5 text-xs text-gray-400">
@@ -298,36 +290,51 @@ export default async function PackDetailPage({ params }: Props) {
             </nav>
 
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-lg lg:w-[440px] lg:shrink-0">
-                {pack.cover_image_url ? (
+              {packArtwork ? (
+                <div className="hover-pack-twitch relative mx-auto aspect-[2/3] w-full max-w-[420px] drop-shadow-[0_30px_34px_rgba(15,23,42,0.34)] lg:mx-0 lg:w-[360px] lg:shrink-0">
+                  <div className="pointer-events-none absolute inset-x-5 bottom-10 h-20 rounded-full bg-gray-950/24 blur-3xl" />
+                  <div className="pointer-events-none absolute inset-x-10 top-8 h-64 rounded-full bg-gray-950/8 blur-3xl" />
                   <Image
-                    src={pack.cover_image_url}
-                    alt={pack.title}
+                    src={packArtwork.imageUrl}
+                    alt={packArtwork.alt}
                     fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 440px"
+                    className="object-contain"
+                    sizes="(max-width: 1024px) 80vw, 360px"
                     priority
                   />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <svg className="h-20 w-20 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                    </svg>
-                  </div>
-                )}
-
-                <div className="absolute left-3 top-3">
-                  {pack.is_free ? (
-                    <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
-                      Free
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                      ${((activePriceCents || 0) / 100).toFixed(2)}
-                    </span>
-                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-lg lg:w-[440px] lg:shrink-0">
+                  {heroImageUrl ? (
+                    <Image
+                      src={heroImageUrl}
+                      alt={pack.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 440px"
+                      priority
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <svg className="h-20 w-20 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                      </svg>
+                    </div>
+                  )}
+
+                  <div className="absolute left-3 top-3">
+                    {pack.is_free ? (
+                      <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
+                        Free
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-gradient-to-r from-pink-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                        ${((activePriceCents || 0) / 100).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="flex-1">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
@@ -475,52 +482,7 @@ export default async function PackDetailPage({ params }: Props) {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {items.slice(0, previewCount).map((item) => {
-              const gen = item.generations;
-              const isLinkable = !item.is_exclusive && gen.slug;
-              const card = (
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 transition-all group-hover:shadow-md">
-                  <Image
-                    src={gen.image_url}
-                    alt={gen.title || gen.prompt}
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                  />
-                </div>
-              );
-
-              if (isLinkable) {
-                return (
-                  <Link key={item.id} href={getItemLink(gen)} className="group block">
-                    {card}
-                    <p className="mt-1.5 truncate text-xs text-gray-500 transition-colors group-hover:text-pink-600">
-                      {gen.title || gen.prompt.slice(0, 40)}
-                    </p>
-                  </Link>
-                );
-              }
-
-              return (
-                <div key={item.id} className="group">
-                  {card}
-                  <p className="mt-1.5 truncate text-xs text-gray-500">
-                    {gen.title || gen.prompt.slice(0, 40)}
-                  </p>
-                </div>
-              );
-            })}
-
-            {hiddenCount > 0 && (
-              <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-200 bg-gray-50">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-300">+{hiddenCount}</p>
-                  <p className="mt-1 text-[10px] font-semibold text-gray-400">more items</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <PackItemsDrawerGrid items={items.slice(0, previewCount)} hiddenCount={hiddenCount} />
         </div>
 
         {pack.tags.length > 0 && (

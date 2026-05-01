@@ -6,7 +6,7 @@ import { AdminOnly } from "@/components/AdminOnly";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildBreadcrumbJsonLd, buildPackListJsonLd } from "@/lib/seo-jsonld";
-import { getCharacterForPack } from "@/data/characters";
+import { getCharacterForPack, getCharacterPackArtworkForPack } from "@/data/characters";
 
 export const revalidate = 60;
 
@@ -102,6 +102,7 @@ async function getCharacterPacks(): Promise<PackRow[]> {
       .filter((pack) => Boolean(getCharacterForPack(pack)))
       .map((pack) => ({
         ...pack,
+        cover_image_url: getCharacterPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
         categories: { slug: STATIC_CHARACTER_CATEGORY.slug, name: STATIC_CHARACTER_CATEGORY.name },
       }));
   } catch {

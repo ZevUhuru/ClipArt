@@ -5,6 +5,7 @@ import { ImageDetailPage } from "@/components/ImageDetailPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo";
+import { getParentPacksForGeneration } from "@/lib/packContext";
 
 function humanizeSlug(slug: string): string {
   return slug
@@ -123,7 +124,10 @@ export default async function Page({ params }: PageProps) {
     prompt: dbRow.prompt,
   };
 
-  const relatedImages = await getRelatedImages(canonicalTheme, canonicalSlug);
+  const [relatedImages, parentPacks] = await Promise.all([
+    getRelatedImages(canonicalTheme, canonicalSlug),
+    getParentPacksForGeneration(dbRow.id, canonicalTheme),
+  ]);
 
   const theme = await getColoringThemeBySlug(canonicalTheme);
   const themeName = theme?.name || humanizeSlug(canonicalTheme);
@@ -137,6 +141,7 @@ export default async function Page({ params }: PageProps) {
         relatedImages={relatedImages}
         categoryName={themeName}
         imageId={dbRow.id}
+        parentPacks={parentPacks}
       />
       <MarketingFooter />
     </>

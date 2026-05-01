@@ -5,6 +5,7 @@ import { ImageDetailPage } from "@/components/ImageDetailPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo";
+import { getParentPacksForGeneration } from "@/lib/packContext";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -116,7 +117,10 @@ export default async function Page({ params }: PageProps) {
     prompt: dbRow.prompt,
   };
 
-  const relatedImages = await getRelatedImages(canonicalCategory, canonicalSlug);
+  const [relatedImages, parentPacks] = await Promise.all([
+    getRelatedImages(canonicalCategory, canonicalSlug),
+    getParentPacksForGeneration(dbRow.id, canonicalCategory),
+  ]);
 
   const category = await getIllustrationCategoryBySlug(canonicalCategory);
   const categoryName = category?.name || canonicalCategory;
@@ -130,6 +134,7 @@ export default async function Page({ params }: PageProps) {
         relatedImages={relatedImages}
         categoryName={categoryName}
         imageId={dbRow.id}
+        parentPacks={parentPacks}
       />
       <MarketingFooter />
     </>

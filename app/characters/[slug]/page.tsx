@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import {
   characters,
   getCharacterBySlug,
+  getCharacterPackArtworkForPack,
   getCharacterForPack,
   type ClipArtCharacter,
 } from "@/data/characters";
@@ -90,6 +91,7 @@ async function getRelatedPacks(character: ClipArtCharacter): Promise<PackRow[]> 
       })
       .map((pack) => ({
         ...pack,
+        cover_image_url: getCharacterPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
         categories: { slug: character.primaryCategorySlug, name: "Characters" },
       }));
   } catch {
@@ -135,112 +137,136 @@ export default async function CharacterDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="min-h-screen bg-[#f6efe4]">
-        <section className="relative overflow-hidden bg-[#14100b] text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(180,112,45,0.38),transparent_30%),radial-gradient(circle_at_80%_8%,rgba(236,72,153,0.16),transparent_26%),linear-gradient(135deg,#14100b_0%,#261a10_48%,#0f0c09_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#f6efe4] to-transparent" />
-          <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-8 sm:pb-14 sm:pt-10">
-            <nav className="mb-8 flex items-center gap-1.5 text-xs text-amber-100/60">
-              <Link href="/" className="transition-colors hover:text-amber-100">
+      <main className="min-h-screen bg-[#0b0805] text-[#efe1bf] [background-image:radial-gradient(circle_at_18%_12%,rgba(140,78,28,0.32),transparent_28%),radial-gradient(circle_at_82%_4%,rgba(88,20,42,0.34),transparent_30%)]">
+        <section className="relative overflow-hidden border-b border-[#7a5128]/40">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(239,181,91,0.12),transparent_42%),linear-gradient(135deg,rgba(12,9,6,0.92),rgba(35,20,11,0.84)_46%,rgba(10,7,5,0.96))]" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d69b4d]/70 to-transparent" />
+          <div className="relative mx-auto max-w-[1500px] px-4 pb-10 pt-8 sm:pb-14 sm:pt-10">
+            <nav className="mb-7 flex items-center gap-1.5 text-xs text-[#c9a979]/70">
+              <Link href="/" className="transition-colors hover:text-[#f4d393]">
                 Home
               </Link>
-              <span className="text-amber-100/30">/</span>
-              <Link href="/characters" className="transition-colors hover:text-amber-100">
+              <span className="text-[#8a6233]/70">/</span>
+              <Link href="/characters" className="transition-colors hover:text-[#f4d393]">
                 Characters
               </Link>
-              <span className="text-amber-100/30">/</span>
-              <span className="font-semibold text-amber-50">{character.name}</span>
+              <span className="text-[#8a6233]/70">/</span>
+              <span className="font-semibold text-[#f4d393]">{character.name}</span>
             </nav>
 
-            <div className="grid items-center gap-10 lg:grid-cols-[0.78fr_1.22fr]">
-              <div className="max-w-xl">
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
-                  Original clip.art character
-                </p>
-                <h1 className="mt-4 font-serif text-5xl font-black tracking-tight text-amber-50 sm:text-6xl lg:text-7xl">
-                  {character.name}
-                </h1>
-                <p className="mt-2 text-sm font-black uppercase tracking-[0.28em] text-amber-400">
-                  {character.epithet}
-                </p>
-                <p className="mt-6 border-l-2 border-amber-400/70 pl-4 font-serif text-2xl italic leading-9 text-amber-50/90">
-                  {character.quote}
-                </p>
-                <p className="mt-6 text-base leading-7 text-amber-50/72 sm:text-lg">
-                  {character.tagline}
-                </p>
+            <div className="relative border border-[#9a6a35]/55 bg-[#120d08]/86 p-3 shadow-2xl shadow-black/50 ring-1 ring-[#f0c070]/10">
+              <div className="pointer-events-none absolute -left-px -top-px h-8 w-8 border-l border-t border-[#d6a65b]" />
+              <div className="pointer-events-none absolute -right-px -top-px h-8 w-8 border-r border-t border-[#d6a65b]" />
+              <div className="pointer-events-none absolute -bottom-px -left-px h-8 w-8 border-b border-l border-[#d6a65b]" />
+              <div className="pointer-events-none absolute -bottom-px -right-px h-8 w-8 border-b border-r border-[#d6a65b]" />
 
-                <div className="mt-7 grid grid-cols-2 gap-2">
-                  {character.profileFacts.map((fact) => (
-                    <div
-                      key={fact.label}
-                      className="rounded-2xl border border-amber-200/15 bg-white/[0.06] px-4 py-3 shadow-sm backdrop-blur"
-                    >
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300/80">
-                        {fact.label}
+              <div className="grid gap-3 lg:grid-cols-[0.38fr_0.62fr]">
+                <div className="border border-[#7f562b]/60 bg-[#19110a]/88 p-5">
+                  <p className="text-[11px] font-black uppercase tracking-[0.34em] text-[#d8a852]">
+                    Original clip.art character
+                  </p>
+                  <h1 className="mt-5 font-serif text-6xl font-black leading-[0.88] tracking-tight text-[#f4ead2] sm:text-7xl lg:text-8xl">
+                    {character.name.split(" ").map((part) => (
+                      <span key={part} className="block">
+                        {part}
+                      </span>
+                    ))}
+                  </h1>
+                  <p className="mt-4 border-y border-[#7f562b]/70 py-2 text-xs font-black uppercase tracking-[0.34em] text-[#d8a852]">
+                    {character.epithet}
+                  </p>
+                  <p className="mt-6 border-l border-[#d8a852] pl-4 font-serif text-2xl italic leading-9 text-[#f5e7c8]">
+                    {character.quote}
+                  </p>
+                  <p className="mt-6 text-base leading-7 text-[#dac6a2]">
+                    {character.tagline}
+                  </p>
+
+                  <div className="mt-7 border border-[#7f562b]/70">
+                    <div className="border-b border-[#7f562b]/70 bg-[#21170d] px-3 py-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[#d8a852]">
+                        Character profile
                       </p>
-                      <p className="mt-1 text-sm font-bold text-amber-50">{fact.value}</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="grid grid-cols-2">
+                      {character.profileFacts.map((fact) => (
+                        <div
+                          key={fact.label}
+                          className="border-b border-r border-[#7f562b]/50 px-3 py-3 last:border-r-0"
+                        >
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#b88a48]">
+                            {fact.label}
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-[#f4ead2]">{fact.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {character.traits.map((trait) => (
-                    <span
-                      key={trait}
-                      className="rounded-full border border-amber-200/20 bg-amber-100/10 px-3 py-1.5 text-xs font-bold text-amber-50/85"
+                  <div className="mt-5 border border-[#7f562b]/70 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[#d8a852]">
+                      Key traits
+                    </p>
+                    <div className="mt-3 grid gap-2">
+                      {character.traits.map((trait) => (
+                        <div key={trait} className="flex items-center gap-2 text-sm font-semibold text-[#ead6b0]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#d8a852]" />
+                          {trait}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                    <Link
+                      href="#reference-sheet"
+                      className="border border-[#d8a852]/70 bg-[#d8a852] px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#120d08] transition-all hover:bg-[#f1c46d]"
                     >
-                      {trait}
-                    </span>
-                  ))}
+                      View sheets
+                    </Link>
+                    <Link
+                      href="/packs/characters"
+                      className="border border-[#9a6a35]/70 bg-[#120d08] px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#f3d99f] transition-all hover:bg-[#24170d]"
+                    >
+                      Character packs
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href="#reference-sheet"
-                    className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-black text-gray-950 shadow-xl shadow-amber-950/20 transition-all hover:-translate-y-0.5 hover:bg-amber-300"
-                  >
-                    View reference sheets
-                  </Link>
-                  <Link
-                    href="/packs/characters"
-                    className="inline-flex items-center justify-center rounded-2xl border border-amber-200/25 bg-white/10 px-5 py-3 text-sm font-black text-amber-50 shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/15"
-                  >
-                    Browse character packs
-                  </Link>
-                </div>
-              </div>
-
-              {referenceSheet && (
-                <div className="relative">
-                  <div className="absolute -inset-5 rounded-[2.5rem] bg-gradient-to-br from-amber-500/30 via-orange-300/10 to-pink-400/20 blur-2xl" />
-                  <div className="relative overflow-hidden rounded-[2.25rem] border border-amber-200/20 bg-[#0d0b08] p-2 shadow-2xl shadow-black/40 ring-1 ring-white/10">
-                    <div className="relative aspect-[3/2] overflow-hidden rounded-[1.8rem] bg-[#1a140e]">
+                {referenceSheet && (
+                  <div className="border border-[#7f562b]/60 bg-[#0d0a07] p-3">
+                    <div className="relative aspect-[3/2] overflow-hidden border border-[#9a6a35]/60 bg-[#080604]">
+                      <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_30%_18%,transparent_0,rgba(0,0,0,0.16)_52%,rgba(0,0,0,0.44)_100%)]" />
                       <Image
                         src={referenceSheet.imageUrl}
                         alt={referenceSheet.alt}
                         fill
                         className="object-contain"
-                        sizes="(max-width: 1024px) 100vw, 760px"
+                        sizes="(max-width: 1024px) 100vw, 900px"
                         priority
                       />
+                      <div className="absolute left-3 top-3 z-20 border border-[#9a6a35]/70 bg-[#0d0a07]/82 px-3 py-2 backdrop-blur-sm">
+                        <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[#d8a852]">
+                          Master reference board
+                        </p>
+                      </div>
                     </div>
-                    <div className="grid gap-2 p-3 sm:grid-cols-3">
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       {["Turnaround", "Expressions", "Props"].map((label) => (
                         <div
                           key={label}
-                          className="rounded-2xl border border-amber-200/10 bg-white/[0.04] px-3 py-2"
+                          className="border border-[#7f562b]/60 bg-[#19110a] px-3 py-3"
                         >
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-300">
+                          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d8a852]">
                             {label}
                           </p>
-                          <p className="mt-1 text-xs text-amber-50/65">Captured in the board</p>
+                          <p className="mt-1 text-xs text-[#bda27a]">Captured in the board</p>
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -250,36 +276,36 @@ export default async function CharacterDetailPage({ params }: Props) {
           designNotes={character.designNotes}
         />
 
-        <section className="mx-auto max-w-7xl px-4 pb-12">
+        <section className="mx-auto max-w-[1500px] px-4 pb-12">
           <div className="grid gap-5 lg:grid-cols-3">
-            <div className="rounded-[2rem] border border-white bg-white p-6 shadow-sm ring-1 ring-amber-950/5 lg:col-span-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
+            <div className="border border-[#7f562b]/60 bg-[#15100a] p-6 shadow-xl shadow-black/20 lg:col-span-2">
+              <p className="text-[11px] font-black uppercase tracking-[0.26em] text-[#d8a852]">
                 Story engine
               </p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight text-gray-950">
+              <h2 className="mt-2 font-serif text-3xl font-black tracking-tight text-[#f4ead2]">
                 Mystery prompts made for packs, coloring pages, and worksheets
               </h2>
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 {character.storyHooks.map((hook) => (
-                  <div key={hook} className="rounded-2xl bg-amber-50/70 p-4">
-                    <p className="text-sm font-semibold leading-6 text-gray-700">{hook}</p>
+                  <div key={hook} className="border border-[#7f562b]/55 bg-[#21170d] p-4">
+                    <p className="text-sm font-semibold leading-6 text-[#dac6a2]">{hook}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-white bg-[#21170f] p-6 text-amber-50 shadow-sm ring-1 ring-amber-950/10">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-300">
+            <div className="border border-[#7f562b]/60 bg-[#21170f] p-6 text-[#f4ead2] shadow-xl shadow-black/20">
+              <p className="text-[11px] font-black uppercase tracking-[0.26em] text-[#d8a852]">
                 Signature props
               </p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight">
+              <h2 className="mt-2 font-serif text-3xl font-black tracking-tight">
                 Detective kit
               </h2>
               <div className="mt-5 flex flex-wrap gap-2">
                 {character.signatureItems.map((item) => (
                   <span
                     key={item}
-                    className="rounded-full border border-amber-200/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-amber-50/85"
+                    className="border border-[#8a6233]/70 bg-[#120d08] px-3 py-1.5 text-xs font-bold text-[#ead6b0]"
                   >
                     {item}
                   </span>
@@ -289,17 +315,17 @@ export default async function CharacterDetailPage({ params }: Props) {
           </div>
         </section>
 
-        <section id="character-packs" className="mx-auto max-w-7xl px-4 py-12">
+        <section id="character-packs" className="mx-auto max-w-[1500px] px-4 py-12">
           <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-500/80">
+              <p className="text-[11px] font-black uppercase tracking-[0.26em] text-[#d8a852]">
                 Character bundles
               </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-gray-950">
+              <h2 className="mt-1 font-serif text-3xl font-black tracking-tight text-[#f4ead2]">
                 {character.name} packs
               </h2>
             </div>
-            <p className="text-sm font-semibold text-gray-400">
+            <p className="text-sm font-semibold text-[#9f845e]">
               {relatedPacks.length} pack{relatedPacks.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -307,30 +333,30 @@ export default async function CharacterDetailPage({ params }: Props) {
           {relatedPacks.length > 0 ? (
             <PackGrid packs={relatedPacks} />
           ) : (
-            <div className="rounded-[2rem] border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
-              <h2 className="text-base font-black text-gray-950">
+            <div className="border border-dashed border-[#7f562b]/70 bg-[#15100a] px-6 py-16 text-center">
+              <h2 className="text-base font-black text-[#f4ead2]">
                 No public {character.name} packs yet
               </h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#9f845e]">
                 Published packs that match this character by slug, title, or tags will appear here.
               </p>
             </div>
           )}
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-14">
+        <section className="mx-auto max-w-[1500px] px-4 pb-14">
           <div className="grid gap-4 md:grid-cols-3">
             {[
               ["Reference sheets", character.referenceSheets.length, "Turnarounds, expressions, palettes, props, and outfit notes."],
               ["Coloring pages", character.coloringPageSlugs.length, "Future printable Orion scenes and mystery moments."],
               ["Worksheets", character.worksheetSlugs.length, "Future clue trails, reading prompts, vocabulary sheets, and classroom mysteries."],
             ].map(([label, count, description]) => (
-              <div key={label} className="rounded-3xl border border-white bg-white p-6 shadow-sm ring-1 ring-amber-950/5">
-                <p className="text-3xl font-black text-gray-950">{count}</p>
-                <h2 className="mt-2 text-sm font-black uppercase tracking-[0.16em] text-gray-500">
+              <div key={label} className="border border-[#7f562b]/60 bg-[#15100a] p-6 shadow-xl shadow-black/20">
+                <p className="font-serif text-4xl font-black text-[#f4ead2]">{count}</p>
+                <h2 className="mt-2 text-sm font-black uppercase tracking-[0.2em] text-[#d8a852]">
                   {label}
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-gray-500">
+                <p className="mt-3 text-sm leading-6 text-[#9f845e]">
                   {description}
                 </p>
               </div>

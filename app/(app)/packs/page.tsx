@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { AdminOnly } from "@/components/AdminOnly";
 import { PackGrid } from "@/components/packs/PackGrid";
+import { getCharacterPackArtworkForPack } from "@/data/characters";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackListJsonLd } from "@/lib/seo-jsonld";
 
@@ -90,7 +91,10 @@ async function getPublishedPacks(): Promise<PackRow[]> {
       .eq("visibility", "public")
       .order("downloads", { ascending: false })
       .limit(100);
-    return (data || []) as PackRow[];
+    return ((data || []) as PackRow[]).map((pack) => ({
+      ...pack,
+      cover_image_url: getCharacterPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
+    }));
   } catch {
     return [];
   }
@@ -197,14 +201,14 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen bg-[#f5f6f8]">
-        <section className="relative overflow-hidden border-b border-white/80 bg-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(236,72,153,0.16),transparent_26%),radial-gradient(circle_at_86%_24%,rgba(251,146,60,0.18),transparent_28%),linear-gradient(135deg,#fff_0%,#fff7ed_48%,#fdf2f8_100%)]" />
+      <div className="min-h-screen bg-[#f6f5f2]">
+        <section className="relative overflow-hidden border-b border-[#e7e2d8] bg-[#fbfaf7]">
+          <div className="absolute inset-0 bg-[#fbfaf7]" />
           <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-8 sm:pb-14 lg:pt-12">
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="max-w-2xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-pink-200/70 bg-white/75 px-3.5 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-pink-600 shadow-sm backdrop-blur">
-                  <span className="h-2 w-2 rounded-full bg-pink-500 shadow-[0_0_0_4px_rgba(236,72,153,0.12)]" />
+                <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/70 px-3.5 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-gray-600 shadow-sm backdrop-blur">
+                  <span className="h-2 w-2 rounded-full bg-rose-400 shadow-[0_0_0_4px_rgba(251,113,133,0.12)]" />
                   Theme Pack Marketplace
                 </span>
 
@@ -230,7 +234,7 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
                   <AdminOnly>
                     <Link
                       href="/create/packs"
-                      className="inline-flex items-center justify-center rounded-2xl border border-pink-200 bg-white/85 px-5 py-3 text-sm font-black text-pink-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-pink-300 hover:bg-white"
+                      className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white/75 px-5 py-3 text-sm font-black text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-white"
                     >
                       Create a pack
                     </Link>
@@ -256,43 +260,46 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
               <div className="relative">
                 <div className={`absolute -inset-5 rounded-[2.5rem] blur-2xl ${
                   isDropLanding
-                    ? "bg-gradient-to-br from-pink-300/70 via-orange-300/50 to-amber-300/60"
-                    : "bg-gradient-to-br from-pink-200/50 via-white/20 to-orange-200/50"
+                    ? "bg-rose-200/32"
+                    : "bg-gray-300/22"
                 }`} />
-                <div className={`relative overflow-hidden rounded-[2.25rem] border p-3 shadow-2xl ${
-                  isDropLanding
-                    ? "border-orange-200/80 bg-gradient-to-br from-gray-950 via-[#25130b] to-gray-950 shadow-orange-200/70"
-                    : "border-white/80 bg-gray-950 shadow-pink-200/50"
-                }`}>
+                <div className="relative">
                   {isDropLanding && (
-                    <div className="absolute inset-x-0 top-0 z-10 bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300 px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-orange-950/20">
+                    <div className="mx-auto mb-2 max-w-[420px] rounded-full border border-gray-200 bg-white/72 px-4 py-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-gray-700 shadow-sm backdrop-blur">
                       You found the new drop
                     </div>
                   )}
-                  <div className="relative rounded-[1.75rem] bg-white p-3">
+                  <div className="relative mx-auto max-w-[460px]">
+                    <div className="pointer-events-none absolute inset-x-8 bottom-20 h-16 rounded-full bg-gray-950/16 blur-2xl" />
+                    <div className="pointer-events-none absolute inset-x-4 top-10 h-72 rounded-full bg-white/70 blur-3xl" />
                     {leadPack?.cover_image_url ? (
-                      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.35rem] bg-gray-100">
+                      <Link
+                        href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
+                        aria-label={`View ${leadPack.title} pack`}
+                        title={`View ${leadPack.title} pack`}
+                        className="group relative z-10 block aspect-[2/3] drop-shadow-[0_24px_30px_rgba(15,23,42,0.24)] transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.012] hover:drop-shadow-[0_34px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                      >
                         <Image
                           src={leadPack.cover_image_url}
                           alt={`${leadPack.title} pack preview`}
                           fill
-                          className="object-cover object-top"
+                          className="object-contain transition-transform duration-500 group-hover:scale-[1.025]"
                           priority
                           sizes="(max-width: 1024px) 100vw, 500px"
                         />
-                      </div>
+                      </Link>
                     ) : (
-                      <div className="flex aspect-[4/3] items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-pink-50 to-orange-50">
+                      <div className="flex aspect-[2/3] items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-pink-50 to-orange-50">
                         <svg className="h-16 w-16 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.4}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21" />
                         </svg>
                       </div>
                     )}
 
-                    <div className="mt-4 flex items-start justify-between gap-4 px-1">
+                    <div className="relative z-10 mt-4 flex items-start justify-between gap-4 px-1">
                       <div>
                         <p className={`text-[11px] font-black uppercase tracking-[0.18em] ${
-                          isDropLanding ? "text-orange-500" : "text-pink-500"
+                          isDropLanding ? "text-rose-500" : "text-gray-500"
                         }`}>
                           {isDropLanding ? activeDrop?.badge_label || "New drop" : "Featured drop"}
                         </p>
@@ -306,16 +313,16 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
                     </div>
 
                     {leadPack && (
-                      <div className="mt-4 rounded-2xl bg-gray-50 p-3">
+                      <div className="relative z-10 mt-3">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs font-bold text-gray-700">
+                          <p className="text-xs font-bold text-gray-600">
                             {isDropLanding && activeDrop?.description
                               ? activeDrop.description
                               : "A focused collection of matching artwork, transparent assets, and ready-to-use creative pieces."}
                           </p>
                           <Link
                             href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
-                            className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[11px] font-black text-gray-900 shadow-sm ring-1 ring-gray-200 transition-colors hover:text-pink-600"
+                            className="shrink-0 rounded-full bg-gray-950 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-colors hover:bg-gray-800"
                           >
                             View pack
                           </Link>
@@ -329,7 +336,7 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
 
             <div className="mt-9 grid gap-3 sm:grid-cols-3">
               {SHOP_PROMISES.map((promise) => (
-                <div key={promise} className="rounded-2xl border border-white/80 bg-white/65 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm backdrop-blur">
+                <div key={promise} className="rounded-2xl border border-gray-200 bg-white/58 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm backdrop-blur">
                   {promise}
                 </div>
               ))}

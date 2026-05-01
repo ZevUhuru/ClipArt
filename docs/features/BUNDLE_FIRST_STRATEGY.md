@@ -130,6 +130,8 @@ Likely schema later:
 - `character_assets`
 - Optional artifact relationship tables for worksheets, coloring pages, animations, and stickers.
 
+Once characters move into the database, standalone asset detail pages should use real character relationships instead of the V1 registry heuristics. Parent pack context can continue to come from `pack_items`, but "More from this character" should resolve through DB-backed character links such as `character_assets`, `character_packs`, or a returned `character_id` from ESY.
+
 ## Standalone Asset To Pack Linking
 
 Standalone clip art pages should eventually show pack context:

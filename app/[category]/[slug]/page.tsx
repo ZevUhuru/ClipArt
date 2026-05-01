@@ -7,6 +7,7 @@ import { ImageDetailPage } from "@/components/ImageDetailPage";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo";
+import { getParentPacksForGeneration } from "@/lib/packContext";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -197,9 +198,10 @@ export default async function Page({ params }: PageProps) {
         : [String(category.seo_content)])
     : [];
 
-  const [relatedImages, styleRelatedImages] = await Promise.all([
+  const [relatedImages, styleRelatedImages, parentPacks] = await Promise.all([
     getRelatedImages(canonicalCategory, canonicalSlug),
     getStyleRelatedImages(dbRow.style, canonicalSlug),
+    getParentPacksForGeneration(dbRow.id, canonicalCategory),
   ]);
 
   return (
@@ -212,6 +214,7 @@ export default async function Page({ params }: PageProps) {
         categorySeoContent={categorySeoContent}
         categoryName={category?.name}
         imageId={dbRow.id}
+        parentPacks={parentPacks}
       />
       <MarketingFooter />
     </>
