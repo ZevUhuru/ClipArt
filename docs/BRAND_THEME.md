@@ -4,14 +4,14 @@ This guide captures the current visual direction for clip.art after the homepage
 
 ## Brand Position
 
-clip.art is a practical creative workspace for reusable clip art: transparent PNGs, visual discovery, generation, packs, and everyday project use.
+clip.art is a practical creative workspace for reusable clip art packs: coordinated bundles, transparent PNGs, visual discovery, generation, and everyday project use.
 
 The brand should feel:
 
 - Useful before promotional.
 - Image-led rather than text-card heavy.
 - Warm, polished, and lightweight.
-- Focused on clip art as the core product.
+- Focused on packs as the core product, with clip art as the reusable inventory inside them.
 - Fast to scan for teachers, creators, small businesses, crafters, and internal operators.
 
 ## Visual Principles
@@ -48,9 +48,9 @@ In-app surfaces should feel like daily workspaces:
 
 Avoid promotional language inside the app. The user is already signed in and trying to get work done.
 
-### 3. Clipart-First Hierarchy
+### 3. Bundle-First Hierarchy
 
-Homepage, explore, create, and pack surfaces should lead with clip art. Secondary formats can remain discoverable, but they should not compete with clip art as the primary business focus.
+The long-term direction is bundle-first. Once clip.art has at least 100 high-quality published packs, homepage, explore, and category surfaces should lead with coordinated packs. Standalone clip art remains essential, but it should appear as pack proof, searchable inventory, and detail-level SEO support rather than the main homepage story.
 
 Secondary formats:
 
@@ -59,7 +59,9 @@ Secondary formats:
 - Illustrations.
 - Animations.
 
-Keep them in compact strips, footer links, SEO routes, and contextual cross-links.
+Keep them in compact strips, footer links, SEO routes, and contextual cross-links unless they belong to a named character page or a pack-led collection.
+
+Use `docs/features/BUNDLE_FIRST_STRATEGY.md` as the product source of truth for the 100-pack threshold, `/packs` vs `/design-bundles`, character hubs, and asset-to-pack linking.
 
 ## Color System
 
@@ -273,5 +275,5 @@ Do not:
 - Turn app pages into marketing landing pages.
 - Use black panels or black active tabs in the app.
 - Ship large sections of text-only cards when images are available.
-- Give secondary formats equal homepage weight while clip art is the focus.
+- Give secondary formats equal homepage weight while packs are the focus.
 - Hide important actions behind decorative UI.

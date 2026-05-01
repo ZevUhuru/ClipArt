@@ -10,6 +10,8 @@ The product promise:
 
 Distribution strategy lives in `docs/features/DISTRIBUTION_AND_SHARING.md`. Pack Studio owns downstream bundle publishing and sharing workflows, including Etsy draft export. ESY remains the artifact generation layer and should not integrate with social platforms or marketplaces.
 
+The long-term content strategy lives in `docs/features/BUNDLE_FIRST_STRATEGY.md`. Once clip.art has at least 100 high-quality published packs, packs should become the primary homepage, catalog, sharing, and marketplace unit. Standalone clip art remains important, but it should increasingly act as pack-attached inventory and SEO depth.
+
 `/packs` is the storefront and browse/download surface. `/design-bundles` is the higher-level marketing landing page for the bundle creation and distribution product. Pack Studio is the creator surface.
 
 ```mermaid
@@ -141,6 +143,8 @@ Model IDs must remain explicit and must not use floating aliases such as `latest
 
 Character sheet packs should behave like a first-class Pack Studio workflow. See `docs/features/PACK_STUDIO_CHARACTER_REFERENCE_SHEETS.md` for the full plan.
 
+Character packs also feed the public character strategy in `docs/features/BUNDLE_FIRST_STRATEGY.md`: `/packs/characters` is the pack category for character bundles, while `/characters` and `/characters/[slug]` are public character IP pages that gather reference sheets, packs, coloring pages, worksheets, and future related artifacts.
+
 V1 should keep the implementation scoped to Pack Studio:
 
 - The `Consistent Character Sheet Pack` starter preloads editable reference-sheet rows.
@@ -232,6 +236,12 @@ The design bundle detail page should render the selling copy:
 - License summary.
 - Item count, transparent PNG, and commercial-use trust badges.
 
+When a pack belongs to a named character, the detail page should reserve space for character context:
+
+- Character reference sheet preview.
+- Link to the canonical character page, such as `/characters/orion-foxwell`.
+- Related character packs when available.
+
 ### Distribution and Sharing
 
 Pack Studio should become the launch point for bundle distribution after a pack is ready:
@@ -254,6 +264,8 @@ Separate creation from browsing:
 - `/design-bundles` should be the marketing landing page for bundle creation, sharing, and marketplace export.
 - The signed-in create navigation should point to Pack Studio, not the browse page.
 - Library should expose Pack Studio because users manage assets and bundles together.
+
+At the 100+ published pack threshold, homepage and category navigation should treat packs as the main discovery unit. Pack Studio remains the creation workspace; `/packs` remains the storefront.
 
 ## Not In V1
 
@@ -278,6 +290,7 @@ Separate creation from browsing:
 5. Add deterministic readiness checks.
 6. Render long-form selling copy on public bundle detail pages.
 7. Clarify navigation labels and routes.
-8. Add share controls for public bundle pages.
-9. Add Etsy draft export after pack readiness checks and ZIP generation are stable.
-10. Run lint checks and focused manual flow checks.
+8. Add character-aware pack detail modules for reference sheets and canonical character links.
+9. Add share controls for public bundle pages.
+10. Add Etsy draft export after pack readiness checks and ZIP generation are stable.
+11. Run lint checks and focused manual flow checks.

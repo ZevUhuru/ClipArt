@@ -7,6 +7,7 @@ import {
   getIllustrationCategories,
   getWorksheetGrades,
 } from "@/lib/categories";
+import { characters } from "@/data/characters";
 import { getAllPosts } from "@/lib/learn";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -168,6 +169,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     }));
 
+    if (!(packCats || []).some((cat: { slug: string }) => cat.slug === "characters")) {
+      packCategoryPages.push({
+        url: `${baseUrl}/packs/characters`,
+        lastModified: now,
+        changeFrequency: "daily",
+        priority: 0.9,
+      });
+    }
+
     const { data: packs } = await admin
       .from("packs")
       .select("slug, created_at, updated_at, categories!category_id(slug)")
@@ -187,6 +197,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     // packs table may not exist yet
   }
+
+  /* --- Characters --- */
+
+  const characterPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/characters`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    ...characters.map((character) => ({
+      url: `${baseUrl}/characters/${character.slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+    })),
+  ];
 
   /* --- Worksheets --- */
 
@@ -376,6 +403,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...packsLanding,
     ...packCategoryPages,
     ...packDetailPages,
+    ...characterPages,
     ...animationsLanding,
     ...stickersLanding,
     ...animalsHub,

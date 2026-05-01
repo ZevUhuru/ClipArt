@@ -59,6 +59,12 @@ const SHOP_PROMISES = [
   "Transparent PNG assets",
 ];
 
+const STATIC_CHARACTER_CATEGORY = {
+  id: "characters-static",
+  slug: "characters",
+  name: "Characters",
+};
+
 function formatStat(value: number) {
   return new Intl.NumberFormat("en", { notation: "compact" }).format(value);
 }
@@ -101,6 +107,9 @@ export default async function PacksPage() {
     getPublishedPacks(),
     getPackCategories(),
   ]);
+  const visibleCategories = categories.some((cat) => cat.slug === STATIC_CHARACTER_CATEGORY.slug)
+    ? categories
+    : [...categories, STATIC_CHARACTER_CATEGORY];
 
   const featured = packs.filter((p) => p.is_featured);
   const heroSource = featured.length > 0 ? featured : packs;
@@ -247,7 +256,7 @@ export default async function PacksPage() {
         </section>
 
         <div id="pack-collection" className="mx-auto max-w-6xl px-4 py-10">
-          {categories.length > 0 && (
+          {visibleCategories.length > 0 && (
             <section className="mb-8 overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-sm ring-1 ring-gray-200/60">
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -270,7 +279,7 @@ export default async function PacksPage() {
                 >
                   All Packs
                 </Link>
-                {categories.map((cat) => (
+                {visibleCategories.map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/packs/${cat.slug}`}

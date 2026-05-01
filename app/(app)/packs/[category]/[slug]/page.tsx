@@ -7,6 +7,7 @@ import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackJsonLd, buildPackBreadcrumb } from "@/lib/seo-jsonld";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { PackDownloadButton } from "@/components/packs/PackDownloadButton";
+import { getCharacterForPack } from "@/data/characters";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -156,18 +157,26 @@ function getActivePackPrice(pack: Pick<PackDetail, "price_cents" | "launch_price
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, category: categorySlug } = await params;
   const pack = await getPack(slug);
   if (!pack) return {};
 
-  const categoryName = pack.categories?.name || "Design";
+  const character = getCharacterForPack(pack);
+  const routeCategorySlug =
+    character && categorySlug === character.primaryCategorySlug
+      ? character.primaryCategorySlug
+      : pack.categories?.slug || "all";
+  const categoryName =
+    character && routeCategorySlug === character.primaryCategorySlug
+      ? "Characters"
+      : pack.categories?.name || "Design";
   const itemLabel = pack.content_types.map((ct) => CONTENT_TYPE_LABELS[ct] || ct).join(", ");
   const titleStr = `${pack.title} - ${pack.item_count} Free ${categoryName} ${itemLabel.includes(",") ? "Assets" : itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1)}`;
   const title = titleStr.length > 60 ? `${titleStr.slice(0, 57)}...` : titleStr;
   const description =
     pack.description ||
     `Download ${pack.title} - ${pack.item_count} free AI-generated ${itemLabel} as transparent PNG assets. Free for personal and commercial use.`;
-  const canonical = buildCanonical(`packs/${pack.categories?.slug || "all"}/${pack.slug}`);
+  const canonical = buildCanonical(`packs/${routeCategorySlug}/${pack.slug}`);
   const socialImage = pack.cover_image_url
     ? { url: pack.cover_image_url, alt: pack.title }
     : DEFAULT_SOCIAL_IMAGE;
@@ -199,7 +208,17 @@ export default async function PackDetailPage({ params }: Props) {
   const pack = await getPack(slug);
   if (!pack) notFound();
 
+  const character = getCharacterForPack(pack);
   const catSlug = pack.categories?.slug || "all";
+  const routeCatSlug =
+    character && categorySlug === character.primaryCategorySlug
+      ? character.primaryCategorySlug
+      : catSlug;
+  const routeCategoryName =
+    character && routeCatSlug === character.primaryCategorySlug
+      ? "Characters"
+      : pack.categories?.name || "All";
+  const referenceSheet = character?.referenceSheets[0];
   const items = [...(pack.pack_items || [])].sort((a, b) => a.sort_order - b.sort_order);
   const previewCount = pack.is_free ? items.length : Math.min(6, items.length);
   const hiddenCount = items.length - previewCount;
@@ -227,14 +246,14 @@ export default async function PackDetailPage({ params }: Props) {
     itemCount: pack.item_count,
     isFree: pack.is_free,
     priceCents: pack.price_cents,
-    categorySlug: catSlug,
+    categorySlug: routeCatSlug,
     slug: pack.slug,
     tags: pack.tags,
     downloads: pack.downloads,
   });
   const breadcrumbJsonLd = buildPackBreadcrumb({
-    categorySlug: catSlug,
-    categoryName: pack.categories?.name || "All",
+    categorySlug: routeCatSlug,
+    categoryName: routeCategoryName,
     packTitle: pack.title,
     packSlug: pack.slug,
   });
@@ -265,14 +284,14 @@ export default async function PackDetailPage({ params }: Props) {
               <Link href="/" className="transition-colors hover:text-gray-600">Home</Link>
               <span className="text-gray-300">/</span>
               <Link href="/packs" className="transition-colors hover:text-gray-600">Packs</Link>
-              {pack.categories && (
+              {routeCatSlug !== "all" && (
                 <>
                   <span className="text-gray-300">/</span>
                   <Link
-                    href={`/packs/${pack.categories.slug}`}
+                    href={`/packs/${routeCatSlug}`}
                     className="transition-colors hover:text-gray-600"
                   >
-                    {pack.categories.name}
+                    {routeCategoryName}
                   </Link>
                 </>
               )}
@@ -315,9 +334,9 @@ export default async function PackDetailPage({ params }: Props) {
                   {pack.title}
                 </h1>
 
-                {catSlug !== categorySlug && categorySlug !== "all" && (
+                {routeCatSlug !== categorySlug && categorySlug !== "all" && (
                   <p className="mt-2 text-xs text-gray-400">
-                    This pack now lives in <Link href={`/packs/${catSlug}/${pack.slug}`} className="font-semibold text-pink-600">/{catSlug}</Link>.
+                    This pack now lives in <Link href={`/packs/${routeCatSlug}/${pack.slug}`} className="font-semibold text-pink-600">/{routeCatSlug}</Link>.
                   </p>
                 )}
 
@@ -359,6 +378,37 @@ export default async function PackDetailPage({ params }: Props) {
                     {pack.license_summary || "Free for personal and commercial use. No attribution required."}
                   </p>
                 </div>
+
+                {character && referenceSheet && (
+                  <div className="mt-4 overflow-hidden rounded-xl border border-pink-100 bg-white/85 p-4 backdrop-blur-sm">
+                    <div className="flex gap-4">
+                      <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-50">
+                        <Image
+                          src={referenceSheet.imageUrl}
+                          alt={referenceSheet.alt}
+                          fill
+                          className="object-contain"
+                          sizes="80px"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="text-xs font-bold uppercase tracking-wide text-pink-500">
+                          Character reference sheet
+                        </h2>
+                        <p className="mt-1 text-sm font-bold text-gray-900">{character.name}</p>
+                        <p className="mt-1 text-xs leading-5 text-gray-500">
+                          {referenceSheet.description}
+                        </p>
+                        <Link
+                          href={`/characters/${character.slug}`}
+                          className="mt-2 inline-flex text-xs font-bold text-pink-600 transition-colors hover:text-pink-500"
+                        >
+                          View {character.name} page
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-6">
                   <PackDownloadButton

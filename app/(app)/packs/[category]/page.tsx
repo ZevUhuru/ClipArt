@@ -6,6 +6,7 @@ import { AdminOnly } from "@/components/AdminOnly";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildBreadcrumbJsonLd, buildPackListJsonLd } from "@/lib/seo-jsonld";
+import { getCharacterForPack } from "@/data/characters";
 
 export const revalidate = 60;
 
@@ -34,8 +35,21 @@ interface PackRow {
   is_free: boolean;
   price_cents: number | null;
   downloads: number;
+  tags?: string[];
   categories: { slug: string; name: string } | null;
 }
+
+const STATIC_CHARACTER_CATEGORY: CategoryRow = {
+  id: "characters-static",
+  slug: "characters",
+  name: "Characters",
+  h1: "Character Clip Art Packs",
+  meta_title: "Character Clip Art Packs & Reference Sheet Bundles | clip.art",
+  meta_description:
+    "Browse character clip art packs, reference sheets, pose sets, expression packs, and themed character bundles from clip.art.",
+  intro:
+    "Character bundles collect reusable reference sheets, poses, expressions, outfits, props, and story-ready clip art under cohesive named identities.",
+};
 
 async function getCategory(slug: string): Promise<CategoryRow | null> {
   try {
@@ -49,7 +63,7 @@ async function getCategory(slug: string): Promise<CategoryRow | null> {
       .single();
     return data as CategoryRow | null;
   } catch {
-    return null;
+    return slug === "characters" ? STATIC_CHARACTER_CATEGORY : null;
   }
 }
 
@@ -67,6 +81,29 @@ async function getPacksByCategory(categoryId: string): Promise<PackRow[]> {
       .order("downloads", { ascending: false })
       .limit(100);
     return (data || []) as PackRow[];
+  } catch {
+    return [];
+  }
+}
+
+async function getCharacterPacks(): Promise<PackRow[]> {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data } = await admin
+      .from("packs")
+      .select(
+        "id, title, slug, cover_image_url, item_count, content_types, formats, is_free, price_cents, downloads, tags, categories!category_id(slug, name)",
+      )
+      .eq("is_published", true)
+      .eq("visibility", "public")
+      .order("downloads", { ascending: false })
+      .limit(200);
+    return ((data || []) as PackRow[])
+      .filter((pack) => Boolean(getCharacterForPack(pack)))
+      .map((pack) => ({
+        ...pack,
+        categories: { slug: STATIC_CHARACTER_CATEGORY.slug, name: STATIC_CHARACTER_CATEGORY.name },
+      }));
   } catch {
     return [];
   }
@@ -128,7 +165,7 @@ export default async function PackCategoryPage({ params }: Props) {
   if (!category) notFound();
 
   const [packs, allCategories] = await Promise.all([
-    getPacksByCategory(category.id),
+    category.id === STATIC_CHARACTER_CATEGORY.id ? getCharacterPacks() : getPacksByCategory(category.id),
     getAllPackCategories(),
   ]);
 
@@ -217,6 +254,18 @@ export default async function PackCategoryPage({ params }: Props) {
                     {cat.name}
                   </Link>
                 ))}
+                {!allCategories.some((cat: { slug: string }) => cat.slug === STATIC_CHARACTER_CATEGORY.slug) && (
+                  <Link
+                    href="/packs/characters"
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                      category.slug === STATIC_CHARACTER_CATEGORY.slug
+                        ? "bg-gray-900 text-white"
+                        : "border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    Characters
+                  </Link>
+                )}
               </div>
             </div>
           </div>

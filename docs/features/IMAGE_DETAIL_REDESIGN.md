@@ -36,6 +36,19 @@ Redesign `ImageDetailPage` into a first-class SEO landing page with a premium he
 - Uses existing `ImageCard` + `ImageGrid` components
 - Fetched in parent server pages, passed as `relatedImages` prop
 
+### Parent Pack Context
+
+The bundle-first strategy in `docs/features/BUNDLE_FIRST_STRATEGY.md` changes the role of standalone detail pages. They should stay indexed and useful, but they should point users back to the strongest relevant pack when a relationship exists.
+
+Use existing `pack_items` relationships before adding new fields:
+
+- Show `Part of this pack` when the asset belongs to one published pack.
+- Show `Also included in` when the asset belongs to multiple published packs.
+- Add a `Build the full set` CTA that links to the strongest parent pack.
+- Add `More from this character` when the asset maps to a named character page.
+
+If an asset has multiple parent packs, rank published packs first, then prefer the most category-relevant pack, then the pack with the strongest item count or performance signal.
+
 ### Conversion Polish
 
 - Download button shimmer highlight animation (CSS-only `@keyframes shimmer`)
