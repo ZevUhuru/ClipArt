@@ -12,6 +12,8 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 import { sampleImages, type SampleImage } from "@/data/sampleGallery";
 import { getCategorySlugForImage } from "@/data/categories";
 import { STYLE_LABELS, VALID_STYLES, type StyleKey } from "@/lib/styles";
+import { getPackArtworkForPack } from "@/data/packArtwork";
+import { packPath } from "@/lib/packRoutes";
 
 export const revalidate = 60;
 
@@ -37,6 +39,7 @@ interface HomeVisual {
   transparentUrl?: string | null;
   hasTransparency?: boolean;
   style?: string;
+  searchText: string;
 }
 
 interface HomepagePack {
@@ -48,6 +51,7 @@ interface HomepagePack {
   content_types: string[];
   formats: string[];
   is_free: boolean;
+  tags?: string[] | null;
   categories: { slug: string; name: string } | null;
 }
 
@@ -62,13 +66,13 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
       .eq("content_type", "clipart")
       .order("featured_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .limit(32);
+      .limit(160);
 
-    if (featured && featured.length >= 24) return featured as CommunityImage[];
+    if (featured && featured.length >= 96) return featured as CommunityImage[];
 
     const featuredList = (featured || []) as CommunityImage[];
     const existing = new Set(featuredList.map((f) => f.id));
-    const remaining = 32 - featuredList.length;
+    const remaining = 160 - featuredList.length;
     const { data: recent } = await admin
       .from("generations")
       .select("id, prompt, title, image_url, transparent_image_url, has_transparency, style, category, slug, aspect_ratio")
@@ -79,7 +83,7 @@ async function getCommunityGallery(): Promise<CommunityImage[]> {
       .limit(remaining);
 
     const recentList = (recent || []) as CommunityImage[];
-    return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 32);
+    return [...featuredList, ...recentList.filter((r) => !existing.has(r.id))].slice(0, 160);
   } catch {
     return [];
   }
@@ -90,13 +94,16 @@ async function getHomepagePacks(): Promise<HomepagePack[]> {
     const admin = createSupabaseAdmin();
     const { data } = await admin
       .from("packs")
-      .select("id, title, slug, cover_image_url, item_count, content_types, formats, is_free, categories!category_id(slug, name)")
+      .select("id, title, slug, cover_image_url, item_count, content_types, formats, is_free, tags, categories!category_id(slug, name)")
       .eq("is_published", true)
       .eq("visibility", "public")
       .order("is_featured", { ascending: false })
       .order("downloads", { ascending: false })
-      .limit(6);
-    return (data || []) as HomepagePack[];
+      .limit(100);
+    return ((data || []) as HomepagePack[]).map((pack) => ({
+      ...pack,
+      cover_image_url: getPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
+    }));
   } catch {
     return [];
   }
@@ -227,24 +234,28 @@ const USE_CASE_PATHS = [
     body: "Find visual aids for worksheets, slides, bulletin boards, lessons, labels, and seasonal activities.",
     href: "/school",
     link: "Browse school clip art",
+    visualTerms: ["school", "teacher", "classroom", "apple", "book", "bus", "worksheet"],
   },
   {
     title: "Small business marketing",
     body: "Create friendly visuals for flyers, emails, menus, ads, packaging, and social media posts.",
     href: "/search?q=business",
     link: "Search business ideas",
+    visualTerms: ["business", "shop", "store", "menu", "coffee", "sale", "package", "flyer"],
   },
   {
     title: "Parties, crafts, and events",
     body: "Make invitations, cake toppers, stickers, gift tags, party signs, and printable decorations.",
     href: "/search?q=birthday",
     link: "Find party clip art",
+    visualTerms: ["birthday", "cake", "party", "balloon", "gift", "heart", "celebration"],
   },
   {
     title: "Stickers and merchandise",
     body: "Generate clean isolated art for sticker sheets, t-shirts, mugs, planners, and product mockups.",
     href: "/search?style=sticker",
     link: "Explore sticker style",
+    visualTerms: ["sticker", "kawaii", "cute", "mascot", "coffee", "dog", "cat"],
   },
 ];
 
@@ -270,21 +281,25 @@ const SECONDARY_PRODUCTS = [
     title: "Coloring Pages",
     body: "Printable line art when you need kid-friendly pages instead of full-color clip art.",
     href: "/coloring-pages",
+    visualTerms: ["outline", "line art", "coloring", "school", "animal"],
   },
   {
     title: "Worksheets",
     body: "Practice pages with clipart-style visuals for classroom and homeschool activities.",
     href: "/worksheets",
+    visualTerms: ["school", "teacher", "book", "apple", "worksheet"],
   },
   {
     title: "Illustrations",
     body: "Full-scene artwork when your project needs a background and more visual context.",
     href: "/illustrations",
+    visualTerms: ["watercolor", "landscape", "scene", "flower", "vintage"],
   },
   {
     title: "Animations",
     body: "Bring selected clip art to life for presentations, social posts, and playful content.",
     href: "/animations",
+    visualTerms: ["character", "animal", "cute", "mascot", "sticker"],
   },
 ];
 
@@ -305,6 +320,7 @@ function normalizeHomeImage(img: CommunityImage | SampleImage): HomeVisual {
       transparentUrl: img.transparent_image_url,
       hasTransparency: img.has_transparency,
       style: img.style,
+      searchText: `${img.title || ""} ${img.prompt} ${img.category} ${img.style}`.toLowerCase(),
     };
   }
 
@@ -317,6 +333,7 @@ function normalizeHomeImage(img: CommunityImage | SampleImage): HomeVisual {
     transparentUrl: img.transparent_url,
     hasTransparency: img.has_transparency,
     style: img.tags?.[0],
+    searchText: `${img.title} ${img.category || ""} ${(img.tags || []).join(" ")}`.toLowerCase(),
   };
 }
 
@@ -328,6 +345,24 @@ function takeVisuals(images: HomeVisual[], start: number, count: number): HomeVi
 function categoryVisuals(images: HomeVisual[], category: DbCategory, start: number): HomeVisual[] {
   const matches = images.filter((img) => img.category === category.slug);
   return (matches.length >= 3 ? matches : takeVisuals(images, start, 3)).slice(0, 3);
+}
+
+function contextVisuals(
+  images: HomeVisual[],
+  terms: string[],
+  count: number,
+): HomeVisual[] {
+  const normalizedTerms = terms.map((term) => term.toLowerCase());
+  const matches = images.filter((img) =>
+    normalizedTerms.some((term) => img.searchText.includes(term)),
+  );
+  const byKey = new Map<string, HomeVisual>();
+
+  matches.forEach((img) => {
+    if (!byKey.has(img.key)) byKey.set(img.key, img);
+  });
+
+  return Array.from(byKey.values()).slice(0, count);
 }
 
 function imageHref(img: HomeVisual) {
@@ -385,10 +420,13 @@ export default async function Home() {
   const featuredClipArt = hasClipArt ? clipArtImages : fallbackClipArt;
   const visualImages = featuredClipArt.map(normalizeHomeImage);
   const heroVisuals = takeVisuals(visualImages, 0, 9);
-  const qualityVisuals = takeVisuals(visualImages, 9, 8);
-  const useCaseVisuals = takeVisuals(visualImages, 17, 12);
+  const qualityVisuals = contextVisuals(
+    visualImages,
+    ["transparent", "sticker", "watercolor", "kawaii", "outline", "flower", "heart", "icon"],
+    8,
+  );
   const packVisuals = takeVisuals(visualImages, 6, 8);
-  const promptVisuals = takeVisuals(visualImages, 12, 10);
+  const promptVisuals = contextVisuals(visualImages, PROMPT_EXAMPLES, 10);
   const featuredCategories = FEATURED_CATEGORY_SLUGS
     .map((slug) => categories.find((category) => category.slug === slug))
     .filter(Boolean) as DbCategory[];
@@ -396,10 +434,21 @@ export default async function Home() {
     (category) => !FEATURED_CATEGORY_SLUGS.includes(category.slug),
   );
   const categoryAtlas = [...featuredCategories, ...remainingCategories].slice(0, 12);
-  const preferredWomanPack = homepagePacks.find((pack) =>
-    pack.title.toLowerCase().includes("whimsical spring woman"),
-  );
-  const leadPack = preferredWomanPack || homepagePacks[0];
+  const kawaiiPack = homepagePacks.find((pack) => {
+    const text = `${pack.slug} ${pack.title} ${(pack.tags || []).join(" ")}`.toLowerCase();
+    return text.includes("kawaii") && (text.includes("dessert") || text.includes("desert") || text.includes("christmas"));
+  });
+  const orionPack = homepagePacks.find((pack) => {
+    const text = `${pack.slug} ${pack.title} ${(pack.tags || []).join(" ")}`.toLowerCase();
+    return text.includes("orion") || text.includes("foxwell");
+  });
+  const themeShowcasePacks = [kawaiiPack, orionPack].filter(Boolean) as HomepagePack[];
+  const themePackCards = [
+    ...themeShowcasePacks,
+    ...homepagePacks.filter((pack) =>
+      !themeShowcasePacks.some((featuredPack) => featuredPack.id === pack.id),
+    ),
+  ].slice(0, 2);
 
   const mosaicAnimations: MosaicAnimation[] = mosaicAnimationItems
     .slice(0, homepageConfig.mosaic_animation_slots)
@@ -664,7 +713,7 @@ export default async function Home() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {USE_CASE_PATHS.map((item, index) => {
-                const visuals = takeVisuals(useCaseVisuals, index * 3, 3);
+                const visuals = contextVisuals(visualImages, item.visualTerms, 3);
                 return (
                   <Link
                     key={item.title}
@@ -734,45 +783,49 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/80 bg-white/85 p-3 shadow-2xl shadow-pink-100/70 ring-1 ring-gray-100 backdrop-blur">
-                <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-                  {leadPack?.cover_image_url ? (
-                    <Link
-                      href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
-                      className="group block overflow-hidden rounded-[1.6rem] bg-gray-100"
-                    >
-                      <div className="relative aspect-[4/5] bg-gray-100 sm:aspect-[4/3] lg:aspect-[4/5]">
-                      <Image
-                        src={leadPack.cover_image_url}
-                        alt={`${leadPack.title} clipart theme pack preview`}
-                        fill
-                        className="object-cover object-[center_18%] transition-transform duration-500 group-hover:scale-[1.03]"
-                        sizes="(max-width: 1024px) 100vw, 560px"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-950/88 via-gray-950/35 to-transparent p-5 pt-16">
-                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pink-200">
-                          Featured bundle
+              <div className="rounded-[2rem] border border-white/80 bg-white/85 p-4 shadow-2xl shadow-pink-100/70 ring-1 ring-gray-100 backdrop-blur">
+                {themePackCards.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {themePackCards.map((pack) => (
+                      <Link
+                        key={pack.id}
+                        href={packPath(pack)}
+                        className="group block rounded-[1.6rem] bg-white px-4 pb-4 pt-5 text-center transition-colors hover:bg-pink-50/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                      >
+                        <div className="hover-pack-twitch relative mx-auto aspect-[2/3] max-w-[270px] drop-shadow-[0_22px_28px_rgba(15,23,42,0.28)]">
+                          {pack.cover_image_url && (
+                            <Image
+                              src={pack.cover_image_url}
+                              alt={`${pack.title} sealed theme pack preview`}
+                              fill
+                              className="object-contain"
+                              sizes="(max-width: 640px) 78vw, (max-width: 1024px) 40vw, 280px"
+                            />
+                          )}
+                        </div>
+                        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-pink-500">
+                          Featured theme pack
                         </p>
-                        <h3 className="mt-1 line-clamp-2 text-2xl font-black tracking-tight text-white">
-                          {leadPack.title}
+                        <h3 className="mt-1 line-clamp-2 text-lg font-black tracking-tight text-gray-950">
+                          {pack.title}
                         </h3>
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-gray-950">
-                            {leadPack.item_count} assets
+                        <div className="mt-3 flex flex-wrap justify-center gap-2">
+                          <span className="rounded-full bg-gray-950 px-3 py-1 text-xs font-black text-white">
+                            {pack.item_count} assets
                           </span>
-                          {leadPack.is_free && (
-                            <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-emerald-950">
+                          {pack.is_free && (
+                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700">
                               Free
                             </span>
                           )}
-                          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-black text-white ring-1 ring-white/20">
-                            Transparent PNG
+                          <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-black text-pink-700">
+                            PNG / WEBP
                           </span>
                         </div>
-                      </div>
-                      </div>
-                    </Link>
-                  ) : (
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
                     <div className="rounded-[1.6rem] bg-gray-950 p-6 text-white">
                       <div className="grid grid-cols-3 gap-2">
                         {packVisuals.slice(0, 6).map((img) => (
@@ -789,43 +842,6 @@ export default async function Home() {
                       </p>
                     </div>
                   )}
-
-                  <div className="grid gap-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      {packVisuals.slice(0, 6).map((img) => (
-                        <Link
-                          key={`${img.key}-pack-mosaic`}
-                          href={imageHref(img)}
-                          className="relative aspect-square rounded-2xl bg-gray-50 ring-1 ring-gray-100 transition hover:ring-pink-200"
-                        >
-                          <Image
-                            src={img.transparentUrl || img.url}
-                            alt={`${img.title} bundle asset example`}
-                            fill
-                            className="object-contain p-2"
-                            sizes="140px"
-                            unoptimized
-                          />
-                        </Link>
-                      ))}
-                    </div>
-                    {homepagePacks.slice(1, 4).map((pack) => (
-                      <Link
-                        key={pack.id}
-                        href={`/packs/${pack.categories?.slug || "all"}/${pack.slug}`}
-                        className="rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-lg"
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
-                          {pack.categories?.name || "Theme Pack"}
-                        </p>
-                        <h3 className="mt-1 line-clamp-2 font-black text-gray-950">{pack.title}</h3>
-                        <p className="mt-1 text-xs font-semibold text-gray-500">
-                          {pack.item_count} coordinated assets
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -921,7 +937,7 @@ export default async function Home() {
                     className="rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-lg"
                   >
                     <div className="mb-4 flex gap-1.5">
-                      {takeVisuals(visualImages, product.title.length, 3).map((img) => (
+                      {contextVisuals(visualImages, product.visualTerms, 3).map((img) => (
                         <div key={`${product.title}-${img.key}`} className="relative h-10 w-10 rounded-xl bg-gray-50 ring-1 ring-gray-100">
                           <Image
                             src={img.transparentUrl || img.url}

@@ -5,6 +5,7 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { AdminOnly } from "@/components/AdminOnly";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { getPackArtworkForPack } from "@/data/packArtwork";
+import { packPath } from "@/lib/packRoutes";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackListJsonLd } from "@/lib/seo-jsonld";
 
@@ -274,7 +275,7 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
                     <div className="pointer-events-none absolute inset-x-4 top-10 h-72 rounded-full bg-white/70 blur-3xl" />
                     {leadPack?.cover_image_url ? (
                       <Link
-                        href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
+                        href={packPath(leadPack)}
                         aria-label={`View ${leadPack.title} pack`}
                         title={`View ${leadPack.title} pack`}
                         className="hover-pack-twitch group relative z-10 block aspect-[2/3] drop-shadow-[0_24px_30px_rgba(15,23,42,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
@@ -321,7 +322,7 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
                               : "A focused collection of matching artwork, transparent assets, and ready-to-use creative pieces."}
                           </p>
                           <Link
-                            href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
+                            href={packPath(leadPack)}
                             className="shrink-0 rounded-full bg-gray-950 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-colors hover:bg-gray-800"
                           >
                             View pack

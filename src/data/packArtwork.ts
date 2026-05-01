@@ -20,14 +20,7 @@ const PACK_ARTWORK_OVERRIDES: Array<PackArtworkOverride & {
     title: "Kawaii Desserts Christmas Pack",
     imageUrl: "/assets/characters/kawaii-deserts-card-pack-transparent.png",
     alt: "Kawaii Desserts Christmas clipart sealed pink card pack",
-    matches: (pack) => {
-      const text = `${pack.slug} ${pack.title} ${(pack.tags || []).join(" ")}`.toLowerCase();
-      return text.includes("kawaii") && (
-        text.includes("dessert") ||
-        text.includes("desert") ||
-        text.includes("christmas")
-      );
-    },
+    matches: (pack) => pack.slug === "kawaii-christmas",
   },
 ];
 

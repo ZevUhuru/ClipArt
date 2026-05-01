@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getPackArtworkForPack } from "@/data/packArtwork";
+import { packPath } from "@/lib/packRoutes";
 
 interface PackCardProps {
   pack: {
@@ -27,8 +28,7 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export function PackCard({ pack }: PackCardProps) {
-  const categorySlug = pack.categories?.slug || "all";
-  const href = `/packs/${categorySlug}/${pack.slug}`;
+  const href = packPath(pack);
   const priceLabel = pack.is_free
     ? "Free"
     : `$${((pack.price_cents || 0) / 100).toFixed(2)}`;

@@ -5,6 +5,7 @@ import { AdminOnly } from "@/components/AdminOnly";
 import { MarketingFooter } from "@/components/MarketingFooter";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { packPath } from "@/lib/packRoutes";
 
 export const revalidate = 300;
 
@@ -80,10 +81,6 @@ async function getPackPreviews(): Promise<PackPreview[]> {
   }
 }
 
-function packHref(pack: PackPreview) {
-  return `/packs/${pack.categories?.slug || "all"}/${pack.slug}`;
-}
-
 function priceLabel(pack: PackPreview) {
   if (pack.is_free) return "Free";
   if (!pack.price_cents) return "Paid";
@@ -116,7 +113,7 @@ function BundleMosaic({ packs }: { packs: PackPreview[] }) {
         {visible.map((pack, index) => (
           <Link
             key={pack.id}
-            href={packHref(pack)}
+            href={packPath(pack)}
             aria-label={`View ${pack.title} pack`}
             title={`View ${pack.title} pack`}
             className={`group relative overflow-hidden rounded-[1.25rem] bg-transparency-grid ring-1 ring-gray-100 ${
@@ -214,7 +211,7 @@ export default async function DesignBundlesLandingPage() {
                     </p>
                   </div>
                   <Link
-                    href={packHref(leadPack)}
+                    href={packPath(leadPack)}
                     className="shrink-0 rounded-full bg-pink-50 px-3 py-1.5 text-xs font-black text-pink-600 transition-colors hover:bg-pink-100"
                   >
                     View pack
@@ -266,7 +263,7 @@ export default async function DesignBundlesLandingPage() {
           {packs.slice(0, 4).map((pack) => (
             <Link
               key={pack.id}
-              href={packHref(pack)}
+              href={packPath(pack)}
               className="group overflow-hidden rounded-[2rem] border border-gray-100 bg-white p-3 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-100/60"
             >
               <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-transparency-grid">
