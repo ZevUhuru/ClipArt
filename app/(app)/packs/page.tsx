@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { AdminOnly } from "@/components/AdminOnly";
 import { PackGrid } from "@/components/packs/PackGrid";
-import { getCharacterPackArtworkForPack } from "@/data/characters";
+import { getPackArtworkForPack } from "@/data/packArtwork";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { buildPackListJsonLd } from "@/lib/seo-jsonld";
 
@@ -93,7 +93,7 @@ async function getPublishedPacks(): Promise<PackRow[]> {
       .limit(100);
     return ((data || []) as PackRow[]).map((pack) => ({
       ...pack,
-      cover_image_url: getCharacterPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
+      cover_image_url: getPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
     }));
   } catch {
     return [];

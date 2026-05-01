@@ -5,10 +5,10 @@ import { notFound } from "next/navigation";
 import {
   characters,
   getCharacterBySlug,
-  getCharacterPackArtworkForPack,
   getCharacterForPack,
   type ClipArtCharacter,
 } from "@/data/characters";
+import { getPackArtworkForPack } from "@/data/packArtwork";
 import { CharacterReferenceSheetGallery } from "@/components/characters/CharacterReferenceSheetGallery";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
@@ -91,7 +91,7 @@ async function getRelatedPacks(character: ClipArtCharacter): Promise<PackRow[]> 
       })
       .map((pack) => ({
         ...pack,
-        cover_image_url: getCharacterPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
+        cover_image_url: getPackArtworkForPack(pack)?.imageUrl || pack.cover_image_url,
         categories: { slug: character.primaryCategorySlug, name: "Characters" },
       }));
   } catch {

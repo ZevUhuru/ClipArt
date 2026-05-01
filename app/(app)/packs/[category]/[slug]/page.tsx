@@ -8,7 +8,8 @@ import { buildPackJsonLd, buildPackBreadcrumb } from "@/lib/seo-jsonld";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { PackDownloadButton } from "@/components/packs/PackDownloadButton";
 import { PackItemsDrawerGrid } from "@/components/packs/PackItemsDrawerGrid";
-import { getCharacterForPack, getCharacterPackArtworkForPack } from "@/data/characters";
+import { getCharacterForPack } from "@/data/characters";
+import { getPackArtworkForPack } from "@/data/packArtwork";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -255,7 +256,7 @@ export default async function PackDetailPage({ params }: Props) {
       return `${count} ${CONTENT_TYPE_LABELS[ct] || ct}`;
     })
     .join(", ");
-  const packArtwork = getCharacterPackArtworkForPack(pack);
+  const packArtwork = getPackArtworkForPack(pack);
   const heroImageUrl = packArtwork?.imageUrl || pack.cover_image_url;
 
   return (

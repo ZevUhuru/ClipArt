@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { getPackArtworkForPack } from "@/data/packArtwork";
 
 interface PackCardProps {
   pack: {
@@ -35,6 +36,8 @@ export function PackCard({ pack }: PackCardProps) {
     .filter((format) => format.toLowerCase() !== "svg")
     .map((format) => format.toUpperCase())
     .join(" / ");
+  const artworkOverride = getPackArtworkForPack(pack);
+  const coverImageUrl = artworkOverride?.imageUrl || pack.cover_image_url;
 
   return (
     <Link
@@ -44,9 +47,9 @@ export function PackCard({ pack }: PackCardProps) {
       className="group relative block overflow-hidden bg-transparent transition-all duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
     >
       <div className="relative aspect-[2/3] overflow-hidden bg-transparent drop-shadow-2xl transition-all duration-300 group-hover:drop-shadow-[0_24px_28px_rgba(0,0,0,0.45)]">
-        {pack.cover_image_url ? (
+        {coverImageUrl ? (
           <Image
-            src={pack.cover_image_url}
+            src={coverImageUrl}
             alt={pack.title}
             fill
             className="object-contain transition-transform duration-500 group-hover:scale-[1.025]"
