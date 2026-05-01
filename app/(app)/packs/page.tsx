@@ -277,13 +277,13 @@ export default async function PacksPage({ searchParams }: PacksPageProps) {
                         href={`/packs/${leadPack.categories?.slug || "all"}/${leadPack.slug}`}
                         aria-label={`View ${leadPack.title} pack`}
                         title={`View ${leadPack.title} pack`}
-                        className="group relative z-10 block aspect-[2/3] drop-shadow-[0_24px_30px_rgba(15,23,42,0.24)] transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.012] hover:drop-shadow-[0_34px_38px_rgba(15,23,42,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                        className="hover-pack-twitch group relative z-10 block aspect-[2/3] drop-shadow-[0_24px_30px_rgba(15,23,42,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
                       >
                         <Image
                           src={leadPack.cover_image_url}
                           alt={`${leadPack.title} pack preview`}
                           fill
-                          className="object-contain transition-transform duration-500 group-hover:scale-[1.025]"
+                          className="object-contain"
                           priority
                           sizes="(max-width: 1024px) 100vw, 500px"
                         />
