@@ -14,7 +14,6 @@ Sitemap: https://clip.art/sitemap.xml
 # Block internal/API routes
 Disallow: /api/
 Disallow: /auth/
-Disallow: /generator
 
 # Allow search engines to crawl all public content
 Allow: /christmas

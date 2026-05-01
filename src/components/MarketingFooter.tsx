@@ -61,6 +61,7 @@ export async function MarketingFooter() {
             <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-300">Create</h4>
             <ul className="space-y-2.5">
               <li><Link href="/create" className="text-sm transition-colors hover:text-white">AI Clip Art Generator</Link></li>
+              <li><Link href="/design-bundles" className="text-sm transition-colors hover:text-white">Design Bundles</Link></li>
               <li><Link href="/stickers" className="text-sm transition-colors hover:text-white">AI Sticker Generator</Link></li>
               <li><Link href="/animations" className="text-sm transition-colors hover:text-white">Animated Clip Art</Link></li>
               <li><Link href="/packs" className="text-sm transition-colors hover:text-white">Packs</Link></li>
