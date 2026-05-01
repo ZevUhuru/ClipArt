@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useAppStore } from "@/stores/useAppStore";
 import { useSidebar } from "@/stores/useSidebar";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { usePackReleaseNotification } from "@/hooks/usePackReleaseNotification";
 
 const toolItems = [
   {
@@ -76,24 +77,58 @@ function NavItem({
   icon,
   isActive,
   collapsed,
+  showRelease,
+  onClick,
 }: {
   href: string;
   label: string;
   icon: React.ReactNode;
   isActive: boolean;
   collapsed: boolean;
+  showRelease?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
       title={collapsed ? label : undefined}
+      onClick={onClick}
       className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-semibold transition-all ${
         isActive
           ? "bg-white/[0.12] text-white shadow-sm shadow-black/20"
           : "text-gray-400 hover:bg-white/[0.07] hover:text-gray-200"
       } ${collapsed ? "justify-center px-0" : ""}`}
     >
-      {icon}
+      <span className={`relative shrink-0 ${showRelease ? "text-orange-300 drop-shadow-[0_0_10px_rgba(251,146,60,0.65)]" : ""}`}>
+        {icon}
+        {showRelease && (
+          <>
+            <span className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-orange-400 ring-2 ring-[#1c1c27]" />
+            <span className="absolute -right-1.5 -top-1.5 h-3 w-3 animate-ping rounded-full bg-orange-300/70" />
+          </>
+        )}
+      </span>
+      {showRelease && !collapsed && (
+        <span className="absolute -top-3 left-7 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-xl shadow-pink-950/25 ring-1 ring-white/20">
+          New drop
+        </span>
+      )}
+      {showRelease && collapsed && (
+        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-pink-950/25 ring-1 ring-white/15">
+          New
+        </span>
+      )}
+      {showRelease && collapsed && (
+        <span className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-2xl border border-orange-200/30 bg-[#fff7ed] px-3 py-2 text-left shadow-2xl shadow-orange-950/20 ring-1 ring-white/80 group-hover:block">
+          <span className="absolute -left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b border-l border-orange-200/30 bg-[#fff7ed]" />
+          <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
+            New character pack
+          </span>
+          <span className="mt-0.5 block text-xs font-black text-gray-950">
+            Orion Foxwell is live
+          </span>
+        </span>
+      )}
       <span
         className={`whitespace-nowrap transition-all duration-200 ${
           collapsed ? "w-0 overflow-hidden opacity-0" : "w-auto opacity-100"
@@ -114,6 +149,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user, credits, isAdmin, openAuthModal, openBuyCreditsModal, resetUserState } = useAppStore();
   const { collapsed, toggle, hydrate, setCollapsedSilently } = useSidebar();
+  const { showPackRelease, dismissPackRelease } = usePackReleaseNotification();
 
   useEffect(() => {
     hydrate(pathname);
@@ -208,6 +244,8 @@ export function AppSidebar() {
               icon={item.icon}
               isActive={isActive}
               collapsed={collapsed}
+              showRelease={item.href === "/packs" && showPackRelease}
+              onClick={item.href === "/packs" ? dismissPackRelease : undefined}
             />
           );
         })}
@@ -232,6 +270,8 @@ export function AppSidebar() {
               icon={item.icon}
               isActive={isActive}
               collapsed={collapsed}
+              showRelease={item.href === "/packs" && showPackRelease}
+              onClick={item.href === "/packs" ? dismissPackRelease : undefined}
             />
           );
         })}

@@ -8,6 +8,7 @@ import {
   getCharacterForPack,
   type ClipArtCharacter,
 } from "@/data/characters";
+import { CharacterReferenceSheetGallery } from "@/components/characters/CharacterReferenceSheetGallery";
 import { PackGrid } from "@/components/packs/PackGrid";
 import { buildCanonical, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -199,7 +200,7 @@ export default async function CharacterDetailPage({ params }: Props) {
                     href="#reference-sheet"
                     className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-black text-gray-950 shadow-xl shadow-amber-950/20 transition-all hover:-translate-y-0.5 hover:bg-amber-300"
                   >
-                    View reference sheet
+                    View reference sheets
                   </Link>
                   <Link
                     href="/packs/characters"
@@ -244,45 +245,10 @@ export default async function CharacterDetailPage({ params }: Props) {
           </div>
         </section>
 
-        {referenceSheet && (
-          <section id="reference-sheet" className="mx-auto max-w-7xl px-4 py-12">
-            <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="overflow-hidden rounded-[2rem] border border-amber-950/10 bg-[#18120c] p-3 shadow-2xl shadow-amber-950/10">
-                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.5rem] bg-[#0f0c09]">
-                  <Image
-                    src={referenceSheet.imageUrl}
-                    alt={referenceSheet.alt}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 1024px) 100vw, 760px"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col justify-center">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-700">
-                  Reference board
-                </p>
-                <h2 className="mt-2 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
-                  Built to keep the character consistent everywhere
-                </h2>
-                <p className="mt-4 text-base leading-7 text-gray-600">
-                  {referenceSheet.description} The sheet captures Orion&apos;s silhouette, clothing,
-                  expressions, props, color palette, and railway-noir setting so every future pack
-                  can feel like it belongs to the same character universe.
-                </p>
-
-                <div className="mt-6 space-y-3">
-                  {character.designNotes.map((note) => (
-                    <div key={note} className="rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm">
-                      <p className="text-sm font-semibold leading-6 text-gray-700">{note}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+        <CharacterReferenceSheetGallery
+          sheets={character.referenceSheets}
+          designNotes={character.designNotes}
+        />
 
         <section className="mx-auto max-w-7xl px-4 pb-12">
           <div className="grid gap-5 lg:grid-cols-3">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
+import { usePackReleaseNotification } from "@/hooks/usePackReleaseNotification";
 
 interface Tab {
   href: string;
@@ -77,10 +78,11 @@ const tabs: Tab[] = [
 
 export function AppBottomNav() {
   const pathname = usePathname();
+  const { showPackRelease, dismissPackRelease } = usePackReleaseNotification();
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 overflow-hidden bg-[#1c1c27] px-4 pt-2 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 overflow-visible bg-[#1c1c27] px-4 pt-2 md:hidden"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
       aria-label="Primary navigation"
     >
@@ -101,6 +103,7 @@ export function AppBottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              onClick={tab.href === "/packs" ? dismissPackRelease : undefined}
               aria-current={isActive ? "page" : undefined}
               className={`relative flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition-all ${
                 isActive
@@ -111,7 +114,23 @@ export function AppBottomNav() {
               {isActive && (
                 <span className="absolute inset-0 rounded-xl bg-white shadow-sm" />
               )}
-              <span className="relative">
+              {tab.href === "/packs" && showPackRelease && (
+                <span
+                  aria-hidden
+                  className="absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-xl shadow-pink-950/25 ring-1 ring-white/25"
+                >
+                  New drop
+                  <span className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-orange-400" />
+                </span>
+              )}
+              {tab.href === "/packs" && showPackRelease && (
+                <>
+                  <span className="absolute inset-2 rounded-xl bg-orange-300/15 blur-md" />
+                  <span className="absolute right-[24%] top-1 z-10 h-3 w-3 rounded-full bg-orange-400 ring-2 ring-[#2c2c36]" />
+                  <span className="absolute right-[24%] top-1 z-10 h-3 w-3 animate-ping rounded-full bg-orange-300/70" />
+                </>
+              )}
+              <span className={`relative ${tab.href === "/packs" && showPackRelease ? "text-orange-200 drop-shadow-[0_0_10px_rgba(251,146,60,0.75)]" : ""}`}>
                 {isActive ? tab.activeIcon : tab.icon}
               </span>
               <span className="relative text-[10px] font-bold">
