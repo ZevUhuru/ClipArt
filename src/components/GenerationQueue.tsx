@@ -14,34 +14,50 @@ const GEN_STAGES = [
   { at: 100, msg: "Complete" },
 ];
 
+function getGenProgress(startedAt: number, active: boolean, now = Date.now()) {
+  if (!active) {
+    return { progress: 100, stage: "Complete", isFinalizing: false };
+  }
+
+  const elapsed = (now - startedAt) / 1000;
+  let value: number;
+  if (elapsed < 1) value = 15 * elapsed;
+  else if (elapsed < 4) value = 15 + 35 * ((elapsed - 1) / 3);
+  else if (elapsed < 8) value = 50 + 30 * ((elapsed - 4) / 4);
+  else if (elapsed < 15) value = 80 + 15 * ((elapsed - 8) / 7);
+  else value = 95 + 4 * (1 - Math.exp(-(elapsed - 15) / 10));
+
+  const progress = Math.min(Math.round(value), 99);
+  const isFinalizing = progress >= 99;
+  const stage = isFinalizing
+    ? "Almost ready..."
+    : GEN_STAGES.reduce(
+        (acc, s) => (progress >= s.at ? s.msg : acc),
+        GEN_STAGES[0].msg,
+      );
+
+  return { progress, stage, isFinalizing };
+}
+
 function useGenProgress(startedAt: number, active: boolean) {
-  const [progress, setProgress] = useState(0);
+  const [snapshot, setSnapshot] = useState(() => getGenProgress(startedAt, active));
   const raf = useRef(0);
 
   useEffect(() => {
-    if (!active) { setProgress(100); return; }
+    if (!active) {
+      setSnapshot(getGenProgress(startedAt, false));
+      return;
+    }
 
     function tick() {
-      const elapsed = (Date.now() - startedAt) / 1000;
-      let v: number;
-      if (elapsed < 1) v = 15 * elapsed;
-      else if (elapsed < 4) v = 15 + 35 * ((elapsed - 1) / 3);
-      else if (elapsed < 8) v = 50 + 30 * ((elapsed - 4) / 4);
-      else if (elapsed < 15) v = 80 + 15 * ((elapsed - 8) / 7);
-      else v = 95 + 4 * (1 - Math.exp(-(elapsed - 15) / 10));
-      setProgress(Math.min(v, 99));
+      setSnapshot(getGenProgress(startedAt, true));
       raf.current = requestAnimationFrame(tick);
     }
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, [startedAt, active]);
 
-  const stage = GEN_STAGES.reduce(
-    (acc, s) => (progress >= s.at ? s.msg : acc),
-    GEN_STAGES[0].msg,
-  );
-
-  return { progress: Math.round(active ? progress : 100), stage };
+  return snapshot;
 }
 
 const CARD_SIZE = 80;
@@ -60,7 +76,7 @@ function GenCard({
   const isActive = job.status === "generating";
   const isComplete = job.status === "completed";
   const isFailed = job.status === "failed";
-  const { progress, stage } = useGenProgress(job.startedAt, isActive);
+  const { progress, stage, isFinalizing } = useGenProgress(job.startedAt, isActive);
 
   const styleName = job.style.charAt(0).toUpperCase() + job.style.slice(1);
   const strokeDash = (progress / 100) * RING_CIRC;
@@ -139,7 +155,7 @@ function GenCard({
       {/* Style pill (generating / failed) */}
       {!isComplete && (
         <span className="absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/30 px-1.5 py-px text-[7px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-          {styleName}
+          {isActive && isFinalizing ? stage : styleName}
         </span>
       )}
 
@@ -164,6 +180,15 @@ export function GenerationQueue() {
   const removeJob = useGenerationQueue((s) => s.removeJob);
   const clearCompleted = useGenerationQueue((s) => s.clearCompleted);
   const openDrawer = useImageDrawer((s) => s.open);
+  const hasActiveJobs = jobs.some((j) => j.status === "generating");
+  const [queueNow, setQueueNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!hasActiveJobs) return;
+
+    const interval = window.setInterval(() => setQueueNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [hasActiveJobs]);
 
   const completedDrawerList = useMemo<DrawerImage[]>(
     () =>
@@ -204,6 +229,9 @@ export function GenerationQueue() {
 
   const activeCount = jobs.filter((j) => j.status === "generating").length;
   const completedCount = jobs.filter((j) => j.status !== "generating").length;
+  const finalizingCount = jobs.filter(
+    (j) => j.status === "generating" && getGenProgress(j.startedAt, true, queueNow).isFinalizing,
+  ).length;
 
   return (
     <div>
@@ -225,6 +253,20 @@ export function GenerationQueue() {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {finalizingCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="mb-2 rounded-2xl border border-amber-100 bg-amber-50/80 px-3 py-2 text-xs leading-relaxed text-amber-800 shadow-sm"
+          >
+            <span className="font-bold">Almost ready.</span>{" "}
+            Your image is finishing processing and should appear here soon.
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <AnimatePresence mode="popLayout">
