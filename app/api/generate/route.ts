@@ -223,16 +223,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Anonymous free generation — generate + upload, skip credits and DB record
-    const [{ buffer: rawBuffer, needsBgRemoval: freeNeedsBgRemoval }, freeBgConfig] =
+    const [{ buffer: rawBuffer, hasTransparency: freeNativeTransparency, needsBgRemoval: freeNeedsBgRemoval }, freeBgConfig] =
       await Promise.all([
         generateImage(prompt, styleKey, contentType),
         getBgRemovalConfig(),
       ]);
 
     let freeProcessedBuffer = rawBuffer;
+    let freeHasTransparency = freeNativeTransparency;
     if (freeNeedsBgRemoval && freeBgConfig.enabled) {
       try {
         freeProcessedBuffer = await removeBackground(rawBuffer, freeBgConfig.modelId);
+        freeHasTransparency = true;
       } catch (bgErr) {
         Sentry.captureException(bgErr, { tags: { type: "bg_removal_error" } });
         console.error("Background removal failed, using original:", bgErr);
@@ -253,7 +255,14 @@ export async function POST(request: NextRequest) {
       contentType: "image/webp",
     });
 
-    return NextResponse.json({ imageUrl, freeGen: true });
+    return NextResponse.json({
+      imageUrl,
+      freeGen: true,
+      hasTransparency: freeHasTransparency,
+      title: classification.title,
+      category: cat,
+      slug: uniqueSlug,
+    });
   } catch (err) {
     Sentry.captureException(err, {
       tags: { type: "generation_error" },

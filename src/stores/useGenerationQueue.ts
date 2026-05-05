@@ -112,7 +112,7 @@ export const useGenerationQueue = create<GenerationQueueState>()(
           title: data.generation?.title || data.title || prompt,
           model: data.generation?.model || undefined,
           contentType: data.generation?.content_type || options?.contentType || "clipart",
-          hasTransparency: data.generation?.has_transparency ?? false,
+          hasTransparency: data.generation?.has_transparency ?? data.hasTransparency ?? false,
         });
       })
       .catch((err) => {

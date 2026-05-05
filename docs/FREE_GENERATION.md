@@ -31,7 +31,7 @@ The biggest drop-off in any freemium funnel is the signup wall before the user h
 │  │  3. Upload to R2                                   │    │
 │  │  4. Skip credit deduction (no user profile)        │    │
 │  │  5. Skip generations table insert (no user_id)     │    │
-│  │  6. Return { imageUrl, title, category, slug }     │    │
+│  │  6. Return image URL + transparency metadata       │    │
 │  └────────────────────────────────────────────────────┘    │
 │  ↓                                                         │
 │  Client queues the job and redirects to /create            │
@@ -97,7 +97,7 @@ The completed queue card opens the normal image drawer, where the image can be d
 3. **Skip credit check** — no profile lookup or deduction
 4. **Generate + upload** — same pipeline (generateImage → Sharp → R2 → classify)
 5. **Skip DB insert** — no `generations` row created (no `user_id` to associate)
-6. **Return** — `{ imageUrl, classification }` (no `credits` or `generation` fields)
+6. **Return** — `{ imageUrl, hasTransparency, title, category, slug }` (no `credits` or `generation` fields)
 
 ### Why no DB record for anonymous generations
 
@@ -163,6 +163,7 @@ The create page uses `GenerationQueue` as the anonymous result surface:
 - The homepage queues the first free anonymous generation and redirects immediately to `/create`
 - The user sees progress in the queue area while the app shell is visible
 - Once complete, clicking the queue thumbnail opens the image drawer with the normal download action
+- Transparent free generations use the same checkerboard preview and "Transparent PNG" labelling as signed-in generations
 - Creating additional images still requires signup; after signup, the user has 10 credits and can continue
 
 ## Files Changed

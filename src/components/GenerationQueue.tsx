@@ -85,11 +85,12 @@ function GenCard({
       {/* Completed: thumbnail */}
       {isComplete && job.imageUrl && (
         <>
+          {job.hasTransparency && <div className="absolute inset-0 bg-transparency-grid" />}
           <Image
             src={job.imageUrl}
             alt={job.prompt}
             fill
-            className="object-cover"
+            className={job.hasTransparency ? "object-contain p-1.5" : "object-cover"}
             sizes={`${CARD_SIZE}px`}
             unoptimized
           />
