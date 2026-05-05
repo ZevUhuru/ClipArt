@@ -280,7 +280,9 @@ interface RetouchResult {
     category: string;
     slug: string;
     aspect_ratio: string;
+    content_type?: string;
     model: string;
+    has_transparency?: boolean;
     created_at: string;
   } | null;
 }
@@ -369,9 +371,11 @@ function DrawerContent({ image, categorySlug, detailHref, isColoring, isOwner, o
         url: gen.image_url,
         category: gen.category || "free",
         style: gen.style || "flat",
+        content_type: gen.content_type || "clipart",
         aspect_ratio: gen.aspect_ratio || undefined,
         prompt: gen.prompt,
         model: gen.model || undefined,
+        has_transparency: gen.has_transparency ?? false,
       },
       [],
       true,

@@ -80,8 +80,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Background removal is currently disabled" }, { status: 503 });
     }
 
-    // Pass the public URL directly — avoids fetch+encode round-trip
-    const transparentPngBuffer = await removeBackground(generation.image_url, bgConfig.modelId);
+    const sourceRes = await fetch(generation.image_url);
+    if (!sourceRes.ok) {
+      return NextResponse.json({ error: "Could not fetch source image" }, { status: 400 });
+    }
+
+    // Match the generation pipeline: source buffer → bg removal → WebP → R2.
+    const sourceBuffer = Buffer.from(await sourceRes.arrayBuffer());
+    const sourcePngBuffer = await sharp(sourceBuffer).png().toBuffer();
+    const transparentPngBuffer = await removeBackground(sourcePngBuffer, bgConfig.modelId);
 
     // Convert transparent PNG → transparent WebP
     const webpBuffer = await sharp(transparentPngBuffer)
@@ -91,13 +98,11 @@ export async function POST(request: NextRequest) {
     // Upload to a new R2 key — preserves the original image_url
     const originalKey = keyFromUrl(generation.image_url);
     const transparentKey = transparentKeyFromKey(originalKey);
-    await uploadToR2(webpBuffer, transparentKey, {
+    const transparentUrl = await uploadToR2(webpBuffer, transparentKey, {
       category: generation.category,
       contentType: "image/webp",
       cacheControl: "public, max-age=31536000",
     });
-
-    const transparentUrl = `${R2_PUBLIC_URL}/${transparentKey}`;
 
     // Store in transparent_image_url; mark has_transparency
     await admin

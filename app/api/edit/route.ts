@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import * as Sentry from "@sentry/nextjs";
 import sharp from "sharp";
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import { editImage } from "@/lib/geminiEdit";
+import { editWithGptImage2, GPT_IMAGE_2_MODEL_ID } from "@/lib/gptImage2";
+import { removeBackground } from "@/lib/bgRemoval";
+import { getBgRemovalConfig } from "@/lib/imageGen";
 import { uploadToR2 } from "@/lib/r2";
 import { checkPromptSafety } from "@/lib/promptSafety";
 
 const ALLOWED_IMAGE_HOST = "images.clip.art";
+const CLIPART_CONTENT_TYPE = "clipart";
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const { data: sourceGen } = await admin
       .from("generations")
-      .select("id, category, style, title, slug, aspect_ratio")
+      .select("id, category, style, title, slug, aspect_ratio, content_type")
       .eq("image_url", sourceUrl)
       .single();
 
@@ -70,15 +74,36 @@ export async function POST(request: NextRequest) {
     const sourceBuffer = Buffer.from(await sourceRes.arrayBuffer());
     const contentType = sourceRes.headers.get("content-type") || "image/webp";
 
-    const editedBuffer = await editImage(sourceBuffer, contentType, instruction);
+    const category = sourceGen?.category || "free";
+    const style = sourceGen?.style || "flat";
+    const generationContentType = sourceGen?.content_type || CLIPART_CONTENT_TYPE;
+    const aspectRatio = sourceGen?.aspect_ratio || "1:1";
+    const editPrompt = [
+      instruction,
+      "Preserve the source image's core subject, style, composition, and clean product-art presentation unless the instruction explicitly says otherwise.",
+    ].join(" ");
 
-    const webpBuffer = await sharp(editedBuffer)
+    const [editedBuffer, bgRemovalConfig] = await Promise.all([
+      editWithGptImage2(sourceBuffer, contentType, editPrompt, aspectRatio),
+      getBgRemovalConfig(),
+    ]);
+
+    let processedBuffer = editedBuffer;
+    let hasTransparency = false;
+    if (generationContentType === CLIPART_CONTENT_TYPE && bgRemovalConfig.enabled) {
+      try {
+        processedBuffer = await removeBackground(editedBuffer, bgRemovalConfig.modelId);
+        hasTransparency = true;
+      } catch (bgErr) {
+        Sentry.captureException(bgErr, { tags: { type: "edit_bg_removal_error" } });
+        console.error("Edit background removal failed, using original:", bgErr);
+      }
+    }
+
+    const webpBuffer = await sharp(processedBuffer)
       .webp({ quality: 85, effort: 4 })
       .toBuffer();
 
-    const category = sourceGen?.category || "free";
-    const style = sourceGen?.style || "flat";
-    const aspectRatio = sourceGen?.aspect_ratio || "1:1";
     const suffix = Math.random().toString(36).slice(2, 8);
     const baseSlug = sourceGen?.slug?.replace(/-[a-z0-9]{6}$/, "") || "edited";
     const editSlug = `${baseSlug}-edit-${suffix}`;
@@ -104,15 +129,17 @@ export async function POST(request: NextRequest) {
         style,
         image_url: imageUrl,
         category,
+        content_type: generationContentType,
         is_public: isPublic !== false,
         title: editTitle,
         slug: editSlug,
         description: `AI edit: ${instruction.slice(0, 160)}`,
         aspect_ratio: aspectRatio,
         parent_id: sourceGen?.id || null,
-        model: "gemini",
+        model: GPT_IMAGE_2_MODEL_ID,
+        has_transparency: hasTransparency,
       })
-      .select("id, image_url, prompt, style, category, slug, aspect_ratio, model, created_at")
+      .select("id, image_url, prompt, style, content_type, category, slug, aspect_ratio, model, has_transparency, created_at")
       .single();
 
     if (isPublic !== false) {
